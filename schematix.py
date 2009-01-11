@@ -107,6 +107,7 @@ class BlockFrame(wx.Frame):
         dlg = wx.FileDialog(self, "Open Schematic", style = wx.FD_OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             filename =  dlg.GetPath()
+            self.filename = filename
             open_file = open(filename, 'r')
             self.sn = pickle.load(open_file)
             self.netlist = pickle.load(open_file)
@@ -607,6 +608,7 @@ class Block:
     """Draw the block described by the instance object"""
 
     def __init__(self, blockframe, instance):
+
         """Draw a block and its port_positions"""
 
         blockframe = blockframe
@@ -669,6 +671,13 @@ class Block:
         y_offset = height - 20
         for port_name in input_ports:
             if port_name not in connected:
+                def callback(obj, 
+                        instance_name=instance_name, 
+                        port_name=port_name):
+                    blockframe.on_in_port_left_down(
+                        instance_name, 
+                        port_name
+                    )
                 if name in ["Tee", "Bend"]:
                     outline = blockframe.canvas.AddCircle(
                         (x-10, y), 
@@ -685,10 +694,7 @@ class Block:
                     )
                 outline.Bind(
                     FloatCanvas.EVT_FC_LEFT_DOWN, 
-                    lambda obj: blockframe.on_in_port_left_down(
-                        instance_name, 
-                        port_name
-                    )
+                    callback
                 )
             if name not in ["Tee", "Bend"]:
                 blockframe.port_positions[instance_name][port_name] = (
@@ -716,6 +722,13 @@ class Block:
         y_offset = height - 20
         for port_name in output_ports:
             if port_name not in connected:
+                def callback(obj,
+                        instance_name=instance_name,
+                        port_name=port_name):
+                    blockframe.on_out_port_left_down(
+                        instance_name, 
+                        port_name
+                    )
                 if name in ["Tee", "Bend"]:
                     outline = blockframe.canvas.AddCircle(
                         (x+10, y), 
@@ -731,10 +744,7 @@ class Block:
                     )
                 outline.Bind(
                     FloatCanvas.EVT_FC_LEFT_DOWN, 
-                    lambda obj: blockframe.on_out_port_left_down(
-                        instance_name, 
-                        port_name
-                    )
+                    callback
                 )
             if name not in ["Tee", "Bend"]:
                 blockframe.port_positions[instance_name][port_name] = (

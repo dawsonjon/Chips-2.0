@@ -1,3 +1,64 @@
+library = """
+def Bend(a):
+    return a
+
+def Tee(a):
+    temp = Variable(0)
+    x = Output()
+    y = Output()
+    Process(a.get_bits(),
+        Loop(
+            a.read(temp),
+            x.write(temp),
+            y.write(temp),
+        )
+    )
+    return x, y
+
+def Mul(a, b):
+    return a * b
+
+def Div(a, b):
+    return a // b
+
+def Add(a, b):
+    return a + b
+
+def Sub(a, b):
+    return a - b
+
+def AND(a, b):
+    return a & b
+
+def OR(a, b):
+    return a | b
+
+def XOR(a, b):
+    return a ^ b
+
+def NOT(a):
+    return ~a
+
+def Eq(a, b):
+    return a == b
+
+def Ne(a, b):
+    return a != b
+
+def Lt(a, b):
+    return a < b
+
+def Gt(a, b):
+    return a > b
+
+def Le(a, b):
+    return a <= b
+
+def Ge(a, b):
+    return a >= b
+"""
+
+
 def generate(filename, netlist, ports, wires):
 
     """Generate a Chips file from the schematic"""
@@ -11,6 +72,7 @@ def generate(filename, netlist, ports, wires):
     #check if all the input streams for a block have been created
     #============================================================
     output_file.write("from chips import *\n\n")
+    output_file.write(library)
 
     all_streams_generated = False
     while not all_streams_generated:
@@ -53,9 +115,9 @@ def generate(filename, netlist, ports, wires):
                     #generate component
                     #------------------
                     parameters = [
-                        repr(i) for 
-                        i in 
-                        instance["parameters"].values()
+                        str(i) + "=" + repr(j) for 
+                        i, j in 
+                        instance["parameters"].iteritems()
                     ]
                     if not instance["component"]["output_ports"]:
                         #must be a sink
