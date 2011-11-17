@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import wx
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas, Resources
 
@@ -6,17 +8,21 @@ class InPort:
     def __init__(self, blockframe, position, label):
         self.blockframe = blockframe
         self.connected = False
-        self.rectangle = self.blockframe.canvas.AddCircle(
-                position, 
-                10,
-                LineColor = "dark green"
+        x, y = position
+        self.rectangle = self.blockframe.canvas.AddPolygon(
+            [
+                (x, y+7), 
+                (x+7, y),
+                (x, y-7), 
+            ],
+            LineColor = "dark green",
+            LineWidth = 1
         )
         self.rectangle.Bind(
                 FloatCanvas.EVT_FC_LEFT_DOWN, 
                 lambda obj: self.blockframe.on_in_port_left_down(self)
         )
         if label is not None:
-            x, y = position
             self.label = self.blockframe.canvas.AddScaledText(
                 label,
                 (x+10, y),
@@ -26,12 +32,18 @@ class InPort:
         self.position = position
 
     def move(self, coord):
-        self.rectangle.SetPoint(coord)
         self.position = coord
+        x, y = coord
+        self.rectangle.SetPoints(
+            [
+                (x, y+7), 
+                (x+7, y),
+                (x, y-7), 
+            ],
+        )
         if self.connected:
             self.out_port.draw_wire()
         if hasattr(self, "label"):
-            x, y = coord
             self.label.SetPoint(
                 (x+10, y),
             )
@@ -48,16 +60,21 @@ class OutPort:
     def __init__(self, blockframe, position, label):
         self.connected = False
         self.blockframe = blockframe
-        self.rectangle = self.blockframe.canvas.AddCircle(
-                position, 
-                10,
-                LineColor = "dark green")
+        x, y = position
+        self.rectangle = self.blockframe.canvas.AddPolygon(
+            [
+                (x-7, y+7), 
+                (x, y),
+                (x-7, y-7), 
+            ],
+            LineColor = "dark green",
+            LineWidth = 1
+        )
         self.rectangle.Bind(
                 FloatCanvas.EVT_FC_LEFT_DOWN, 
                 lambda obj: self.blockframe.on_out_port_left_down(self)
         )
         if label is not None:
-            x, y = position
             self.label = self.blockframe.canvas.AddScaledText(
                     label,
                     (x-10, y),
@@ -72,10 +89,16 @@ class OutPort:
             self.blockframe.canvas.Draw(True)
 
     def move(self, coord):
-        self.rectangle.SetPoint(coord)
         self.position = coord
+        x, y = coord
+        self.rectangle.SetPoints(
+            [
+                (x-7, y+7), 
+                (x, y),
+                (x-7, y-7), 
+            ],
+        )
         if hasattr(self, "label"):
-            x, y = coord
             self.label.SetPoint(
                 (x-10, y),
             )
@@ -121,14 +144,22 @@ class WireHandle:
     def __init__(self, blockframe, position):
         x, y = position
         self.blockframe = blockframe
-        self.inport = InPort(blockframe, (x-8, y), None)
-        self.outport1 = OutPort(blockframe, (x, y+8), None)
-        self.outport2 = OutPort(blockframe, (x, y-8), None)
-        self.rectangle = self.blockframe.canvas.AddCircle(
-                position, 
-                8,
-                FillColor = "dark green"
+        self.rectangle = self.blockframe.canvas.AddPolygon(
+            [
+                (x, y+20),
+                (x+10, y+20),
+                (x+10, y-20),
+                (x, y-20),
+                (x, y-10),
+                (x-10, y-10),
+                (x-10, y+10),
+                (x, y+10),
+            ],
+            LineColor = "dark green"
         )
+        self.inport = InPort(blockframe, (x-10, y), None)
+        self.outport1 = OutPort(blockframe, (x+10, y+10), None)
+        self.outport2 = OutPort(blockframe, (x+10, y-10), None)
         self.rectangle.Bind(
             FloatCanvas.EVT_FC_LEFT_DOWN, 
             lambda obj : blockframe.on_block_left_down(self)
@@ -147,10 +178,27 @@ class WireHandle:
 
     def move(self, position):
         x, y = position
-        self.rectangle.SetPoint(position)
-        self.inport.move((x-8, y))
-        self.outport1.move((x, y+8))
-        self.outport2.move((x, y-8))
+        if (self.outport1.connected and 
+                self.outport2.connected and
+                self.outport2.in_port.position[1] >
+                self.outport1.in_port.position[1]):
+            self.outport1, self.outport2 = self.outport2, self.outport1
+        self.rectangle.SetPoints(
+            [
+                (x, y+20),
+                (x+10, y+20),
+                (x+10, y-20),
+                (x, y-20),
+                (x, y-10),
+                (x-10, y-10),
+                (x-10, y+10),
+                (x, y+10),
+            ]
+        )
+
+        self.inport.move((x-10, y))
+        self.outport1.move((x+10, y+10))
+        self.outport2.move((x+10, y-10))
         self.blockframe.canvas.Draw(True)
 
 class Block:
@@ -245,10 +293,19 @@ class BlockFrame(wx.Frame):
 
         #draw windows
         wx.Frame.__init__(self, *args, **kwargs)
-        canvas = NavCanvas.NavCanvas(self)
+
+        #make canvas
+        canvas = NavCanvas.NavCanvas(self, style=wx.SUNKEN_BORDER)
         self.canvas = canvas.Canvas
-        self.rect = self.canvas.AddCircle((0, 0), 20)
-        self.blocks = []
+
+        #make selector
+        selector = wx.TreeCtrl(self, style=wx.SUNKEN_BORDER)
+
+        #layout windows
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(selector, 1, wx.EXPAND)
+        sizer.Add(canvas, 5, wx.EXPAND)
+        self.SetSizer(sizer)
 
         #bind events
         self.state = "idle"
