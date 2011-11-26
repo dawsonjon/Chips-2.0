@@ -35,14 +35,14 @@ components = (
            },
            {
                "name": "Serial Output", 
-               "input_ports" : ["serial data"],  
+               "input_ports" : ["z"],  
                "output_ports" : [], 
                 "parameters" : {"name":"TX", "clock_speed":50000000, "baud_rate":115200}, 
                "function" : "SerialOut"
            },
            {
                 "name": "Console",       
-                "input_ports" : ["console data"], 
+                "input_ports" : ["z"], 
                 "output_ports" : [], 
                 "parameters" : {}, 
                 "function" : "Console"
