@@ -24,7 +24,7 @@ Features Yet to be Implemented
 Techinical Details
 ------------------
 
-*Implemented in Python.
-*Uses wxPython for gui framework.
-*Schematic editor is based on wxPython FloatCanvas.
-*Dependencies are Python, wxPython, NumPy (required by floatcanvas)
+* Implemented in Python.
+* Uses wxPython for gui framework.
+* Schematic editor is based on wxPython FloatCanvas.
+* Dependencies are Python, wxPython, NumPy (required by floatcanvas)
