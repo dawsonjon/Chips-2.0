@@ -1,0 +1,11 @@
+--name: input
+--tag: core
+--tag: IO
+--output: out1
+--parameter: name : adfasdf
+--source_file: built_in
+
+---Input
+---=====
+---
+---Component Input
