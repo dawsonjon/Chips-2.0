@@ -10,6 +10,7 @@ import editor
 import c_actions
 import schematic_actions
 import wxghdl
+import transcript_window
 
 system_components = os.path.join(os.path.dirname(__file__), "system_components")
 
@@ -18,6 +19,7 @@ def edit(window, component):
     """Edit a component"""
 
     editor.open_file(window.get_component_path(component))
+    window.transcript.log("Launching Text Editor")
     window.update()
 
 def delete(window, component):
@@ -28,7 +30,9 @@ def delete(window, component):
         if component["source_file"] == "built_in":
             #don't delete builtins
             return
+        window.transcript.log("Removing Source File")
         os.remove(window.get_source_path(component))
+    window.transcript.log("Removing Component")
     os.remove(window.get_component_path(component))
     window.update()
 
@@ -42,6 +46,7 @@ def new(window):
         "New Component")
     if dlg.ShowModal() == wx.ID_OK:
         name = dlg.GetValue()
+        window.transcript.log("Creating New Component")
         new_file = name + ".vhd"
         new_file = os.path.join(
             window.project_path.GetValue(),
@@ -95,7 +100,7 @@ def parse_vhdl(filename):
     return component
 
 
-class Selector(wx.SplitterWindow):
+class Selector(wx.Panel):
 
     """A Component selection window.
     
@@ -108,31 +113,58 @@ class Selector(wx.SplitterWindow):
 
         """Create a component selection window, add available components."""
 
-        wx.SplitterWindow.__init__(self, parent, *args)
-
-        panel = wx.Panel(self, -1)
+        #layout window
+        wx.Panel.__init__(self, parent, *args)
+        horizontal_splitter = wx.SplitterWindow(self)
         self.project_path = filebrowse.DirBrowseButton(
-                panel, 
+                self, 
                 -1,
                 labelText="Project Directory",
                 startDirectory=os.getcwd(),
         )
         self.project_path.SetValue(os.path.join(os.getcwd(), "components"))
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.project_path, 0, wx.EXPAND)
+        sizer.Add(horizontal_splitter, 1, wx.EXPAND)
+        self.SetSizer(sizer)
+
+        #Create Component Browser
+        vertical_splitter = wx.SplitterWindow(horizontal_splitter)
+        panel = wx.Panel(vertical_splitter, -1)
         self.selector = wx.TreeCtrl(
                 panel, 
                 style=wx.SUNKEN_BORDER|wx.TR_DEFAULT_STYLE
         )
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.project_path, 0, wx.EXPAND)
+        sizer.Add(wx.StaticText(panel, -1, "Component Browser"), 0, wx.EXPAND)
         sizer.Add(self.selector, 1, wx.EXPAND)
         panel.SetSizer(sizer)
 
-        self.document_window = docwin.DocWin(self, -1)
-        self.SplitHorizontally(panel, self.document_window, 0)
+        #Create Document Window
+        dw = wx.Panel(vertical_splitter, -1)
+        self.document_window = docwin.DocWin(dw, -1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(wx.StaticText(dw, -1, "Documentation"), 0, wx.EXPAND)
+        sizer.Add(self.document_window, 1, wx.EXPAND)
+        dw.SetSizer(sizer)
+
+        vertical_splitter.SplitVertically(panel, dw, 0)
+
+        #Create transcript window
+        tw = wx.Panel(horizontal_splitter, -1)
+        self.transcript = transcript_window.TranscriptWindow(tw)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(wx.StaticText(tw, -1, "Transcript"), 0, wx.EXPAND)
+        sizer.Add(self.transcript, 1, wx.EXPAND)
+        tw.SetSizer(sizer)
+        horizontal_splitter.SplitHorizontally(vertical_splitter, tw, -200)
+
+        #Bind Events
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select_item, self.selector)
         self.selector.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click_item)
         self.selector.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick_item)
 
+        #initialise component browser
         self.selector.DeleteAllItems()
         root = self.selector.AddRoot("Component Categories")
         self.tags = {}
@@ -144,19 +176,20 @@ class Selector(wx.SplitterWindow):
 
         """Update the component selector tree after a change"""
 
-        library = {"all":[]}
+        library = {"uncategorised":[]}
         for directory in (system_components, self.project_path.GetValue()):
             for component in os.listdir(directory):
                 if component.endswith(".vhd"):
                     filename = os.path.join(directory, component)
                     component = parse_vhdl(filename)
-                    if "meta_tags" in component:
+                    if "meta_tags" in component and component["meta_tags"]:
                         for tag in component["meta_tags"]:
                             if tag in library:
                                 library[tag].append(component)
                             else:
                                 library[tag] = [component]
-                    library["all"].append(component)
+                    else:
+                        library["uncategorised"].append(component)
 
         #delete non-existent tags and components
         delete_tags = []
@@ -219,6 +252,7 @@ class Selector(wx.SplitterWindow):
 
         """Return a dictionary describing the component"""
 
+        self.transcript.log("Creating Component Instance")
         component = self.selector.GetSelection()
         component = self.selector.GetItemPyData(component)
         if "name" in component:
@@ -239,7 +273,7 @@ class Selector(wx.SplitterWindow):
                 if component["source_file"].endswith(".sch"):
                     schematic_actions.edit(self, component),
                 elif component["source_file"].endswith(".c"):
-                    c_actions.edit(window, component),
+                    c_actions.edit(self, component),
 
     def on_right_click_item(self, event):
 
@@ -281,12 +315,12 @@ class Selector(wx.SplitterWindow):
                         )
                 elif component["source_file"].endswith(".c"):
                     self.Bind(wx.EVT_MENU, 
-                        lambda evt: c_actions.edit(window, component),
+                        lambda evt: c_actions.edit(self, component),
                         menu.Append(-1, "Edit"),
                     )
                     if not self.is_up_to_date(component):
                         self.Bind(wx.EVT_MENU, 
-                            lambda evt: c_actions.generate(window, component),
+                            lambda evt: c_actions.generate(self, component),
                             menu.Append(-1, "Generate"),
                         )
             if "file" in component:
@@ -357,10 +391,13 @@ class Selector(wx.SplitterWindow):
 
         """Simulate component"""
 
+        self.transcript.log("Generating all dependencies")
         self.generate_dependencies(component)
+        self.transcript.log("Creating file list")
         file_list = []
         for dependency in self.get_dependencies(component):
             file_list.append(self.get_component_path(dependency))
+        self.transcript.log("Launching VHDL simulator")
         wxghdl.VHDLProject(file_list, component["name"])
 
 

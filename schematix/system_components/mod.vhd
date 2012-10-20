@@ -1,12 +1,12 @@
---name: divider
+--name: modulo
 --tag: arithmetic
 --input: in1
 --input: in2
 --output: out1
 --source_file: built_in
 
----Divider
----=======
+---modulo
+---======
 ---
 ---Produces a stream of data *out1* by dividing *in1* by *in2* item by item.
 
@@ -14,7 +14,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity divider is
+entity modulo is
 
   port(
     CLK         : in  std_logic;
@@ -33,9 +33,9 @@ entity divider is
     OUT1_ACK    : in  std_logic
   );
 
-end entity divider;
+end entity modulo;
 
-architecture RTL of divider is
+architecture RTL of modulo is
 
   function MAX(
     A : integer;
@@ -50,12 +50,12 @@ architecture RTL of divider is
 
   constant WIDTH : integer := MAX(IN1'LENGTH, IN2'LENGTH) + 1;
   constant MSB : integer := WIDTH-1;
-  type DIVIDER_STATE_TYPE is (READ_A_B, DIVIDE_1, DIVIDE_2, WRITE_Z);
+  type modulo_STATE_TYPE is (READ_A_B, modulo_1, modulo_2, WRITE_Z);
 
-  signal STATE      : DIVIDER_STATE_TYPE;
+  signal STATE      : modulo_STATE_TYPE;
   signal A          : std_logic_vector(MSB downto 0);
   signal B          : std_logic_vector(MSB downto 0);
-  signal QUOTIENT   : std_logic_vector(MSB downto 0);
+  signal MODULO     : std_logic_vector(MSB downto 0);
   signal SHIFTER    : std_logic_vector(MSB downto 0);
   signal REMAINDER  : std_logic_vector(MSB downto 0);
   signal COUNT      : integer range 0 to WIDTH;
@@ -76,10 +76,10 @@ begin
             SIGN <= IN1(MSB-1) xor IN2(MSB-1);
             IN1_ACK <= '1';
             IN2_ACK <= '1';
-            STATE <= DIVIDE_1;
+            STATE <= modulo_1;
           end if;
 
-        when DIVIDE_1 =>
+        when modulo_1 =>
           IN1_ACK <= '0';
           IN2_ACK <= '0';
           QUOTIENT <= (others => '0');
@@ -87,9 +87,9 @@ begin
           SHIFTER(0) <= A(MSB);
           A <= A(MSB-1 downto 0) & '0';
           COUNT <= WIDTH;
-          STATE <= DIVIDE_2;
+          STATE <= modulo_2;
 
-        when DIVIDE_2 => --subtract
+        when modulo_2 => --subtract
          --if SHIFTER - B is positive or zero
          if REMAINDER(MSB) = '0' then
            SHIFTER(MSB downto 1) <= REMAINDER(MSB-1 downto 0);
@@ -106,12 +106,13 @@ begin
          end if;
 
       when WRITE_Z =>
-        MODULO := unsigned(SHIFTER)/2;
-        if SIGN = '1' then --if negative
-          OUT1 <= std_logic_vector( 0 - MODULO);
-        else
-          OUT1 <= std_logic_vector( MODULO);
-        end if;
+         MODULO := unsigned(SHIFTER_2)/2;
+         if SIGN = '1' then --if negative
+           OUT1 <= std_logic_vector( 0 - MODULO);
+         else
+           OUT1 <= std_logic_vector( MODULO);
+         end if;
+
         OUT1_STB <= '1';
         if OUT1_ACK = '1' then
           OUT1_STB <= '0';

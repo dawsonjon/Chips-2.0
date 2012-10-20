@@ -14,6 +14,7 @@ except:
     exit(0)
 
 import editor
+import transcript_window
 
 temp_dir=tempfile.mkdtemp()
 wave_file=os.path.join(temp_dir, "wave.ghw")
@@ -39,6 +40,8 @@ class VHDLProject:
         sim_menu = wx.Menu()
         menubar.Append(sim_menu, "Simulation")
         self.frame.SetMenuBar(menubar)
+        splitter = wx.SplitterWindow(self.frame)
+        panel = wx.Panel(splitter, -1)
 
         #Simulation Menu
         #---------------
@@ -54,10 +57,10 @@ class VHDLProject:
         #create toolbar
         #==============
 
-        self.time_control = wx.SpinCtrl(self.frame, -1)
+        self.time_control = wx.SpinCtrl(panel, -1)
         self.time_control.SetRange(1,999)
         self.time_control.SetValue(1)
-        self.time_units_control = wx.ComboBox(self.frame, -1, "us")
+        self.time_units_control = wx.ComboBox(panel, -1, "us")
         self.time_units_control.Append("fs")
         self.time_units_control.Append("ps")
         self.time_units_control.Append("ns")
@@ -66,25 +69,25 @@ class VHDLProject:
         self.time_units_control.Append("s")
 
         toolbar = wx.BoxSizer(wx.HORIZONTAL)
-        toolbar.Add(wx.StaticText(self.frame, -1, "Run time"), 0, wx.CENTRE)
+        toolbar.Add(wx.StaticText(panel, -1, "Run time"), 0, wx.CENTRE)
         toolbar.Add(self.time_control)
         toolbar.Add(self.time_units_control)
 
         #create file window
         #==================
-        self.file_tree = wx.TreeCtrl(self.frame, -1)
+        self.file_tree = wx.TreeCtrl(panel, -1)
         self.file_tree.Bind(wx.EVT_RIGHT_DOWN, self.show_library_menu)
         self.file_tree.Bind(wx.EVT_LEFT_DCLICK, self.edit)
 
         #create transcript window
         #========================
-        self.transcript = wx.TextCtrl(self.frame, -1, style=wx.TE_MULTILINE | wx.TE_RICH2)
+        self.transcript = transcript_window.TranscriptWindow(splitter)
+        splitter.SplitHorizontally(panel, self.transcript)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(toolbar, 0, wx.EXPAND)
         sizer.Add(self.file_tree, 2, wx.EXPAND)
-        sizer.Add(self.transcript, 1, wx.EXPAND)
-        self.frame.SetSizer(sizer)
+        panel.SetSizer(sizer)
         self.frame.Show()
 
         self.frame.Bind(wx.EVT_TIMER, self.on_timer)
@@ -156,9 +159,9 @@ class VHDLProject:
 
         """Compile a simulation using GHDL"""
 
-        self.transcript.WriteText("launching GHDL VHDL compiler\n")
+        self.transcript.log("launching GHDL VHDL compiler\n")
         for path in self.files:
-            self.transcript.WriteText("compiling: %s\n"%path)
+            self.transcript.log("compiling: %s\n"%path)
             command = 'ghdl -a --workdir={0} {1}'.format(
                     temp_dir,
                     path)
@@ -168,7 +171,7 @@ class VHDLProject:
                     stderr=subprocess.STDOUT, 
                     shell=True)
             for line in process.stdout:
-                self.transcript.WriteText(line)
+                self.transcript.log(line)
             process.wait()
 
         command = 'ghdl -e --workdir={0} {1}'.format(
@@ -183,21 +186,21 @@ class VHDLProject:
                 shell=True)
 
         for line in process.stdout:
-            self.transcript.WriteText(line)
+            self.transcript.log(line)
         process.wait()
 
         if process.returncode == 0:
             self.update_state("sim_compiled")
-            self.transcript.WriteText("GHDL VHDL compile ... successful\n")
+            self.transcript.log("GHDL VHDL compile ... successful\n")
         else:
             self.update_state("start")
-            self.transcript.WriteText("GHDL VHDL compile ... failed\n")
+            self.transcript.log("GHDL VHDL compile ... failed\n")
 
     def run_simulation(self):
 
         """Run a simulation using GHDL"""
 
-        self.transcript.WriteText("launching GHDL simulation\n")
+        self.transcript.log("launching GHDL simulation\n")
         time_to_run = "".join([
             str(self.time_control.GetValue()), 
             self.time_units_control.GetValue()
@@ -220,22 +223,22 @@ class VHDLProject:
         try:
             for i in range(100):
                 line = next(self.process.stdout)
-                self.transcript.WriteText(line)
+                self.transcript.log(line)
         except StopIteration:
             self.timer.Stop()
             self.process.wait()
             if self.process.returncode == 0:
                 self.update_state("sim_run")
-                self.transcript.WriteText("GHDL simulation ... successful\n")
+                self.transcript.log("GHDL simulation ... successful\n")
             else:
                 self.update_state("sim_compiled")
-                self.transcript.WriteText("GHDL simulation ... failed\n")
+                self.transcript.log("GHDL simulation ... failed\n")
 
     def view_wave(self):
 
         """Open simulation waveform in GTKWave"""
 
-        self.transcript.WriteText("launching GTKWave waveform viewer\n")
+        self.transcript.log("launching GTKWave waveform viewer\n")
         subprocess.Popen("gtkwave {0}".format(wave_file), shell=True)
         
 

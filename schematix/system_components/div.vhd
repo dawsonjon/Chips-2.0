@@ -48,7 +48,7 @@ architecture RTL of divider is
     end if;
   end MAX;
 
-  constant WIDTH : integer := MAX(IN1'LENGTH, IN2'LENGTH) + 1;
+  constant WIDTH : integer := 16;
   constant MSB : integer := WIDTH-1;
   type DIVIDER_STATE_TYPE is (READ_A_B, DIVIDE_1, DIVIDE_2, WRITE_Z);
 
@@ -71,9 +71,9 @@ begin
 
         when READ_A_B =>
           if IN1_STB = '1' and IN1_STB = '1' then
-            A <= std_logic_vector(abs(resize(signed(IN1), WIDTH)));
-            B <= std_logic_vector(abs(resize(signed(IN2), WIDTH)));
-            SIGN <= IN1(MSB-1) xor IN2(MSB-1);
+            A <= std_logic_vector(abs(signed(IN1)));
+            B <= std_logic_vector(abs(signed(IN2)));
+            SIGN <= IN1(MSB) xor IN2(MSB);
             IN1_ACK <= '1';
             IN2_ACK <= '1';
             STATE <= DIVIDE_1;
@@ -86,7 +86,7 @@ begin
           SHIFTER <= (others => '0');
           SHIFTER(0) <= A(MSB);
           A <= A(MSB-1 downto 0) & '0';
-          COUNT <= WIDTH;
+          COUNT <= MSB;
           STATE <= DIVIDE_2;
 
         when DIVIDE_2 => --subtract
