@@ -54,47 +54,29 @@ def new(window):
         new_file.close()
         window.update()
 
-def generate(window, component):
+def generate_ports(netlist, vhdl):
 
-    """Make a VHDL component from a schematic"""
-
-    filename = os.path.join(
-        window.project_path.GetValue(),
-        component["source_file"])
-
-    open_file = open(filename, 'r')
-    sn = pickle.load(open_file)
-    netlist = pickle.load(open_file)
-    port_positions = pickle.load(open_file)
-    wires = pickle.load(open_file)
-
-    name = os.path.basename(filename).split(".")[0]
-    output_file = os.path.join(window.project_path.GetValue(), name + ".vhd")
-    output_file = open(output_file, "w")
-
-    output_file.write("--name: %s\n"%name)
-    output_file.write("--source_file: %s\n"%(name+".sch"))
+    """Generate a list of ports and device io."""
 
     input_ports = []
     output_ports = []
     for instance_name, instance in netlist.iteritems():
         if instance["component"]["name"] == "input":
             input_ports.append(instance["port_name"])
-            output_file.write("--input: %s\n"%instance["port_name"])
+            vhdl.append("--input: %s\n"%instance["port_name"])
         elif instance["component"]["name"] == "output":
             output_ports.append(instance["port_name"])
-            output_file.write("--output: %s\n"%instance["port_name"])
+            vhdl.append("--output: %s\n"%instance["port_name"])
 
-    output_file.write("entity %s is\n"%name)
-    output_file.write("  port(\n")
     ports = []
-    ports.append("    CLK : in std_logic")
-    ports.append("    RST : in std_logic")
+    if input_ports or output_ports:
+        ports.append("    CLK : in std_logic")
+        ports.append("    RST : in std_logic")
 
     for instance_name, instance in netlist.iteritems():
         for pin_name, size in instance["component"]["device_inputs"].iteritems():
             size = int(size)
-            output_file.write("--device_in: %s_%s : %s\n"%(instance_name, pin_name, size))
+            vhdl.append("--device_in: %s_%s : %s\n"%(instance_name, pin_name, size))
             if size == 1:
                 ports.append("    %s_%s : in std_logic"%(instance_name, pin_name))
             else:
@@ -102,44 +84,45 @@ def generate(window, component):
 
         for pin_name, size in instance["component"]["device_outputs"].iteritems():
             size = int(size)
-            output_file.write("--device_out: %s_%s : %s\n"%(instance_name, pin_name, size))
+            vhdl.append("--device_out: %s_%s : %s\n"%(instance_name, pin_name, size))
             if size == 1:
                 ports.append("    %s_%s : out std_logic"%(instance_name, pin_name))
             else:
                 ports.append("    %s_%s : out std_logic_vector(%s downto 0)"%(instance_name, pin_name, size-1))
 
     for inport in input_ports:
-        ports.append("    %s : in std_logic_vector"%inport)
+        ports.append("    %s : in std_logic_vector(15 downto 0)"%inport)
         ports.append("    %s_STB : in std_logic"%inport)
         ports.append("    %s_ACK : out std_logic"%inport)
 
     for outport in output_ports:
-        output_ports
-        ports.append("    %s : out std_logic_vector"%outport)
+        ports.append("    %s : out std_logic_vector(15 downto 0)"%outport)
         ports.append("    %s_STB : out std_logic"%outport)
         ports.append("    %s_ACK : in std_logic"%outport)
 
-    output_file.write(";\n".join(ports))
-    output_file.write(");\n")
-    output_file.write("end entity %s;\n\n"%name)
-    output_file.write("architecture RTL of %s\n\n"%name)
-    components = []
+    return ports, input_ports, output_ports
 
+def generate_components(netlist, vhdl):
+
+    components = []
     for instance_name, instance in netlist.iteritems():
         if instance["component"]["name"] in components:
             continue
         if instance["component"]["name"] in ["input", "output"]:
             continue
-        output_file.write("--dependency: %s\n"%instance["component"]["name"])
+        vhdl.append("--dependency: %s\n"%instance["component"]["name"])
         components.append(instance["component"]["name"])
-        output_file.write("  component %s is\n"%instance["component"]["name"])
-        output_file.write("    generic(\n")
+        vhdl.append("  component %s is\n"%instance["component"]["name"])
+
         generics = []
         for parameter, default in instance["component"]["parameters"].iteritems():
             generics.append("    %s : integer := %s"%(parameter, default))
-        output_file.write(";\n".join(generics))
-        output_file.write("    );\n")
-        output_file.write("    port(\n")
+
+        if generics:
+            vhdl.append("    generic(\n")
+            vhdl.append(";\n".join(generics))
+            vhdl.append("    );\n")
+
         ports = []
         ports.append("    CLK : in std_logic")
         ports.append("    RST : in std_logic")
@@ -159,34 +142,104 @@ def generate(window, component):
                 ports.append("    %s : out std_logic_vector(%s downto 0)"%(pin_name, size-1))
 
         for inport in instance["component"]["inputs"]:
-            ports.append("    %s : in std_logic_vector"%inport)
+            ports.append("    %s : in std_logic_vector(15 downto 0)"%inport)
             ports.append("    %s_STB : in std_logic"%inport)
             ports.append("    %s_ACK : out std_logic"%inport)
 
         for outport in instance["component"]["outputs"]:
-            ports.append("    %s : out std_logic_vector"%outport)
+            ports.append("    %s : out std_logic_vector(15 downto 0)"%outport)
             ports.append("    %s_STB : out std_logic"%outport)
             ports.append("    %s_ACK : in std_logic"%outport)
 
-        output_file.write(";\n".join(ports))
-        output_file.write("\n  );\n")
-        output_file.write("  end component %s;\n\n"%instance["component"]["name"])
+        if ports:
+            vhdl.append("    port(\n")
+            vhdl.append(";\n".join(ports))
+            vhdl.append("\n  );\n")
+        vhdl.append("  end component %s;\n\n"%instance["component"]["name"])
+
+def generate_signals(input_ports, output_ports, wires, vhdl):
 
     wire = 0
     for from_instance, from_port, to_instance, to_port in wires:
-        output_file.write("  signal signal_%s : std_logic_vector(15 downto 0);\n"%wire)
+        vhdl.append("  signal signal_%s : std_logic_vector(15 downto 0);\n"%wire)
+        vhdl.append("  signal signal_%s_STB : std_logic;\n"%wire)
+        vhdl.append("  signal signal_%s_ACK : std_logic;\n"%wire)
         wire += 1
-    output_file.write("begin\n\n")
+
+    if not(input_ports or output_ports):
+        vhdl.append("  signal CLK : std_logic;\n")
+        vhdl.append("  signal RST : std_logic;\n")
+
+def generate(window, component):
+
+    """Make a VHDL component from a schematic"""
+
+    #Read in the project file
+    filename = os.path.join(
+        window.project_path.GetValue(),
+        component["source_file"])
+    open_file = open(filename, 'r')
+    sn = pickle.load(open_file)
+    netlist = pickle.load(open_file)
+    port_positions = pickle.load(open_file)
+    wires = pickle.load(open_file)
+    name = os.path.basename(filename).split(".")[0]
+    vhdl = []
+
+    ports, input_ports, output_ports = generate_ports(netlist, vhdl)
+    vhdl.append("--name: %s\n"%name)
+    vhdl.append("--source_file: %s\n"%(name+".sch"))
+    vhdl.append("library ieee;\n")
+    vhdl.append("use ieee.std_logic_1164.all;\n")
+    vhdl.append("use ieee.numeric_std.all;\n\n")
+    vhdl.append("entity %s is\n"%name)
+    if ports:
+        vhdl.append("  port(\n")
+        vhdl.append(";\n".join(ports))
+        vhdl.append("  );\n")
+    vhdl.append("end entity %s;\n\n"%name)
+    vhdl.append("architecture RTL of %s is\n\n"%name)
+    generate_components(netlist, vhdl)
+    generate_signals(input_ports, output_ports, wires, vhdl)
+    vhdl.append("begin\n\n")
+    if not (input_ports or output_ports):
+        vhdl.append("  GENERATE_CLK : process\n")
+        vhdl.append("  begin\n")
+        vhdl.append("    while True loop\n")
+        vhdl.append("      CLK <= '0';\n")
+        vhdl.append("      wait for 5 ns;\n")
+        vhdl.append("      CLK <= '1';\n")
+        vhdl.append("      wait for 5 ns;\n")
+        vhdl.append("    end loop;\n")
+        vhdl.append("    wait;\n")
+        vhdl.append("  end process GENERATE_CLK;\n\n")
+
+        vhdl.append("  GENERATE_RST : process\n")
+        vhdl.append("  begin\n")
+        vhdl.append("    RST <= '1';\n")
+        vhdl.append("    wait for 50 ns;\n")
+        vhdl.append("    RST <= '0';\n")
+        vhdl.append("    wait;\n")
+        vhdl.append("  end process GENERATE_RST;\n\n")
+
     for instance_name, instance in netlist.iteritems():
         if instance["component"]["name"] in ["input", "output"]:
             continue
-        output_file.write("  %s : %s generic map(\n"%(
-            instance_name, instance["component"]["name"]))
+
         generics = []
         for parameter, value in instance["parameters"].iteritems():
             generics.append("    %s => %s"%(parameter, value))
-        output_file.write(",\n".join(generics))
-        output_file.write("\n  ) port map (\n")
+
+        vhdl.append("  %s_%s : %s\n"%(
+            instance["component"]["name"],
+            instance_name, 
+            instance["component"]["name"]))
+        if generics:
+            vhdl.append("  generic map(\n")
+            vhdl.append(",\n".join(generics))
+            vhdl.append("\n  )\n")
+
+        vhdl.append("  port map (\n")
         signals = []
         wire = 0
         signals.append("    CLK => CLK")
@@ -239,8 +292,12 @@ def generate(window, component):
                         to_port,
                         wire))
             wire += 1
-        output_file.write(",\n".join(signals))
-        output_file.write("\n  );\n")
-    output_file.write("end architecture RTL;\n")
+        vhdl.append(",\n".join(signals))
+        vhdl.append("\n  );\n\n")
+    vhdl.append("end architecture RTL;\n")
+
+    output_file = os.path.join(window.project_path.GetValue(), name + ".vhd")
+    output_file = open(output_file, "w")
+    output_file.write("".join(vhdl))
     output_file.close()
     window.update()

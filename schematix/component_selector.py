@@ -9,6 +9,7 @@ import docwin
 import editor
 import c_actions
 import schematic_actions
+import wxghdl
 
 system_components = os.path.join(os.path.dirname(__file__), "system_components")
 
@@ -60,6 +61,7 @@ def parse_vhdl(filename):
         "meta_tags": [],
         "inputs": [],
         "outputs": [],
+        "dependencies": [],
         "device_inputs": {},
         "device_outputs": {},
         "parameters": {},
@@ -87,6 +89,8 @@ def parse_vhdl(filename):
             component["device_inputs"][line.split(":")[1].strip()] = line.split(":")[2].strip()
         elif line.startswith("--device_out"):
             component["device_outputs"][line.split(":")[1].strip()] = line.split(":")[2].strip()
+        elif line.startswith("--dependency"):
+            component["dependencies"].append(line.split(":")[1].strip())
 
     return component
 
@@ -126,13 +130,15 @@ class Selector(wx.SplitterWindow):
         self.document_window = docwin.DocWin(self, -1)
         self.SplitHorizontally(panel, self.document_window, 0)
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select_item, self.selector)
-        self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.on_right_click_item, self.selector)
+        self.selector.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click_item)
+        self.selector.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick_item)
 
         self.selector.DeleteAllItems()
         root = self.selector.AddRoot("Component Categories")
         self.tags = {}
         self.tag_components = {}
         self.update()
+        self.selector.ExpandAll()
 
     def update(self):
 
@@ -211,7 +217,7 @@ class Selector(wx.SplitterWindow):
 
     def new_instance(self):
 
-        """Return a dictionary describing the component."""
+        """Return a dictionary describing the component"""
 
         component = self.selector.GetSelection()
         component = self.selector.GetItemPyData(component)
@@ -220,35 +226,44 @@ class Selector(wx.SplitterWindow):
         else:
             return None
 
+    def on_left_dclick_item(self, event):
+
+        """Edit the source if applicable"""
+
+        pt = event.GetPosition();
+        component, flags = self.selector.HitTest(pt)
+        component = self.selector.GetItemPyData(component)
+
+        if component is not None:
+            if "source_file" in component:
+                if component["source_file"].endswith(".sch"):
+                    schematic_actions.edit(self, component),
+                elif component["source_file"].endswith(".c"):
+                    c_actions.edit(window, component),
+
     def on_right_click_item(self, event):
 
         """Show a context menu for the schematic"""
 
-        component = event.GetItem()
+        pt = event.GetPosition();
+        component, flags = self.selector.HitTest(pt)
         component = self.selector.GetItemPyData(component)
         menu = wx.Menu()
-        self.Bind(wx.EVT_MENU, 
-            lambda evt: new(self),
-            menu.Append(-1, "New Chip"),
-        )
-        self.Bind(wx.EVT_MENU, 
-            lambda evt: c_actions.new(self),
-            menu.Append(-1, "New C file"),
-        )
-        self.Bind(wx.EVT_MENU, 
-            lambda evt: schematic_actions.new(self),
-            menu.Append(-1, "New Schematic"),
-        )
-        if component is not None:
-            if "file" in component:
-                self.Bind(wx.EVT_MENU, 
-                    lambda evt: edit(self, component),
-                    menu.Append(-1, "Edit Chip"),
-                )
-                self.Bind(wx.EVT_MENU, 
-                    lambda evt: simulate(self, component),
-                    menu.Append(-1, "Simulate Chip"),
-                )
+
+        if component is None:
+            self.Bind(wx.EVT_MENU, 
+                lambda evt: new(self),
+                menu.Append(-1, "New Chip"),
+            )
+            self.Bind(wx.EVT_MENU, 
+                lambda evt: c_actions.new(self),
+                menu.Append(-1, "New C file"),
+            )
+            self.Bind(wx.EVT_MENU, 
+                lambda evt: schematic_actions.new(self),
+                menu.Append(-1, "New Schematic"),
+            )
+        else:
             if "source_file" in component:
                 self.Bind(wx.EVT_MENU, 
                     lambda evt: delete(self, component),
@@ -257,23 +272,32 @@ class Selector(wx.SplitterWindow):
                 if component["source_file"].endswith(".sch"):
                     self.Bind(wx.EVT_MENU, 
                         lambda evt: schematic_actions.edit(self, component),
-                        menu.Append(-1, "Edit Schematic"),
+                        menu.Append(-1, "Edit"),
                     )
                     if not self.is_up_to_date(component):
                         self.Bind(wx.EVT_MENU, 
                             lambda evt: schematic_actions.generate(self, component),
-                            menu.Append(-1, "Generate from Schematic"),
+                            menu.Append(-1, "Generate"),
                         )
                 elif component["source_file"].endswith(".c"):
                     self.Bind(wx.EVT_MENU, 
                         lambda evt: c_actions.edit(window, component),
-                        menu.Append(-1, "Edit C File"),
+                        menu.Append(-1, "Edit"),
                     )
                     if not self.is_up_to_date(component):
                         self.Bind(wx.EVT_MENU, 
                             lambda evt: c_actions.generate(window, component),
-                            menu.Append(-1, "Generate from C File"),
+                            menu.Append(-1, "Generate"),
                         )
+            if "file" in component:
+                self.Bind(wx.EVT_MENU, 
+                    lambda evt: edit(self, component),
+                    menu.Append(-1, "Edit Component"),
+                )
+                self.Bind(wx.EVT_MENU, 
+                    lambda evt: self.simulate(component),
+                    menu.Append(-1, "Simulate"),
+                )
 
         self.PopupMenu(menu)
 
@@ -291,6 +315,54 @@ class Selector(wx.SplitterWindow):
         """Get the source file path of a component"""
 
         return os.path.join(self.project_path.GetValue(), component["source_file"])
+
+    def get_component_named(self, name):
+
+        """Return the component with the given name"""
+
+        for directory in (system_components, self.project_path.GetValue()):
+            for component in os.listdir(directory):
+                if component.endswith(".vhd"):
+                    filename = os.path.join(directory, component)
+                    component = parse_vhdl(filename)
+                    if component["name"]==name:
+                        return component
+        return None
+
+    def get_dependencies(self, component):
+
+        """Return a list including the component, and all the components it depends on"""
+
+        #Accessing the component by name forces the generated component to be parsed
+        component = self.get_component_named(component["name"])
+        dependencies = []
+        for i in component["dependencies"]:
+            dependencies.extend(self.get_dependencies(self.get_component_named(i)))
+
+        return dependencies + [component]
+
+    def generate_dependencies(self, component):
+
+        """Generate from source all dependencies"""
+        
+        for dependency in self.get_dependencies(component):
+            if not self.is_up_to_date(dependency):
+                if "source_file" in dependency and dependency["source_file"] not in ["built_in"]:
+                    if dependency["source_file"].endswith(".c"):
+                        c_actions.generate(self, dependency)
+                    elif dependency["source_file"].endswith(".sch"):
+                        schematic_actions.generate(self, dependency)
+
+    def simulate(self, component):
+
+        """Simulate component"""
+
+        self.generate_dependencies(component)
+        file_list = []
+        for dependency in self.get_dependencies(component):
+            file_list.append(self.get_component_path(dependency))
+        wxghdl.VHDLProject(file_list, component["name"])
+
 
     def is_up_to_date(self, component):
 

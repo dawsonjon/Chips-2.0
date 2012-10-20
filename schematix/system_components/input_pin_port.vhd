@@ -1,36 +1,43 @@
---name: input_pin_port
---tag: IO
+--name: device_pin_input
+--tag: sources
 --output: out1
 --source_file: built_in
 --device_in: input_port : 8
 
----Input Pin Port
----==============
+---Device Pin Input
+---================
 ---
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity input_pin_port is
+entity device_pin_input is
 
   port(
-    CLK         : in std_logic;
+    CLK         : in  std_logic;
     RST         : in  std_logic;
-    INPUT_PORT  : in std_logic_vector;
+    INPUT_PORT  : in  std_logic_vector(15 downto 0);
    
-    OUT1        : out std_logic_vector;
+    OUT1        : out std_logic_vector(15 downto 0);
     OUT1_STB    : out std_logic;
-    OUT1_ACK    : in std_logic
+    OUT1_ACK    : in  std_logic
   );
 
-end entity input_pin_port;
+end entity device_pin_input;
 
-architecture RTL of input_pin_port is
+architecture RTL of device_pin_input is
+
+  signal REG : std_logic;
 
 begin
 
-  OUT1 <= INPUT_PORT;
-  OUT1_STB <= '1';
+  process
+  begin
+    wait until rising_edge(CLK);
+    REG <= INPUT_PORT;
+    OUT1 <= REG;
+    OUT1_STB <= '1';
+  end process;
 
 end architecture RTL;

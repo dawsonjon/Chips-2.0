@@ -1,5 +1,5 @@
---name: SerialIn
---tag: IO
+--name: serial_input
+--tag: sources
 --output: out1
 --source_file: built_in
 --device_in: rx : 1
@@ -7,7 +7,7 @@
 --parameter: baud_rate : 115200
 
 ---Serial Input
----=============
+---============
 ---
 ---Read a stream of data from a serial UART
 ---
@@ -26,25 +26,25 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity SERIAL_IN is
+entity SERIAL_INPUT is
 
   generic(
     CLOCK_FREQUENCY : integer;
     BAUD_RATE       : integer
   );
   port(
-    CLK     : in std_logic;
-    RST     : in  std_logic;
-    RX      : in std_logic;
+    CLK      : in std_logic;
+    RST      : in std_logic;
+    RX       : in std_logic;
    
-    OUT1     : out std_logic_vector;
+    OUT1     : out std_logic_vector(15 downto 0);
     OUT1_STB : out std_logic;
-    OUT1_ACK : in std_logic
+    OUT1_ACK : in  std_logic
   );
 
-end entity SERIAL_IN;
+end entity SERIAL_INPUT;
 
-architecture RTL of SERIAL_IN is
+architecture RTL of SERIAL_INPUT is
 
   type SERIAL_IN_STATE_TYPE is (IDLE, START, RX0, RX1, RX2, RX3, RX4, RX5, RX6, RX7, STOP, OUTPUT_DATA);
   signal STATE           : SERIAL_IN_STATE_TYPE;

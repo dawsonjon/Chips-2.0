@@ -1,11 +1,9 @@
 --name: input
---tag: core
---tag: IO
+--tag: schematic
 --output: out1
---parameter: name : adfasdf
 --source_file: built_in
 
 ---Input
 ---=====
 ---
----Component Input
+---Represents an input to a component in schematix.

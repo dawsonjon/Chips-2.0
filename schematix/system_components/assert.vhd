@@ -1,11 +1,11 @@
---name: console_output
+--name: asserter
 --tag: sinks
 --input: in1
 --source_file: built_in
 
----Console Output
----==============
----Write a stream of data to the console.
+---Asserter
+---========
+---Raise an exception if *in1* is 0.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -13,7 +13,7 @@ use ieee.numeric_std.all;
 
 use std.textio.all;
 
-entity console_output is
+entity asserter is
 
   port(
     CLK     : in std_logic;
@@ -24,9 +24,9 @@ entity console_output is
     IN1_ACK : out std_logic
   );
 
-end entity console_output;
+end entity asserter;
 
-architecture RTL of console_output is
+architecture RTL of asserter is
   signal S_IN1_ACK : std_logic;
 begin
 
@@ -37,11 +37,7 @@ begin
     wait until rising_edge(CLK);
     S_IN1_ACK <= IN1_STB;
     if IN1_STB = '1' and S_IN1_ACK = '1' then
-      INT := to_integer(signed(IN1));
-      report integer'image(INT);
-      write(OUTPUT_LINE, INT);
-      writeline(output, OUTPUT_LINE);
-      S_IN1_ACK <= '1';
+      assert IN1 \= "000000000000000000";
     end if;
   end process;
   IN1_ACK <= S_IN1_ACK;

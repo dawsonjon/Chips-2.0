@@ -5,6 +5,7 @@ import subprocess
 import os
 import tempfile
 import shelve
+
 try:
     import wx
     import wx.lib.agw.floatspin as FS
@@ -12,28 +13,7 @@ except:
     print "You need to install wxpython to run this software"
     exit(0)
 
-######################################################################
-##USER SETTINGS
-######################################################################
-editor = "gedit"
-new_file_template = """
-    --your header here
-
-    library ieee;
-    use ieee.std_logic_1164.all;
-    use ieee.numeric_std.all;
-
-    entity <entity> is
-    begin
-    end entity;
-
-    architecture <architecture> of <entity> is
-    end architecture;
-"""
-
-######################################################################
-##END USER SETTINGS
-######################################################################
+import editor
 
 temp_dir=tempfile.mkdtemp()
 wave_file=os.path.join(temp_dir, "wave.ghw")
@@ -46,38 +26,19 @@ metric_prefix = {
     "s" : 1
 }
 
-def discover_files(root):
-    paths = []
-    for file_name in os.listdir(root):
-        path = os.path.join(root, file_name)
-        if path.endswith(".vhd") or path.endswith(".vhdl"):
-            paths.append(path)
-        elif os.path.isdir(path):
-            paths.extend(discover_files(path))
-    return paths
-
 class VHDLProject:
-    def __init__(self, project_settings):
+    def __init__(self, files, top):
         self.frame = wx.Frame(None, title = "wxGHDL", size=(1024,600))
 
-        self.project_settings = project_settings
+        self.files = files
+        self.top = top
 
         #create menu bar
         #===============
         menubar = wx.MenuBar()
-        file_menu = wx.Menu()
         sim_menu = wx.Menu()
-        menubar.Append(file_menu, "File")
         menubar.Append(sim_menu, "Simulation")
         self.frame.SetMenuBar(menubar)
-
-        #File Menu
-        #---------
-        self.menu_open_project = file_menu.Append(wx.ID_OPEN, "Open", "Open Project")
-        self.frame.Bind(wx.EVT_MENU, lambda event:self.load(), self.menu_open_project)
-
-        self.menu_save_project = file_menu.Append(wx.ID_SAVE, "Save", "Save Project")
-        self.frame.Bind(wx.EVT_MENU, lambda event:self.save(), self.menu_save_project)
 
         #Simulation Menu
         #---------------
@@ -93,8 +54,6 @@ class VHDLProject:
         #create toolbar
         #==============
 
-        #create time settings
-        #--------------------
         self.time_control = wx.SpinCtrl(self.frame, -1)
         self.time_control.SetRange(1,999)
         self.time_control.SetValue(1)
@@ -106,8 +65,6 @@ class VHDLProject:
         self.time_units_control.Append("ms")
         self.time_units_control.Append("s")
 
-        #create tool bar
-        #-------------------
         toolbar = wx.BoxSizer(wx.HORIZONTAL)
         toolbar.Add(wx.StaticText(self.frame, -1, "Run time"), 0, wx.CENTRE)
         toolbar.Add(self.time_control)
@@ -117,6 +74,7 @@ class VHDLProject:
         #==================
         self.file_tree = wx.TreeCtrl(self.frame, -1)
         self.file_tree.Bind(wx.EVT_RIGHT_DOWN, self.show_library_menu)
+        self.file_tree.Bind(wx.EVT_LEFT_DCLICK, self.edit)
 
         #create transcript window
         #========================
@@ -132,134 +90,92 @@ class VHDLProject:
         self.frame.Bind(wx.EVT_TIMER, self.on_timer)
         self.timer = wx.Timer(self.frame)
         self.process = None
-        self.update_state("no_project_open")
+        self.update_tree()
+        self.update_state("start")
 
     def update_state(self, state):
+
+        """Keep track of the simualtor state"""
+
         self.state = state
-        if state == "no_project_open":
-            self.menu_save_project.Enable(False)
-            self.menu_compile_sim.Enable(False)
-            self.menu_run_sim.Enable(False)
-            self.menu_view_wave.Enable(False)
-        elif state == "project_open":
-            self.menu_save_project.Enable(True)
+        if state == "start":
+
             self.menu_compile_sim.Enable(True)
             self.menu_run_sim.Enable(False)
             self.menu_view_wave.Enable(False)
+
         elif state == "sim_compiled":
-            self.menu_save_project.Enable(True)
+
             self.menu_compile_sim.Enable(True)
             self.menu_run_sim.Enable(True)
             self.menu_view_wave.Enable(False)
+
         elif state == "sim_run":
-            self.menu_save_project.Enable(True)
+
             self.menu_compile_sim.Enable(True)
             self.menu_run_sim.Enable(True)
             self.menu_view_wave.Enable(True)
 
     def show_library_menu(self, event):
+
+        """Show a context menu if a file is right clicked"""
+
         pt = event.GetPosition();
         item, flags = self.file_tree.HitTest(pt)
-
-        if self.file_tree.GetPyData(item) == "root":
-            label = self.file_tree.GetItemText(item)
-            popupmenu = wx.Menu()
-            add_library = popupmenu.Append(-1, "Add a new library")
-            self.frame.Bind(wx.EVT_MENU, lambda event: self.new_library(), add_library)
-            self.frame.PopupMenu(popupmenu)
-        elif self.file_tree.GetPyData(item) == "library":
-            library = item
-            popupmenu = wx.Menu()
-            new_file = popupmenu.Append(-1, "Create a new file")
-            self.frame.Bind(wx.EVT_MENU, lambda event: self.new_file(library), new_file)
-            add_file = popupmenu.Append(-1, "Add an existing file")
-            self.frame.Bind(wx.EVT_MENU, lambda event: self.add_file(library), add_file)
-            add_directory = popupmenu.Append(-1, "Add files from directory")
-            self.frame.Bind(wx.EVT_MENU, lambda event: self.add_directory(library), add_directory)
-            self.frame.PopupMenu(popupmenu)
-        elif self.file_tree.GetPyData(item) == "file":
+        if self.file_tree.GetPyData(item) == "file":
             label = self.file_tree.GetItemText(item)
             filename = label
             file_node = item
             popupmenu = wx.Menu()
-            edit_source = popupmenu.Append(-1, "Open in text editor")
-            self.frame.Bind(wx.EVT_MENU, lambda event: self.launch_editor(filename), edit_source)
-            delete_file = popupmenu.Append(-1, "Delete from library")
-            self.frame.Bind(wx.EVT_MENU, lambda event: self.delete_file(file_node), delete_file)
+            edit_source = popupmenu.Append(-1, "Open")
+            self.frame.Bind(wx.EVT_MENU, lambda event: editor.open_file(filename), edit_source)
             self.frame.PopupMenu(popupmenu)
+
+    def edit(self, event):
+
+        """Edit file when double clicked"""
+
+        pt = event.GetPosition();
+        item, flags = self.file_tree.HitTest(pt)
+        if self.file_tree.GetPyData(item) == "file":
+            label = self.file_tree.GetItemText(item)
+            filename = label
+            editor.open_file(filename)
      
-    def launch_editor(self, filename):
-        self.transcript.WriteText("Launching Text Editor\n")
-        subprocess.Popen("{0} {1}".format(editor, filename), shell=True)
+    def update_tree(self):
 
-    def new_library(self):
-        dlg = wx.TextEntryDialog(
-                self.frame, 
-                "Library Name")
-        if dlg.ShowModal() == wx.ID_OK:
-            name = dlg.GetValue()
-            node = self.file_tree.AppendItem(self.root_node, name)
-            self.file_tree.SetPyData(node, "library")
+        """Add files to the file tree"""
 
-    def new_file(self, library):
-        dlg = wx.FileDialog(
-                self.frame, 
-                "Add file", 
-                style=wx.SAVE,
-                wildcard="VHDL files (*.vhd;*.vhdl)|*.vhd;*.vhdl")
-        if dlg.ShowModal() == wx.ID_OK:
-            filename = dlg.GetPath()
-            new_file = open(filename, "w")
-            new_file.write(new_file_template)
-            node = self.file_tree.AppendItem(library, filename)
+        root = self.file_tree.AddRoot("Files")
+        for path in self.files:
+            node = self.file_tree.AppendItem(root, path)
             self.file_tree.SetPyData(node, "file")
-
-    def add_file(self, library):
-        dlg = wx.FileDialog(
-                self.frame, 
-                "Add file", 
-                style=wx.OPEN,
-                wildcard="VHDL files (*.vhd;*.vhdl)|*.vhd;*.vhdl")
-        if dlg.ShowModal() == wx.ID_OK:
-            node = self.file_tree.AppendItem(library, dlg.GetPath())
-            self.file_tree.SetPyData(node, "file")
-
-    def add_directory(self, library):
-        dlg = wx.DirDialog(
-                self.frame, 
-                "Add directory", 
-                style=wx.DD_DEFAULT_STYLE)
-        if dlg.ShowModal() == wx.ID_OK:
-            paths = discover_files(dlg.GetPath())
-            for path in paths:
-                node = self.file_tree.AppendItem(library, path)
-                self.file_tree.SetPyData(node, "file")
-
-    def delete_file(self, file_node):
-        node = self.file_tree.Delete(file_node)
+        self.file_tree.ExpandAll()
 
     def compile_simulation(self):
-        self.transcript.WriteText("launching GHDL VHDL compiler\n")
-        for library, paths in self.project_settings["libraries"].iteritems():
-            for path in paths:
-                command = 'ghdl -a --work={0} --workdir={1} {2}'.format(
-                        library, 
-                        temp_dir,
-                        path)
-                process = subprocess.Popen(
-                        command, 
-                        stdout=subprocess.PIPE, 
-                        stderr=subprocess.STDOUT, 
-                        shell=True)
-                for line in process.stdout:
-                    self.transcript.WriteText(line)
-                process.wait()
 
-        command = 'ghdl -e --work={0} --workdir={1} {2}'.format(
-                self.project_settings["top_lib"],
+        """Compile a simulation using GHDL"""
+
+        self.transcript.WriteText("launching GHDL VHDL compiler\n")
+        for path in self.files:
+            self.transcript.WriteText("compiling: %s\n"%path)
+            command = 'ghdl -a --workdir={0} {1}'.format(
+                    temp_dir,
+                    path)
+            process = subprocess.Popen(
+                    command, 
+                    stdout=subprocess.PIPE, 
+                    stderr=subprocess.STDOUT, 
+                    shell=True)
+            for line in process.stdout:
+                self.transcript.WriteText(line)
+            process.wait()
+
+        command = 'ghdl -e --workdir={0} {1}'.format(
                 temp_dir,
-                self.project_settings["top_entity"]
+                self.top
                 )
+
         process = subprocess.Popen(
                 command, 
                 stdout=subprocess.PIPE, 
@@ -274,17 +190,20 @@ class VHDLProject:
             self.update_state("sim_compiled")
             self.transcript.WriteText("GHDL VHDL compile ... successful\n")
         else:
-            self.update_state("project_open")
+            self.update_state("start")
             self.transcript.WriteText("GHDL VHDL compile ... failed\n")
 
-
     def run_simulation(self):
+
+        """Run a simulation using GHDL"""
+
         self.transcript.WriteText("launching GHDL simulation\n")
         time_to_run = "".join([
             str(self.time_control.GetValue()), 
             self.time_units_control.GetValue()
         ])
-        command = "./streams_vhdl_model --wave={0} --stop-time={1}".format(
+        command = "./{0} --wave={1} --stop-time={2}".format(
+                self.top,
                 wave_file,
                 time_to_run
         )
@@ -295,6 +214,9 @@ class VHDLProject:
         self.timer.Start(100)
 
     def on_timer(self, event):
+
+        """We don't want the simulator to lock the GUI"""
+
         try:
             for i in range(100):
                 line = next(self.process.stdout)
@@ -310,23 +232,12 @@ class VHDLProject:
                 self.transcript.WriteText("GHDL simulation ... failed\n")
 
     def view_wave(self):
+
+        """Open simulation waveform in GTKWave"""
+
         self.transcript.WriteText("launching GTKWave waveform viewer\n")
         subprocess.Popen("gtkwave {0}".format(wave_file), shell=True)
         
-
-    def project_to_window(self):
-        self.file_tree.DeleteAllItems()
-        self.root_node = self.file_tree.AddRoot("Libraries")
-        self.file_tree.SetPyData(self.root_node, "root")
-
-        for library, paths in self.project_settings["libraries"].iteritems():
-            library_node = self.file_tree.AppendItem(self.root_node, library)
-            self.file_tree.SetPyData(library_node, "library")
-            for path in paths:
-                node = self.file_tree.AppendItem(library_node, path)
-                self.file_tree.SetPyData(node, "file")
-
-        self.file_tree.ExpandAll()
 
 if __name__ == "__main__":
     app = wx.App()

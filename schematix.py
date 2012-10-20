@@ -7,5 +7,6 @@ app = wx.App()
 
 frame = wx.Frame(None, size=(1024,768), title="Design Browser")
 selector = schematix.component_selector.Selector(frame, -1)
+
 frame.Show()
 app.MainLoop()

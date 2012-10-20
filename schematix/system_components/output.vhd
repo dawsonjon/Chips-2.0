@@ -1,10 +1,8 @@
 --name: output
---tag: core
---tag: IO
+--tag: schematic
 --input: in_1
---parameter: name : asdfasdfasdf
 --source_file:built_in
 
 ---Output
 ---======
----Component Output
+---Used to represent an output from a component in schematix.

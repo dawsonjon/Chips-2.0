@@ -1,5 +1,5 @@
---name: SerialOut
---tag: IO
+--name: serial_output
+--tag: sinks
 --input: in1
 --source_file: built_in
 --device_out: tx : 1
@@ -9,13 +9,13 @@
 ---Serial Output
 ---=============
 ---
----Write a stream of data to s serial UART
+---Write a stream of data to a serial UART
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity ConsoleOut is
+entity serial_output is
 
   generic(
     CLOCK_FREQUENCY : integer;
@@ -26,14 +26,14 @@ entity ConsoleOut is
     RST     : in  std_logic;
     TX      : out std_logic;
    
-    IN1     : in std_logic_vector;
+    IN1     : in std_logic_vector(15 downto 0);
     IN1_STB : in std_logic;
     IN1_ACK : out std_logic
   );
 
-end entity ConsoleOut;
+end entity serial_output;
 
-architecture RTL of ConsoleOut is
+architecture RTL of serial_output is
 
   constant CLOCK_DIVIDER : Unsigned(11 downto 0) := To_unsigned(CLOCK_FREQUENCY/BAUD_RATE, 12);
   signal BAUD_COUNT      : Unsigned(11 downto 0);
@@ -65,11 +65,12 @@ begin
   process
   begin
     wait until rising_edge(CLK);
+    S_IN1_ACK <= '0';
     case STATE is
       when IDLE =>
         if IN1_STB = '1'  then
-          IN1_ACK <= '1';
-          DATA <= IN1;
+          S_IN1_ACK <= '1';
+          DATA <= std_logic_vector(RESIZE(unsigned(IN1), 8));
           STATE     <= WAIT_EN;
         end if;
       when WAIT_EN =>

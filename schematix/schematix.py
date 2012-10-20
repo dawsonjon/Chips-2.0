@@ -163,6 +163,7 @@ class BlockFrame(wx.Frame):
             pickle.dump(self.port_positions, save_file)
             pickle.dump(self.wires, save_file)
             save_file.close()
+
         self.selector.update()
 
     def on_save(self):
@@ -262,7 +263,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": [],
+                    "parameters": {},
                     "position": snap(event.Coords), 
                     "name":instance,
                     "port_name":instance
@@ -317,7 +318,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": [],
+                    "parameters": {},
                     "position": snap(event.Coords), 
                     "name":instance
             }
@@ -341,7 +342,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": [],
+                    "parameters": {},
                     "position": snap(event.Coords), 
                     "name":instance
             }
@@ -550,7 +551,7 @@ class BlockFrame(wx.Frame):
         self.sn+=1
         self.netlist[instance] = {
                 "component": bend_component, 
-                "parameters": [],
+                "parameters": {},
                 "position": snap(((x1+x2)/2, (y1+y2)/2)), 
                 "name":instance
         }
@@ -571,7 +572,7 @@ class BlockFrame(wx.Frame):
         self.sn+=1
         self.netlist[instance] = {
                 "component": tee_component, 
-                "parameters": [],
+                "parameters": {},
                 "position": snap(((x1+x2)/2, (y1+y2)/2)), 
                 "name": instance
         }
