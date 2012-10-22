@@ -1,6 +1,6 @@
 --name: bend
 --tag: schematic
---output: out1 : in1
+--output: out1
 --input: in1
 --source_file: built_in
 

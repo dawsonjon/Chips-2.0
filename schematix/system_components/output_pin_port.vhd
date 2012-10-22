@@ -1,11 +1,11 @@
---name: device_pin_output
+--name: device_pin_output_16
 --tag: sinks
---input: in1
+--input: in1 : 16
 --source_file: built_in
---device_out: output_port : n
+--device_out: output_port : 16
 
----Device Pin Output
----=================
+---16-bit Device Pin Output
+---========================
 ---
 ---Send a stream of data to a device pin(s).
 
@@ -13,7 +13,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity DEVICE_PIN_OUTPUT is
+entity DEVICE_PIN_OUTPUT_16 is
 
   port(
     CLK         : in std_logic;
@@ -25,9 +25,9 @@ entity DEVICE_PIN_OUTPUT is
     IN1_ACK    : in  std_logic
   );
 
-end entity DEVICE_PIN_OUTPUT;
+end entity DEVICE_PIN_OUTPUT_16;
 
-architecture RTL of DEVICE_PIN_OUTPUT is
+architecture RTL of DEVICE_PIN_OUTPUT_16 is
 
 begin
 

@@ -2,11 +2,11 @@
 --tag: arithmetic
 --input: in1
 --input: in2
---output: out1 : max([in1, in2]) + 1
+--output: out1
 --source_file: built_in
 
 ---Adder
----=====
+---==============
 ---
 ---Produces a stream of data *out1* by adding *in1* to *in2* item by item.
 

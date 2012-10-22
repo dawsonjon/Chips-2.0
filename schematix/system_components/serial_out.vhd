@@ -1,6 +1,6 @@
 --name: serial_output
 --tag: sinks
---input: in1
+--input: in1 : 8
 --source_file: built_in
 --device_out: tx : 1
 --parameter: clock_frequency : 100000000

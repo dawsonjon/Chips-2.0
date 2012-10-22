@@ -66,6 +66,7 @@ def parse_vhdl(filename):
         "meta_tags": [],
         "inputs": [],
         "outputs": [],
+        "output_sizes":{},
         "dependencies": [],
         "device_inputs": {},
         "device_outputs": {},
@@ -84,6 +85,9 @@ def parse_vhdl(filename):
             component["inputs"].append(line.split(":")[1].strip())
         elif line.startswith("--output"):
             component["outputs"].append(line.split(":")[1].strip())
+            if len(line.split(":")) == 3:
+                outputs, name, size = line.split(":")
+                component["output_sizes"][name.strip()]=int(size.strip())
         elif line.startswith("--parameter"):
             component["parameters"][line.split(":")[1].strip()] = line.split(":")[2].strip()
         elif line.startswith("--tag"):
@@ -421,6 +425,7 @@ class Selector(wx.Panel):
           component["file"]
         )
 
+        print component
         source_updated = os.path.getmtime(source_path)
         dest_updated = os.path.getmtime(dest_path)
 

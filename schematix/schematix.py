@@ -7,6 +7,8 @@ from wx.lib.floatcanvas import NavCanvas, FloatCanvas, Resources
 
 import component_selector
 import parameter_dialog
+import schematic_actions
+import c_actions
 import name_dialog
 from instance import Instance
 from wire import Wire
@@ -415,6 +417,22 @@ class BlockFrame(wx.Frame):
                 )
             self.canvas.Draw()
 
+    def on_block_left_dclick(self, instance):
+        self.edit_source(instance)
+
+
+    def edit_component_source(self, instance):
+
+        """Edit the block"""
+
+        component = instance["component"]
+        if "source_file" in component:
+            if component["source_file"].endswith(".sch"):
+                schematic_actions.edit(self.selector, component),
+            elif component["source_file"].endswith(".c"):
+                c_actions.edit(self.selector, component),
+
+
     def on_block_right_down(self, instance):
 
         """Capture the mouse right down event on a block.
@@ -439,6 +457,12 @@ class BlockFrame(wx.Frame):
                     ),
                     menu.Append(-1, "Edit Parameters"),
                 )
+            elif instance["component"]["source_file"] != "built_in":
+                self.Bind(wx.EVT_MENU, 
+                    lambda evt: self.edit_component_source(instance),
+                    menu.Append(-1, "Edit Source File"),
+                )
+
             self.Bind(wx.EVT_MENU, 
                 lambda evt: self.delete_instance(instance),
                 menu.Append(-1, "Delete"),

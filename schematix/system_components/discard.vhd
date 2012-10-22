@@ -5,7 +5,7 @@
 
 ---Discard
 ---=======
----Discard all data on *in1*. Usefull to avoid unconnected outputs.
+---Discard all data on *in1*. Useful to avoid unconnected outputs.
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -13,7 +13,7 @@ use ieee.numeric_std.all;
 
 use std.textio.all;
 
-entity discard is
+entity discard_16 is
 
   port(
     CLK     : in std_logic;
@@ -24,9 +24,9 @@ entity discard is
     IN1_ACK : out std_logic
   );
 
-end entity discard;
+end entity discard_16;
 
-architecture RTL of discard is
+architecture RTL of discard_16 is
 begin
 
   IN1_ACK <= '1';

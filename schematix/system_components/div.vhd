@@ -5,8 +5,8 @@
 --output: out1
 --source_file: built_in
 
----Divider
----=======
+---16-bit Divider
+---==============
 ---
 ---Produces a stream of data *out1* by dividing *in1* by *in2* item by item.
 

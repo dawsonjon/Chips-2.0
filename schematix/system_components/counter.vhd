@@ -1,13 +1,13 @@
---name: counter
+--name: counter_16
 --tag: sources
---output: out1
+--output: out1 : 16
 --source_file: built_in
 --parameter: start: 0
 --parameter: stop: 10
 --parameter: step: 1
 
----Counter
----=======
+---16-bit Counter
+---==============
 ---
 ---A counter component
 ---
@@ -20,7 +20,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity counter is
+entity counter_16 is
 
   generic(
     START       : integer;
@@ -36,9 +36,9 @@ entity counter is
     OUT1_ACK    : in  std_logic
   );
 
-end entity counter;
+end entity counter_16;
 
-architecture RTL of counter is
+architecture RTL of counter_16 is
 
   signal COUNT : integer range START to STOP;
 

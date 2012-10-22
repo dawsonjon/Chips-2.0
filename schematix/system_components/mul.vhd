@@ -5,8 +5,8 @@
 --output: out1
 --source_file: built_in
 
----Multiplier
----==========
+---16-bit Multiplier
+---=================
 ---
 ---Produces a stream of data *out1* by multiplying *in1* by *in2* item by item.
 
@@ -14,7 +14,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity multiplier is
+entity multiplier_16 is
 
   port(
     CLK         : in  std_logic;
@@ -33,9 +33,9 @@ entity multiplier is
     OUT1_ACK    : in  std_logic
   );
 
-end entity multiplier;
+end entity multiplier_16;
 
-architecture RTL of multiplier is
+architecture RTL of multiplier_16 is
 
   type STATE_TYPE is (READ_A_B, WRITE_Z);
   signal STATE      : STATE_TYPE;

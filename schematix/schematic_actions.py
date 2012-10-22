@@ -170,6 +170,18 @@ def generate_signals(input_ports, output_ports, wires, vhdl):
         vhdl.append("  signal CLK : std_logic;\n")
         vhdl.append("  signal RST : std_logic;\n")
 
+def calculate_widths(netslit, wires):
+    
+    sizes = {}
+    for instance_name, instance in netlist:
+        component = instance["component"]
+        if "size" in component:
+            sizes[component["name"]]=component["size"]
+
+    for from_instance, from_port, to_instance, to_port in wires:
+        from_instance["component"]["name"] + "." + from_port
+
+
 def generate(window, component):
 
     """Make a VHDL component from a schematic"""

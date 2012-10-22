@@ -1,12 +1,12 @@
---name: tee
+--name: tee_16
 --tag: schematic
---output: out1
---output: out2
---input: in1
+--output: out1 : 16
+--output: out2 : 16
+--input: in1 : 16
 --source_file: built_in
 
----Tee
----===
+---16-bit Tee
+---==========
 ---
 ---Used to represent a tee or join in a wire in schematix.
 
@@ -14,7 +14,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity tee is
+entity tee_16 is
 
   port(
     CLK         : in  std_logic;
@@ -33,9 +33,9 @@ entity tee is
     OUT2_ACK    : in  std_logic
   );
 
-end entity tee;
+end entity tee_16;
 
-architecture RTL of tee is
+architecture RTL of tee_16 is
 
   type STATE_TYPE is (READ, WRITE_1, WRITE_2);
   signal STATE : STATE_TYPE;

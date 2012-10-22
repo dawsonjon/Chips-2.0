@@ -2,11 +2,11 @@
 --tag: arithmetic
 --input: in1
 --input: in2
---output: out1 : max([in1, in2]) + 1
+--output: out1
 --source_file: built_in
 
----Subtractor
----==========
+---16-bit Subtractor
+---=================
 ---
 ---Produces a stream of data *out1* by subtracting *in2* from *in1* item by item.
 
@@ -20,15 +20,15 @@ entity subtractor is
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    IN1         : in  std_logic_vector(15 downto 0);
+    IN1         : in  std_logic_vector;
     IN1_STB     : in  std_logic;
     IN1_ACK     : out std_logic;
 
-    IN2         : in  std_logic_vector(15 downto 0);
+    IN2         : in  std_logic_vector;
     IN2_STB     : in  std_logic;
     IN2_ACK     : out std_logic;
 
-    OUT1        : out std_logic_vector(15 downto 0);
+    OUT1        : out std_logic_vector;
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic
   );

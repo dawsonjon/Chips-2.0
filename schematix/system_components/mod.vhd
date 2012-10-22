@@ -5,8 +5,8 @@
 --output: out1
 --source_file: built_in
 
----modulo
----======
+---modulo_16
+---=========
 ---
 ---Produces a stream of data *out1* by dividing *in1* by *in2* item by item.
 
@@ -14,7 +14,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity modulo is
+entity modulo_16 is
 
   port(
     CLK         : in  std_logic;
@@ -33,9 +33,9 @@ entity modulo is
     OUT1_ACK    : in  std_logic
   );
 
-end entity modulo;
+end entity modulo_16;
 
-architecture RTL of modulo is
+architecture RTL of modulo_16 is
 
   function MAX(
     A : integer;

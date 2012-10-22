@@ -82,6 +82,11 @@ class Instance():
         )
 
         outline.Bind(
+            FloatCanvas.EVT_FC_LEFT_DCLICK, 
+            lambda obj : blockframe.on_block_left_dclick(instance)
+        )
+
+        outline.Bind(
             FloatCanvas.EVT_FC_RIGHT_DOWN, 
             lambda obj : blockframe.on_block_right_down(instance)
         )

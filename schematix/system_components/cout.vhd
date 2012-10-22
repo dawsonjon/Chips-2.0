@@ -3,8 +3,8 @@
 --input: in1
 --source_file: built_in
 
----Console Output
----==============
+---16-bit Console Output
+---=====================
 ---Write a stream of data to the console.
 
 library ieee;

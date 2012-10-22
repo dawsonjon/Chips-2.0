@@ -1,18 +1,18 @@
---name: device_pin_input
+--name: device_pin_input_16
 --tag: sources
---output: out1
+--output: out1 : 16
 --source_file: built_in
---device_in: input_port : 8
+--device_in: input_port : 16
 
----Device Pin Input
----================
+---16-bit Device Pin Input
+---=======================
 ---
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity device_pin_input is
+entity device_pin_input_16 is
 
   port(
     CLK         : in  std_logic;
@@ -24,9 +24,9 @@ entity device_pin_input is
     OUT1_ACK    : in  std_logic
   );
 
-end entity device_pin_input;
+end entity device_pin_input_16;
 
-architecture RTL of device_pin_input is
+architecture RTL of device_pin_input_16 is
 
   signal REG : std_logic;
 

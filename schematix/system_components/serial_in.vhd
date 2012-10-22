@@ -1,6 +1,6 @@
 --name: serial_input
 --tag: sources
---output: out1
+--output: out1: 8
 --source_file: built_in
 --device_in: rx : 1
 --parameter: clock_frequency : 100000000
