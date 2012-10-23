@@ -73,6 +73,12 @@ class BlockFrame(wx.Frame):
              lambda evt: self.on_exit(),
              file_menu.Append(wx.ID_EXIT, "Exit"),
         )
+        self.Bind(wx.EVT_CLOSE, 
+             lambda evt: self.on_exit(),
+        )
+        self.Bind(wx.EVT_ACTIVATE, 
+             lambda evt: self.on_activate(),
+        )
         edit_menu = wx.Menu()
 
         self.undo = edit_menu.Append(wx.ID_UNDO, "Undo")
@@ -123,6 +129,7 @@ class BlockFrame(wx.Frame):
         self.netlist = pickle.load(open_file)
         self.port_positions = pickle.load(open_file)
         self.wires = pickle.load(open_file)
+        self.update_all_instances()
         self.draw()
         self.undo.Enable(False)
         self.redo.Enable(False)
@@ -144,6 +151,7 @@ class BlockFrame(wx.Frame):
             self.netlist = pickle.load(open_file)
             self.port_positions = pickle.load(open_file)
             self.wires = pickle.load(open_file)
+            self.update_all_instances()
             self.draw()
             self.undo.Enable(False)
             self.redo.Enable(False)
@@ -665,6 +673,95 @@ class BlockFrame(wx.Frame):
         for wire in self.wires:
             Wire(self, wire)
         self.canvas.Draw(True)
+
+    def update_all_instances(self):
+
+        """Make sure that all instances reflect the current implementation"""
+
+        self.regenerate_out_of_date_components()
+        for instance_name, instance in self.netlist.iteritems():
+            self.update_instance_component(instance)
+
+    def get_out_of_date_components(self):
+
+        """Go through the components in the schematic, and find the ones that are out of date"""
+
+        out_of_date_components = []
+        for instance_name, instance in self.netlist.iteritems():
+            name = instance["component"]["name"]
+            component = self.selector.get_component_named(name)
+            if not self.selector.is_up_to_date(component):
+                out_of_date_components.append(name)
+
+        return out_of_date_components
+
+    def regenerate_out_of_date_components(self):
+
+        """Regenerate all the out of date components we can"""
+
+        out_of_date_components = self.get_out_of_date_components()
+        regenerated_components = []
+        for component_name in out_of_date_components:
+
+            component = self.selector.get_component_named(component_name)
+            #try regenerating
+            if "source_file" in component and component["source_file"] not in ["built_in"]:
+                #automatically compiling C files works wuite well, but
+                #could get pretty slow.
+                #if component["source_file"].endswith(".c"):
+                #    c_actions.generate(self.selector, component)
+                if component["source_file"].endswith(".sch"):
+                    schematic_actions.generate(self.selector, component)
+
+            #if it worked, update the component in the schematic
+            if self.selector.is_up_to_date(component):
+                regenerated_components.append(component_name)
+
+        return regenerated_components
+
+    def update_instance_component(self, instance):
+
+        """Update the component instance with any changes that have been made to the component"""
+
+        name = instance["component"]["name"]
+
+        #update instance
+        component = self.selector.get_component_named(name)
+        instance["component"]=component
+
+        #copy accross new parameters
+        for parameter_name, default in component["parameters"].iteritems():
+            if parameter_name not in instance["parameters"]:
+                instance["parameters"][parameter_name] = default
+
+        #remove any parameters from the instance that are no longer in the component
+        for parameter_name, default in instance["parameters"].iteritems():
+            if parameter_name not in component["parameters"]:
+                instance["paremeters"].pop(parameter_name)
+
+        #search wires for connections to no longer existent ports
+        new_wires = []
+        for from_instance, from_port, to_instance, to_port in self.wires:
+            if from_instance == instance["name"]:
+                if from_port not in instance["component"]["outputs"]:
+                    continue
+            if to_instance == instance["name"]:
+                if to_port not in instance["component"]["inputs"]:
+                    continue
+            new_wires.append((from_instance, from_port, to_instance, to_port))
+        self.wires = new_wires
+
+    def on_exit(self):
+        for name, window in self.selector.schematic_windows.iteritems():
+            if window is self:
+                close_name = name
+        self.selector.schematic_windows.pop(close_name)
+        self.Destroy()
+
+    def on_activate(self):
+        self.update_all_instances()
+        self.draw()
+
 
 def snap(coord):
 

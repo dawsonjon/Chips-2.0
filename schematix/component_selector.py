@@ -36,27 +36,6 @@ def delete(window, component):
     os.remove(window.get_component_path(component))
     window.update()
 
-def new(window):
-
-    """Make a new component"""
-
-    dlg = wx.TextEntryDialog(
-        window, 
-        "Component name:",
-        "New Component")
-    if dlg.ShowModal() == wx.ID_OK:
-        name = dlg.GetValue()
-        window.transcript.log("Creating New Component")
-        new_file = name + ".vhd"
-        new_file = os.path.join(
-            window.project_path.GetValue(),
-            new_file)
-        new_file = os.path.join(window.project, new_file)
-        new_file = open(new_file, "w")
-        new_file.write("--name : %s\n"%name)
-        new_file.close()
-        window.update()
-
 def parse_vhdl(filename):
 
     """Extract key facts about the component"""
@@ -115,6 +94,7 @@ class Selector(wx.Panel):
 
         #layout window
         wx.Panel.__init__(self, parent, *args)
+        self.parent = parent
         horizontal_splitter = wx.SplitterWindow(self)
         self.project_path = filebrowse.DirBrowseButton(
                 self, 
@@ -161,6 +141,8 @@ class Selector(wx.Panel):
 
         #Bind Events
         self.Bind(wx.EVT_TREE_SEL_CHANGED, self.on_select_item, self.selector)
+        parent.Bind(wx.EVT_CLOSE, lambda evt: self.on_exit())
+        parent.Bind(wx.EVT_ACTIVATE, lambda evt: self.update())
         self.selector.Bind(wx.EVT_RIGHT_DOWN, self.on_right_click_item)
         self.selector.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick_item)
 
@@ -169,8 +151,14 @@ class Selector(wx.Panel):
         root = self.selector.AddRoot("Component Categories")
         self.tags = {}
         self.tag_components = {}
+        self.schematic_windows = {}
         self.update()
         self.selector.ExpandAll()
+
+    def on_exit(self):
+        for window in self.schematic_windows.values():
+            window.Close()
+        self.parent.Destroy()
 
     def update(self):
 
@@ -238,6 +226,9 @@ class Selector(wx.Panel):
                 else:
                     self.selector.SetItemTextColour(node, "black")
 
+        for schematic in self.schematic_windows.values():
+            schematic.draw()
+
     def on_select_item(self, event):
 
         """When a new component is selected, update the help window."""
@@ -287,10 +278,6 @@ class Selector(wx.Panel):
 
         if component is None:
             self.Bind(wx.EVT_MENU, 
-                lambda evt: new(self),
-                menu.Append(-1, "New Chip"),
-            )
-            self.Bind(wx.EVT_MENU, 
                 lambda evt: c_actions.new(self),
                 menu.Append(-1, "New C file"),
             )
@@ -327,7 +314,7 @@ class Selector(wx.Panel):
             if "file" in component:
                 self.Bind(wx.EVT_MENU, 
                     lambda evt: edit(self, component),
-                    menu.Append(-1, "Edit Component"),
+                    menu.Append(-1, "View Component"),
                 )
                 self.Bind(wx.EVT_MENU, 
                     lambda evt: self.simulate(component),

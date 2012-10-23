@@ -14,9 +14,14 @@ def edit(window, component):
 
     """Edit a schematic"""
 
-    schematic = schematix.BlockFrame(window, None, size=(1024,768), title="Schematix")
-    schematic.Show()
-    schematic.open(window.get_source_path(component))
+    if component["name"] in window.schematic_windows:
+        #window.schematic_windows[component["name"]].SetFocus()
+        window.schematic_windows[component["name"]].Raise()
+    else:
+        schematic = schematix.BlockFrame(window, None, size=(1024,768), title="Schematix")
+        schematic.Show()
+        schematic.open(window.get_source_path(component))
+        window.schematic_windows[component["name"]] = schematic
     window.update()
 
 def _import(window, component):
