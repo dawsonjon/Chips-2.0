@@ -1,7 +1,8 @@
 --name: bend
 --tag: schematic
---output: out1
---input: in1
+--output: out1 : bits
+--input: in1 : bits
+--generic : bits : 16
 --source_file: built_in
 
 ---Bend
@@ -15,15 +16,18 @@ use ieee.numeric_std.all;
 
 entity BEND is
 
+  generic(
+    BITS : integer
+  );
   port(
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    IN1         : in  std_logic_vector;
+    IN1         : in  std_logic_vector(BITS-1 downto 0);
     IN1_STB     : in  std_logic;
     IN1_ACK     : out std_logic;
 
-    OUT1        : out std_logic_vector;
+    OUT1        : out std_logic_vector(BITS-1 downto 0);
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic
   );

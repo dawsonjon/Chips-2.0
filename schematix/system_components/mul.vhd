@@ -1,12 +1,13 @@
 --name: multiplier
 --tag: arithmetic
---input: in1
---input: in2
---output: out1
+--input: in1 : bits
+--input: in2 : bits
+--output: out1 : bits
+--parameter:bits:16
 --source_file: built_in
 
----16-bit Multiplier
----=================
+---Multiplier
+---==========
 ---
 ---Produces a stream of data *out1* by multiplying *in1* by *in2* item by item.
 
@@ -14,28 +15,28 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity multiplier_16 is
+entity multiplier is
 
   port(
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    IN1         : in  std_logic_vector(15 downto 0);
+    IN1         : in  std_logic_vector(BITS-1 downto 0);
     IN1_STB     : in  std_logic;
     IN1_ACK     : out std_logic;
 
-    IN2         : in  std_logic_vector(15 downto 0);
+    IN2         : in  std_logic_vector(BITS-1 downto 0);
     IN2_STB     : in  std_logic;
     IN2_ACK     : out std_logic;
 
-    OUT1        : out std_logic_vector(15 downto 0);
+    OUT1        : out std_logic_vector(BITS-1 downto 0);
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic
   );
 
-end entity multiplier_16;
+end entity multiplier;
 
-architecture RTL of multiplier_16 is
+architecture RTL of multiplier is
 
   type STATE_TYPE is (READ_A_B, WRITE_Z);
   signal STATE      : STATE_TYPE;
@@ -52,7 +53,7 @@ begin
             IN1_ACK <= '1';
             IN2_ACK <= '1';
             OUT1_STB <= '1';
-            OUT1 <= std_logic_vector(resize(signed(IN1) * signed(IN2), 16));
+            OUT1 <= std_logic_vector(resize(signed(IN1) * signed(IN2), BITS));
             STATE <= WRITE_Z;
           end if;
 

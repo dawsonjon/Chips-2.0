@@ -1,7 +1,7 @@
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
-class PythonExpValidator(wx.PyValidator):
+class NameValidator(wx.PyValidator):
 
     """A port name validator
     
@@ -15,7 +15,7 @@ class PythonExpValidator(wx.PyValidator):
         self.names = names
 
     def Clone(self):
-        return PythonExpValidator(self.instance, self.names)
+        return NameValidator(self.instance, self.names)
 
     def Validate(self, win):
         textctrl = self.GetWindow()
@@ -55,27 +55,58 @@ class PythonExpValidator(wx.PyValidator):
         self.instance["port_name"] = name
         return True
 
+class SizeValidator(wx.PyValidator):
+
+    """A port size validator
+    
+    * Tranfers Data to and from windows in a dialog box.
+    * Checks that entered data is a valid size
+    """
+
+    def __init__(self, instance, names):
+        wx.PyValidator.__init__(self)
+        self.instance = instance
+        self.names = names
+
+    def Clone(self):
+        return SizeValidator(self.instance, self.names)
+
+    def Validate(self, win):
+        textctrl = self.GetWindow()
+        text = textctrl.GetValue()
+        return 0 < int(text) <= 100
+
+    def TransferToWindow(self):
+        self.GetWindow().SetValue(self.instance["port_size"])
+        return True
+
+    def TransferFromWindow(self):
+        size = self.GetWindow().GetValue()
+        self.instance["port_size"] = size
+        self.instance["parameters"]["bits"] = size
+        return True
+
 
 class NameDlg(wx.Dialog):
 
-    """Name Editing Dialog.
-    
-    - Contains a scrolled area with a text box for each parameter.
-    - Contains a non-scrolled area with standard dialog buttons.
-
-    """
+    """Port Editing Dialog."""
 
     def __init__(self, instance, names, *args, **kwargs):
-        wx.Dialog.__init__(self, *args, **kwargs)
+        wx.Dialog.__init__(self, title="Edit Port", *args, **kwargs)
         self.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
         panel = wx.Panel(self, -1)
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        sb = wx.StaticBox(panel, -1, "Name:")
-        hsizer = wx.StaticBoxSizer(sb, wx.HORIZONTAL)
+        hsizer = wx.BoxSizer(wx.VERTICAL)
+        hsizer.Add(wx.StaticText(panel, -1, "Port Name"), 0, wx.EXPAND)
         hsizer.Add(wx.TextCtrl(
             panel, 
-            validator=PythonExpValidator(instance, names)
-        ), 1, wx.ALIGN_CENTER)
+            validator=NameValidator(instance, names)
+        ), 0, wx.EXPAND)
+        hsizer.Add(wx.StaticText(panel, -1, "Port Size (bits)"), 0, wx.EXPAND)
+        hsizer.Add(wx.TextCtrl(
+            panel, 
+            validator=SizeValidator(instance, names)
+        ), 0, wx.EXPAND)
         vsizer.Add(hsizer, 0, wx.EXPAND)
         panel.SetSizer(vsizer)
         wvsizer = wx.BoxSizer(wx.VERTICAL)

@@ -37,7 +37,7 @@ entity SERIAL_INPUT is
     RST      : in std_logic;
     RX       : in std_logic;
    
-    OUT1     : out std_logic_vector(15 downto 0);
+    OUT1     : out std_logic_vector(7 downto 0);
     OUT1_STB : out std_logic;
     OUT1_ACK : in  std_logic
   );

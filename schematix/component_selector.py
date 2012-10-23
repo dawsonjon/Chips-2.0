@@ -64,9 +64,8 @@ def parse_vhdl(filename):
     component = {
         "name": "",
         "meta_tags": [],
-        "inputs": [],
-        "outputs": [],
-        "output_sizes":{},
+        "inputs": {},
+        "outputs": {},
         "dependencies": [],
         "device_inputs": {},
         "device_outputs": {},
@@ -82,12 +81,9 @@ def parse_vhdl(filename):
         elif line.startswith("--name"):
             component["name"]=line.split(":")[1].strip()
         elif line.startswith("--input"):
-            component["inputs"].append(line.split(":")[1].strip())
+            component["inputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
         elif line.startswith("--output"):
-            component["outputs"].append(line.split(":")[1].strip())
-            if len(line.split(":")) == 3:
-                outputs, name, size = line.split(":")
-                component["output_sizes"][name.strip()]=int(size.strip())
+            component["outputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
         elif line.startswith("--parameter"):
             component["parameters"][line.split(":")[1].strip()] = line.split(":")[2].strip()
         elif line.startswith("--tag"):
@@ -232,10 +228,11 @@ class Selector(wx.Panel):
                     self.tag_components[tag][title] = node
                     self.selector.SetItemPyData(node, component)
 
-        #mark out of date items
+        #Update components
         for tag, components in library.iteritems():
             for component in components:
                 node = self.tag_components[tag][component["name"]]
+                self.selector.SetItemPyData(node, component)
                 if not self.is_up_to_date(component):
                     self.selector.SetItemTextColour(node, "red")
                 else:
@@ -425,7 +422,6 @@ class Selector(wx.Panel):
           component["file"]
         )
 
-        print component
         source_updated = os.path.getmtime(source_path)
         dest_updated = os.path.getmtime(dest_path)
 

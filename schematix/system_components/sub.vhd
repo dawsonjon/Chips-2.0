@@ -1,12 +1,13 @@
 --name: subtractor
 --tag: arithmetic
---input: in1
---input: in2
---output: out1
+--input: in1: bits
+--input: in2: bits
+--output: out1: bits
+--parameter:bits:16
 --source_file: built_in
 
----16-bit Subtractor
----=================
+---Subtractor
+---==========
 ---
 ---Produces a stream of data *out1* by subtracting *in2* from *in1* item by item.
 
@@ -16,19 +17,22 @@ use ieee.numeric_std.all;
 
 entity subtractor is
 
+  generic(
+    BITS : integer
+  );
   port(
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    IN1         : in  std_logic_vector;
+    IN1         : in  std_logic_vector(BITS-1 downto 0);
     IN1_STB     : in  std_logic;
     IN1_ACK     : out std_logic;
 
-    IN2         : in  std_logic_vector;
+    IN2         : in  std_logic_vector(BITS-1 downto 0);
     IN2_STB     : in  std_logic;
     IN2_ACK     : out std_logic;
 
-    OUT1        : out std_logic_vector;
+    OUT1        : out std_logic_vector(BITS-1 downto 0);
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic
   );

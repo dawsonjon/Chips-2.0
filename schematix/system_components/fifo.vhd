@@ -1,12 +1,13 @@
 --name: fifo
 --tag: memory
---input: in1
---output: out1
+--input: in1: bits
+--output: out1: bits
 --source_file: built_in
 --parameter:depth:1024
+--parameter:bits:16
 
----16-bit FIFO
----===========
+---FIFO
+---====
 ---Store up to *depth* data items.
 
 library ieee;
@@ -15,15 +16,16 @@ use ieee.numeric_std.all;
 
 entity FIFO is
     generic(
+        BITS  : integer;
         DEPTH : integer
     );
     port(
         CLK      : in std_logic;
         RST      : in std_logic;
-        IN1      : in std_logic_vector;
+        IN1      : in std_logic_vector(BITS-1 downto 0);
         IN1_STB  : in std_logic;
         IN1_ACK  : out std_logic;
-        OUT1     : out std_logic_vector;
+        OUT1     : out std_logic_vector(BITS-1 downto 0);
         OUT1_STB : out std_logic;
         OUT1_ACK : in std_logic
     );
@@ -31,7 +33,7 @@ end entity FIFO;
 
 architecture RTL of FIFO is
 
-    type MEMORY_TYPE is array (0 to DEPTH - 1) of std_logic_vector(IN1'LEFT downto 0);
+    type MEMORY_TYPE is array (0 to DEPTH - 1) of std_logic_vector(BITS-1 downto 0);
     signal MEMORY : MEMORY_TYPE;
 
     signal FILL : integer range 0 to DEPTH;

@@ -15,18 +15,18 @@ from wire import Wire
 
 bend_component = {
     "name" : "bend",
-    "inputs" : ["in1"], 
-    "outputs" : ["out1"],
-    "parameters" : {},
+    "inputs" : {"in1":"bits"}, 
+    "outputs" : {"out1":"bits"},
+    "parameters" : {"bits":16},
     "device_inputs" : {},
     "device_outputs" : {},
 }
 
 tee_component = {
     "name" : "tee",
-    "inputs" : ["in1"], 
-    "outputs" : ["out1", "out2"],
-    "parameters" : {},
+    "inputs" : {"in1":"bits"}, 
+    "outputs" : {"out1":"bits", "out2":"bits"},
+    "parameters" : {"bits":16},
     "device_inputs" : {},
     "device_outputs" : {},
 }
@@ -265,10 +265,10 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": {},
+                    "parameters": {"bits":16},
                     "position": snap(event.Coords), 
                     "name":instance,
-                    "port_name":instance
+                    "port_name":instance,
             }
             self.wires.append((
                 self.from_instance, 
@@ -312,6 +312,7 @@ class BlockFrame(wx.Frame):
                     while "port_%s"%number in self.get_names():
                         number += 1
                     self.netlist[instance]["port_name"] = "port_%s"%number
+                    self.netlist[instance]["port_size"] = 16
                 self.draw()
 
         elif self.state == "join_port":
@@ -320,7 +321,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": {},
+                    "parameters": {"bits":16},
                     "position": snap(event.Coords), 
                     "name":instance
             }
@@ -344,7 +345,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": {},
+                    "parameters": {"bits":16},
                     "position": snap(event.Coords), 
                     "name":instance
             }
@@ -418,7 +419,11 @@ class BlockFrame(wx.Frame):
             self.canvas.Draw()
 
     def on_block_left_dclick(self, instance):
-        self.edit_source(instance)
+
+        """double clocking on a block opens the source file"""
+
+        if instance["component"]["source_file"] != "built_in":
+            self.edit_component_source(instance)
 
 
     def edit_component_source(self, instance):
@@ -448,7 +453,7 @@ class BlockFrame(wx.Frame):
                     lambda evt: self.edit_name(
                         instance
                     ),
-                    menu.Append(-1, "Edit Name"),
+                    menu.Append(-1, "Edit Port"),
                 )
             elif instance["parameters"]:
                 self.Bind(wx.EVT_MENU, 
@@ -575,7 +580,7 @@ class BlockFrame(wx.Frame):
         self.sn+=1
         self.netlist[instance] = {
                 "component": bend_component, 
-                "parameters": {},
+                "parameters": {"bits":16},
                 "position": snap(((x1+x2)/2, (y1+y2)/2)), 
                 "name":instance
         }
@@ -596,7 +601,7 @@ class BlockFrame(wx.Frame):
         self.sn+=1
         self.netlist[instance] = {
                 "component": tee_component, 
-                "parameters": {},
+                "parameters": {"bits":16},
                 "position": snap(((x1+x2)/2, (y1+y2)/2)), 
                 "name": instance
         }

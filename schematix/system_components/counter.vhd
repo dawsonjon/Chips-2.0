@@ -1,13 +1,14 @@
---name: counter_16
+--name: counter
 --tag: sources
---output: out1 : 16
+--output: out1 : bits
 --source_file: built_in
 --parameter: start: 0
 --parameter: stop: 10
 --parameter: step: 1
+--parameter: bits: 16
 
----16-bit Counter
----==============
+---Counter
+---=======
 ---
 ---A counter component
 ---
@@ -20,9 +21,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity counter_16 is
+entity counter is
 
   generic(
+    BITS        : integer;
     START       : integer;
     STOP        : integer;
     STEP        : integer
@@ -31,21 +33,21 @@ entity counter_16 is
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    OUT1        : out std_logic_vector(15 downto 0);
+    OUT1        : out std_logic_vector(BITS-1 downto 0);
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic
   );
 
-end entity counter_16;
+end entity counter;
 
-architecture RTL of counter_16 is
+architecture RTL of counter is
 
   signal COUNT : integer range START to STOP;
 
 begin
 
   OUT1_STB <= '1';
-  OUT1 <= std_logic_vector(to_unsigned(COUNT, OUT1'length));
+  OUT1 <= std_logic_vector(to_unsigned(COUNT, BITS));
   process
   begin
     wait until rising_edge(CLK);

@@ -40,8 +40,6 @@ class PythonExpValidator(wx.PyValidator):
         return True
 
     def TransferToWindow(self):
-        print self.parameters
-        print self.parameter
         self.GetWindow().SetValue(
             repr(self.parameters[self.parameter])
         )
@@ -63,7 +61,7 @@ class ParameterDlg(wx.Dialog):
     """
 
     def __init__(self, parameters, *args, **kwargs):
-        wx.Dialog.__init__(self, *args, **kwargs)
+        wx.Dialog.__init__(self, title="Edit Parameters", *args, **kwargs)
         self.SetExtraStyle(wx.WS_EX_VALIDATE_RECURSIVELY)
         panel = ScrolledPanel(self, -1)
         vsizer = wx.BoxSizer(wx.VERTICAL)

@@ -1,8 +1,9 @@
 --name: adder
 --tag: arithmetic
---input: in1
---input: in2
---output: out1
+--input: in1 : bits
+--input: in2 : bits
+--output: out1 : bits
+--parameter:bits:16
 --source_file: built_in
 
 ---Adder
@@ -16,19 +17,22 @@ use ieee.numeric_std.all;
 
 entity adder is
 
+  generic(
+    BITS : integer
+  );
   port(
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    IN1         : in  std_logic_vector(15 downto 0);
+    IN1         : in  std_logic_vector(BITS-1 downto 0);
     IN1_STB     : in  std_logic;
     IN1_ACK     : out std_logic;
 
-    IN2         : in  std_logic_vector(15 downto 0);
+    IN2         : in  std_logic_vector(BITS-1 downto 0);
     IN2_STB     : in  std_logic;
     IN2_ACK     : out std_logic;
 
-    OUT1        : out std_logic_vector(15 downto 0);
+    OUT1        : out std_logic_vector(BITS-1 downto 0);
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic
   );
@@ -37,20 +41,8 @@ end entity adder;
 
 architecture RTL of adder is
 
-  function MAX(
-    A : integer;
-    B : integer) return integer is
-  begin
-    if A > B then
-      return A;
-    else
-      return B;
-    end if;
-  end MAX;
-
   type STATE_TYPE is (READ_A_B, WRITE_Z);
   signal STATE      : STATE_TYPE;
-
 
 begin
 

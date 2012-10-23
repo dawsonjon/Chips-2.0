@@ -1,7 +1,8 @@
 --name: asserter
 --tag: sinks
---input: in1
+--input: in1 : bits
 --source_file: built_in
+--generic : bits : 16
 
 ---Asserter
 ---========
@@ -15,11 +16,14 @@ use std.textio.all;
 
 entity asserter is
 
+  generic(
+    BITS : integer
+  );
   port(
     CLK     : in std_logic;
     RST     : in std_logic;
    
-    IN1     : in std_logic_vector(15 downto 0);
+    IN1     : in std_logic_vector(BITS-1 downto 0);
     IN1_STB : in std_logic;
     IN1_ACK : out std_logic
   );
@@ -37,7 +41,7 @@ begin
     wait until rising_edge(CLK);
     S_IN1_ACK <= IN1_STB;
     if IN1_STB = '1' and S_IN1_ACK = '1' then
-      assert IN1 \= "000000000000000000";
+      assert to_integer(signed(IN1));
     end if;
   end process;
   IN1_ACK <= S_IN1_ACK;

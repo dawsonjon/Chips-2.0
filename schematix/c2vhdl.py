@@ -1307,9 +1307,9 @@ def generate_VHDL(input_file, name, frames, output_file, registers, arrays):
   output_file.write("--name : %s\n"%name)
   output_file.write("--tag : c components\n")
   for i in inputs:
-      output_file.write("--input : %s\n"%i)
+      output_file.write("--input : INPUT_%s:16\n"%i)
   for i in outputs:
-      output_file.write("--output : %s\n"%i)
+      output_file.write("--output : OUTPUT_%s:16\n"%i)
   output_file.write("--source_file : %s\n"%input_file)
   output_file.write("---%s\n"%name.title())
   output_file.write("---%s\n"%"".join(["=" for i in name]))

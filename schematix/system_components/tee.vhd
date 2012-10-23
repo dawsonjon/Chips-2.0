@@ -1,12 +1,13 @@
---name: tee_16
+--name: tee
 --tag: schematic
---output: out1 : 16
---output: out2 : 16
---input: in1 : 16
+--output: out1 : bits
+--output: out2 : bits
+--input: in1 : bits
+--parameters:bits:16
 --source_file: built_in
 
----16-bit Tee
----==========
+---Tee
+---===
 ---
 ---Used to represent a tee or join in a wire in schematix.
 
@@ -14,28 +15,31 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity tee_16 is
+entity tee is
 
+  generic(
+    BITS : integer
+  );
   port(
     CLK         : in  std_logic;
     RST         : in  std_logic;
     
-    IN1         : in  std_logic_vector(15 downto 0);
+    IN1         : in  std_logic_vector(BITS-1 downto 0);
     IN1_STB     : in  std_logic;
     IN1_ACK     : out std_logic;
 
-    OUT1        : out std_logic_vector(15 downto 0);
+    OUT1        : out std_logic_vector(BITS-1 downto 0);
     OUT1_STB    : out std_logic;
     OUT1_ACK    : in  std_logic;
 
-    OUT2        : out std_logic_vector(15 downto 0);
+    OUT2        : out std_logic_vector(BITS-1 downto 0);
     OUT2_STB    : out std_logic;
     OUT2_ACK    : in  std_logic
   );
 
-end entity tee_16;
+end entity tee;
 
-architecture RTL of tee_16 is
+architecture RTL of tee is
 
   type STATE_TYPE is (READ, WRITE_1, WRITE_2);
   signal STATE : STATE_TYPE;
