@@ -15,3 +15,26 @@ Screenshots
 -----------
 
 .. image:: https://raw.github.com/dawsonjon/Schematix/master/screenshots.png
+
+
+What is Implemented
+-------------------
+
++ A tree based component manager using meta-tags to categorise components.
++ A schematic editor.
++ Automatic generation of VHDL.
++ GHDL and gtkWave integration.
++ A base set of components.
++ C based component description.
++ Integrated reStructuredText based documentation browser.
+
+What is not Implemented
+-----------------------
+
++ Better GUI features.
+
+  - Documentation Editor.
+  - Preferences dialog.
+
++ Synthesisable floating point.
++ More built in components.
