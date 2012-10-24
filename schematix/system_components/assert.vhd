@@ -2,7 +2,7 @@
 --tag: sinks
 --input: in1 : bits
 --source_file: built_in
---generic : bits : 16
+--parameter : bits : 16
 
 ---Asserter
 ---========
@@ -41,7 +41,7 @@ begin
     wait until rising_edge(CLK);
     S_IN1_ACK <= IN1_STB;
     if IN1_STB = '1' and S_IN1_ACK = '1' then
-      assert to_integer(signed(IN1));
+      assert to_integer(signed(IN1)) /= 0;
     end if;
   end process;
   IN1_ACK <= S_IN1_ACK;
