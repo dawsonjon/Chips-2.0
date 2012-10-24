@@ -14,4 +14,4 @@ Schematix is a graphical program for designing FPGAs using schematic entry. FPGA
 Screenshots
 -----------
 
-.. screenshot.png
+.. image:: screenshots.png
