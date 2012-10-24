@@ -737,7 +737,7 @@ class BlockFrame(wx.Frame):
         #remove any parameters from the instance that are no longer in the component
         for parameter_name, default in instance["parameters"].iteritems():
             if parameter_name not in component["parameters"]:
-                instance["paremeters"].pop(parameter_name)
+                instance["parameters"].pop(parameter_name)
 
         #search wires for connections to no longer existent ports
         new_wires = []
