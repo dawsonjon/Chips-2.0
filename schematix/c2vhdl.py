@@ -106,7 +106,7 @@ class Tokens:
           if char.isalnum() or char== "_":
             token += char
           else:
-            tokens.append((filename, lineno, token.lower()))
+            tokens.append((filename, lineno, token))
             token = char
         #number
         elif token[0].isdigit():

@@ -426,14 +426,6 @@ class BlockFrame(wx.Frame):
                 )
             self.canvas.Draw()
 
-    def on_block_left_dclick(self, instance):
-
-        """double clocking on a block opens the source file"""
-
-        if instance["component"]["source_file"] != "built_in":
-            self.edit_component_source(instance)
-
-
     def edit_component_source(self, instance):
 
         """Edit the block"""
