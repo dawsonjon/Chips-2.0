@@ -2,8 +2,9 @@
 --tag: sinks
 --input: in1 : bits
 --source_file: built_in
---device_out: output_port : bits
+--device_out: BUS : PINS : port_name : bits
 --parameter: bits:16
+--parameter:port_name:"PINS"
 
 ---Device Pin Output
 ---=================
@@ -17,16 +18,17 @@ use ieee.numeric_std.all;
 entity DEVICE_PIN_OUTPUT is
 
   generic(
-    BITS : integer
+    BITS : integer;
+    PORT_NAME : string
   );
   port(
-    CLK         : in std_logic;
-    RST         : in std_logic;
-    OUTPUT_PORT : in std_logic_vector(BITS-1 downto 0);
+    CLK     : in std_logic;
+    RST     : in std_logic;
+    PINS    : out std_logic_vector(BITS-1 downto 0);
    
-    IN1        : out std_logic_vector(BITS-1 downto 0);
-    IN1_STB    : out std_logic;
-    IN1_ACK    : in  std_logic
+    IN1     : in std_logic_vector(BITS-1 downto 0);
+    IN1_STB : in std_logic;
+    IN1_ACK : out  std_logic
   );
 
 end entity DEVICE_PIN_OUTPUT;
@@ -35,7 +37,7 @@ architecture RTL of DEVICE_PIN_OUTPUT is
 
 begin
 
-  OUTPUT_PORT <= IN1;
+  PINS <= IN1;
   IN1_ACK <= '1';
 
 end architecture RTL;

@@ -2,9 +2,10 @@
 --tag: sinks
 --input: in1 : 8
 --source_file: built_in
---device_out: tx : 1
+--device_out: BIT: TX : port_name : 1
 --parameter: clock_frequency : 100000000
 --parameter: baud_rate : 115200
+--parameter: port_name : "TX"
 
 ---Serial Output
 ---=============
@@ -19,14 +20,15 @@ entity serial_output is
 
   generic(
     CLOCK_FREQUENCY : integer;
-    BAUD_RATE       : integer
+    BAUD_RATE       : integer;
+    PORT_NAME       : string
   );
   port(
     CLK     : in std_logic;
     RST     : in  std_logic;
     TX      : out std_logic;
    
-    IN1     : in std_logic_vector(8 downto 0);
+    IN1     : in std_logic_vector(7 downto 0);
     IN1_STB : in std_logic;
     IN1_ACK : out std_logic
   );
@@ -65,16 +67,13 @@ begin
   process
   begin
     wait until rising_edge(CLK);
-    S_IN1_ACK <= '0';
     case STATE is
       when IDLE =>
         if IN1_STB = '1'  then
-          S_IN1_ACK <= '1';
           DATA <= std_logic_vector(RESIZE(unsigned(IN1), 8));
           STATE     <= WAIT_EN;
         end if;
       when WAIT_EN =>
-        IN1_ACK <= '0';
         if X16CLK_EN = '1' then
           STATE <= START;
         end if;
@@ -132,11 +131,11 @@ begin
         STATE <= IDLE;
       end case;
     if RST = '1' then
-      S_IN1_ACK <= '0';
       STATE <= IDLE;
+      TX <= '0';
     end if; 
   end process;
 
-  IN1_ACK <= S_IN1_ACK;
+  IN1_ACK <= '1' when STATE=IDLE else '0';
 
 end architecture RTL;

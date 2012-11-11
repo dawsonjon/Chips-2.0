@@ -82,8 +82,8 @@ class SizeValidator(wx.PyValidator):
 
     def TransferFromWindow(self):
         size = self.GetWindow().GetValue()
-        self.instance["port_size"] = int(size)
-        self.instance["parameters"]["bits"] = int(size)
+        self.instance["port_size"] = size
+        self.instance["parameters"]["bits"] = size
         return True
 
 

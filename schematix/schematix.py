@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pickle
 import copy
+import StringIO
 
 import wx
 from wx.lib.floatcanvas import NavCanvas, FloatCanvas, Resources
@@ -10,6 +11,7 @@ import parameter_dialog
 import schematic_actions
 import c_actions
 import name_dialog
+import rested
 from instance import Instance
 from wire import Wire
 
@@ -17,7 +19,7 @@ bend_component = {
     "name" : "bend",
     "inputs" : {"in1":"bits"}, 
     "outputs" : {"out1":"bits"},
-    "parameters" : {"bits":16},
+    "parameters" : {"bits":"16"},
     "device_inputs" : {},
     "device_outputs" : {},
 }
@@ -26,7 +28,7 @@ tee_component = {
     "name" : "tee",
     "inputs" : {"in1":"bits"}, 
     "outputs" : {"out1":"bits", "out2":"bits"},
-    "parameters" : {"bits":16},
+    "parameters" : {"bits":"16"},
     "device_inputs" : {},
     "device_outputs" : {},
 }
@@ -117,6 +119,7 @@ class BlockFrame(wx.Frame):
         self.netlist = {}
         self.port_positions = {}
         self.wires = []
+        self.documentation = ""
 
     def open(self, filename):
 
@@ -129,6 +132,7 @@ class BlockFrame(wx.Frame):
         self.netlist = pickle.load(open_file)
         self.port_positions = pickle.load(open_file)
         self.wires = pickle.load(open_file)
+        self.documentation = pickle.load(open_file)
         self.update_all_instances()
         self.draw()
         self.undo.Enable(False)
@@ -151,6 +155,7 @@ class BlockFrame(wx.Frame):
             self.netlist = pickle.load(open_file)
             self.port_positions = pickle.load(open_file)
             self.wires = pickle.load(open_file)
+            self.documentation = pickle.load(open_file)
             self.update_all_instances()
             self.draw()
             self.undo.Enable(False)
@@ -172,6 +177,7 @@ class BlockFrame(wx.Frame):
             pickle.dump(self.netlist, save_file)
             pickle.dump(self.port_positions, save_file)
             pickle.dump(self.wires, save_file)
+            pickle.dump(self.documentation, save_file)
             save_file.close()
 
         self.selector.update()
@@ -192,6 +198,7 @@ class BlockFrame(wx.Frame):
             pickle.dump(self.netlist, save_file)
             pickle.dump(self.port_positions, save_file)
             pickle.dump(self.wires, save_file)
+            pickle.dump(self.documentation, save_file)
             save_file.close()
 
         self.selector.update()
@@ -273,7 +280,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": {"bits":16},
+                    "parameters": {"bits":"16"},
                     "position": snap(event.Coords), 
                     "name":instance,
                     "port_name":instance,
@@ -298,6 +305,12 @@ class BlockFrame(wx.Frame):
                 LineWidth = 1
             )
 
+    def on_edit_documentation(self, event):
+        frame = rested.DocEdit(None, title="reSTEd", size=(1024,768))
+        doc_file = StringIO.StringIO(self.documentation)
+        frame.open(doc_file)
+        frame.Show()
+
     def on_left_dclick(self, event):
 
         """Capture the mouse left down on an unoccupied schematic area.  This
@@ -320,7 +333,7 @@ class BlockFrame(wx.Frame):
                     while "port_%s"%number in self.get_names():
                         number += 1
                     self.netlist[instance]["port_name"] = "port_%s"%number
-                    self.netlist[instance]["port_size"] = 16
+                    self.netlist[instance]["port_size"] = "16"
                 self.draw()
 
         elif self.state == "join_port":
@@ -329,7 +342,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": {"bits":16},
+                    "parameters": {"bits":"16"},
                     "position": snap(event.Coords), 
                     "name":instance
             }
@@ -353,7 +366,7 @@ class BlockFrame(wx.Frame):
             self.sn+=1
             self.netlist[instance] = {
                     "component": bend_component, 
-                    "parameters": {"bits":16},
+                    "parameters": {"bits":"16"},
                     "position": snap(event.Coords), 
                     "name":instance
             }
@@ -365,6 +378,13 @@ class BlockFrame(wx.Frame):
             ))
             self.draw()
             self.state = "idle"
+        else:
+            menu = wx.Menu()
+            self.Bind(wx.EVT_MENU, 
+                self.on_edit_documentation,
+                menu.Append(-1, "Edit Documention"),
+            )
+            self.PopupMenu(menu)
 
     def on_left_up(self, event):
 
@@ -580,7 +600,7 @@ class BlockFrame(wx.Frame):
         self.sn+=1
         self.netlist[instance] = {
                 "component": bend_component, 
-                "parameters": {"bits":16},
+                "parameters": {"bits":"16"},
                 "position": snap(((x1+x2)/2, (y1+y2)/2)), 
                 "name":instance
         }
@@ -601,7 +621,7 @@ class BlockFrame(wx.Frame):
         self.sn+=1
         self.netlist[instance] = {
                 "component": tee_component, 
-                "parameters": {"bits":16},
+                "parameters": {"bits":"16"},
                 "position": snap(((x1+x2)/2, (y1+y2)/2)), 
                 "name": instance
         }
@@ -681,7 +701,11 @@ class BlockFrame(wx.Frame):
         out_of_date_components = []
         for instance_name, instance in self.netlist.iteritems():
             name = instance["component"]["name"]
-            component = self.selector.get_component_named(name)
+            try:
+                component = self.selector.get_component_named(name)
+            except component_selector.ComponentReadError as err:
+                self.selector.transcript.log("Could not update schematic components")
+                self.selector.transcript.log(err.msg)
             if not self.selector.is_up_to_date(component):
                 out_of_date_components.append(name)
 

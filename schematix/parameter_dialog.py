@@ -41,13 +41,13 @@ class PythonExpValidator(wx.PyValidator):
 
     def TransferToWindow(self):
         self.GetWindow().SetValue(
-            repr(self.parameters[self.parameter])
+            self.parameters[self.parameter]
         )
         return True
 
     def TransferFromWindow(self):
         text = self.GetWindow().GetValue()
-        self.parameters[self.parameter] = eval(text)
+        self.parameters[self.parameter] = text
         return True
 
 

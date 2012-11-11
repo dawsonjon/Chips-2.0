@@ -1,7 +1,12 @@
 #!/usr/bin/env python
+
+import webbrowser
+import thread
+
 import wx
 import wx.html as html
 import docutils.core
+from docutils.writers.odf_odt import Writer as odt_writer
 
 class DocWin(html.HtmlWindow):
 
@@ -12,10 +17,30 @@ class DocWin(html.HtmlWindow):
         if "gtk2" in wx.PlatformInfo:
             self.SetStandardFonts()
 
-    def set_RsT(self, RsT):
-        document = docutils.core.publish_doctree(RsT)
-        html = docutils.core.publish_from_doctree(document, writer_name="html")
+    def set_RsT(self, reST):
+        self.reST = reST
+        #thread.start_new_thread(self.update, ())
+        self.update()
+
+    def update(self):
+        self.document = docutils.core.publish_doctree(self.reST)
+        html = docutils.core.publish_from_doctree(self.document, writer_name="html")
         self.SetPage(html)
+
+    def export_html(self, filename):
+        html = docutils.core.publish_from_doctree(self.document, writer_name="html")
+        export_file = open(filename, "w")
+        export_file.write(html)
+
+    def export_latex(self, filename):
+        html = docutils.core.publish_from_doctree(self.document, writer_name="latex")
+        export_file = open(filename, "w")
+        export_file.write(html)
+
+    def export_odt(self, filename):
+        html = docutils.core.publish_from_doctree(self.document, writer = odt_writer())
+        export_file = open(filename, "w")
+        export_file.write(html)
 
 
 if __name__ == "__main__":

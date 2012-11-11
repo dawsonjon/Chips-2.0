@@ -31,7 +31,6 @@ entity console_output is
 end entity console_output;
 
 architecture RTL of console_output is
-  signal S_IN1_ACK : std_logic;
 begin
 
   process
@@ -39,14 +38,13 @@ begin
     variable INT  : integer;
   begin
     wait until rising_edge(CLK);
-    S_IN1_ACK <= IN1_STB;
-    if IN1_STB = '1' and S_IN1_ACK = '1' then
+
+    if IN1_STB = '1' then
       INT := to_integer(signed(IN1));
       write(OUTPUT_LINE, INT);
       writeline(output, OUTPUT_LINE);
-      S_IN1_ACK <= '1';
     end if;
   end process;
-  IN1_ACK <= S_IN1_ACK;
+  IN1_ACK <= IN1_STB;
 
 end RTL;

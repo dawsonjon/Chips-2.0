@@ -52,6 +52,8 @@ begin
     case STATE is
       when READ =>
         if IN1_STB = '1' then
+          OUT1 <= IN1;
+          OUT2 <= IN1;
           STATE <= WRITE_1;
         end if;
 

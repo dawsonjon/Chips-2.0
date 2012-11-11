@@ -14,6 +14,10 @@ import transcript_window
 
 system_components = os.path.join(os.path.dirname(__file__), "system_components")
 
+class ComponentReadError(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
 def edit(window, component):
 
     """Edit a component"""
@@ -58,23 +62,58 @@ def parse_vhdl(filename):
         if line.startswith("---"):
             component["documentation"] += line[3:]
         elif line.startswith("--name"):
-            component["name"]=line.split(":")[1].strip()
+            try:
+                component["name"]=line.split(":")[1].strip()
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read component name"%filename)
         elif line.startswith("--input"):
-            component["inputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
+            try:
+                component["inputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read component input"%filename)
         elif line.startswith("--output"):
-            component["outputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
+            try:
+                component["outputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read component output"%filename)
         elif line.startswith("--parameter"):
-            component["parameters"][line.split(":")[1].strip()] = line.split(":")[2].strip()
+            try:
+                component["parameters"][line.split(":")[1].strip()]=line.split(":")[2].strip()
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read component parameter"%filename)
         elif line.startswith("--tag"):
-            component["meta_tags"].append(line.split(":")[1].strip())
+            try:
+                component["meta_tags"].append(line.split(":")[1].strip())
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read meta tag"%filename)
         elif line.startswith("--source_file"):
-            component["source_file"]=line.split(":")[1].strip()
+            try:
+                component["source_file"]=line.split(":")[1].strip()
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read source file"%filename)
         elif line.startswith("--device_in"):
-            component["device_inputs"][line.split(":")[1].strip()] = line.split(":")[2].strip()
+            try:
+                discard, bus, local_name, port_name, size  = [i.strip() for i in line.split(":")]
+                bus = bus.upper()
+                if bus not in ["BIT", "BUS"]:
+                    raise ComponentReadError("%s:\nExpected BIT or BUS in device input"%filename)
+                component["device_inputs"][local_name] = (bus, port_name, size)
+            except ValueError, IndexError:
+                raise ComponentReadError("%s:\nCould not read device input"%filename)
         elif line.startswith("--device_out"):
-            component["device_outputs"][line.split(":")[1].strip()] = line.split(":")[2].strip()
+            try:
+                discard, bus, local_name, port_name, size  = [i.strip() for i in line.split(":")]
+                bus = bus.upper()
+                if bus not in ["BIT", "BUS"]:
+                    raise ComponentReadError("%s:\nExpected BIT or BUS in device output"%filename)
+                component["device_outputs"][local_name] = (bus, port_name, size)
+            except ValueError, IndexError:
+                raise ComponentReadError("%s:\nCould not read device output"%filename)
         elif line.startswith("--dependency"):
-            component["dependencies"].append(line.split(":")[1].strip())
+            try:
+                component["dependencies"].append(line.split(":")[1].strip())
+            except IndexError:
+                raise ComponentReadError("%s:\nCould not read dependencies"%filename)
 
     return component
 
@@ -169,7 +208,12 @@ class Selector(wx.Panel):
             for component in os.listdir(directory):
                 if component.endswith(".vhd"):
                     filename = os.path.join(directory, component)
-                    component = parse_vhdl(filename)
+                    try:
+                        component = parse_vhdl(filename)
+                    except ComponentReadError as err:
+                        self.transcript.log("Error reading file %s"%filename)
+                        self.transcript.log(err.msg)
+                        continue
                     if "meta_tags" in component and component["meta_tags"]:
                         for tag in component["meta_tags"]:
                             if tag in library:

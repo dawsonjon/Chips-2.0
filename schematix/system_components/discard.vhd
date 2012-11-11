@@ -16,6 +16,9 @@ use std.textio.all;
 
 entity discard is
 
+  generic(
+    BITS    : integer
+  );
   port(
     CLK     : in std_logic;
     RST     : in std_logic;

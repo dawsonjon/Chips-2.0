@@ -206,7 +206,7 @@ class VHDLProject:
             self.time_units_control.GetValue()
         ])
         command = "./{0} --wave={1} --stop-time={2}".format(
-                self.top,
+                self.top.lower(),
                 wave_file,
                 time_to_run
         )

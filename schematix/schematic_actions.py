@@ -60,6 +60,7 @@ def new(window):
         pickle.dump({}, new_file)
         pickle.dump({}, new_file)
         pickle.dump([], new_file)
+        pickle.dump("", new_file)
         new_file.close()
         window.update()
 
@@ -72,10 +73,14 @@ def generate_ports(netlist, wires, vhdl):
     for instance_name, instance in netlist.iteritems():
         if instance["component"]["name"] == "input":
             input_ports[instance["port_name"]] = instance["port_size"]
-            vhdl.append("--input: %s:%s\n"%(instance["port_name"], instance["port_size"]))
+            vhdl.append("--input: %s:%s\n"%(
+                instance["port_name"], 
+                evaluate_parameter(instance["port_size"], instance)))
         elif instance["component"]["name"] == "output":
             output_ports[instance["port_name"]] = instance["port_size"]
-            vhdl.append("--output: %s:%s\n"%(instance["port_name"], instance["port_size"]))
+            vhdl.append("--output: %s:%s\n"%(
+                instance["port_name"], 
+                evaluate_parameter(instance["port_size"], instance)))
 
     ports = []
     if input_ports or output_ports:
@@ -83,42 +88,62 @@ def generate_ports(netlist, wires, vhdl):
         ports.append("    RST : in std_logic")
 
     for instance_name, instance in netlist.iteritems():
-        for pin_name, size in instance["component"]["device_inputs"].iteritems():
-            size = int(size)
-            vhdl.append("--device_in: %s_%s : %s\n"%(instance_name, pin_name, size))
-            if size == 1:
-                ports.append("    %s_%s : in std_logic"%(instance_name, pin_name))
+        for local_name, pin_data in instance["component"]["device_inputs"].iteritems():
+            bus, pin_name, size = pin_data
+            size = int(evaluate_parameter(size, instance))
+            pin_name = str(evaluate_parameter(pin_name, instance))
+            vhdl.append('--device_in: %s: %s : "%s" : %s\n'%(bus, pin_name, pin_name, size))
+            if bus == "BIT":
+                ports.append("    %s : in std_logic"%(pin_name))
             else:
-                ports.append("    %s_%s : in std_logic_vector(%s downto 0)"%(instance_name, pin_name, size-1))
+                ports.append("    %s : in std_logic_vector(%s downto 0)"%(pin_name, size-1))
 
-        for pin_name, size in instance["component"]["device_outputs"].iteritems():
-            size = int(size)
-            vhdl.append("--device_out: %s_%s : %s\n"%(instance_name, pin_name, size))
-            if size == 1:
-                ports.append("    %s_%s : out std_logic"%(instance_name, pin_name))
+        for local_name, pin_data in instance["component"]["device_outputs"].iteritems():
+            bus, pin_name, size = pin_data
+            size = int(evaluate_parameter(size, instance))
+            pin_name = str(evaluate_parameter(pin_name, instance))
+            vhdl.append('--device_out: %s: %s : "%s" : %s\n'%(bus, pin_name, pin_name, size))
+            if bus == "BIT":
+                ports.append("    %s : out std_logic"%(pin_name))
             else:
-                ports.append("    %s_%s : out std_logic_vector(%s downto 0)"%(instance_name, pin_name, size-1))
+                ports.append("    %s : out std_logic_vector(%s downto 0)"%(pin_name, size-1))
 
     for inport, size in input_ports.iteritems():
         size = int(size)
-        if size == 1:
-            ports.append("    %s : in std_logic"%(inport, size-1))
-        else:
-            ports.append("    %s : in std_logic_vector(%s downto 0)"%(inport, size-1))
+        ports.append("    %s : in std_logic_vector(%s downto 0)"%(inport, size-1))
         ports.append("    %s_STB : in std_logic"%inport)
         ports.append("    %s_ACK : out std_logic"%inport)
 
     for outport, size in output_ports.iteritems():
         size = int(size)
-        if size == 1:
-            ports.append("    %s : out std_logic"%(outport, size-1))
-        else:
-            ports.append("    %s : out std_logic_vector(%s downto 0)"%(outport, size-1))
+        ports.append("    %s : out std_logic_vector(%s downto 0)"%(outport, size-1))
         ports.append("    %s_STB : out std_logic"%outport)
         ports.append("    %s_ACK : in std_logic"%outport)
 
     return ports, input_ports, output_ports
 
+def evaluate_parameter(parameter, instance):
+    environment = {
+        "instance":instance["name"],
+        "component":instance["component"]["name"],
+    }
+
+    for parameter_name, value in instance["parameters"].iteritems():
+        print instance["component"]["name"]
+        print value
+        environment[parameter_name] = eval(value, environment)
+
+    for name, size in instance["component"]["inputs"].iteritems():
+        environment[name] = {}
+        environment[name]["bits"] = eval(size, environment)
+
+    for name, size in instance["component"]["inputs"].iteritems():
+        environment[name] = {}
+        environment[name]["bits"] = eval(size, environment)
+
+    print parameter
+    value = eval(parameter, environment)
+    return value
 
 def generate_components(netlist, vhdl):
 
@@ -134,7 +159,12 @@ def generate_components(netlist, vhdl):
 
         generics = []
         for parameter, default in instance["component"]["parameters"].iteritems():
-            generics.append("    %s : integer := %s"%(parameter, default))
+            try:
+                generics.append("    %s : integer := %s"%(parameter, 
+                    int(evaluate_parameter(default, instance))))
+            except ValueError:
+                generics.append('    %s : string := "%s"'%(parameter,
+                    str(evaluate_parameter(default, instance))))
 
         if generics:
             vhdl.append("    generic(\n")
@@ -145,19 +175,31 @@ def generate_components(netlist, vhdl):
         ports.append("    CLK : in std_logic")
         ports.append("    RST : in std_logic")
 
-        for pin_name, size in instance["component"]["device_inputs"].iteritems():
-            ports.append("    %s : in std_logic_vector(%s-1 downto 0)"%(pin_name, size))
+        for local_name, pin_data in instance["component"]["device_inputs"].iteritems():
+            bus, pin_name, size = pin_data
+            size = int(evaluate_parameter(size, instance))
+            if bus == "BIT":
+                ports.append("    %s : in std_logic"%(local_name))
+            else:
+                ports.append("    %s : in std_logic_vector"%(local_name))
 
-        for pin_name, size in instance["component"]["device_outputs"].iteritems():
-            ports.append("    %s : out std_logic_vector(%s-1 downto 0)"%(pin_name, size))
+        for local_name, pin_data in instance["component"]["device_outputs"].iteritems():
+            bus, pin_name, size = pin_data
+            size = int(evaluate_parameter(size, instance))
+            if bus == "BIT":
+                ports.append("    %s : out std_logic"%(local_name))
+            else:
+                ports.append("    %s : out std_logic_vector"%(local_name))
 
         for inport, size in instance["component"]["inputs"].iteritems():
-            ports.append("    %s : in std_logic_vector(%s-1 downto 0)"%(inport, size))
+            size = int(evaluate_parameter(size, instance))
+            ports.append("    %s : in std_logic_vector"%(inport))
             ports.append("    %s_STB : in std_logic"%inport)
             ports.append("    %s_ACK : out std_logic"%inport)
 
         for outport, size in instance["component"]["outputs"].iteritems():
-            ports.append("    %s : out std_logic_vector(%s-1 downto 0)"%(outport, size))
+            size = int(evaluate_parameter(size, instance))
+            ports.append("    %s : out std_logic_vector"%(outport))
             ports.append("    %s_STB : out std_logic"%outport)
             ports.append("    %s_ACK : in std_logic"%outport)
 
@@ -167,27 +209,24 @@ def generate_components(netlist, vhdl):
             vhdl.append("\n  );\n")
         vhdl.append("  end component %s;\n\n"%instance["component"]["name"])
 
-def parse_size(size, instance):
+def update_size(netlist, instance, wires):
+    driver_instance, driver_port = get_input_driver(instance["name"], "in1", wires)
+    driver_instance = netlist[driver_instance]
+    if driver_instance["component"]["name"] in ["tee", "bend"]:
+        update_size(netlist, driver_instance, wires)
+    size = driver_instance["component"]["outputs"][driver_port]
+    size = evaluate_parameter(size, driver_instance)
+    instance["parameters"]["bits"] = str(size)
 
-    """Get an integer value of size, size may be an instance parameter"""
-
-    if size in instance["parameters"]:
-        return parse_size(instance["parameters"][size], instance)
-    else:
-        return int(size)
+def get_input_driver(instance_name, port_name, wires):
+    for from_instance, from_port, to_instance, to_port in wires:
+        if to_instance == instance_name:
+            return from_instance, from_port
 
 def update_tees_and_bends(netlist, wires):
-
-    """For convenience, tees and bends assume the type of the thing that drives them"""
-
     for instance_name, instance in netlist.iteritems():
         if instance["component"]["name"] in ["tee", "bend"]:
-            #find the source of the driving signal
-            for from_instance, from_port, to_instance, to_port in wires:
-                if to_instance == instance_name:
-                    size = netlist[from_instance]["component"]["outputs"][from_port]
-                    size = parse_size(size, netlist[from_instance])
-                    instance["parameters"]["bits"] = size
+            update_size(netlist, instance, wires)
 
 
 def generate_signals(netlist, input_ports, output_ports, wires, vhdl):
@@ -195,9 +234,9 @@ def generate_signals(netlist, input_ports, output_ports, wires, vhdl):
     wire = 0
     for from_instance, from_port, to_instance, to_port in wires:
         from_size = netlist[from_instance]["component"]["outputs"][from_port]
-        from_size = parse_size(from_size, netlist[from_instance])
+        from_size = int(evaluate_parameter(from_size, netlist[from_instance]))
         to_size = netlist[to_instance]["component"]["inputs"][to_port]
-        to_size = parse_size(to_size, netlist[to_instance])
+        to_size = int(evaluate_parameter(to_size, netlist[to_instance]))
         if from_size != to_size:
             raise SchematicError("type mismatch:\n from %s_%s port %s is %s to %s_%s port %s is %s"%(
                 netlist[from_instance]["component"]["name"], from_instance, from_port, from_size,
@@ -214,7 +253,7 @@ def generate_signals(netlist, input_ports, output_ports, wires, vhdl):
         vhdl.append("  signal CLK : std_logic;\n")
         vhdl.append("  signal RST : std_logic;\n")
 
-def calculate_widths(netslit, wires):
+def calculate_widths(netlist, wires):
     
     sizes = {}
     for instance_name, instance in netlist:
@@ -240,6 +279,7 @@ def generate(window, component):
         netlist = pickle.load(open_file)
         port_positions = pickle.load(open_file)
         wires = pickle.load(open_file)
+        documentation = pickle.load(open_file)
         name = os.path.basename(filename).split(".")[0]
         vhdl = []
 
@@ -286,7 +326,11 @@ def generate(window, component):
 
             generics = []
             for parameter, value in instance["parameters"].iteritems():
-                generics.append("    %s => %s"%(parameter, value))
+                value = evaluate_parameter(value, instance)
+                try:
+                    generics.append("    %s => %s"%(parameter, int(value)))
+                except ValueError:
+                    generics.append('    %s => "%s"'%(parameter, str(value)))
 
             vhdl.append("  %s_%s : %s\n"%(
                 instance["component"]["name"],
@@ -302,10 +346,14 @@ def generate(window, component):
             wire = 0
             signals.append("    CLK => CLK")
             signals.append("    RST => RST")
-            for pin_name, size in instance["component"]["device_inputs"].iteritems():
-                signals.append("    %s => %s_%s"%(pin_name, instance_name, pin_name))
-            for pin_name, size in instance["component"]["device_outputs"].iteritems():
-                signals.append("    %s => %s_%s"%(pin_name, instance_name, pin_name))
+            for local_name, pin_data in instance["component"]["device_inputs"].iteritems():
+                bus, pin_name, size = pin_data
+                pin_name = str(evaluate_parameter(pin_name, instance))
+                signals.append("    %s => %s"%(local_name, pin_name))
+            for local_name, pin_data in instance["component"]["device_outputs"].iteritems():
+                bus, pin_name, size = pin_data
+                pin_name = str(evaluate_parameter(pin_name, instance))
+                signals.append("    %s => %s"%(local_name, pin_name))
             for from_instance, from_port, to_instance, to_port in wires:
                 if from_instance == instance_name:
                     if netlist[to_instance]["component"]["name"] == "output":

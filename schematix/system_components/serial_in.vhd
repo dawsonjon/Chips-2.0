@@ -1,10 +1,14 @@
 --name: serial_input
 --tag: sources
 --output: out1: 8
+
 --source_file: built_in
---device_in: rx : 1
---parameter: clock_frequency : 100000000
---parameter: baud_rate : 115200
+
+--device_in: BIT : RX : port_name :1
+
+--parameter: clock_frequency :100000000
+--parameter: baud_rate       :115200
+--parameter: port_name       :"RX"
 
 ---Serial Input
 ---============
@@ -30,7 +34,8 @@ entity SERIAL_INPUT is
 
   generic(
     CLOCK_FREQUENCY : integer;
-    BAUD_RATE       : integer
+    BAUD_RATE       : integer;
+    PORT_NAME       : string
   );
   port(
     CLK      : in std_logic;

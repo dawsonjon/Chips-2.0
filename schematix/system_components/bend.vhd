@@ -2,7 +2,7 @@
 --tag: schematic
 --output: out1 : bits
 --input: in1 : bits
---generic : bits : 16
+--parameter : bits : 16
 --source_file: built_in
 
 ---Bend
