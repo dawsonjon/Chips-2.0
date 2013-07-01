@@ -155,15 +155,45 @@ class VHDLProject:
             self.file_tree.SetPyData(node, "file")
         self.file_tree.ExpandAll()
 
+    import os
+    import tempfile
+    import shutil
+    verilog_file = os.path.abspath("%s.v"%name)
+    tempdir = tempfile.mkdtemp()
+    os.chdir(tempdir)
+    os.system("iverilog -o %s %s"%(name, verilog_file))
+    if "run" in sys.argv:
+      result = os.system("vvp %s"%name)
+      if result:
+        sys.exit(1)
+      else:
+        sys.exit(0)
+    shutil.rmtree(tempdir)
+
+    import os
+    import tempfile
+    import shutil
+    verilog_file = os.path.abspath("%s.v"%name)
+    tempdir = tempfile.mkdtemp()
+    os.chdir(tempdir)
+    os.system("iverilog -o %s %s"%(name, verilog_file))
+    if "run" in sys.argv:
+      result = os.system("vvp %s"%name)
+      if result:
+        sys.exit(1)
+      else:
+        sys.exit(0)
+    shutil.rmtree(tempdir)
+
     def compile_simulation(self):
 
         """Compile a simulation using """
 
-        self.transcript.log("launching GHDL VHDL compiler\n")
+        self.transcript.log("launching icarus verilog compiler\n")
         for path in self.files:
             self.transcript.log("compiling: %s\n"%path)
-            command = 'ghdl -a --workdir={0} {1}'.format(
-                    temp_dir,
+            command = 'iverilog -o {0} {1}'.format(
+                    path[:-2] + ".o",
                     path)
             process = subprocess.Popen(
                     command, 
@@ -174,8 +204,7 @@ class VHDLProject:
                 self.transcript.log(line)
             process.wait()
 
-        command = 'ghdl -e --workdir={0} {1}'.format(
-                temp_dir,
+        command = 'vvp'.format(
                 self.top
                 )
 
