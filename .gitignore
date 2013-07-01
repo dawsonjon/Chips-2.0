@@ -1,2 +1,4 @@
 *.pyc
 components
+.coverage*
+main.v

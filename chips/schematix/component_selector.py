@@ -12,7 +12,7 @@ import schematic_actions
 import wxghdl
 import transcript_window
 
-system_components = os.path.join(os.path.dirname(__file__), "system_components")
+system_components = os.path.join(os.path.dirname(__file__), "..", "toolbox")
 
 class ComponentReadError(Exception):
     def __init__(self, msg):
@@ -59,39 +59,39 @@ def parse_vhdl(filename):
 
     VHDL_file = open(filename)
     for line in VHDL_file:
-        if line.startswith("---"):
+        if line.startswith("---") or line.startswith("///"):
             component["documentation"] += line[3:]
-        elif line.startswith("--name"):
+        elif line.startswith("--name") or line.startswith("//name"):
             try:
                 component["name"]=line.split(":")[1].strip()
             except IndexError:
                 raise ComponentReadError("%s:\nCould not read component name"%filename)
-        elif line.startswith("--input"):
+        elif line.startswith("--input") or line.startswith("//input"):
             try:
                 component["inputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
             except IndexError:
                 raise ComponentReadError("%s:\nCould not read component input"%filename)
-        elif line.startswith("--output"):
+        elif line.startswith("--output") or line.startswith("//output"):
             try:
                 component["outputs"][line.split(":")[1].strip()]=line.split(":")[2].strip()
             except IndexError:
                 raise ComponentReadError("%s:\nCould not read component output"%filename)
-        elif line.startswith("--parameter"):
+        elif line.startswith("--parameter") or line.startswith("//parameter"):
             try:
                 component["parameters"][line.split(":")[1].strip()]=line.split(":")[2].strip()
             except IndexError:
                 raise ComponentReadError("%s:\nCould not read component parameter"%filename)
-        elif line.startswith("--tag"):
+        elif line.startswith("--tag") or line.startswith("//tag"):
             try:
                 component["meta_tags"].append(line.split(":")[1].strip())
             except IndexError:
                 raise ComponentReadError("%s:\nCould not read meta tag"%filename)
-        elif line.startswith("--source_file"):
+        elif line.startswith("--source_file") or line.startswith("//source_file"):
             try:
                 component["source_file"]=line.split(":")[1].strip()
             except IndexError:
                 raise ComponentReadError("%s:\nCould not read source file"%filename)
-        elif line.startswith("--device_in"):
+        elif line.startswith("--device_in") or line.startswith("//device_in"):
             try:
                 discard, bus, local_name, port_name, size  = [i.strip() for i in line.split(":")]
                 bus = bus.upper()
@@ -100,7 +100,7 @@ def parse_vhdl(filename):
                 component["device_inputs"][local_name] = (bus, port_name, size)
             except ValueError, IndexError:
                 raise ComponentReadError("%s:\nCould not read device input"%filename)
-        elif line.startswith("--device_out"):
+        elif line.startswith("--device_out") or line.startswith("//device_out"):
             try:
                 discard, bus, local_name, port_name, size  = [i.strip() for i in line.split(":")]
                 bus = bus.upper()
@@ -109,7 +109,7 @@ def parse_vhdl(filename):
                 component["device_outputs"][local_name] = (bus, port_name, size)
             except ValueError, IndexError:
                 raise ComponentReadError("%s:\nCould not read device output"%filename)
-        elif line.startswith("--dependency"):
+        elif line.startswith("--dependency") or line.startswith("//dependency"):
             try:
                 component["dependencies"].append(line.split(":")[1].strip())
             except IndexError:
@@ -206,7 +206,9 @@ class Selector(wx.Panel):
         library = {"uncategorised":[]}
         for directory in (system_components, self.project_path.GetValue()):
             for component in os.listdir(directory):
-                if component.endswith(".vhd"):
+                if (component.endswith(".vhd") or
+                    component.endswith(".vhdl") or
+                    component.endswith(".v")):
                     filename = os.path.join(directory, component)
                     try:
                         component = parse_vhdl(filename)
@@ -388,7 +390,9 @@ class Selector(wx.Panel):
 
         for directory in (system_components, self.project_path.GetValue()):
             for component in os.listdir(directory):
-                if component.endswith(".vhd"):
+                if (component.endswith(".vhd") or 
+                    component.endswith(".vhdl") or 
+                    component.endswith(".v")):
                     filename = os.path.join(directory, component)
                     component = parse_vhdl(filename)
                     if component["name"]==name:

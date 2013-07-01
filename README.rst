@@ -1,40 +1,17 @@
-Schematix
-=========
+Chips
+=====
 
 
 Introduction
 ------------
 
-Schematix is a graphical program for designing FPGAs using schematic entry. FPGA designs can be created graphically by placing components, and connecting them together using standardised buses. Schematix includes many predefined components. You can add your own componentsby:
-
-+ Creating them in a schematic.
-+ Creating them from a C program.
-+ Writing them yourself in VHDL.
+Chips is a suite of FPGA (chip) design tools. Design chips by connecting
+components using the *schematix* graphical schematic editor. Chips includes a
+*toolbox* of usefull components, but you can also create components in C using
+the built in *c2verilog* compiler (you can also use verilog or VHDL).
 
 Screenshots
 -----------
 
-.. image:: https://raw.github.com/dawsonjon/Schematix/master/screenshots.png
+.. image:: https://raw.github.com/dawsonjon/Schematix/master/documents/screenshots.png
 
-
-What is Implemented
--------------------
-
-+ A tree based component manager using meta-tags to categorise components.
-+ A schematic editor.
-+ Automatic generation of VHDL.
-+ GHDL and gtkWave integration.
-+ A base set of components.
-+ C based component description.
-+ Integrated reStructuredText based documentation browser.
-
-What is not Implemented
------------------------
-
-+ Better GUI features.
-
-  - Documentation Editor.
-  - Preferences dialog.
-
-+ Synthesisable floating point.
-+ More built in components.
