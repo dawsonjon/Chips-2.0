@@ -17,7 +17,10 @@ import editor
 import transcript_window
 
 temp_dir=tempfile.mkdtemp()
-wave_file=os.path.join(temp_dir, "wave.ghw")
+wave_file=os.path.join(temp_dir, "wave.lxt")
+settings_filename=os.path.join(temp_dir, "settings.v")
+object_file=os.path.join(temp_dir, "object")
+
 metric_prefix = {
     "fs" : 1e-15,
     "ps" : 1e-12,
@@ -27,9 +30,9 @@ metric_prefix = {
     "s" : 1
 }
 
-class VHDLProject:
+class VerilogProject:
     def __init__(self, files, top):
-        self.frame = wx.Frame(None, title = "wxGHDL", size=(1024,600))
+        self.frame = wx.Frame(None, title = "Icarus Verilog", size=(1024,600))
 
         self.files = files
         self.top = top
@@ -67,6 +70,8 @@ class VHDLProject:
         self.time_units_control.Append("us")
         self.time_units_control.Append("ms")
         self.time_units_control.Append("s")
+        self.frame.Bind(wx.EVT_COMBOBOX, self.time_changed, self.time_units_control)
+        self.frame.Bind(wx.EVT_SPINCTRL, self.time_changed, self.time_control)
 
         toolbar = wx.BoxSizer(wx.HORIZONTAL)
         toolbar.Add(wx.StaticText(panel, -1, "Run time"), 0, wx.CENTRE)
@@ -94,6 +99,12 @@ class VHDLProject:
         self.timer = wx.Timer(self.frame)
         self.process = None
         self.update_tree()
+        self.update_state("start")
+
+    def time_changed(self, event):
+
+        """If the run time changes, we need to recompile"""
+
         self.update_state("start")
 
     def update_state(self, state):
@@ -155,58 +166,69 @@ class VHDLProject:
             self.file_tree.SetPyData(node, "file")
         self.file_tree.ExpandAll()
 
-    import os
-    import tempfile
-    import shutil
-    verilog_file = os.path.abspath("%s.v"%name)
-    tempdir = tempfile.mkdtemp()
-    os.chdir(tempdir)
-    os.system("iverilog -o %s %s"%(name, verilog_file))
-    if "run" in sys.argv:
-      result = os.system("vvp %s"%name)
-      if result:
-        sys.exit(1)
-      else:
-        sys.exit(0)
-    shutil.rmtree(tempdir)
+    def check_icarus_installed(self):
 
-    import os
-    import tempfile
-    import shutil
-    verilog_file = os.path.abspath("%s.v"%name)
-    tempdir = tempfile.mkdtemp()
-    os.chdir(tempdir)
-    os.system("iverilog -o %s %s"%(name, verilog_file))
-    if "run" in sys.argv:
-      result = os.system("vvp %s"%name)
-      if result:
-        sys.exit(1)
-      else:
-        sys.exit(0)
-    shutil.rmtree(tempdir)
+        """Check that Icarus Verilog is correctly installed"""
+
+        try:
+            subprocess.call("iverilog")
+            return True
+        except OSError:
+            self.transcript.log("Icarus Verilog does not appear to be installed correctly.")
+            self.transcript.log("Get Icarus Verilog from http://iverilog.icarus.com")
+            return False
+
+    def check_gtkwave_installed(self):
+
+        """Check that Icarus Verilog is correctly installed"""
+
+        try:
+            subprocess.call("gtkwave -h", shell=True)
+            return True
+        except OSError:
+            self.transcript.log("GTK Wave does not appear to be installed correctly.")
+            self.transcript.log("Get GTKWave from http://gtkwave.sourceforge.net")
+            return False
 
     def compile_simulation(self):
 
         """Compile a simulation using """
 
+        if not self.check_icarus_installed():
+            return
+
         self.transcript.log("launching icarus verilog compiler\n")
+
+        #calculate run time
+        time_to_run = self.time_control.GetValue() * metric_prefix[
+            self.time_units_control.GetValue()]
+        print time_to_run
+
+        #create a settings file for iverilog
+        settings_file = open(settings_filename, "w")
+        settings_file.write(
+"""
+`timescale 1s/1ps
+module settings();
+ initial begin
+	 $dumpfile("%s");
+	 $dumpvars(0, %s);
+ end
+ initial begin
+	 #%s
+	 $finish();
+ end
+endmodule"""%(wave_file, self.top, time_to_run)
+        )
+        settings_file.close()
+
         for path in self.files:
             self.transcript.log("compiling: %s\n"%path)
-            command = 'iverilog -o {0} {1}'.format(
-                    path[:-2] + ".o",
-                    path)
-            process = subprocess.Popen(
-                    command, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.STDOUT, 
-                    shell=True)
-            for line in process.stdout:
-                self.transcript.log(line)
-            process.wait()
 
-        command = 'vvp'.format(
-                self.top
-                )
+        command = 'iverilog -o {0} {1} {2}'.format(
+                object_file,
+                settings_filename,
+                " ".join(self.files))
 
         process = subprocess.Popen(
                 command, 
@@ -216,28 +238,23 @@ class VHDLProject:
 
         for line in process.stdout:
             self.transcript.log(line)
+
         process.wait()
 
         if process.returncode == 0:
             self.update_state("sim_compiled")
-            self.transcript.log("GHDL VHDL compile ... successful\n")
+            self.transcript.log("Icarus Verilog compile ... successful\n")
         else:
             self.update_state("start")
-            self.transcript.log("GHDL VHDL compile ... failed\n")
+            self.transcript.log("Icarus Verilog compile ... failed\n")
 
     def run_simulation(self):
 
-        """Run a simulation using GHDL"""
+        """Run a simulation using Icarus Verilog"""
 
-        self.transcript.log("launching GHDL simulation\n")
-        time_to_run = "".join([
-            str(self.time_control.GetValue()), 
-            self.time_units_control.GetValue()
-        ])
-        command = "./{0} --wave={1} --stop-time={2}".format(
-                self.top.lower(),
-                wave_file,
-                time_to_run
+        self.transcript.log("launching Icarus Verilog simulation\n")
+        command = "vvp {0} -lxt2".format(
+                object_file,
         )
         self.process = subprocess.Popen(command, 
                 stdout=subprocess.PIPE,
@@ -258,14 +275,16 @@ class VHDLProject:
             self.process.wait()
             if self.process.returncode == 0:
                 self.update_state("sim_run")
-                self.transcript.log("GHDL simulation ... successful\n")
+                self.transcript.log("Icarus Verilog simulation ... successful\n")
             else:
                 self.update_state("sim_compiled")
-                self.transcript.log("GHDL simulation ... failed\n")
+                self.transcript.log("Icarus Verilog simulation ... failed\n")
 
     def view_wave(self):
 
         """Open simulation waveform in GTKWave"""
+        if not self.check_gtkwave_installed():
+            return
 
         self.transcript.log("launching GTKWave waveform viewer\n")
         subprocess.Popen("gtkwave {0}".format(wave_file), shell=True)
@@ -273,5 +292,5 @@ class VHDLProject:
 
 if __name__ == "__main__":
     app = wx.App()
-    VHDLProject()
+    VerilogProject()
     app.MainLoop()

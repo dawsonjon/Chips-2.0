@@ -143,8 +143,6 @@ def evaluate_parameter(parameter, instance):
     }
 
     for parameter_name, value in instance["parameters"].iteritems():
-        print instance["component"]["name"]
-        print value
         environment[parameter_name] = eval(value, environment)
 
     for name, size in instance["component"]["inputs"].iteritems():
@@ -155,7 +153,6 @@ def evaluate_parameter(parameter, instance):
         environment[name] = {}
         environment[name]["bits"] = eval(size, environment)
 
-    print parameter
     value = eval(parameter, environment)
     return value
 

@@ -9,7 +9,7 @@ import docwin
 import editor
 import c_actions
 import schematic_actions
-import wxghdl
+import wxiverilog
 import transcript_window
 
 system_components = os.path.join(os.path.dirname(__file__), "..", "toolbox")
@@ -364,7 +364,7 @@ class Selector(wx.Panel):
                 )
                 self.Bind(wx.EVT_MENU, 
                     lambda evt: self.simulate(component),
-                    menu.Append(-1, "Simulate"),
+                    menu.Append(-1, "Icarus Verilog Simulation"),
                 )
 
         self.PopupMenu(menu)
@@ -433,8 +433,8 @@ class Selector(wx.Panel):
         file_list = []
         for dependency in self.get_dependencies(component):
             file_list.append(self.get_component_path(dependency))
-        self.transcript.log("Launching VHDL simulator")
-        wxghdl.VHDLProject(file_list, component["name"])
+        self.transcript.log("Launching Verilog simulator")
+        wxiverilog.VerilogProject(file_list, component["name"])
 
 
     def is_up_to_date(self, component):

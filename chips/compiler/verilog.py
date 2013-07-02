@@ -122,6 +122,7 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size)
   output_file.write("///%s\n"%"".join(["=" for i in name]))
   output_file.write("///\n")
   output_file.write("///*Created by C2CHIP*\n\n")
+  output_file.write("  \n`timescale 1ns/1ps\n")
   output_file.write("module %s"%name)
 
   all_ports = [name for name, size in inports + outports]
