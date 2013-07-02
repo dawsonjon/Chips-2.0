@@ -196,10 +196,6 @@ def generate_signals(netlist, input_ports, output_ports, wires, vhdl):
         vhdl.append("  wire signal_%s_ack;\n"%wire)
         wire += 1
 
-    if not(input_ports or output_ports):
-        vhdl.append("  wire clk;\n")
-        vhdl.append("  wire rst;\n")
-
 def calculate_widths(netlist, wires):
     
     sizes = {}
@@ -234,6 +230,17 @@ def generate(window, component):
         port_names, ports, input_ports, output_ports = generate_ports(netlist, wires, vhdl)
         vhdl.append("//name: %s\n"%name)
         vhdl.append("//source_file: %s\n"%(name+".sch"))
+
+        dependencies = []
+        for instance_name, instance in netlist.iteritems():
+            if instance["component"]["name"] in ["input", "output"]:
+                continue
+            if instance["component"]["name"] not in dependencies:
+                dependencies.append(instance["component"]["name"])
+
+        for dependency in dependencies:
+            vhdl.append("//dependency: %s\n"%dependency)
+
         vhdl.append("module %s (\n    "%name)
         vhdl.append(",\n    ".join(port_names))
         vhdl.append("\n);\n\n")
@@ -242,6 +249,8 @@ def generate(window, component):
         generate_signals(netlist, input_ports, output_ports, wires, vhdl)
         vhdl.append("\n")
         if not (input_ports or output_ports):
+            vhdl.append("  reg clk;\n")
+            vhdl.append("  reg rst;\n")
             vhdl.append("  \ninitial\n")
             vhdl.append("  begin\n")
             vhdl.append("    rst <= 1'b1;\n")

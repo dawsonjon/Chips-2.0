@@ -82,7 +82,8 @@ def generate(window, component):
                 frames, 
                 output_file, 
                 parser.allocator.all_registers,
-                parser.allocator.memory_size)
+                parser.allocator.memory_size,
+                True)
         output_file.close()
     except C2CHIPError as err:
       window.transcript.log(err.message)

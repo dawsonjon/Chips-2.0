@@ -11,7 +11,7 @@ def unique(l):
 
   return dict(zip(l, l)).keys()
 
-def generate_CHIP(input_file, name, frames, output_file, registers, memory_size):
+def generate_CHIP(input_file, name, frames, output_file, registers, memory_size, no_tb_mode=False):
 
   """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
 
@@ -36,7 +36,7 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size)
   #list all inputs and outputs used in the program
   inputs = unique([i["input"] for frame in frames for i in frame if "input" in i])
   outputs = unique([i["output"] for frame in frames for i in frame if "output" in i])
-  testbench = not inputs and not outputs
+  testbench = not inputs and not outputs and not no_tb_mode
 
   #Do not generate a port in testbench mode
   inports = [
