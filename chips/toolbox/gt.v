@@ -1,19 +1,19 @@
-//name: subtractor
-//tag: arithmetic
+//name: greater_than
+//tag: comparator
 //input: in1: bits
 //input: in2: bits
 //output: out1: bits
 //parameter:bits:16
 //source_file: built_in
 
-///Subtractor
-///==========
+///Greater Than
+///============
 ///
-///Produces a stream of data *out1* by subtracting *in2* from *in1* item by item.
+///Produces a stream of data *out1* by comparing whether *in1* is greater than *in2* item by item.
 ///
 ///::
 ///
-///    out1 <= in1 - in2
+///    out1 <= in1 > in2
 ///
 ///+--------------------+-------------------------------------+
 ///|Language            | Verilog                             |
@@ -56,7 +56,7 @@
 /// ============= ============== ==============================================
 ///
 
-module subtractor #( parameter bits = 16)(
+module greater_than #( parameter bits = 16)(
     input clk,
     input rst,
     
@@ -89,7 +89,7 @@ module subtractor #( parameter bits = 16)(
            in1_ack <= 1'b1;
            in2_ack <= 1'b1;
            if (in1_stb && in1_ack && in2_stb && in2_ack) begin
-             out1 <= $signed(in1) - $signed(in2);
+             out1 <= in1 > in2;
              in1_ack <= 1'b0;
              in2_ack <= 1'b0;
              state <= write_z;
@@ -108,7 +108,7 @@ module subtractor #( parameter bits = 16)(
         begin
            if (in1_stb && in1_ack) begin
              in1_ack <= 1'b0;
-             out1 <= $signed(in1) - $signed(b);
+             out1 <= in1 > b;
              state <= write_z;
            end
         end
@@ -117,7 +117,7 @@ module subtractor #( parameter bits = 16)(
         begin
            if (in2_stb && in2_ack) begin
              in2_ack <= 1'b0;
-             out1 <= $signed(a) - $signed(in2);
+             out1 <= a > in2;
              state <= write_z;
            end
         end
