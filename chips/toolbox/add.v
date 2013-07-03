@@ -7,7 +7,7 @@
 //source_file: built_in
 
 ///Adder
-///==========
+///=====
 ///
 ///Produces a stream of data *out1* by adding *in2* to *in1* item by item.
 ///
