@@ -191,7 +191,7 @@ def generate_signals(netlist, input_ports, output_ports, wires, vhdl):
         if from_size == 1:
             vhdl.append("  wire signal_%s : std_logic;\n"%wire)
         else:
-            vhdl.append("  wire signal_%s [%s : 0];\n"%(wire, from_size-1))
+            vhdl.append("  wire [%s : 0] signal_%s;\n"%(from_size-1, wire))
         vhdl.append("  wire signal_%s_stb;\n"%wire)
         vhdl.append("  wire signal_%s_ack;\n"%wire)
         wire += 1
@@ -276,16 +276,19 @@ def generate(window, component):
                 except ValueError:
                     generics.append('    .%s ("%s")'%(parameter, str(value)))
 
-            vhdl.append("  %s %s_%s\n"%(
+            vhdl.append("  %s"%(
                 instance["component"]["name"],
-                instance["component"]["name"],
-                instance_name, 
                 ))
 
             if generics:
-                vhdl.append("  #(\n")
+                vhdl.append(" #(\n")
                 vhdl.append(",\n".join(generics))
                 vhdl.append("\n  )\n")
+
+            vhdl.append(" %s_%s\n"%(
+                instance["component"]["name"],
+                instance_name, 
+                ))
 
             signals = []
             wire = 0

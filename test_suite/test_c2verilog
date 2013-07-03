@@ -163,6 +163,29 @@ int main(){
 
 """)
 
+test("modulo 1",
+"""
+int main(){
+  int a = 3;
+  int b = 4;
+  assert(a%b == 3);
+  return 0;
+}
+
+""")
+
+test("modulo 2",
+"""
+int main(){
+  int a = -3;
+  int b = 4;
+  assert(a%b == -3);
+  return 0;
+}
+
+""")
+
+
 test("division 2",
 """
 int main(){
