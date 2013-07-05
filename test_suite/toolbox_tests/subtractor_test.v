@@ -88,7 +88,6 @@ module subtractor_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
 
       16'd1:
       begin
-        $finish;
         program_counter <= program_counter;
       end
 

@@ -88,7 +88,6 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
 
       16'd1:
       begin
-        $finish;
         program_counter <= program_counter;
       end
 
@@ -143,7 +142,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd8:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 5 in file: multiplier_test.c");
+          $display("Assertion failed at line: 5 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd0;
@@ -195,7 +194,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd14:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 6 in file: multiplier_test.c");
+          $display("Assertion failed at line: 6 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd0;
@@ -247,7 +246,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd20:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 7 in file: multiplier_test.c");
+          $display("Assertion failed at line: 7 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd0;
@@ -299,7 +298,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd26:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 8 in file: multiplier_test.c");
+          $display("Assertion failed at line: 8 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd2;
@@ -351,7 +350,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd32:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 9 in file: multiplier_test.c");
+          $display("Assertion failed at line: 9 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd1;
@@ -403,7 +402,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd38:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 10 in file: multiplier_test.c");
+          $display("Assertion failed at line: 10 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd1;
@@ -455,7 +454,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd44:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 11 in file: multiplier_test.c");
+          $display("Assertion failed at line: 11 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd65535;
@@ -507,7 +506,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd50:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 12 in file: multiplier_test.c");
+          $display("Assertion failed at line: 12 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd1;
@@ -560,7 +559,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
       16'd56:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 13 in file: multiplier_test.c");
+          $display("Assertion failed at line: 13 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd1;
@@ -568,7 +567,7 @@ module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,out
 
       16'd57:
       begin
-        $display ("%d (report at line: 14 in file: multiplier_test.c)", $signed(register_2));
+        $display ("%d (report at line: 14 in file: /home/jon/Projects/Chips-2.0/test_suite/toolbox_tests/multiplier_test.c)", $signed(register_2));
         program_counter <= register_0;
       end
 

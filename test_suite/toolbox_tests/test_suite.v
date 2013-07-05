@@ -2,11 +2,11 @@
 //source_file: test_suite.sch
 //dependency: bend
 //dependency: multiplier_test
-//dependency: subtractor_test
 //dependency: multiplier
-//dependency: subtractor
 //dependency: adder_test
 //dependency: adder
+//dependency: subtractor_test
+//dependency: subtractor
 module test_suite (
     
 );
@@ -140,19 +140,19 @@ initial
     .input_a_ack (signal_20_ack)
   );
 
-  subtractor_test subtractor_test_inst_7
+  bend #(
+    .bits (16)
+  )
+ bend_inst_40
   (
     .clk (clk),
     .rst (rst),
-    .input_a (signal_9),
-    .input_a_stb (signal_9_stb),
-    .input_a_ack (signal_9_ack),
-    .output_a (signal_10),
-    .output_a_stb (signal_10_stb),
-    .output_a_ack (signal_10_ack),
-    .output_b (signal_11),
-    .output_b_stb (signal_11_stb),
-    .output_b_ack (signal_11_ack)
+    .in1 (signal_16),
+    .in1_stb (signal_16_stb),
+    .in1_ack (signal_16_ack),
+    .out1 (signal_17),
+    .out1_stb (signal_17_stb),
+    .out1_ack (signal_17_ack)
   );
 
   multiplier #(
@@ -176,34 +176,31 @@ initial
   bend #(
     .bits (16)
   )
- bend_inst_4
+ bend_inst_43
   (
     .clk (clk),
     .rst (rst),
-    .in1 (signal_2),
-    .in1_stb (signal_2_stb),
-    .in1_ack (signal_2_ack),
-    .out1 (signal_3),
-    .out1_stb (signal_3_stb),
-    .out1_ack (signal_3_ack)
+    .in1 (signal_19),
+    .in1_stb (signal_19_stb),
+    .in1_ack (signal_19_ack),
+    .out1 (signal_20),
+    .out1_stb (signal_20_stb),
+    .out1_ack (signal_20_ack)
   );
 
-  subtractor #(
+  bend #(
     .bits (16)
   )
- subtractor_inst_6
+ bend_inst_41
   (
     .clk (clk),
     .rst (rst),
-    .out1 (signal_5),
-    .out1_stb (signal_5_stb),
-    .out1_ack (signal_5_ack),
-    .in1 (signal_10),
-    .in1_stb (signal_10_stb),
-    .in1_ack (signal_10_ack),
-    .in2 (signal_11),
-    .in2_stb (signal_11_stb),
-    .in2_ack (signal_11_ack)
+    .in1 (signal_17),
+    .in1_stb (signal_17_stb),
+    .in1_ack (signal_17_ack),
+    .out1 (signal_18),
+    .out1_stb (signal_18_stb),
+    .out1_ack (signal_18_ack)
   );
 
   bend #(
@@ -239,16 +236,16 @@ initial
   bend #(
     .bits (16)
   )
- bend_inst_5
+ bend_inst_42
   (
     .clk (clk),
     .rst (rst),
-    .in1 (signal_3),
-    .in1_stb (signal_3_stb),
-    .in1_ack (signal_3_ack),
-    .out1 (signal_4),
-    .out1_stb (signal_4_stb),
-    .out1_ack (signal_4_ack)
+    .in1 (signal_18),
+    .in1_stb (signal_18_stb),
+    .in1_ack (signal_18_ack),
+    .out1 (signal_19),
+    .out1_stb (signal_19_stb),
+    .out1_ack (signal_19_ack)
   );
 
   bend #(
@@ -314,64 +311,67 @@ initial
     .in2_ack (signal_13_ack)
   );
 
-  bend #(
-    .bits (16)
-  )
- bend_inst_40
+  subtractor_test subtractor_test_inst_7
   (
     .clk (clk),
     .rst (rst),
-    .in1 (signal_16),
-    .in1_stb (signal_16_stb),
-    .in1_ack (signal_16_ack),
-    .out1 (signal_17),
-    .out1_stb (signal_17_stb),
-    .out1_ack (signal_17_ack)
+    .input_a (signal_9),
+    .input_a_stb (signal_9_stb),
+    .input_a_ack (signal_9_ack),
+    .output_a (signal_10),
+    .output_a_stb (signal_10_stb),
+    .output_a_ack (signal_10_ack),
+    .output_b (signal_11),
+    .output_b_stb (signal_11_stb),
+    .output_b_ack (signal_11_ack)
+  );
+
+  subtractor #(
+    .bits (16)
+  )
+ subtractor_inst_6
+  (
+    .clk (clk),
+    .rst (rst),
+    .out1 (signal_5),
+    .out1_stb (signal_5_stb),
+    .out1_ack (signal_5_ack),
+    .in1 (signal_10),
+    .in1_stb (signal_10_stb),
+    .in1_ack (signal_10_ack),
+    .in2 (signal_11),
+    .in2_stb (signal_11_stb),
+    .in2_ack (signal_11_ack)
   );
 
   bend #(
     .bits (16)
   )
- bend_inst_41
+ bend_inst_5
   (
     .clk (clk),
     .rst (rst),
-    .in1 (signal_17),
-    .in1_stb (signal_17_stb),
-    .in1_ack (signal_17_ack),
-    .out1 (signal_18),
-    .out1_stb (signal_18_stb),
-    .out1_ack (signal_18_ack)
+    .in1 (signal_3),
+    .in1_stb (signal_3_stb),
+    .in1_ack (signal_3_ack),
+    .out1 (signal_4),
+    .out1_stb (signal_4_stb),
+    .out1_ack (signal_4_ack)
   );
 
   bend #(
     .bits (16)
   )
- bend_inst_42
+ bend_inst_4
   (
     .clk (clk),
     .rst (rst),
-    .in1 (signal_18),
-    .in1_stb (signal_18_stb),
-    .in1_ack (signal_18_ack),
-    .out1 (signal_19),
-    .out1_stb (signal_19_stb),
-    .out1_ack (signal_19_ack)
-  );
-
-  bend #(
-    .bits (16)
-  )
- bend_inst_43
-  (
-    .clk (clk),
-    .rst (rst),
-    .in1 (signal_19),
-    .in1_stb (signal_19_stb),
-    .in1_ack (signal_19_ack),
-    .out1 (signal_20),
-    .out1_stb (signal_20_stb),
-    .out1_ack (signal_20_ack)
+    .in1 (signal_2),
+    .in1_stb (signal_2_stb),
+    .in1_ack (signal_2_ack),
+    .out1 (signal_3),
+    .out1_stb (signal_3_stb),
+    .out1_ack (signal_3_ack)
   );
 
 endmodule

@@ -13,6 +13,7 @@ import wxiverilog
 import transcript_window
 
 system_components = os.path.join(os.path.dirname(__file__), "..", "toolbox")
+force_update_all = True
 
 class ComponentReadError(Exception):
     def __init__(self, msg):
@@ -416,7 +417,7 @@ class Selector(wx.Panel):
         """Generate from source all dependencies"""
         
         for dependency in self.get_dependencies(component):
-            if not self.is_up_to_date(dependency):
+            if (not self.is_up_to_date(dependency)) or force_update_all:
                 if "source_file" in dependency and dependency["source_file"] not in ["built_in"]:
                     if dependency["source_file"].endswith(".c"):
                         c_actions.generate(self, dependency)

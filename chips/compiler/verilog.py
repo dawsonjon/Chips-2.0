@@ -441,7 +441,10 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
         ))
 
       elif instruction["op"] == "stop":
-        output_file.write('        $finish;\n')
+        #If we are in testbench mode stop the simulation
+        #If we are part of a larger design, other C programs may still be running
+        if testbench:
+            output_file.write('        $finish;\n')
         output_file.write("        program_counter <= program_counter;\n")
     output_file.write("      end\n\n")
 
