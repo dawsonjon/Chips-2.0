@@ -434,7 +434,7 @@ class Selector(wx.Panel):
         for dependency in self.get_dependencies(component):
             file_list.append(self.get_component_path(dependency))
         self.transcript.log("Launching Verilog simulator")
-        wxiverilog.VerilogProject(file_list, component["name"])
+        wxiverilog.VerilogProject(file_list, component, self)
 
 
     def is_up_to_date(self, component):

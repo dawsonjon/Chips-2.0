@@ -31,11 +31,13 @@ metric_prefix = {
 }
 
 class VerilogProject:
-    def __init__(self, files, top):
+    def __init__(self, files, component, component_selector):
         self.frame = wx.Frame(None, title = "Icarus Verilog", size=(1024,600))
 
         self.files = files
-        self.top = top
+        self.component = component
+        self.top = component["name"]
+        self.component_selector = component_selector
 
         #create menu bar
         #===============
@@ -48,6 +50,9 @@ class VerilogProject:
 
         #Simulation Menu
         #---------------
+        self.menu_regenerate_sim = sim_menu.Append(-1, "Regenerate", "Regenerate from Source")
+        self.frame.Bind(wx.EVT_MENU, lambda event:self.regenerate_simulation(), self.menu_regenerate_sim)
+
         self.menu_compile_sim = sim_menu.Append(-1, "Compile", "Compile Simulation")
         self.frame.Bind(wx.EVT_MENU, lambda event:self.compile_simulation(), self.menu_compile_sim)
 
@@ -160,6 +165,7 @@ class VerilogProject:
 
         """Add files to the file tree"""
 
+        self.file_tree.DeleteAllItems()
         root = self.file_tree.AddRoot("Files")
         for path in self.files:
             node = self.file_tree.AppendItem(root, path)
@@ -189,6 +195,22 @@ class VerilogProject:
             self.transcript.log("GTK Wave does not appear to be installed correctly.")
             self.transcript.log("Get GTKWave from http://gtkwave.sourceforge.net")
             return False
+
+    def regenerate_simulation(self):
+
+        """Regenerate all components and start everything from scratch"""
+
+        self.update_state("start")
+        self.component_selector.update()
+        self.component_selector.transcript.log("Generating all dependencies")
+        self.component_selector.generate_dependencies(self.component)
+        self.component_selector.transcript.log("Creating file list")
+        file_list = []
+        for dependency in self.component_selector.get_dependencies(self.component):
+            file_list.append(self.component_selector.get_component_path(dependency))
+        self.files = file_list
+        self.update_tree()
+        self.component_selector.transcript.log("Launching Verilog simulator")
 
     def compile_simulation(self):
 
