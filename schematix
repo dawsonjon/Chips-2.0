@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import wx
 import chips.schematix.component_selector
+import sys
 
 #Create an application and show the main window
 app = wx.App()

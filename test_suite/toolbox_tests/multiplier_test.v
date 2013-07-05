@@ -1,17 +1,17 @@
-//name : adder_test
+//name : multiplier_test
 //tag : c components
 //input : input_a:16
 //output : output_a:16
 //output : output_b:16
-//source_file : adder_test.c
-///Adder_Test
-///==========
+//source_file : multiplier_test.c
+///Multiplier_Test
+///===============
 ///
 ///*Created by C2CHIP*
 
   
 `timescale 1ns/1ps
-module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a,output_b,output_a_stb,output_b_stb,input_a_ack);
+module multiplier_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a,output_b,output_a_stb,output_b_stb,input_a_ack);
   input     [15:0] input_a;
   input     input_a_stb;
   input     output_a_ack;
@@ -24,7 +24,7 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
   output    output_b_stb;
   output    input_a_ack;
   reg       [15:0] timer;
-  reg       [63:0] program_counter;
+  reg       [57:0] program_counter;
   reg       [15:0] address;
   reg       [15:0] data_out;
   reg       [15:0] data_in;
@@ -110,7 +110,7 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd4:
       begin
-        register_2 <= 16'd1;
+        register_2 <= 16'd0;
       end
 
       16'd5:
@@ -137,13 +137,13 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd7:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd1);
+        register_2 <= $signed(register_2) == $signed(16'd0);
       end
 
       16'd8:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 5 in file: adder_test.c");
+          $display("Assertion failed at line: 5 in file: multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd0;
@@ -162,7 +162,7 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd10:
       begin
-        register_2 <= 16'd2;
+        register_2 <= 16'd1;
       end
 
       16'd11:
@@ -189,13 +189,13 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd13:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd2);
+        register_2 <= $signed(register_2) == $signed(16'd0);
       end
 
       16'd14:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 6 in file: adder_test.c");
+          $display("Assertion failed at line: 6 in file: multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd0;
@@ -214,7 +214,7 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd16:
       begin
-        register_2 <= 16'd3;
+        register_2 <= 16'd2;
       end
 
       16'd17:
@@ -241,13 +241,13 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd19:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd3);
+        register_2 <= $signed(register_2) == $signed(16'd0);
       end
 
       16'd20:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 7 in file: adder_test.c");
+          $display("Assertion failed at line: 7 in file: multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd0;
@@ -293,16 +293,16 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd25:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd32767);
+        register_2 <= $signed(register_2) == $signed(16'd0);
       end
 
       16'd26:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 8 in file: adder_test.c");
+          $display("Assertion failed at line: 8 in file: multiplier_test.c");
           $finish_and_return(1);
         end
-        register_2 <= 16'd1;
+        register_2 <= 16'd2;
       end
 
       16'd27:
@@ -318,7 +318,7 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd28:
       begin
-        register_2 <= 16'd32767;
+        register_2 <= 16'd16383;
       end
 
       16'd29:
@@ -345,16 +345,16 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd31:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd32768);
+        register_2 <= $signed(register_2) == $signed(16'd32766);
       end
 
       16'd32:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 9 in file: adder_test.c");
+          $display("Assertion failed at line: 9 in file: multiplier_test.c");
           $finish_and_return(1);
         end
-        register_2 <= 16'd2;
+        register_2 <= 16'd1;
       end
 
       16'd33:
@@ -397,16 +397,16 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd37:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd32769);
+        register_2 <= $signed(register_2) == $signed(16'd32767);
       end
 
       16'd38:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 10 in file: adder_test.c");
+          $display("Assertion failed at line: 10 in file: multiplier_test.c");
           $finish_and_return(1);
         end
-        register_2 <= 16'd0;
+        register_2 <= 16'd1;
       end
 
       16'd39:
@@ -455,10 +455,10 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
       16'd44:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 11 in file: adder_test.c");
+          $display("Assertion failed at line: 11 in file: multiplier_test.c");
           $finish_and_return(1);
         end
-        register_2 <= 16'd1;
+        register_2 <= 16'd65535;
       end
 
       16'd45:
@@ -501,16 +501,16 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd49:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd0);
+        register_2 <= $signed(register_2) == $signed(16'd1);
       end
 
       16'd50:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 12 in file: adder_test.c");
+          $display("Assertion failed at line: 12 in file: multiplier_test.c");
           $finish_and_return(1);
         end
-        register_2 <= 16'd2;
+        register_2 <= 16'd1;
       end
 
       16'd51:
@@ -553,13 +553,14 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd55:
       begin
-        register_2 <= $signed(register_2) == $signed(16'd1);
+        register_2 <= $signed(register_2) == $signed(16'd65535);
+        register_1 <= 16'd0;
       end
 
       16'd56:
       begin
         if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 13 in file: adder_test.c");
+          $display("Assertion failed at line: 13 in file: multiplier_test.c");
           $finish_and_return(1);
         end
         register_2 <= 16'd1;
@@ -567,60 +568,7 @@ module adder_test(input_a,input_a_stb,output_a_ack,output_b_ack,clk,rst,output_a
 
       16'd57:
       begin
-        s_output_a <= register_2;
-        program_counter <= 57;
-        s_output_a_stb <= 1'b1;
-        if (s_output_a_stb == 1'b1 && output_a_ack == 1'b1) begin
-          s_output_a_stb <= 1'b0;
-          program_counter <= 58;
-        end
-      end
-
-      16'd58:
-      begin
-        register_2 <= 16'd65535;
-      end
-
-      16'd59:
-      begin
-        s_output_b <= register_2;
-        program_counter <= 59;
-        s_output_b_stb <= 1'b1;
-        if (s_output_b_stb == 1'b1 && output_b_ack == 1'b1) begin
-          s_output_b_stb <= 1'b0;
-          program_counter <= 60;
-        end
-      end
-
-      16'd60:
-      begin
-        register_2 <= input_a;
-        program_counter <= 60;
-        s_input_a_ack <= 1'b1;
-       if (s_input_a_ack == 1'b1 && input_a_stb == 1'b1) begin
-          s_input_a_ack <= 1'b0;
-          program_counter <= 16'd61;
-        end
-      end
-
-      16'd61:
-      begin
-        register_2 <= $signed(register_2) == $signed(16'd0);
-        register_1 <= 16'd0;
-      end
-
-      16'd62:
-      begin
-        if (register_2 == 16'h0000) begin
-          $display("Assertion failed at line: 14 in file: adder_test.c");
-          $finish_and_return(1);
-        end
-        register_2 <= 16'd1;
-      end
-
-      16'd63:
-      begin
-        $display ("%d (report at line: 15 in file: adder_test.c)", $signed(register_2));
+        $display ("%d (report at line: 14 in file: multiplier_test.c)", $signed(register_2));
         program_counter <= register_0;
       end
 

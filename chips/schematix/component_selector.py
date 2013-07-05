@@ -141,7 +141,7 @@ class Selector(wx.Panel):
                 labelText="Project Directory",
                 startDirectory=os.getcwd(),
         )
-        self.project_path.SetValue(os.path.join(os.getcwd(), "components"))
+        self.project_path.SetValue(os.getcwd())
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(self.project_path, 0, wx.EXPAND)
         sizer.Add(horizontal_splitter, 1, wx.EXPAND)

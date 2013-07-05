@@ -1,7 +1,7 @@
 //name : board_test
 //tag : c components
 //output : OUTPUT_serial:16
-//source_file : /home/jon/Projects/Schematix/components/board_test.c
+//source_file : ./board_test.c
 ///Board_Test
 ///==========
 ///

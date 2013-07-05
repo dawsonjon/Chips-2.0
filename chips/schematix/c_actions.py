@@ -76,6 +76,7 @@ def generate(window, component):
             window.project_path.GetValue(),
             output_file)
         output_file = open(output_file, "w")
+        filename = os.path.relpath(filename, window.project_path.GetValue())
         generate_CHIP(
                 filename, 
                 name, 
