@@ -299,7 +299,7 @@ endmodule"""%(wave_file, self.top, time_to_run)
                 self.update_state("sim_run")
                 self.transcript.log("Icarus Verilog simulation ... successful\n")
             else:
-                self.update_state("sim_compiled")
+                self.update_state("sim_run")
                 self.transcript.log("Icarus Verilog simulation ... failed\n")
 
     def view_wave(self):

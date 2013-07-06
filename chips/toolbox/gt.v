@@ -15,17 +15,21 @@
 ///
 ///    out1 <= in1 > in2
 ///
-///+--------------------+-------------------------------------+
-///|Language            | Verilog                             |
-///+--------------------+-------------------------------------+
-///|Synthesis           | Yes                                 |
-///+--------------------+-------------------------------------+
-///|License             | MIT                                 |
-///+--------------------+-------------------------------------+
-///|Author              | Jonathan P Dawson                   |
-///+--------------------+-------------------------------------+
-///|Copyright           | Jonathan P Dawson 2013              |
-///+--------------------+-------------------------------------+
+///..
+///
+///  +--------------------+-------------------------------------+
+///  |Language            | Verilog                             |
+///  +--------------------+-------------------------------------+
+///  |Synthesis           | Yes                                 |
+///  +--------------------+-------------------------------------+
+///  |License             | MIT                                 |
+///  +--------------------+-------------------------------------+
+///  |Author              | Jonathan P Dawson                   |
+///  +--------------------+-------------------------------------+
+///  |Copyright           | Jonathan P Dawson 2013              |
+///  +--------------------+-------------------------------------+
+///
+///..
 ///
 ///Parameters
 ///----------
@@ -89,7 +93,8 @@ module greater_than #( parameter bits = 16)(
            in1_ack <= 1'b1;
            in2_ack <= 1'b1;
            if (in1_stb && in1_ack && in2_stb && in2_ack) begin
-             out1 <= in1 > in2;
+             a <= in1;
+             b <= in2;
              in1_ack <= 1'b0;
              in2_ack <= 1'b0;
              state <= write_z;
@@ -108,7 +113,7 @@ module greater_than #( parameter bits = 16)(
         begin
            if (in1_stb && in1_ack) begin
              in1_ack <= 1'b0;
-             out1 <= in1 > b;
+             a <= in1;
              state <= write_z;
            end
         end
@@ -117,13 +122,14 @@ module greater_than #( parameter bits = 16)(
         begin
            if (in2_stb && in2_ack) begin
              in2_ack <= 1'b0;
-             out1 <= a > in2;
+             b <= in2;
              state <= write_z;
            end
         end
 
         write_z: 
         begin
+          out1 <= $signed(a) > $signed(b);
           out1_stb <= 1'b1;
           if (out1_ack && out1_stb) begin
             out1_stb <= 1'b0;

@@ -1,17 +1,24 @@
+//device_in: BUS: input_pins : "input_pins" : 16
+//device_out: BUS: output_pins : "output_pins" : 16
 //name: test_suite
 //source_file: test_suite.sch
 //dependency: bend
 //dependency: multiplier_test
 //dependency: multiplier
+//dependency: device_pin_input
+//dependency: device_pin_output
 //dependency: adder_test
 //dependency: adder
 //dependency: subtractor_test
 //dependency: subtractor
+`timescale 1ns/1ps
 module test_suite (
-    
+    input_pins,
+    output_pins
 );
 
-
+  input [15 : 0] input_pins;
+  output [15 : 0] output_pins;
 
   wire [15 : 0] signal_0;
   wire signal_0_stb;
@@ -76,6 +83,9 @@ module test_suite (
   wire [15 : 0] signal_20;
   wire signal_20_stb;
   wire signal_20_ack;
+  wire [15 : 0] signal_21;
+  wire signal_21_stb;
+  wire signal_21_ack;
 
   reg clk;
   reg rst;
@@ -206,6 +216,21 @@ initial
   bend #(
     .bits (16)
   )
+ bend_inst_3
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_1),
+    .in1_stb (signal_1_stb),
+    .in1_ack (signal_1_ack),
+    .out1 (signal_2),
+    .out1_stb (signal_2_stb),
+    .out1_ack (signal_2_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
  bend_inst_9
   (
     .clk (clk),
@@ -251,21 +276,6 @@ initial
   bend #(
     .bits (16)
   )
- bend_inst_3
-  (
-    .clk (clk),
-    .rst (rst),
-    .in1 (signal_1),
-    .in1_stb (signal_1_stb),
-    .in1_ack (signal_1_ack),
-    .out1 (signal_2),
-    .out1_stb (signal_2_stb),
-    .out1_ack (signal_2_ack)
-  );
-
-  bend #(
-    .bits (16)
-  )
  bend_inst_2
   (
     .clk (clk),
@@ -276,6 +286,34 @@ initial
     .out1 (signal_1),
     .out1_stb (signal_1_stb),
     .out1_ack (signal_1_ack)
+  );
+
+  device_pin_input #(
+    .port_name ("input_pins"),
+    .bits (16)
+  )
+ device_pin_input_inst_44
+  (
+    .clk (clk),
+    .rst (rst),
+    .pins (input_pins),
+    .out1 (signal_21),
+    .out1_stb (signal_21_stb),
+    .out1_ack (signal_21_ack)
+  );
+
+  device_pin_output #(
+    .port_name ("output_pins"),
+    .bits (16)
+  )
+ device_pin_output_inst_45
+  (
+    .clk (clk),
+    .rst (rst),
+    .pins (output_pins),
+    .in1 (signal_21),
+    .in1_stb (signal_21_stb),
+    .in1_ack (signal_21_ack)
   );
 
   adder_test adder_test_inst_1

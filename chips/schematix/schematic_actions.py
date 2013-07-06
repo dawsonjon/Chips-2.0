@@ -241,6 +241,7 @@ def generate(window, component):
         for dependency in dependencies:
             vhdl.append("//dependency: %s\n"%dependency)
 
+        vhdl.append("`timescale 1ns/1ps\n")
         vhdl.append("module %s (\n    "%name)
         vhdl.append(",\n    ".join(port_names))
         vhdl.append("\n);\n\n")

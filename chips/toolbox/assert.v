@@ -1,21 +1,17 @@
-//name: device_pin_output
+//name: asserter
 //tag: sinks
 //input: in1 : bits
 //source_file: built_in
-//device_out: BUS : pins : port_name : bits
-//parameter: bits:16
-//parameter:port_name:"pins"
-//source_file: built_in
+//parameter : bits : 16
 
-///Device Pin Output
-///=================
+///Asserter
+///========
 ///
-///Send a stream of data to a device pin(s).
-///Produces a stream of data *out1* by adding *in2* to *in1* item by item.
+///Raise an exception if *in1* is 0.
 ///
 ///::
 ///
-///    pins <= in1
+///    assert(in1)
 ///
 ///..
 ///
@@ -37,8 +33,7 @@
 /// ============= ============== ==============================================
 /// Name          Type           Description
 /// ============= ============== ==============================================
-/// bits          integer        Data width of in1, in2 and out1
-/// port_name     string         The name of the device pin port.
+/// bits          integer        Data width of in1.
 /// ============= ============== ==============================================
 ///
 ///Inputs
@@ -47,42 +42,31 @@
 /// ============= ============== ==============================================
 /// Name          Width          Description
 /// ============= ============== ==============================================
-/// in1           bit            Input Stream
-/// ============= ============== ==============================================
-///
-///Device Outputs
-///--------------
-///
-///These outputs will automatically be routed to the top level of the
-///device, but will not appear as inputs/outputs on the component symbol.
-///The parameter *port_name* determines the name given to the device pins.
-///Note that ports names must be unique.
-///
-/// ============= ============== ==============================================
-/// Name          Width          Description
-/// ============= ============== ==============================================
-/// pins          bits           Output port pins
+/// in1           bits           Input Stream
 /// ============= ============== ==============================================
 ///
 
-module device_pin_output #(
-    parameter bits=16,
-    parameter port_name="pins"
-  ) (
+module asserter  #(
+
+    parameter bits=16
+  )(
     input clk,
     input rst,
-    output reg [bits-1:0] pins,
     input [bits-1:0] in1,
     input in1_stb,
-    output reg in1_ack
+    output in1_ack
   );
 
   always @(posedge clk)
   begin
     if (in1_stb) begin
-      pins <= in1;
+      if (in1 == 0) begin
+        $display("Assertion failed");
+        $finish_and_return(1);
+      end
     end
-    in1_ack <= 1'b1;
   end
 
-endmodule
+  assign in1_ack = s_in1_ack;
+
+endmodule 

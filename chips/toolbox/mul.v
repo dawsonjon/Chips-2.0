@@ -89,7 +89,8 @@ module multiplier #( parameter bits = 16)(
            in1_ack <= 1'b1;
            in2_ack <= 1'b1;
            if (in1_stb && in1_ack && in2_stb && in2_ack) begin
-             out1 <= $signed(in1) * $signed(in2);
+             a <= in1;
+             b <= in2;
              in1_ack <= 1'b0;
              in2_ack <= 1'b0;
              state <= write_z;
@@ -108,7 +109,7 @@ module multiplier #( parameter bits = 16)(
         begin
            if (in1_stb && in1_ack) begin
              in1_ack <= 1'b0;
-             out1 <= $signed(in1) * $signed(b);
+             a <= in2;
              state <= write_z;
            end
         end
@@ -117,7 +118,7 @@ module multiplier #( parameter bits = 16)(
         begin
            if (in2_stb && in2_ack) begin
              in2_ack <= 1'b0;
-             out1 <= $signed(a) * $signed(in2);
+             b <= in2;
              state <= write_z;
            end
         end
@@ -125,6 +126,7 @@ module multiplier #( parameter bits = 16)(
         write_z: 
         begin
           out1_stb <= 1'b1;
+             out1 <= $signed(a) * $signed(b);
           if (out1_ack && out1_stb) begin
             out1_stb <= 1'b0;
             state <= read_a_b;

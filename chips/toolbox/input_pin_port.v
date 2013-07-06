@@ -1,21 +1,21 @@
-//name: device_pin_output
-//tag: sinks
-//input: in1 : bits
+//name: device_pin_input
+//tag: sources
+//output: out1 : bits
 //source_file: built_in
-//device_out: BUS : pins : port_name : bits
+//device_in: BUS : pins : port_name : bits
 //parameter: bits:16
 //parameter:port_name:"pins"
 //source_file: built_in
 
-///Device Pin Output
+///Device Pin Input
 ///=================
 ///
-///Send a stream of data to a device pin(s).
-///Produces a stream of data *out1* by adding *in2* to *in1* item by item.
+///Generate a stream of data from device pin(s).
+///The input pins are automatically double registered.
 ///
 ///::
 ///
-///    pins <= in1
+///    out1 <= pins
 ///
 ///..
 ///
@@ -37,23 +37,23 @@
 /// ============= ============== ==============================================
 /// Name          Type           Description
 /// ============= ============== ==============================================
-/// bits          integer        Data width of in1, in2 and out1
+/// bits          integer        Data width of out1 and port.
 /// port_name     string         The name of the device pin port.
 /// ============= ============== ==============================================
 ///
-///Inputs
-///------
+///Outputs
+///-------
 ///
 /// ============= ============== ==============================================
 /// Name          Width          Description
 /// ============= ============== ==============================================
-/// in1           bit            Input Stream
+/// out1          bits           Output Stream
 /// ============= ============== ==============================================
 ///
-///Device Outputs
-///--------------
+///Device Inputs
+///-------------
 ///
-///These outputs will automatically be routed to the top level of the
+///These inputs will automatically be routed to the top level of the
 ///device, but will not appear as inputs/outputs on the component symbol.
 ///The parameter *port_name* determines the name given to the device pins.
 ///Note that ports names must be unique.
@@ -61,28 +61,31 @@
 /// ============= ============== ==============================================
 /// Name          Width          Description
 /// ============= ============== ==============================================
-/// pins          bits           Output port pins
+/// pins          bits           Input port pins
 /// ============= ============== ==============================================
 ///
 
-module device_pin_output #(
+module device_pin_input #(
     parameter bits=16,
     parameter port_name="pins"
   ) (
     input clk,
     input rst,
-    output reg [bits-1:0] pins,
-    input [bits-1:0] in1,
-    input in1_stb,
-    output reg in1_ack
+    input [bits-1:0] pins,
+
+    output reg [bits-1:0] out1,
+    output reg out1_stb,
+    input out1_ack
   );
+
+  reg pins_d, pins_d1;
 
   always @(posedge clk)
   begin
-    if (in1_stb) begin
-      pins <= in1;
-    end
-    in1_ack <= 1'b1;
+    pins_d   <= pins;
+    pins_d1  <= pins_d;
+    out1     <= pins_d1;
+    out1_stb <= 1'b1;
   end
 
 endmodule
