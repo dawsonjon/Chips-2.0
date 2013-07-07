@@ -20,27 +20,8 @@ module real_main;
   reg       [15:0] register_2;
   reg       [15:0] register_3;
   reg       [15:0] register_4;
-  reg       [15:0] a;
-  reg       [15:0] b;
-  reg       [15:0] z;
-  reg       [15:0] divisor;
-  reg       [15:0] dividend;
-  reg       [15:0] quotient;
-  reg       [15:0] remainder;
-  reg       [15:0] modulo;
-  reg       mod_sign;
-  reg       [4:0] count;
-  reg       [1:0] state;
-  reg       stb;
-  reg       ack;
-  reg       sign;
   reg       clk;
   reg       rst;
-  wire      [15:0] difference;
-  parameter [1:0] start= 2'd0;
-  parameter [1:0] calculate= 2'd1;
-  parameter [1:0] finish= 2'd2;
-  parameter [1:0] acknowledge= 2'd3;
   reg [15:0] memory [-1:0];
 
   //////////////////////////////////////////////////////////////////////////////
@@ -128,7 +109,6 @@ initial
     endcase
     if (rst == 1'b1) begin
       program_counter <= 0;
-      stb <= 1'b0;
     end
   end
 
@@ -142,74 +122,6 @@ initial
   // level. The division operation takes 18 clock cycles. You should consider   
   // re-writing the C source file to avoid division if performance is not       
   // accepteable.                                                               
-
-  always @(posedge clk)
-  begin
-
-    ack <= 1'b0;
-
-    case (state)
-
-      start: begin
-
-        a <= divisor[15]?-divisor:divisor;
-        b <= dividend[15]?-dividend:dividend;
-        remainder <= 15'd0;
-        z <= 15'd0;
-        sign  <= divisor[15] ^ dividend[15];
-        mod_sign  <= divisor[15];
-        count <= 5'd16;
-
-        if( stb == 1'b1 ) begin
-          state <= calculate;
-        end
-
-      end //start
-
-      calculate: begin
-
-        if( difference[15] == 0 ) begin //if remainder > b
-          z <= z * 2 + 1;
-          remainder <= {difference[14:0], a[15]};
-        end else begin
-          z <= z * 2;
-          remainder <= {remainder[14:0], a[15]};
-        end
-
-        a <= a * 2;
-        if( count == 5'd0 ) begin
-          state <= finish;
-        end else begin
-          count <= count - 1;
-        end
-
-      end //calculate
-
-      finish: begin
-
-        quotient <= sign?-z:z;
-        modulo <= mod_sign?-(remainder/2):(remainder/2);
-        ack      <= 1'b1;
-        state    <= acknowledge;
-
-      end //finish
-
-      acknowledge: begin
-
-        ack      <= 1'b0;
-        state    <= start;
-
-      end //wait
-
-    endcase
-
-    if( rst == 1'b1 ) begin
-      ack   <= 1'b0;
-      state <= start;
-    end //if
-  end
-
-  assign difference = remainder - b;
 
 
 endmodule
