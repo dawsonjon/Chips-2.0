@@ -2,11 +2,15 @@
 //device_out: BUS: output_pins : "output_pins" : 16
 //name: test_suite
 //source_file: test_suite.sch
+//dependency: bend
+//dependency: right_shift
+//dependency: right_shift_test
+//dependency: left_shift
+//dependency: left_shift_test
 //dependency: divider_test
 //dependency: divider
 //dependency: device_pin_input
 //dependency: device_pin_output
-//dependency: bend
 //dependency: multiplier_test
 //dependency: multiplier
 //dependency: modulo
@@ -132,6 +136,48 @@ module test_suite (
   wire [15 : 0] signal_35;
   wire signal_35_stb;
   wire signal_35_ack;
+  wire [15 : 0] signal_36;
+  wire signal_36_stb;
+  wire signal_36_ack;
+  wire [15 : 0] signal_37;
+  wire signal_37_stb;
+  wire signal_37_ack;
+  wire [15 : 0] signal_38;
+  wire signal_38_stb;
+  wire signal_38_ack;
+  wire [15 : 0] signal_39;
+  wire signal_39_stb;
+  wire signal_39_ack;
+  wire [15 : 0] signal_40;
+  wire signal_40_stb;
+  wire signal_40_ack;
+  wire [15 : 0] signal_41;
+  wire signal_41_stb;
+  wire signal_41_ack;
+  wire [15 : 0] signal_42;
+  wire signal_42_stb;
+  wire signal_42_ack;
+  wire [15 : 0] signal_43;
+  wire signal_43_stb;
+  wire signal_43_ack;
+  wire [15 : 0] signal_44;
+  wire signal_44_stb;
+  wire signal_44_ack;
+  wire [15 : 0] signal_45;
+  wire signal_45_stb;
+  wire signal_45_ack;
+  wire [15 : 0] signal_46;
+  wire signal_46_stb;
+  wire signal_46_ack;
+  wire [15 : 0] signal_47;
+  wire signal_47_stb;
+  wire signal_47_ack;
+  wire [15 : 0] signal_48;
+  wire signal_48_stb;
+  wire signal_48_ack;
+  wire [15 : 0] signal_49;
+  wire signal_49_stb;
+  wire signal_49_ack;
 
   reg clk;
   reg rst;
@@ -150,6 +196,162 @@ initial
       #5 clk <= ~clk;
     end
   end
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_66
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_41),
+    .in1_stb (signal_41_stb),
+    .in1_ack (signal_41_ack),
+    .out1 (signal_42),
+    .out1_stb (signal_42_stb),
+    .out1_ack (signal_42_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_67
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_42),
+    .in1_stb (signal_42_stb),
+    .in1_ack (signal_42_ack),
+    .out1 (signal_43),
+    .out1_stb (signal_43_stb),
+    .out1_ack (signal_43_ack)
+  );
+
+  right_shift #(
+    .bits (16)
+  )
+ right_shift_inst_64
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_36),
+    .in1_stb (signal_36_stb),
+    .in1_ack (signal_36_ack),
+    .in2 (signal_37),
+    .in2_stb (signal_37_stb),
+    .in2_ack (signal_37_ack),
+    .out1 (signal_45),
+    .out1_stb (signal_45_stb),
+    .out1_ack (signal_45_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_65
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_40),
+    .in1_stb (signal_40_stb),
+    .in1_ack (signal_40_ack),
+    .out1 (signal_41),
+    .out1_stb (signal_41_stb),
+    .out1_ack (signal_41_ack)
+  );
+
+  right_shift_test right_shift_test_inst_62
+  (
+    .clk (clk),
+    .rst (rst),
+    .output_a (signal_36),
+    .output_a_stb (signal_36_stb),
+    .output_a_ack (signal_36_ack),
+    .output_b (signal_37),
+    .output_b_stb (signal_37_stb),
+    .output_b_ack (signal_37_ack),
+    .input_a (signal_49),
+    .input_a_stb (signal_49_stb),
+    .input_a_ack (signal_49_ack)
+  );
+
+  left_shift #(
+    .bits (16)
+  )
+ left_shift_inst_63
+  (
+    .clk (clk),
+    .rst (rst),
+    .in2 (signal_38),
+    .in2_stb (signal_38_stb),
+    .in2_ack (signal_38_ack),
+    .in1 (signal_39),
+    .in1_stb (signal_39_stb),
+    .in1_ack (signal_39_ack),
+    .out1 (signal_40),
+    .out1_stb (signal_40_stb),
+    .out1_ack (signal_40_ack)
+  );
+
+  left_shift_test left_shift_test_inst_61
+  (
+    .clk (clk),
+    .rst (rst),
+    .output_b (signal_38),
+    .output_b_stb (signal_38_stb),
+    .output_b_ack (signal_38_ack),
+    .output_a (signal_39),
+    .output_a_stb (signal_39_stb),
+    .output_a_ack (signal_39_ack),
+    .input_a (signal_44),
+    .input_a_stb (signal_44_stb),
+    .input_a_ack (signal_44_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_68
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_43),
+    .in1_stb (signal_43_stb),
+    .in1_ack (signal_43_ack),
+    .out1 (signal_44),
+    .out1_stb (signal_44_stb),
+    .out1_ack (signal_44_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_69
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_45),
+    .in1_stb (signal_45_stb),
+    .in1_ack (signal_45_ack),
+    .out1 (signal_46),
+    .out1_stb (signal_46_stb),
+    .out1_ack (signal_46_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_71
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_47),
+    .in1_stb (signal_47_stb),
+    .in1_ack (signal_47_ack),
+    .out1 (signal_48),
+    .out1_stb (signal_48_stb),
+    .out1_ack (signal_48_ack)
+  );
 
   divider_test divider_test_inst_48
   (
@@ -182,6 +384,21 @@ initial
     .out1 (signal_24),
     .out1_stb (signal_24_stb),
     .out1_ack (signal_24_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_70
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_46),
+    .in1_stb (signal_46_stb),
+    .in1_ack (signal_46_ack),
+    .out1 (signal_47),
+    .out1_stb (signal_47_stb),
+    .out1_ack (signal_47_ack)
   );
 
   device_pin_input #(
@@ -270,6 +487,21 @@ initial
     .out1 (signal_20),
     .out1_stb (signal_20_stb),
     .out1_ack (signal_20_ack)
+  );
+
+  bend #(
+    .bits (16)
+  )
+ bend_inst_72
+  (
+    .clk (clk),
+    .rst (rst),
+    .in1 (signal_48),
+    .in1_stb (signal_48_stb),
+    .in1_ack (signal_48_ack),
+    .out1 (signal_49),
+    .out1_stb (signal_49_stb),
+    .out1_ack (signal_49_ack)
   );
 
   bend #(
