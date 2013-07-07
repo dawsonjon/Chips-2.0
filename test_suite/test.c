@@ -1,7 +1,10 @@
 
 int main(){
-  int char = '1';
-  assert(char == 49);
+  assert(0);
   return 0;
 }
 
+//last function is always main
+int real_main(){
+  return 0;
+}

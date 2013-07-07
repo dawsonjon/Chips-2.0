@@ -185,6 +185,83 @@ int main(){
 
 """)
 
+test("modulo 3",
+"""
+int main(){
+  int a = 7;
+  int b = 8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 4",
+"""
+int main(){
+  int a = 15;
+  int b = 8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 5",
+"""
+int main(){
+  int a = -7;
+  int b = 8;
+  assert(a%b == -7);
+  return 0;
+}
+
+""")
+
+test("modulo 6",
+"""
+int main(){
+  int a = -15;
+  int b = 8;
+  assert(a%b == -7);
+  return 0;
+}
+
+""")
+
+test("modulo 7",
+"""
+int main(){
+  int a = 7;
+  int b = -8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 8",
+"""
+int main(){
+  int a = 15;
+  int b = -8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 9",
+"""
+int main(){
+  int a = 32766;
+  int b = 0;
+  assert(a%b == 32766);
+  return 0;
+}
+
+""")
+
 
 test("division 2",
 """

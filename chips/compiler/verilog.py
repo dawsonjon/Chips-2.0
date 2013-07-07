@@ -65,6 +65,7 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
     ("quotient", 16),
     ("remainder", 16),
     ("modulo", 16),
+    ("mod_sign", 1),
     ("count", 5),
     ("state", 2),
     ("stb", 1),
@@ -492,6 +493,7 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
   output_file.write("        remainder <= 15'd0;\n")
   output_file.write("        z <= 15'd0;\n")
   output_file.write("        sign  <= divisor[15] ^ dividend[15];\n")
+  output_file.write("        mod_sign  <= divisor[15];\n")
   output_file.write("        count <= 5'd16;\n\n")
   output_file.write("        if( stb == 1'b1 ) begin\n")
   output_file.write("          state <= calculate;\n")
@@ -514,7 +516,7 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
   output_file.write("      end //calculate\n\n")
   output_file.write("      finish: begin\n\n")
   output_file.write("        quotient <= sign?-z:z;\n")
-  output_file.write("        modulo <= divisor[15]?-modulo:modulo;\n")
+  output_file.write("        modulo <= mod_sign?-(remainder/2):(remainder/2);\n")
   output_file.write("        ack      <= 1'b1;\n")
   output_file.write("        state    <= acknowledge;\n\n")
   output_file.write("      end //finish\n\n")

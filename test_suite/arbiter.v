@@ -44,6 +44,7 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
   reg       [15:0] quotient;
   reg       [15:0] remainder;
   reg       [15:0] modulo;
+  reg       mod_sign;
   reg       [4:0] count;
   reg       [1:0] state;
   reg       stb;
@@ -215,6 +216,7 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
         remainder <= 15'd0;
         z <= 15'd0;
         sign  <= divisor[15] ^ dividend[15];
+        mod_sign  <= divisor[15];
         count <= 5'd16;
 
         if( stb == 1'b1 ) begin
@@ -245,7 +247,7 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
       finish: begin
 
         quotient <= sign?-z:z;
-        modulo <= divisor[15]?-modulo:modulo;
+        modulo <= mod_sign?-(remainder/2):(remainder/2);
         ack      <= 1'b1;
         state    <= acknowledge;
 

@@ -28,6 +28,7 @@ module real_main;
   reg       [15:0] quotient;
   reg       [15:0] remainder;
   reg       [15:0] modulo;
+  reg       mod_sign;
   reg       [4:0] count;
   reg       [1:0] state;
   reg       stb;
@@ -156,6 +157,7 @@ initial
         remainder <= 15'd0;
         z <= 15'd0;
         sign  <= divisor[15] ^ dividend[15];
+        mod_sign  <= divisor[15];
         count <= 5'd16;
 
         if( stb == 1'b1 ) begin
@@ -186,7 +188,7 @@ initial
       finish: begin
 
         quotient <= sign?-z:z;
-        modulo <= divisor[15]?-modulo:modulo;
+        modulo <= mod_sign?-(remainder/2):(remainder/2);
         ack      <= 1'b1;
         state    <= acknowledge;
 
