@@ -327,6 +327,9 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
         output_file.write("        end\n")
 
       elif instruction["op"] in binary_operators and "left" in instruction:
+        #Verilog uses >>> as an arithmetic right shift
+        if instruction["op"] == ">>":
+            instruction["op"] = ">>>"
         output_file.write(
           "        register_%s <= $signed(16'd%s) %s $signed(register_%s);\n"%(
           instruction["dest"],
@@ -335,6 +338,9 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
           instruction["srcb"]))
 
       elif instruction["op"] in binary_operators and "right" in instruction:
+        #Verilog uses >>> as an arithmetic right shift
+        if instruction["op"] == ">>":
+            instruction["op"] = ">>>"
         output_file.write(
           "        register_%s <= $signed(register_%s) %s $signed(16'd%s);\n"%(
           instruction["dest"],
@@ -343,6 +349,9 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
           instruction["right"] & 0xffff))
 
       elif instruction["op"] in binary_operators:
+        #Verilog uses >>> as an arithmetic right shift
+        if instruction["op"] == ">>":
+            instruction["op"] = ">>>"
         output_file.write(
           "        register_%s <= $signed(register_%s) %s $signed(register_%s);\n"%(
           instruction["dest"],

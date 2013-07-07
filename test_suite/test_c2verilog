@@ -1534,6 +1534,15 @@ int main(){
 }
 
 """)
+test("expression 20",
+"""
+int main(){
+  int a = -1;
+  assert(a >> 2 == -1);
+  return 0;
+}
+
+""")
 test("comment 0",
 """
 int main(){

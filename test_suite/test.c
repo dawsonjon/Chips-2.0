@@ -1,10 +1,7 @@
 
 int main(){
-  int a = 3;
-  int b = 4;
-  report(3%4);
-  report(a%b);
-  assert(a%b == 3);
+  int char = '1';
+  assert(char == 49);
   return 0;
 }
 

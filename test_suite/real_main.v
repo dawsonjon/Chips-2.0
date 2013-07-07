@@ -6,6 +6,8 @@
 ///
 ///*Created by C2CHIP*
 
+  
+`timescale 1ns/1ps
 module real_main;
   reg       [15:0] timer;
   reg       [4:0] program_counter;
@@ -25,6 +27,7 @@ module real_main;
   reg       [15:0] dividend;
   reg       [15:0] quotient;
   reg       [15:0] remainder;
+  reg       [15:0] modulo;
   reg       [4:0] count;
   reg       [1:0] state;
   reg       stb;
@@ -183,6 +186,7 @@ initial
       finish: begin
 
         quotient <= sign?-z:z;
+        modulo <= divisor[15]?-modulo:modulo;
         ack      <= 1'b1;
         state    <= acknowledge;
 

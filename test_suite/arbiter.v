@@ -1,26 +1,28 @@
 //name : arbiter
 //tag : c components
-//input : INPUT_a:16
-//input : INPUT_b:16
-//output : OUTPUT_z:16
+//input : input_a:16
+//input : input_b:16
+//output : output_z:16
 //source_file : test.c
 ///Arbiter
 ///=======
 ///
 ///*Created by C2CHIP*
 
+  
+`timescale 1ns/1ps
 module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,output_z,output_z_stb,input_a_ack,input_b_ack);
   input     [15:0] input_a;
   input     [15:0] input_b;
-  input     [15:0] input_a_stb;
-  input     [15:0] input_b_stb;
-  input     [15:0] output_z_ack;
+  input     input_a_stb;
+  input     input_b_stb;
+  input     output_z_ack;
   input     clk;
   input     rst;
   output    [15:0] output_z;
-  output    [15:0] output_z_stb;
-  output    [15:0] input_a_ack;
-  output    [15:0] input_b_ack;
+  output    output_z_stb;
+  output    input_a_ack;
+  output    input_b_ack;
   reg       [15:0] timer;
   reg       [13:0] program_counter;
   reg       [15:0] address;
@@ -41,6 +43,7 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
   reg       [15:0] dividend;
   reg       [15:0] quotient;
   reg       [15:0] remainder;
+  reg       [15:0] modulo;
   reg       [4:0] count;
   reg       [1:0] state;
   reg       stb;
@@ -84,7 +87,6 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
 
       16'd1:
       begin
-        $finish;
         program_counter <= program_counter;
       end
 
@@ -243,6 +245,7 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
       finish: begin
 
         quotient <= sign?-z:z;
+        modulo <= divisor[15]?-modulo:modulo;
         ack      <= 1'b1;
         state    <= acknowledge;
 
