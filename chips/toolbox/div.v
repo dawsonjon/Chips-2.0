@@ -1,4 +1,4 @@
-//name:modulo 
+//name: divider
 //tag: arithmetic
 //input: in1: bits
 //input: in2: bits
@@ -6,14 +6,14 @@
 //parameter: bits: 16
 //source_file: built_in
 
-///Modulo
+///Divider
 ///=======
 ///
-///Produces a stream of data *out1* by performing the modulo of *in1* and *in2* item by item.
+///Produces a stream of data *out1* by dividing *in1* by *in2* item by item.
 ///
 ///::
 ///
-///    out1 <= in1 % in2
+///    out1 <= in1 / in2
 ///
 ///+--------------------+-------------------------------------+
 ///|Language            | Verilog                             |
@@ -56,7 +56,7 @@
 /// ============= ============== ==============================================
 ///
 
-module modulo #( parameter bits = 16)(
+module divider #( parameter bits = 16)(
     input clk,
     input rst,
     
@@ -172,7 +172,7 @@ module modulo #( parameter bits = 16)(
       finish: 
       begin
 
-        out1     <= divisor[15]?-(remainder/2):remainder/2;
+        out1     <= sign?-quotient:quotient;
         state    <= write_z;
 
       end //finish
