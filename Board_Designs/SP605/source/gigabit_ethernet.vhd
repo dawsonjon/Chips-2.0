@@ -224,7 +224,8 @@ architecture RTL of gigabit_ethernet is
     SEND_CRC_0, DONE_STATE);
   signal TX_PHY_STATE : TX_PHY_STATE_TYPE;
 
-  type TX_PACKET_STATE_TYPE is(GET_LENGTH, GET_DATA, SEND_PACKET);
+  type TX_PACKET_STATE_TYPE is(GET_LENGTH, GET_DATA, SEND_PACKET, 
+    WAIT_NOT_DONE);
   signal TX_PACKET_STATE : TX_PACKET_STATE_TYPE;
 
   type RX_PHY_STATE_TYPE is (WAIT_START, PREAMBLE, DATA_HIGH, DATA_LOW,
@@ -248,6 +249,7 @@ architecture RTL of gigabit_ethernet is
   signal TX_PACKET_LENGTH          : std_logic_vector(15 downto 0);
   signal GO, GO_DEL, GO_SYNC       : std_logic;
   signal DONE, DONE_DEL, DONE_SYNC : std_logic;
+  signal S_TX_ACK                  : std_logic;
 
   --RX signals
   signal RX_WRITE_ADDRESS          : unsigned(ADDRESS_BITS - 1 downto 0);
@@ -282,43 +284,51 @@ begin
     case TX_PACKET_STATE is
 
       when GET_LENGTH =>
-        if TX_STB = '1' then
+        S_TX_ACK <= '1';
+        if S_TX_ACK = '1' and TX_STB = '1' then
+          S_TX_ACK <= '0';
           TX_PACKET_LENGTH <= TX;
+	        TX_IN_COUNT <= 2;
           TX_PACKET_STATE <= GET_DATA;
         end if;
 
       when GET_DATA =>
-        if TX_STB = '1' then
+        S_TX_ACK <= '1';
+        if S_TX_ACK = '1' and TX_STB = '1' then
           TX_WRITE_DATA <= TX;
           TX_WRITE <= '1';
-          if TX_IN_COUNT = 0 then
+          if TX_IN_COUNT >= unsigned(TX_PACKET_LENGTH) then
             TX_PACKET_STATE <= SEND_PACKET;
+            S_TX_ACK <= '0';
           else
             TX_WRITE_ADDRESS <= TX_WRITE_ADDRESS + 1;
-            TX_IN_COUNT <= TX_IN_COUNT - 1;
+            TX_IN_COUNT <= TX_IN_COUNT + 2;
           end if;
         end if;
 
       when SEND_PACKET =>
         GO <= '1';
         TX_WRITE_ADDRESS <= 0;
-        TX_IN_COUNT <= 511;
         if DONE_SYNC = '1' then
           GO <= '0';
-          TX_PACKET_STATE <= GET_DATA;
+          TX_PACKET_STATE <= WAIT_NOT_DONE;
+        end if;
+
+      when WAIT_NOT_DONE =>
+        if DONE_SYNC = '0' then
+          TX_PACKET_STATE <= GET_LENGTH;
         end if;
 
     end case;
     if RST = '1' then
       TX_PACKET_STATE <= GET_LENGTH;
       TX_WRITE_ADDRESS <= 0;
+      S_TX_ACK <= '0';
       GO <= '0';
-      TX_IN_COUNT <= 511;
     end if;
   end process TX_PACKET_FSM;
 
-  TX_ACK <= '1' when TX_PACKET_STATE = GET_DATA else
-            '1' when TX_PACKET_STATE = GET_LENGTH else '0';
+  TX_ACK <= S_TX_ACK;
 
 
   --This process writes data into a dual port RAM
@@ -340,22 +350,21 @@ begin
 
   --This process synchronises ethernet signals
   --to the local clock domain
-  CLK_125_TO_LOCAL : process
+  LOCAL_TO_CLK_125 : process
   begin
     wait until rising_edge(CLK_125_MHZ);
     GO_DEL <= GO; GO_SYNC <= GO_DEL;
   end process;
 
   --This process synchronises local signals to the ethernet clock domain
-  LOCAL_TO_CLK_125 : process
+  CLK_125_TO_LOCAL : process
   begin
-    wait until rising_edge(CLK_125_MHZ);
+    wait until rising_edge(CLK);
     DONE_DEL <= DONE; DONE_SYNC <= DONE_DEL;
   end process;
 
   --Transmit the stored packet via the phy.
   TX_PHY_FSM : process
-    variable MEM_DATA : std_logic_vector(15 downto 0);
   begin
     wait until rising_edge(CLK_125_MHZ);
     case TX_PHY_STATE is
@@ -402,10 +411,12 @@ begin
         TX_CRC <= X"FFFFFFFF";
           
       when SEND_DATA_HI =>
-        TX_CRC   <= NEXTCRC32_D8(TX_READ_DATA(15 downto 8), TX_CRC);
-        TXD   <= TX_READ_DATA(15 downto 8);
-        TX_PHY_STATE <= SEND_DATA_LO;
-        if TX_OUT_COUNT /= 0 then
+        TX_CRC <= NEXTCRC32_D8(TX_READ_DATA(15 downto 8), TX_CRC);
+        TXD <= TX_READ_DATA(15 downto 8);
+        If TX_OUT_COUNT = 0 then
+          TX_PHY_STATE <= SEND_CRC_3;
+        else
+		      TX_PHY_STATE <= SEND_DATA_LO;
           TX_READ_ADDRESS <= TX_READ_ADDRESS + 1;
           TX_OUT_COUNT <= TX_OUT_COUNT - 1;
         end if;
@@ -600,7 +611,7 @@ begin
           RX_PACKET_LENGTH_SYNC <= RX_PACKET_LENGTH_BUFFER(RX_READ_BUFFER);
           RX <= 
             std_logic_vector(
-              resize(RX_PACKET_LENGTH_BUFFER(RX_READ_BUFFER), 16));
+              resize(RX_PACKET_LENGTH_BUFFER(RX_READ_BUFFER)-4, 16));
           RX_STB <= '1';
         end if;
         

@@ -1,5 +1,0 @@
-verilog work "../../source/user_design.v"
-vhdl work "../../source/serial_out.vhd"
-vhdl work "../../source/serial_in.vhd"
-vhdl work "../../source/gigabit_ethernet.vhd"
-vhdl work "../../source/sp605.vhd"

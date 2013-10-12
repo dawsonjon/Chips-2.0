@@ -1,8 +1,0 @@
-INTSTYLE=ise
-INFILE=/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.ncd
-OUTFILE=/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.bit
-FAMILY=Spartan6
-PART=xc6slx45t-3fgg484
-WORKINGDIR=/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605
-LICENSE=WebPack
-USER_INFO=176529646_206660144_0_679
