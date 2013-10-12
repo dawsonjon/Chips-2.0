@@ -11,10 +11,14 @@ class Allocator:
     self.all_registers = {}
     self.memory_size = 0
     self.reuse = reuse
+    self.memory_content = {}
 
-  def new_array(self, size):
+  def new_array(self, size, contents):
     reg = self.memory_size
     self.memory_size += int(size)
+    if contents is not None:
+        for location, value in enumerate(contents, reg):
+            self.memory_content[location] = value
     return reg
 
   def new(self, name="temporary_register"):

@@ -39,6 +39,20 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
   reg [15:0] memory [-1:0];
 
   //////////////////////////////////////////////////////////////////////////////
+  // MEMORY INITIALIZATION                                                      
+  //                                                                            
+  // In order to reduce program size, array contents have been stored into      
+  // memory at initialization. In an FPGA, this will result in the memory being 
+  // initialized when the FPGA configures.                                      
+  // Memory will not be re-initialized at reset.                                
+  // Dissable this behaviour using the no_initialize_memory switch              
+  
+  initial
+  begin
+  end
+
+
+  //////////////////////////////////////////////////////////////////////////////
   // FSM IMPLEMENTAION OF C PROCESS                                             
   //                                                                            
   // This section of the file contains a Finite State Machine (FSM) implementing
@@ -170,17 +184,5 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
   assign input_b_ack = s_input_b_ack;
   assign output_z_stb = s_output_z_stb;
   assign output_z = s_output_z;
-
-  //////////////////////////////////////////////////////////////////////////////
-  // SERIAL DIVIDER                                                             
-  //                                                                            
-  // The C input file uses division.                                            
-  // Division is not directly synthesisable in target hardware.                 
-  // This section of the file implements a serial divider.                      
-  // At present, there is no support for concurrent division at instruction     
-  // level. The division operation takes 18 clock cycles. You should consider   
-  // re-writing the C source file to avoid division if performance is not       
-  // accepteable.                                                               
-
 
 endmodule

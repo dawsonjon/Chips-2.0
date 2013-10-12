@@ -4,30 +4,37 @@ import sys
 
 os.system("python-coverage erase")
 
-def test(test, code):
+def test(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
+  if no_init:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run no_initialize_memory test.c")
+  else:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
+
   if result == 0:
     print test, "...pass"
   else:
     print test, "...fail"
     sys.exit(0)
 
-def test_fails(test, code):
+def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
   print "One error expected ..."
-  result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
+  if no_init:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run no_initialize_memory test.c")
+  else:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
   if result == 0:
     print test, "...fail"
     sys.exit(0)
   else:
     print test, "...pass"
 
-test("string 1",
+test("string 1 a",
 """
 int main(){
   int c[4] = "aA1";
@@ -40,7 +47,20 @@ int main(){
 
 """)
 
-test("string 2",
+test("string 1 b",
+"""
+int main(){
+  int c[4] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""", True)
+
+test("string 2a",
 """
 int main(){
   int c[] = "aA1";
@@ -52,6 +72,19 @@ int main(){
 }
 
 """)
+
+test("string 2b",
+"""
+int main(){
+  int c[] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""", True)
 
 test_fails("string 3",
 """

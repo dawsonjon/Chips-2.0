@@ -10,13 +10,14 @@ class Parser:
 
     """Turn the C input file into a tree of expressions and statements."""
 
-    def __init__(self, input_file, reuse):
+    def __init__(self, input_file, reuse, initialize_memory):
         self.scope = {}
         self.function = None
         self.loop = None
         self.tokens = Tokens(input_file)
         self.allocator = Allocator(reuse)
         self.structs = []
+        self.initialize_memory = initialize_memory
 
     def parse_process(self):
         process = Process()
@@ -439,7 +440,8 @@ class Parser:
                 if size is None:
                     self.tokens.error("array size must be specified if not initialized")
                 type_+="[]"
-                declaration = ArrayDeclaration(self.allocator, size, type_, initializer)
+                initialize_memory = self.initialize_memory
+                declaration = ArrayDeclaration(self.allocator, size, type_, initializer, self.initialize_memory)
 
             #simple variable declaration 
             else:

@@ -34,19 +34,33 @@ module real_main;
   // Verilog files generated in testbecnch mode are not suitable for synthesis, 
   // or for instantiation within a larger design.
   
-initial
+  initial
   begin
     rst <= 1'b1;
     #50 rst <= 1'b0;
   end
 
   
-initial
+  initial
   begin
     clk <= 1'b0;
     while (1) begin
       #5 clk <= ~clk;
     end
+  end
+
+
+  //////////////////////////////////////////////////////////////////////////////
+  // MEMORY INITIALIZATION                                                      
+  //                                                                            
+  // In order to reduce program size, array contents have been stored into      
+  // memory at initialization. In an FPGA, this will result in the memory being 
+  // initialized when the FPGA configures.                                      
+  // Memory will not be re-initialized at reset.                                
+  // Dissable this behaviour using the no_initialize_memory switch              
+  
+  initial
+  begin
   end
 
 
@@ -111,17 +125,5 @@ initial
       program_counter <= 0;
     end
   end
-
-  //////////////////////////////////////////////////////////////////////////////
-  // SERIAL DIVIDER                                                             
-  //                                                                            
-  // The C input file uses division.                                            
-  // Division is not directly synthesisable in target hardware.                 
-  // This section of the file implements a serial divider.                      
-  // At present, there is no support for concurrent division at instruction     
-  // level. The division operation takes 18 clock cycles. You should consider   
-  // re-writing the C source file to avoid division if performance is not       
-  // accepteable.                                                               
-
 
 endmodule

@@ -26,7 +26,7 @@ def parallelise(instructions):
 
     """Return the array modified by this instruction if any"""
 
-    return instruction["op"] in ["memory_write", "memory_read_request", "memory_read"]
+    return instruction["op"] in ["memory_write", "memory_read_request", "memory_read", "memory_write_literal"]
 
   def is_solitary(instruction):
 

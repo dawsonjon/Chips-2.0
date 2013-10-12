@@ -24,6 +24,7 @@ if __name__ == "__main__":
     print "compile options:"
     print "  no_reuse      : prevent register resuse"
     print "  no_concurrent : prevent concurrency"
+    print "  no_initialize_memory : don't initialize memory"
     print
     print "tool options:"
     print "  iverilog      : compiles using the icarus verilog compiler"
@@ -33,10 +34,11 @@ if __name__ == "__main__":
   #parse command line
   input_file = sys.argv[-1]
   reuse = "no_reuse" not in sys.argv
+  initialize_memory = "no_initialize_memory" not in sys.argv
 
   try:
       #compile into CHIP
-      parser = Parser(input_file, reuse)
+      parser = Parser(input_file, reuse, initialize_memory)
       process = parser.parse_process()
       name = process.main.name
       instructions = process.generate()
@@ -46,8 +48,15 @@ if __name__ == "__main__":
         frames = parallelise(instructions)
       output_file = name + ".v"
       output_file = open(output_file, "w")
-      generate_CHIP(input_file, name, frames, output_file, parser.allocator.all_registers,
-        parser.allocator.memory_size)
+      generate_CHIP(
+              input_file, 
+              name, 
+              frames, 
+              output_file, 
+              parser.allocator.all_registers,
+              parser.allocator.memory_size, 
+              initialize_memory, 
+              parser.allocator.memory_content)
       output_file.close()
   except C2CHIPError as err:
       print "Error in file:", err.filename, "at line:", err.lineno
