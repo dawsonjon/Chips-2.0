@@ -11,7 +11,15 @@ def unique(l):
 
   return dict(zip(l, l)).keys()
 
-def generate_CHIP(input_file, name, frames, output_file, registers, memory_size, no_tb_mode=False):
+def generate_CHIP(input_file, 
+                  name, 
+                  frames, 
+                  output_file, 
+                  registers, 
+                  memory_size, 
+                  initialize_memory,
+                  memory_content, 
+                  no_tb_mode=False):
 
   """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
 
@@ -198,13 +206,13 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
       output_file.write("  // Verilog files generated in testbecnch mode are not suitable for synthesis, \n")
       output_file.write("  // or for instantiation within a larger design.\n")
 
-      output_file.write("  \ninitial\n")
+      output_file.write("  \n  initial\n")
       output_file.write("  begin\n")
       output_file.write("    rst <= 1'b1;\n")
       output_file.write("    #50 rst <= 1'b0;\n")
       output_file.write("  end\n\n")
 
-      output_file.write("  \ninitial\n")
+      output_file.write("  \n  initial\n")
       output_file.write("  begin\n")
       output_file.write("    clk <= 1'b0;\n")
       output_file.write("    while (1) begin\n")
@@ -215,6 +223,22 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
   #Generate a state machine to execute the instructions
   binary_operators = ["+", "-", "*", "/", "|", "&", "^", "<<", ">>", "<",">", ">=",
     "<=", "==", "!="]
+
+  output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
+  output_file.write("  // MEMORY INITIALIZATION                                                      \n")
+  output_file.write("  //                                                                            \n")
+  output_file.write("  // In order to reduce program size, array contents have been stored into      \n") 
+  output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n") 
+  output_file.write("  // initialized when the FPGA configures.                                      \n") 
+  output_file.write("  // Memory will not be re-initialized at reset.                                \n") 
+  output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n") 
+
+  if initialize_memory:
+      output_file.write("  \n  initial\n")
+      output_file.write("  begin\n")
+      for location, content in memory_content.iteritems():
+          output_file.write("    memory[16'd%s] = 16'd%s;\n"%(location, content))
+      output_file.write("  end\n\n")
 
   output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
   output_file.write("  // FSM IMPLEMENTAION OF C PROCESS                                             \n")
@@ -442,6 +466,11 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
         output_file.write("        data_in <= register_%s;\n"%(instruction["srcb"]))
         output_file.write("        write_enable <= 1'b1;\n")
 
+      elif instruction["op"] == "memory_write_literal":
+        output_file.write("        address <= 16'd%s;\n"%(instruction["address"]))
+        output_file.write("        data_in <= 16'd%s;\n"%(instruction["value"]))
+        output_file.write("        write_enable <= 1'b1;\n")
+
       elif instruction["op"] == "assert":
         output_file.write( "        if (register_%s == 16'h0000) begin\n"%instruction["src"])
         output_file.write( "          $display(\"Assertion failed at line: %s in file: %s\");\n"%(
@@ -488,18 +517,18 @@ def generate_CHIP(input_file, name, frames, output_file, registers, memory_size,
     output_file.write("  assign output_%s_stb = s_output_%s_stb;\n"%(i, i))
     output_file.write("  assign output_%s = s_output_%s;\n"%(i, i))
   
-  output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
-  output_file.write("  // SERIAL DIVIDER                                                             \n")
-  output_file.write("  //                                                                            \n")
-  output_file.write("  // The C input file uses division.                                            \n") 
-  output_file.write("  // Division is not directly synthesisable in target hardware.                 \n")
-  output_file.write("  // This section of the file implements a serial divider.                      \n")
-  output_file.write("  // At present, there is no support for concurrent division at instruction     \n")
-  output_file.write("  // level. The division operation takes 18 clock cycles. You should consider   \n")
-  output_file.write("  // re-writing the C source file to avoid division if performance is not       \n")
-  output_file.write("  // accepteable.                                                               \n\n")
-
   if has_divider:
+      output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
+      output_file.write("  // SERIAL DIVIDER                                                             \n")
+      output_file.write("  //                                                                            \n")
+      output_file.write("  // The C input file uses division.                                            \n") 
+      output_file.write("  // Division is not directly synthesisable in target hardware.                 \n")
+      output_file.write("  // This section of the file implements a serial divider.                      \n")
+      output_file.write("  // At present, there is no support for concurrent division at instruction     \n")
+      output_file.write("  // level. The division operation takes 18 clock cycles. You should consider   \n")
+      output_file.write("  // re-writing the C source file to avoid division if performance is not       \n")
+      output_file.write("  // accepteable.                                                               \n\n")
+
       output_file.write("  always @(posedge clk)\n")
       output_file.write("  begin\n\n")
       output_file.write("    ack <= 1'b0;\n\n")

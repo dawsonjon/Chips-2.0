@@ -10,13 +10,14 @@ class Parser:
 
     """Turn the C input file into a tree of expressions and statements."""
 
-    def __init__(self, input_file, reuse):
+    def __init__(self, input_file, reuse, initialize_memory):
         self.scope = {}
         self.function = None
         self.loop = None
         self.tokens = Tokens(input_file)
         self.allocator = Allocator(reuse)
         self.structs = []
+        self.initialize_memory = initialize_memory
 
     def parse_process(self):
         process = Process()
@@ -181,6 +182,7 @@ class Parser:
     def parse_discard(self):
         return DiscardExpression(self.parse_expression(), self.allocator)
 
+
     def parse_assignment(self):
         assignment_operators = [
             "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>=", 
@@ -209,7 +211,7 @@ class Parser:
                     self.parse_ternary_expression(), 
                     self.allocator
                 )
-            if lvalue.type_ != expression.type_:
+            if not compatible(lvalue.type_, expression.type_):
                 self.tokens.error(
                     "type mismatch in assignment"
                 )
@@ -439,7 +441,8 @@ class Parser:
                 if size is None:
                     self.tokens.error("array size must be specified if not initialized")
                 type_+="[]"
-                declaration = ArrayDeclaration(self.allocator, size, type_, initializer)
+                initialize_memory = self.initialize_memory
+                declaration = ArrayDeclaration(self.allocator, size, type_, initializer, self.initialize_memory)
 
             #simple variable declaration 
             else:
@@ -622,6 +625,15 @@ class Parser:
                 value = ord(token)
             except SyntaxError:
                 self.tokens.error("%s is not a character literal"%token)
+        elif token.startswith('"'):
+            try:
+                initializer = [ord(i) for i in token.strip('"')] + [0]
+                size = len(initializer)
+                initialize_memory = self.initialize_memory
+                declaration = ArrayDeclaration(self.allocator, size, "char[]", initializer, self.initialize_memory)
+                return declaration.instance()
+            except SyntaxError:
+                self.tokens.error("%s is not a character literal"%token)
         else:
             try:
                 value = int(eval(token))
@@ -655,3 +667,11 @@ class Parser:
             member = self.tokens.get()
             instance = instance.members[member]
             return self.parse_variable_array_struct(instance)
+
+def compatible(left, right):
+    if left == right:
+        return True
+    if left in ["int", "short", "long", "char"] and right in ["int", "short", "long", "char"]:
+        return True
+    return False
+

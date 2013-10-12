@@ -211,30 +211,42 @@ class VariableInstance:
     return self.initializer.generate(self.register)
 
 class ArrayDeclaration:
-  def __init__(self, allocator, size, type_, initializer = None):
+  def __init__(self, allocator, size, type_, initializer = None, initialize_memory = False):
     self.allocator = allocator
     self.size = size
     self.type_ = type_
-    self.initializer = None
+    self.initializer = initializer
+    self.initialize_memory = initialize_memory
   def instance(self):
-    location = self.allocator.new_array(self.size)
+    location = self.allocator.new_array(self.size, self.initializer)
     register = self.allocator.new("array")
-    return ArrayInstance(location, register, self.size, self.type_, self.initializer)
+    return ArrayInstance(location, register, self.size, self.type_, self.initializer, self.initialize_memory)
 
 class ArrayInstance:
-  def __init__(self, location, register, size, type_, initializer):
+  def __init__(self, location, register, size, type_, initializer, initialize_memory):
     self.register = register
     self.location = location
     self.size = size
     self.type_ = type_
     self.initializer = initializer
-  def generate(self):
-      instructions = [{"op":"literal", "literal":self.location, "dest":self.register}]
-      if self.initializer is not None:
+    self.initialize_memory = initialize_memory
+  def generate(self, result=None):
+      instructions = []
+      #If initialize memory is true, the memory content will initialised (as at configuration time)
+      #If initialize memory is false, then the memory will need to be filled by the program.
+      if not self.initialize_memory and self.initializer is not None:
           location = 0
           for value in self.initializer:
-              instructions.append({"op":"literal", "literal": value, "dest":location })
+              instructions.append({"op":"memory_write_literal", "address":location, "value":value})
               location += 1
+      instructions.append({"op":"literal", "literal":self.location, "dest":self.register})
+      #this bit here is to make string literals work, 
+      #in this case an array instance is created implicitly, 
+      #but the value of the expression is the array register.
+      if result is not None and result != self.register:
+          instructions.append({"op"  :"move",
+                               "dest":result,
+                               "src" :self.register})
       return instructions
 
 class StructDeclaration:
