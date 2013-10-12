@@ -673,5 +673,7 @@ def compatible(left, right):
         return True
     if left in ["int", "short", "long", "char"] and right in ["int", "short", "long", "char"]:
         return True
+    if left in ["int[]", "short[]", "long[]", "char[]"] and right in ["int[]", "short[]", "long[]", "char[]"]:
+        return True
     return False
 
