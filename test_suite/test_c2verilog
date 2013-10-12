@@ -99,7 +99,7 @@ int main(){
 
 """)
 
-test_fails("string 4",
+test("string 4a",
 """
 int test(char c[]){
   assert(c[0] == 97);
@@ -113,7 +113,7 @@ int test(char c[]){
   return 0;
 }
 int main(){
-  char c[];
+  char c[] = "aA1";
   assert(c[0] == 97);
   assert(c[1] == 65);
   assert(c[2] == 49);
@@ -128,6 +128,35 @@ int main(){
 
 """)
 
+test("string 4b",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  c[0] = 'b';
+  c[1] = 'B';
+  c[2] = '2';
+  c[3] = 0;
+  return 0;
+}
+int main(){
+  char c[] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  test(c);
+  assert(c[0] == 'b');
+  assert(c[1] == 'B');
+  assert(c[2] == '2');
+  assert(c[3] == 0);
+  return 0;
+}
+
+""", True)
+
 test_fails("string 5",
 """
 int main(){
@@ -138,6 +167,36 @@ int main(){
 }
 
 """)
+
+test("string 6a",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+int main(){
+  test("aA1");
+  return 0;
+}
+""")
+
+test("string 6b",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+int main(){
+  test("aA1");
+  return 0;
+}
+""", True)
 
 test("char 1",
 """

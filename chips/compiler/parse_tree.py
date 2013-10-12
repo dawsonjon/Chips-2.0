@@ -230,8 +230,7 @@ class ArrayInstance:
     self.type_ = type_
     self.initializer = initializer
     self.initialize_memory = initialize_memory
-  def generate(self):
-      print self.initializer
+  def generate(self, result=None):
       instructions = []
       #If initialize memory is true, the memory content will initialised (as at configuration time)
       #If initialize memory is false, then the memory will need to be filled by the program.
@@ -241,6 +240,13 @@ class ArrayInstance:
               instructions.append({"op":"memory_write_literal", "address":location, "value":value})
               location += 1
       instructions.append({"op":"literal", "literal":self.location, "dest":self.register})
+      #this bit here is to make string literals work, 
+      #in this case an array instance is created implicitly, 
+      #but the value of the expression is the array register.
+      if result is not None and result != self.register:
+          instructions.append({"op"  :"move",
+                               "dest":result,
+                               "src" :self.register})
       return instructions
 
 class StructDeclaration:
