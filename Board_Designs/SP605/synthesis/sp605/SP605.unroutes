@@ -1,0 +1,17 @@
+Release 14.3 - par P.40xd (lin64)
+Copyright (c) 1995-2012 Xilinx, Inc.  All rights reserved.
+
+Fri Oct 11 17:21:31 2013
+
+All signals are completely routed.
+
+WARNING:ParHelpers:361 - There are 5 loadless signals in this design. This design will cause Bitgen to issue DRC
+   warnings.
+
+   TXCLK_IBUF
+   gigabit_ethernet_inst_1/Mram_RX_PACKET_LENGTH_BUFFER1_RAMD_D1_O
+   gigabit_ethernet_inst_1/Mram_RX_PACKET_LENGTH_BUFFER2_RAMD_D1_O
+   gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMD_D1_O
+   gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER2_RAMD_D1_O
+
+

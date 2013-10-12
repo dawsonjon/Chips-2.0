@@ -1,0 +1,16 @@
+Release 14.3 - WebTalk (P.40xd)
+Copyright (c) 1995-2010 Xilinx, Inc.  All rights reserved.
+
+Project Information
+--------------------
+ProjectID=D04812FA103A3128F85E18D5E0C5ABA4
+ProjectIteration=21
+
+WebTalk Summary
+----------------
+INFO:WebTalk:1 - WebTalk is enabled because you are using a WebPACK license.
+
+INFO:WebTalk:8 - WebTalk Install setting is ON.
+INFO:WebTalk:6 - WebTalk User setting is ON.
+
+INFO:WebTalk:5 - /media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/usage_statistics_webtalk.html WebTalk report has not been sent to Xilinx.  Please check your network and proxy settings.  For additional details about this file, please refer to the WebTalk help file at /media/sdb1/Xilinx/14.3/14.3/ISE_DS/ISE/data/reports/webtalk_introduction.html

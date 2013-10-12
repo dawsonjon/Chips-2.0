@@ -1,0 +1,1156 @@
+--------------------------------------------------------------------------------
+Release 14.3 Trace  (lin64)
+Copyright (c) 1995-2012 Xilinx, Inc.  All rights reserved.
+
+/media/sdb1/Xilinx/14.3/14.3/ISE_DS/ISE/bin/lin64/unwrapped/trce -intstyle ise
+-v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf
+SP605.ucf
+
+Design file:              SP605.ncd
+Physical constraint file: SP605.pcf
+Device,package,speed:     xc6slx45t,fgg484,C,-3 (PRODUCTION 1.23 2012-10-12)
+Report level:             verbose report
+
+Environment Variable      Effect 
+--------------------      ------ 
+NONE                      No environment variables were set
+--------------------------------------------------------------------------------
+
+INFO:Timing:3412 - To improve timing, see the Timing Closure User Guide (UG612).
+INFO:Timing:2752 - To get complete path coverage, use the unconstrained paths 
+   option. All paths that are not constrained will be reported in the 
+   unconstrained paths section(s) of the report.
+INFO:Timing:3339 - The clock-to-out numbers in this timing report are based on 
+   a 50 Ohm transmission line loading model.  For the details of this model, 
+   and for more information on accounting for different loading conditions, 
+   please see the device datasheet.
+
+================================================================================
+Timing constraint: TS_CLK_P = PERIOD TIMEGRP "CLK_P" 5 ns HIGH 50% INPUT_JITTER 
+0.05 ns;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 0 paths analyzed, 0 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 component switching limit errors)
+ Minimum period is   3.200ns.
+--------------------------------------------------------------------------------
+
+Component Switching Limit Checks: TS_CLK_P = PERIOD TIMEGRP "CLK_P" 5 ns HIGH 50% INPUT_JITTER 0.05 ns;
+--------------------------------------------------------------------------------
+Slack: 3.210ns (period - min period limit)
+  Period: 5.000ns
+  Min period limit: 1.790ns (558.659MHz) (Tdcmper_CLKIN)
+  Physical resource: dcm_sp_inst/CLKIN
+  Logical resource: dcm_sp_inst/CLKIN
+  Location pin: DCM_X0Y1.CLKIN
+  Clock network: dcm_sp_inst_ML_NEW_DIVCLK
+--------------------------------------------------------------------------------
+Slack: 5.330ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 2.670ns (374.532MHz) (Tdcmper_CLKFX)
+  Physical resource: dcm_sp_inst/CLKFX
+  Logical resource: dcm_sp_inst/CLKFX
+  Location pin: DCM_X0Y1.CLKFX
+  Clock network: clkfx
+--------------------------------------------------------------------------------
+Slack: 5.330ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 2.670ns (374.532MHz) (Tdcmper_CLKFX)
+  Physical resource: dcm_sp_inst/CLKFX180
+  Logical resource: dcm_sp_inst/CLKFX180
+  Location pin: DCM_X0Y1.CLKFX180
+  Clock network: clkfx180
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_RXCLK = PERIOD TIMEGRP "RXCLK" 8 ns HIGH 50%;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 1196 paths analyzed, 810 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 setup errors, 0 hold errors, 0 component switching limit errors)
+ Minimum period is   4.263ns.
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3 (SLICE_X52Y43.B4), 46 paths
+--------------------------------------------------------------------------------
+Slack (setup path):     3.737ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PACKET_LENGTH_2 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      4.172ns (Levels of Logic = 5)
+  Clock Path Skew:      -0.056ns (0.453 - 0.509)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_2 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X50Y49.CQ      Tcko                  0.408   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<3>
+                                                       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_2
+    SLICE_X51Y50.D1      net (fanout=3)        0.635   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<2>
+    SLICE_X51Y50.D       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C5      net (fanout=1)        0.331   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B4      net (fanout=1)        0.327   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C4      net (fanout=1)        0.926   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C       Tilo                  0.204   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110
+    SLICE_X52Y43.B4      net (fanout=2)        0.275   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1
+    SLICE_X52Y43.CLK     Tas                   0.289   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3-In
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    -------------------------------------------------  ---------------------------
+    Total                                      4.172ns (1.678ns logic, 2.494ns route)
+                                                       (40.2% logic, 59.8% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     3.773ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PACKET_LENGTH_1 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      4.136ns (Levels of Logic = 5)
+  Clock Path Skew:      -0.056ns (0.453 - 0.509)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_1 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X50Y49.BQ      Tcko                  0.408   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<3>
+                                                       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_1
+    SLICE_X51Y50.D2      net (fanout=3)        0.599   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<1>
+    SLICE_X51Y50.D       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C5      net (fanout=1)        0.331   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B4      net (fanout=1)        0.327   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C4      net (fanout=1)        0.926   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C       Tilo                  0.204   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110
+    SLICE_X52Y43.B4      net (fanout=2)        0.275   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1
+    SLICE_X52Y43.CLK     Tas                   0.289   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3-In
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    -------------------------------------------------  ---------------------------
+    Total                                      4.136ns (1.678ns logic, 2.458ns route)
+                                                       (40.6% logic, 59.4% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     3.961ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PACKET_LENGTH_8 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      3.951ns (Levels of Logic = 5)
+  Clock Path Skew:      -0.053ns (0.453 - 0.506)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_8 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X50Y51.AQ      Tcko                  0.408   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<10>
+                                                       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_8
+    SLICE_X51Y50.D4      net (fanout=4)        0.414   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<8>
+    SLICE_X51Y50.D       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C5      net (fanout=1)        0.331   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B4      net (fanout=1)        0.327   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C4      net (fanout=1)        0.926   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C       Tilo                  0.204   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110
+    SLICE_X52Y43.B4      net (fanout=2)        0.275   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1
+    SLICE_X52Y43.CLK     Tas                   0.289   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3-In
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    -------------------------------------------------  ---------------------------
+    Total                                      3.951ns (1.678ns logic, 2.273ns route)
+                                                       (42.5% logic, 57.5% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 (SLICE_X52Y43.D5), 46 paths
+--------------------------------------------------------------------------------
+Slack (setup path):     3.946ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PACKET_LENGTH_2 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      3.963ns (Levels of Logic = 5)
+  Clock Path Skew:      -0.056ns (0.453 - 0.509)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_2 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X50Y49.CQ      Tcko                  0.408   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<3>
+                                                       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_2
+    SLICE_X51Y50.D1      net (fanout=3)        0.635   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<2>
+    SLICE_X51Y50.D       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C5      net (fanout=1)        0.331   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B4      net (fanout=1)        0.327   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C4      net (fanout=1)        0.926   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C       Tilo                  0.204   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110
+    SLICE_X52Y43.D5      net (fanout=2)        0.201   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1
+    SLICE_X52Y43.CLK     Tas                   0.154   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In2
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    -------------------------------------------------  ---------------------------
+    Total                                      3.963ns (1.543ns logic, 2.420ns route)
+                                                       (38.9% logic, 61.1% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     3.982ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PACKET_LENGTH_1 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      3.927ns (Levels of Logic = 5)
+  Clock Path Skew:      -0.056ns (0.453 - 0.509)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_1 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X50Y49.BQ      Tcko                  0.408   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<3>
+                                                       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_1
+    SLICE_X51Y50.D2      net (fanout=3)        0.599   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<1>
+    SLICE_X51Y50.D       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C5      net (fanout=1)        0.331   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B4      net (fanout=1)        0.327   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C4      net (fanout=1)        0.926   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C       Tilo                  0.204   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110
+    SLICE_X52Y43.D5      net (fanout=2)        0.201   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1
+    SLICE_X52Y43.CLK     Tas                   0.154   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In2
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    -------------------------------------------------  ---------------------------
+    Total                                      3.927ns (1.543ns logic, 2.384ns route)
+                                                       (39.3% logic, 60.7% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     4.170ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PACKET_LENGTH_8 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      3.742ns (Levels of Logic = 5)
+  Clock Path Skew:      -0.053ns (0.453 - 0.506)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_8 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X50Y51.AQ      Tcko                  0.408   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<10>
+                                                       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_8
+    SLICE_X51Y50.D4      net (fanout=4)        0.414   gigabit_ethernet_inst_1/RX_PACKET_LENGTH<8>
+    SLICE_X51Y50.D       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C5      net (fanout=1)        0.331   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+    SLICE_X51Y50.C       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B4      net (fanout=1)        0.327   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12
+    SLICE_X51Y50.B       Tilo                  0.259   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C4      net (fanout=1)        0.926   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13
+    SLICE_X52Y43.C       Tilo                  0.204   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110
+    SLICE_X52Y43.D5      net (fanout=2)        0.201   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1
+    SLICE_X52Y43.CLK     Tas                   0.154   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In2
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    -------------------------------------------------  ---------------------------
+    Total                                      3.742ns (1.543ns logic, 2.199ns route)
+                                                       (41.2% logic, 58.8% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0 (SLICE_X36Y54.CE), 2 paths
+--------------------------------------------------------------------------------
+Slack (setup path):     4.560ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      3.403ns (Levels of Logic = 1)
+  Clock Path Skew:      -0.002ns (0.476 - 0.478)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 to gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X52Y43.DMUX    Tshcko                0.488   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    SLICE_X52Y43.D1      net (fanout=7)        0.540   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    SLICE_X52Y43.D       Tilo                  0.203   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/BUS_00611
+    SLICE_X36Y54.CE      net (fanout=5)        1.837   gigabit_ethernet_inst_1/BUS_0061
+    SLICE_X36Y54.CLK     Tceck                 0.335   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+                                                       gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0
+    -------------------------------------------------  ---------------------------
+    Total                                      3.403ns (1.026ns logic, 2.377ns route)
+                                                       (30.1% logic, 69.9% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     4.847ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0 (FF)
+  Requirement:          8.000ns
+  Data Path Delay:      3.116ns (Levels of Logic = 1)
+  Clock Path Skew:      -0.002ns (0.476 - 0.478)
+  Source Clock:         RXCLK_BUFGP rising at 0.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.035ns
+
+  Clock Uncertainty:          0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.000ns
+    Discrete Jitter (DJ):       0.000ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3 to gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X52Y43.BQ      Tcko                  0.447   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    SLICE_X52Y43.D4      net (fanout=15)       0.294   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+    SLICE_X52Y43.D       Tilo                  0.203   gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3
+                                                       gigabit_ethernet_inst_1/BUS_00611
+    SLICE_X36Y54.CE      net (fanout=5)        1.837   gigabit_ethernet_inst_1/BUS_0061
+    SLICE_X36Y54.CLK     Tceck                 0.335   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+                                                       gigabit_ethernet_inst_1/RX_WRITE_BUFFER_0
+    -------------------------------------------------  ---------------------------
+    Total                                      3.116ns (0.985ns logic, 2.131ns route)
+                                                       (31.6% logic, 68.4% route)
+
+--------------------------------------------------------------------------------
+
+Hold Paths: TS_RXCLK = PERIOD TIMEGRP "RXCLK" 8 ns HIGH 50%;
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA (SLICE_X38Y54.D4), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.305ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.309ns (Levels of Logic = 0)
+  Clock Path Skew:      0.004ns (0.068 - 0.064)
+  Source Clock:         RXCLK_BUFGP rising at 8.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3 to gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X36Y54.CQ      Tcko                  0.200   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+                                                       gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3
+    SLICE_X38Y54.D4      net (fanout=21)       0.237   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+    SLICE_X38Y54.CLK     Tah         (-Th)     0.128   gigabit_ethernet_inst_1/_n1027<5>
+                                                       gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA
+    -------------------------------------------------  ---------------------------
+    Total                                      0.309ns (0.072ns logic, 0.237ns route)
+                                                       (23.3% logic, 76.7% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA_D1 (SLICE_X38Y54.D4), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.305ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA_D1 (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.309ns (Levels of Logic = 0)
+  Clock Path Skew:      0.004ns (0.068 - 0.064)
+  Source Clock:         RXCLK_BUFGP rising at 8.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3 to gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA_D1
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X36Y54.CQ      Tcko                  0.200   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+                                                       gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3
+    SLICE_X38Y54.D4      net (fanout=21)       0.237   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+    SLICE_X38Y54.CLK     Tah         (-Th)     0.128   gigabit_ethernet_inst_1/_n1027<5>
+                                                       gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMA_D1
+    -------------------------------------------------  ---------------------------
+    Total                                      0.309ns (0.072ns logic, 0.237ns route)
+                                                       (23.3% logic, 76.7% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMB (SLICE_X38Y54.D4), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.305ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMB (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.309ns (Levels of Logic = 0)
+  Clock Path Skew:      0.004ns (0.068 - 0.064)
+  Source Clock:         RXCLK_BUFGP rising at 8.000ns
+  Destination Clock:    RXCLK_BUFGP rising at 8.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3 to gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMB
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X36Y54.CQ      Tcko                  0.200   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+                                                       gigabit_ethernet_inst_1/RX_WRITE_BUFFER_3
+    SLICE_X38Y54.D4      net (fanout=21)       0.237   gigabit_ethernet_inst_1/RX_WRITE_BUFFER<3>
+    SLICE_X38Y54.CLK     Tah         (-Th)     0.128   gigabit_ethernet_inst_1/_n1027<5>
+                                                       gigabit_ethernet_inst_1/Mram_RX_START_ADDRESS_BUFFER1_RAMB
+    -------------------------------------------------  ---------------------------
+    Total                                      0.309ns (0.072ns logic, 0.237ns route)
+                                                       (23.3% logic, 76.7% route)
+
+--------------------------------------------------------------------------------
+
+Component Switching Limit Checks: TS_RXCLK = PERIOD TIMEGRP "RXCLK" 8 ns HIGH 50%;
+--------------------------------------------------------------------------------
+Slack: 4.876ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 3.124ns (320.102MHz) (Trper_CLKA(Fmax))
+  Physical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY1/CLKA
+  Logical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY1/CLKA
+  Location pin: RAMB16_X3Y28.CLKA
+  Clock network: RXCLK_BUFGP
+--------------------------------------------------------------------------------
+Slack: 4.876ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 3.124ns (320.102MHz) (Trper_CLKA(Fmax))
+  Physical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY2/CLKA
+  Logical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY2/CLKA
+  Location pin: RAMB16_X3Y26.CLKA
+  Clock network: RXCLK_BUFGP
+--------------------------------------------------------------------------------
+Slack: 6.270ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 1.730ns (578.035MHz) (Tbcper_I)
+  Physical resource: RXCLK_BUFGP/BUFG/I0
+  Logical resource: RXCLK_BUFGP/BUFG/I0
+  Location pin: BUFGMUX_X2Y4.I0
+  Clock network: RXCLK_BUFGP/IBUFG
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_clkfx = PERIOD TIMEGRP "clkfx" TS_CLK_P / 0.625 HIGH 50% 
+INPUT_JITTER 0.05         ns;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 1459 paths analyzed, 401 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 setup errors, 0 hold errors, 0 component switching limit errors)
+ Minimum period is   5.486ns.
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mshreg_GO_SYNC (SLICE_X18Y28.CI), 1 path
+--------------------------------------------------------------------------------
+Slack (setup path):     1.471ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/GO (FF)
+  Destination:          gigabit_ethernet_inst_1/Mshreg_GO_SYNC (FF)
+  Requirement:          4.000ns
+  Data Path Delay:      2.006ns (Levels of Logic = 0)
+  Clock Path Skew:      -0.170ns (2.223 - 2.393)
+  Source Clock:         CLK_OUT1 rising at 20.000ns
+  Destination Clock:    CLK_OUT3 rising at 24.000ns
+  Clock Uncertainty:    0.353ns
+
+  Clock Uncertainty:          0.353ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.160ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/GO to gigabit_ethernet_inst_1/Mshreg_GO_SYNC
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X22Y44.BMUX    Tshcko                0.488   gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd2
+                                                       gigabit_ethernet_inst_1/GO
+    SLICE_X18Y28.CI      net (fanout=2)        1.453   gigabit_ethernet_inst_1/GO
+    SLICE_X18Y28.CLK     Tds                   0.065   gigabit_ethernet_inst_1/GO_SYNC
+                                                       gigabit_ethernet_inst_1/Mshreg_GO_SYNC
+    -------------------------------------------------  ---------------------------
+    Total                                      2.006ns (0.553ns logic, 1.453ns route)
+                                                       (27.6% logic, 72.4% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/TXEN (SLICE_X14Y18.D5), 1 path
+--------------------------------------------------------------------------------
+Slack (setup path):     1.703ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               INTERNAL_RST_1 (FF)
+  Destination:          gigabit_ethernet_inst_1/TXEN (FF)
+  Requirement:          4.000ns
+  Data Path Delay:      1.773ns (Levels of Logic = 1)
+  Clock Path Skew:      -0.171ns (2.223 - 2.394)
+  Source Clock:         CLK_OUT1 rising at 20.000ns
+  Destination Clock:    CLK_OUT3 rising at 24.000ns
+  Clock Uncertainty:    0.353ns
+
+  Clock Uncertainty:          0.353ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.160ns
+
+  Maximum Data Path at Slow Process Corner: INTERNAL_RST_1 to gigabit_ethernet_inst_1/TXEN
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X28Y20.AMUX    Tshcko                0.455   INTERNAL_RST_2
+                                                       INTERNAL_RST_1
+    SLICE_X14Y18.D5      net (fanout=4)        1.029   INTERNAL_RST_1
+    SLICE_X14Y18.CLK     Tas                   0.289   gigabit_ethernet_inst_1/TXEN
+                                                       gigabit_ethernet_inst_1/TXEN_rstpot1
+                                                       gigabit_ethernet_inst_1/TXEN
+    -------------------------------------------------  ---------------------------
+    Total                                      1.773ns (0.744ns logic, 1.029ns route)
+                                                       (42.0% logic, 58.0% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/TXD_4 (SLICE_X18Y17.C3), 1 path
+--------------------------------------------------------------------------------
+Slack (setup path):     1.784ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               INTERNAL_RST_2 (FF)
+  Destination:          gigabit_ethernet_inst_1/TXD_4 (FF)
+  Requirement:          4.000ns
+  Data Path Delay:      1.696ns (Levels of Logic = 1)
+  Clock Path Skew:      -0.167ns (2.227 - 2.394)
+  Source Clock:         CLK_OUT1 rising at 20.000ns
+  Destination Clock:    CLK_OUT3 rising at 24.000ns
+  Clock Uncertainty:    0.353ns
+
+  Clock Uncertainty:          0.353ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.160ns
+
+  Maximum Data Path at Slow Process Corner: INTERNAL_RST_2 to gigabit_ethernet_inst_1/TXD_4
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X28Y20.BQ      Tcko                  0.408   INTERNAL_RST_2
+                                                       INTERNAL_RST_2
+    SLICE_X18Y17.C3      net (fanout=8)        0.999   INTERNAL_RST_2
+    SLICE_X18Y17.CLK     Tas                   0.289   gigabit_ethernet_inst_1/TXD<5>
+                                                       gigabit_ethernet_inst_1/TXD_4_rstpot
+                                                       gigabit_ethernet_inst_1/TXD_4
+    -------------------------------------------------  ---------------------------
+    Total                                      1.696ns (0.697ns logic, 0.999ns route)
+                                                       (41.1% logic, 58.9% route)
+
+--------------------------------------------------------------------------------
+
+Hold Paths: TS_clkfx = PERIOD TIMEGRP "clkfx" TS_CLK_P / 0.625 HIGH 50% INPUT_JITTER 0.05
+        ns;
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAMB8_X1Y12.ADDRBRDADDR5), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.262ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/TX_READ_ADDRESS_1 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.263ns (Levels of Logic = 0)
+  Clock Path Skew:      0.001ns (0.067 - 0.066)
+  Source Clock:         CLK_OUT3 rising at 8.000ns
+  Destination Clock:    CLK_OUT3 rising at 8.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/TX_READ_ADDRESS_1 to gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    Location                 Delay type         Delay(ns)  Physical Resource
+                                                           Logical Resource(s)
+    -----------------------------------------------------  -------------------
+    SLICE_X16Y26.BQ          Tcko                  0.200   gigabit_ethernet_inst_1/TX_READ_ADDRESS<3>
+                                                           gigabit_ethernet_inst_1/TX_READ_ADDRESS_1
+    RAMB8_X1Y12.ADDRBRDADDR5 net (fanout=2)        0.129   gigabit_ethernet_inst_1/TX_READ_ADDRESS<1>
+    RAMB8_X1Y12.CLKBRDCLK    Trckc_ADDRB (-Th)     0.066   gigabit_ethernet_inst_1/Mram_TX_MEMORY
+                                                           gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    -----------------------------------------------------  ---------------------------
+    Total                                          0.263ns (0.134ns logic, 0.129ns route)
+                                                           (51.0% logic, 49.0% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAMB8_X1Y12.ADDRBRDADDR7), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.262ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/TX_READ_ADDRESS_3 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.263ns (Levels of Logic = 0)
+  Clock Path Skew:      0.001ns (0.067 - 0.066)
+  Source Clock:         CLK_OUT3 rising at 8.000ns
+  Destination Clock:    CLK_OUT3 rising at 8.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/TX_READ_ADDRESS_3 to gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    Location                 Delay type         Delay(ns)  Physical Resource
+                                                           Logical Resource(s)
+    -----------------------------------------------------  -------------------
+    SLICE_X16Y26.DQ          Tcko                  0.200   gigabit_ethernet_inst_1/TX_READ_ADDRESS<3>
+                                                           gigabit_ethernet_inst_1/TX_READ_ADDRESS_3
+    RAMB8_X1Y12.ADDRBRDADDR7 net (fanout=2)        0.129   gigabit_ethernet_inst_1/TX_READ_ADDRESS<3>
+    RAMB8_X1Y12.CLKBRDCLK    Trckc_ADDRB (-Th)     0.066   gigabit_ethernet_inst_1/Mram_TX_MEMORY
+                                                           gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    -----------------------------------------------------  ---------------------------
+    Total                                          0.263ns (0.134ns logic, 0.129ns route)
+                                                           (51.0% logic, 49.0% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAMB8_X1Y12.ADDRBRDADDR9), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.291ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/TX_READ_ADDRESS_5 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.290ns (Levels of Logic = 0)
+  Clock Path Skew:      -0.001ns (0.067 - 0.068)
+  Source Clock:         CLK_OUT3 rising at 8.000ns
+  Destination Clock:    CLK_OUT3 rising at 8.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/TX_READ_ADDRESS_5 to gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    Location                 Delay type         Delay(ns)  Physical Resource
+                                                           Logical Resource(s)
+    -----------------------------------------------------  -------------------
+    SLICE_X16Y27.BQ          Tcko                  0.200   gigabit_ethernet_inst_1/TX_READ_ADDRESS<7>
+                                                           gigabit_ethernet_inst_1/TX_READ_ADDRESS_5
+    RAMB8_X1Y12.ADDRBRDADDR9 net (fanout=2)        0.156   gigabit_ethernet_inst_1/TX_READ_ADDRESS<5>
+    RAMB8_X1Y12.CLKBRDCLK    Trckc_ADDRB (-Th)     0.066   gigabit_ethernet_inst_1/Mram_TX_MEMORY
+                                                           gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    -----------------------------------------------------  ---------------------------
+    Total                                          0.290ns (0.134ns logic, 0.156ns route)
+                                                           (46.2% logic, 53.8% route)
+
+--------------------------------------------------------------------------------
+
+Component Switching Limit Checks: TS_clkfx = PERIOD TIMEGRP "clkfx" TS_CLK_P / 0.625 HIGH 50% INPUT_JITTER 0.05
+        ns;
+--------------------------------------------------------------------------------
+Slack: 4.876ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 3.124ns (320.102MHz) (Trper_CLKB(Fmax))
+  Physical resource: gigabit_ethernet_inst_1/Mram_TX_MEMORY/CLKBRDCLK
+  Logical resource: gigabit_ethernet_inst_1/Mram_TX_MEMORY/CLKBRDCLK
+  Location pin: RAMB8_X1Y12.CLKBRDCLK
+  Clock network: CLK_OUT3
+--------------------------------------------------------------------------------
+Slack: 6.270ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 1.730ns (578.035MHz) (Tbcper_I)
+  Physical resource: BUFG_INST3/I0
+  Logical resource: BUFG_INST3/I0
+  Location pin: BUFGMUX_X3Y13.I0
+  Clock network: clkfx
+--------------------------------------------------------------------------------
+Slack: 6.361ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 1.639ns (610.128MHz) (Tockper)
+  Physical resource: GTXCLK_OBUF/CLK0
+  Logical resource: ODDR2_INST1/CK0
+  Location pin: OLOGIC_X8Y0.CLK0
+  Clock network: CLK_OUT3
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_clkfx180 = PERIOD TIMEGRP "clkfx180" TS_CLK_P / 0.625 
+PHASE 4 ns HIGH 50%         INPUT_JITTER 0.05 ns;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 0 paths analyzed, 0 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 component switching limit errors)
+ Minimum period is   1.730ns.
+--------------------------------------------------------------------------------
+
+Component Switching Limit Checks: TS_clkfx180 = PERIOD TIMEGRP "clkfx180" TS_CLK_P / 0.625 PHASE 4 ns HIGH 50%
+        INPUT_JITTER 0.05 ns;
+--------------------------------------------------------------------------------
+Slack: 6.270ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 1.730ns (578.035MHz) (Tbcper_I)
+  Physical resource: BUFG_INST4/I0
+  Logical resource: BUFG_INST4/I0
+  Location pin: BUFGMUX_X2Y2.I0
+  Clock network: clkfx180
+--------------------------------------------------------------------------------
+Slack: 6.597ns (period - min period limit)
+  Period: 8.000ns
+  Min period limit: 1.403ns (712.758MHz) (Tockper)
+  Physical resource: GTXCLK_OBUF/CLK1
+  Logical resource: ODDR2_INST1/CK1
+  Location pin: OLOGIC_X8Y0.CLK1
+  Clock network: CLK_OUT3_N
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_clkdv = PERIOD TIMEGRP "clkdv" TS_CLK_P * 4 HIGH 50% 
+INPUT_JITTER 0.05 ns;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 5813 paths analyzed, 986 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 setup errors, 0 hold errors, 0 component switching limit errors)
+ Minimum period is  12.855ns.
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd1 (SLICE_X22Y44.B5), 1 path
+--------------------------------------------------------------------------------
+Slack (setup path):     1.429ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/DONE_SYNC (FF)
+  Destination:          gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd1 (FF)
+  Requirement:          4.000ns
+  Data Path Delay:      2.042ns (Levels of Logic = 1)
+  Clock Path Skew:      -0.176ns (2.220 - 2.396)
+  Source Clock:         CLK_OUT3 rising at 16.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.353ns
+
+  Clock Uncertainty:          0.353ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.160ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/DONE_SYNC to gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd1
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X18Y28.BQ      Tcko                  0.447   gigabit_ethernet_inst_1/GO_SYNC
+                                                       gigabit_ethernet_inst_1/DONE_SYNC
+    SLICE_X22Y44.B5      net (fanout=1)        1.306   gigabit_ethernet_inst_1/DONE_SYNC
+    SLICE_X22Y44.CLK     Tas                   0.289   gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd2
+                                                       gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd1-In3
+                                                       gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd1
+    -------------------------------------------------  ---------------------------
+    Total                                      2.042ns (0.736ns logic, 1.306ns route)
+                                                       (36.0% logic, 64.0% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/GO (SLICE_X22Y44.B5), 1 path
+--------------------------------------------------------------------------------
+Slack (setup path):     1.564ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/DONE_SYNC (FF)
+  Destination:          gigabit_ethernet_inst_1/GO (FF)
+  Requirement:          4.000ns
+  Data Path Delay:      1.907ns (Levels of Logic = 1)
+  Clock Path Skew:      -0.176ns (2.220 - 2.396)
+  Source Clock:         CLK_OUT3 rising at 16.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.353ns
+
+  Clock Uncertainty:          0.353ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.160ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/DONE_SYNC to gigabit_ethernet_inst_1/GO
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X18Y28.BQ      Tcko                  0.447   gigabit_ethernet_inst_1/GO_SYNC
+                                                       gigabit_ethernet_inst_1/DONE_SYNC
+    SLICE_X22Y44.B5      net (fanout=1)        1.306   gigabit_ethernet_inst_1/DONE_SYNC
+    SLICE_X22Y44.CLK     Tas                   0.154   gigabit_ethernet_inst_1/TX_PACKET_STATE_FSM_FFd2
+                                                       gigabit_ethernet_inst_1/GO_rstpot
+                                                       gigabit_ethernet_inst_1/GO
+    -------------------------------------------------  ---------------------------
+    Total                                      1.907ns (0.601ns logic, 1.306ns route)
+                                                       (31.5% logic, 68.5% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/RX_13 (SLICE_X48Y54.CE), 57 paths
+--------------------------------------------------------------------------------
+Slack (setup path):     13.535ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_READ_BUFFER_0 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_13 (FF)
+  Requirement:          20.000ns
+  Data Path Delay:      6.264ns (Levels of Logic = 3)
+  Clock Path Skew:      -0.008ns (0.474 - 0.482)
+  Source Clock:         CLK_OUT1 rising at 0.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.193ns
+
+  Clock Uncertainty:          0.193ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_READ_BUFFER_0 to gigabit_ethernet_inst_1/RX_13
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X35Y44.AMUX    Tshcko                0.461   gigabit_ethernet_inst_1/RX_READ_BUFFER<4>
+                                                       gigabit_ethernet_inst_1/RX_READ_BUFFER_0
+    SLICE_X28Y42.A1      net (fanout=23)       1.375   gigabit_ethernet_inst_1/RX_READ_BUFFER<0>
+    SLICE_X28Y42.A       Tilo                  0.205   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_92
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_92
+    SLICE_X30Y43.D1      net (fanout=1)        1.028   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_92
+    SLICE_X30Y43.CMUX    Topdc                 0.368   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_7
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_4
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_2_f7
+    SLICE_X48Y54.D3      net (fanout=3)        1.750   gigabit_ethernet_inst_1/RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o
+    SLICE_X48Y54.D       Tilo                  0.203   gigabit_ethernet_inst_1/RX<15>
+                                                       gigabit_ethernet_inst_1/_n1260_inv1
+    SLICE_X48Y54.CE      net (fanout=3)        0.543   gigabit_ethernet_inst_1/_n1260_inv
+    SLICE_X48Y54.CLK     Tceck                 0.331   gigabit_ethernet_inst_1/RX<15>
+                                                       gigabit_ethernet_inst_1/RX_13
+    -------------------------------------------------  ---------------------------
+    Total                                      6.264ns (1.568ns logic, 4.696ns route)
+                                                       (25.0% logic, 75.0% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     13.784ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_READ_BUFFER_0 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_13 (FF)
+  Requirement:          20.000ns
+  Data Path Delay:      6.015ns (Levels of Logic = 3)
+  Clock Path Skew:      -0.008ns (0.474 - 0.482)
+  Source Clock:         CLK_OUT1 rising at 0.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.193ns
+
+  Clock Uncertainty:          0.193ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_READ_BUFFER_0 to gigabit_ethernet_inst_1/RX_13
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X35Y44.AMUX    Tshcko                0.461   gigabit_ethernet_inst_1/RX_READ_BUFFER<4>
+                                                       gigabit_ethernet_inst_1/RX_READ_BUFFER_0
+    SLICE_X29Y42.A1      net (fanout=23)       1.359   gigabit_ethernet_inst_1/RX_READ_BUFFER<0>
+    SLICE_X29Y42.A       Tilo                  0.259   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_10
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_10
+    SLICE_X30Y43.D3      net (fanout=1)        0.741   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_10
+    SLICE_X30Y43.CMUX    Topdc                 0.368   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_7
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_4
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_2_f7
+    SLICE_X48Y54.D3      net (fanout=3)        1.750   gigabit_ethernet_inst_1/RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o
+    SLICE_X48Y54.D       Tilo                  0.203   gigabit_ethernet_inst_1/RX<15>
+                                                       gigabit_ethernet_inst_1/_n1260_inv1
+    SLICE_X48Y54.CE      net (fanout=3)        0.543   gigabit_ethernet_inst_1/_n1260_inv
+    SLICE_X48Y54.CLK     Tceck                 0.331   gigabit_ethernet_inst_1/RX<15>
+                                                       gigabit_ethernet_inst_1/RX_13
+    -------------------------------------------------  ---------------------------
+    Total                                      6.015ns (1.622ns logic, 4.393ns route)
+                                                       (27.0% logic, 73.0% route)
+
+--------------------------------------------------------------------------------
+Slack (setup path):     13.892ns (requirement - (data path - clock path skew + uncertainty))
+  Source:               gigabit_ethernet_inst_1/RX_READ_BUFFER_1 (FF)
+  Destination:          gigabit_ethernet_inst_1/RX_13 (FF)
+  Requirement:          20.000ns
+  Data Path Delay:      5.907ns (Levels of Logic = 3)
+  Clock Path Skew:      -0.008ns (0.474 - 0.482)
+  Source Clock:         CLK_OUT1 rising at 0.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.193ns
+
+  Clock Uncertainty:          0.193ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Total Input Jitter (TIJ):   0.050ns
+    Discrete Jitter (DJ):       0.300ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: gigabit_ethernet_inst_1/RX_READ_BUFFER_1 to gigabit_ethernet_inst_1/RX_13
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    SLICE_X35Y44.AQ      Tcko                  0.391   gigabit_ethernet_inst_1/RX_READ_BUFFER<4>
+                                                       gigabit_ethernet_inst_1/RX_READ_BUFFER_1
+    SLICE_X28Y42.A5      net (fanout=23)       1.088   gigabit_ethernet_inst_1/RX_READ_BUFFER<1>
+    SLICE_X28Y42.A       Tilo                  0.205   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_92
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_92
+    SLICE_X30Y43.D1      net (fanout=1)        1.028   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_92
+    SLICE_X30Y43.CMUX    Topdc                 0.368   gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_7
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_4
+                                                       gigabit_ethernet_inst_1/Mmux_RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o_2_f7
+    SLICE_X48Y54.D3      net (fanout=3)        1.750   gigabit_ethernet_inst_1/RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o
+    SLICE_X48Y54.D       Tilo                  0.203   gigabit_ethernet_inst_1/RX<15>
+                                                       gigabit_ethernet_inst_1/_n1260_inv1
+    SLICE_X48Y54.CE      net (fanout=3)        0.543   gigabit_ethernet_inst_1/_n1260_inv
+    SLICE_X48Y54.CLK     Tceck                 0.331   gigabit_ethernet_inst_1/RX<15>
+                                                       gigabit_ethernet_inst_1/RX_13
+    -------------------------------------------------  ---------------------------
+    Total                                      5.907ns (1.498ns logic, 4.409ns route)
+                                                       (25.4% logic, 74.6% route)
+
+--------------------------------------------------------------------------------
+
+Hold Paths: TS_clkdv = PERIOD TIMEGRP "clkdv" TS_CLK_P * 4 HIGH 50% INPUT_JITTER 0.05 ns;
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAMB8_X1Y12.ADDRAWRADDR10), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.251ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_6 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.255ns (Levels of Logic = 0)
+  Clock Path Skew:      0.004ns (0.067 - 0.063)
+  Source Clock:         CLK_OUT1 rising at 20.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_6 to gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    Location                  Delay type         Delay(ns)  Physical Resource
+                                                            Logical Resource(s)
+    ------------------------------------------------------  -------------------
+    SLICE_X17Y25.CQ           Tcko                  0.198   gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL<7>
+                                                            gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_6
+    RAMB8_X1Y12.ADDRAWRADDR10 net (fanout=1)        0.123   gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL<6>
+    RAMB8_X1Y12.CLKAWRCLK     Trckc_ADDRA (-Th)     0.066   gigabit_ethernet_inst_1/Mram_TX_MEMORY
+                                                            gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    ------------------------------------------------------  ---------------------------
+    Total                                           0.255ns (0.132ns logic, 0.123ns route)
+                                                            (51.8% logic, 48.2% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAMB8_X1Y12.ADDRAWRADDR8), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.278ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_4 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.282ns (Levels of Logic = 0)
+  Clock Path Skew:      0.004ns (0.067 - 0.063)
+  Source Clock:         CLK_OUT1 rising at 20.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_4 to gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    Location                 Delay type         Delay(ns)  Physical Resource
+                                                           Logical Resource(s)
+    -----------------------------------------------------  -------------------
+    SLICE_X17Y25.AQ          Tcko                  0.198   gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL<7>
+                                                           gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_4
+    RAMB8_X1Y12.ADDRAWRADDR8 net (fanout=1)        0.150   gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL<4>
+    RAMB8_X1Y12.CLKAWRCLK    Trckc_ADDRA (-Th)     0.066   gigabit_ethernet_inst_1/Mram_TX_MEMORY
+                                                           gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    -----------------------------------------------------  ---------------------------
+    Total                                          0.282ns (0.132ns logic, 0.150ns route)
+                                                           (46.8% logic, 53.2% route)
+
+--------------------------------------------------------------------------------
+
+Paths for end point gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAMB8_X1Y12.ADDRAWRADDR5), 1 path
+--------------------------------------------------------------------------------
+Slack (hold path):      0.292ns (requirement - (clock path skew + uncertainty - data path))
+  Source:               gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_1 (FF)
+  Destination:          gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Requirement:          0.000ns
+  Data Path Delay:      0.296ns (Levels of Logic = 0)
+  Clock Path Skew:      0.004ns (0.067 - 0.063)
+  Source Clock:         CLK_OUT1 rising at 20.000ns
+  Destination Clock:    CLK_OUT1 rising at 20.000ns
+  Clock Uncertainty:    0.000ns
+
+  Minimum Data Path at Fast Process Corner: gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_1 to gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    Location                 Delay type         Delay(ns)  Physical Resource
+                                                           Logical Resource(s)
+    -----------------------------------------------------  -------------------
+    SLICE_X17Y25.BMUX        Tshcko                0.244   gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL<7>
+                                                           gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL_1
+    RAMB8_X1Y12.ADDRAWRADDR5 net (fanout=1)        0.118   gigabit_ethernet_inst_1/TX_WRITE_ADDRESS_DEL<1>
+    RAMB8_X1Y12.CLKAWRCLK    Trckc_ADDRA (-Th)     0.066   gigabit_ethernet_inst_1/Mram_TX_MEMORY
+                                                           gigabit_ethernet_inst_1/Mram_TX_MEMORY
+    -----------------------------------------------------  ---------------------------
+    Total                                          0.296ns (0.178ns logic, 0.118ns route)
+                                                           (60.1% logic, 39.9% route)
+
+--------------------------------------------------------------------------------
+
+Component Switching Limit Checks: TS_clkdv = PERIOD TIMEGRP "clkdv" TS_CLK_P * 4 HIGH 50% INPUT_JITTER 0.05 ns;
+--------------------------------------------------------------------------------
+Slack: 16.876ns (period - min period limit)
+  Period: 20.000ns
+  Min period limit: 3.124ns (320.102MHz) (Trper_CLKB(Fmax))
+  Physical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY1/CLKB
+  Logical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY1/CLKB
+  Location pin: RAMB16_X3Y28.CLKB
+  Clock network: CLK_OUT1
+--------------------------------------------------------------------------------
+Slack: 16.876ns (period - min period limit)
+  Period: 20.000ns
+  Min period limit: 3.124ns (320.102MHz) (Trper_CLKB(Fmax))
+  Physical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY2/CLKB
+  Logical resource: gigabit_ethernet_inst_1/Mram_RX_MEMORY2/CLKB
+  Location pin: RAMB16_X3Y26.CLKB
+  Clock network: CLK_OUT1
+--------------------------------------------------------------------------------
+Slack: 16.876ns (period - min period limit)
+  Period: 20.000ns
+  Min period limit: 3.124ns (320.102MHz) (Trper_CLKA(Fmax))
+  Physical resource: gigabit_ethernet_inst_1/Mram_TX_MEMORY/CLKAWRCLK
+  Logical resource: gigabit_ethernet_inst_1/Mram_TX_MEMORY/CLKAWRCLK
+  Location pin: RAMB8_X1Y12.CLKAWRCLK
+  Clock network: CLK_OUT1
+--------------------------------------------------------------------------------
+
+
+Derived Constraint Report
+Derived Constraints for TS_CLK_P
++-------------------------------+-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+|                               |   Period    |       Actual Period       |      Timing Errors        |      Paths Analyzed       |
+|           Constraint          | Requirement |-------------+-------------|-------------+-------------|-------------+-------------|
+|                               |             |   Direct    | Derivative  |   Direct    | Derivative  |   Direct    | Derivative  |
++-------------------------------+-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+|TS_CLK_P                       |      5.000ns|      3.200ns|      3.429ns|            0|            0|            0|         7272|
+| TS_clkfx                      |      8.000ns|      5.486ns|          N/A|            0|            0|         1459|            0|
+| TS_clkfx180                   |      8.000ns|      1.730ns|          N/A|            0|            0|            0|            0|
+| TS_clkdv                      |     20.000ns|     12.855ns|          N/A|            0|            0|         5813|            0|
++-------------------------------+-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+
+All constraints were met.
+
+
+Data Sheet report:
+-----------------
+All values displayed in nanoseconds (ns)
+
+Clock to Setup on destination clock CLK_N
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+CLK_N          |    6.465|         |         |         |
+CLK_P          |    6.465|         |         |         |
+---------------+---------+---------+---------+---------+
+
+Clock to Setup on destination clock CLK_P
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+CLK_N          |    6.465|         |         |         |
+CLK_P          |    6.465|         |         |         |
+---------------+---------+---------+---------+---------+
+
+Clock to Setup on destination clock RXCLK
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+RXCLK          |    4.263|         |         |         |
+---------------+---------+---------+---------+---------+
+
+
+Timing summary:
+---------------
+
+Timing errors: 0  Score: 0  (Setup/Max: 0, Hold: 0)
+
+Constraints cover 8468 paths, 0 nets, and 3118 connections
+
+Design statistics:
+   Minimum period:  12.855ns{1}   (Maximum frequency:  77.791MHz)
+
+
+------------------------------------Footnotes-----------------------------------
+1)  The minimum period statistic assumes all single cycle delays.
+
+Analysis completed Fri Oct 11 17:21:39 2013 
+--------------------------------------------------------------------------------
+
+Trace Settings:
+-------------------------
+Trace Settings 
+
+Peak Memory Usage: 465 MB
+
+
+

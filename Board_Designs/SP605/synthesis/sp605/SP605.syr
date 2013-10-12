@@ -1,0 +1,1380 @@
+Release 14.3 - xst P.40xd (lin64)
+Copyright (c) 1995-2012 Xilinx, Inc.  All rights reserved.
+--> 
+Parameter TMPDIR set to xst/projnav.tmp
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.06 secs
+ 
+--> 
+Parameter xsthdpdir set to xst
+
+
+Total REAL time to Xst completion: 0.00 secs
+Total CPU time to Xst completion: 0.06 secs
+ 
+--> 
+Reading design: SP605.prj
+
+TABLE OF CONTENTS
+  1) Synthesis Options Summary
+  2) HDL Parsing
+  3) HDL Elaboration
+  4) HDL Synthesis
+       4.1) HDL Synthesis Report
+  5) Advanced HDL Synthesis
+       5.1) Advanced HDL Synthesis Report
+  6) Low Level Synthesis
+  7) Partition Report
+  8) Design Summary
+       8.1) Primitive and Black Box Usage
+       8.2) Device utilization summary
+       8.3) Partition Resource Summary
+       8.4) Timing Report
+            8.4.1) Clock Information
+            8.4.2) Asynchronous Control Signals Information
+            8.4.3) Timing Summary
+            8.4.4) Timing Details
+            8.4.5) Cross Clock Domains Report
+
+
+=========================================================================
+*                      Synthesis Options Summary                        *
+=========================================================================
+---- Source Parameters
+Input File Name                    : "SP605.prj"
+Ignore Synthesis Constraint File   : NO
+
+---- Target Parameters
+Output File Name                   : "SP605"
+Output Format                      : NGC
+Target Device                      : xc6slx45t-3-fgg484
+
+---- Source Options
+Top Module Name                    : SP605
+Automatic FSM Extraction           : YES
+FSM Encoding Algorithm             : Auto
+Safe Implementation                : No
+FSM Style                          : LUT
+RAM Extraction                     : Yes
+RAM Style                          : Auto
+ROM Extraction                     : Yes
+Shift Register Extraction          : YES
+ROM Style                          : Auto
+Resource Sharing                   : YES
+Asynchronous To Synchronous        : NO
+Shift Register Minimum Size        : 2
+Use DSP Block                      : Auto
+Automatic Register Balancing       : No
+
+---- Target Options
+LUT Combining                      : Auto
+Reduce Control Sets                : Auto
+Add IO Buffers                     : YES
+Global Maximum Fanout              : 100000
+Add Generic Clock Buffer(BUFG)     : 16
+Register Duplication               : YES
+Optimize Instantiated Primitives   : NO
+Use Clock Enable                   : Auto
+Use Synchronous Set                : Auto
+Use Synchronous Reset              : Auto
+Pack IO Registers into IOBs        : Auto
+Equivalent register Removal        : YES
+
+---- General Options
+Optimization Goal                  : Speed
+Optimization Effort                : 1
+Power Reduction                    : NO
+Keep Hierarchy                     : No
+Netlist Hierarchy                  : As_Optimized
+RTL Output                         : Yes
+Global Optimization                : AllClockNets
+Read Cores                         : YES
+Write Timing Constraints           : NO
+Cross Clock Analysis               : NO
+Hierarchy Separator                : /
+Bus Delimiter                      : <>
+Case Specifier                     : Maintain
+Slice Utilization Ratio            : 100
+BRAM Utilization Ratio             : 100
+DSP48 Utilization Ratio            : 100
+Auto BRAM Packing                  : NO
+Slice Utilization Ratio Delta      : 5
+
+=========================================================================
+
+
+=========================================================================
+*                          HDL Parsing                                  *
+=========================================================================
+Analyzing Verilog file "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" into library work
+Parsing module <user_design>.
+Parsing VHDL file "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/serial_out.vhd" into library work
+Parsing entity <serial_output>.
+Parsing architecture <RTL> of entity <serial_output>.
+Parsing VHDL file "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/serial_in.vhd" into library work
+Parsing entity <SERIAL_INPUT>.
+Parsing architecture <RTL> of entity <serial_input>.
+Parsing VHDL file "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/gigabit_ethernet.vhd" into library work
+Parsing entity <gigabit_ethernet>.
+Parsing architecture <RTL> of entity <gigabit_ethernet>.
+Parsing VHDL file "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/sp605.vhd" into library work
+Parsing entity <SP605>.
+Parsing architecture <RTL> of entity <sp605>.
+
+=========================================================================
+*                            HDL Elaboration                            *
+=========================================================================
+
+Elaborating entity <SP605> (architecture <RTL>) from library <work>.
+
+Elaborating entity <gigabit_ethernet> (architecture <RTL>) from library <work>.
+Going to verilog side to elaborate module USER_DESIGN
+
+Elaborating module <user_design>.
+WARNING:HDLCompiler:1127 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 68: Assignment to timer ignored, since the identifier is never used
+WARNING:HDLCompiler:413 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 301: Result of 16-bit expression is truncated to fit in 1-bit target.
+WARNING:HDLCompiler:413 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 302: Result of 16-bit expression is truncated to fit in 1-bit target.
+WARNING:HDLCompiler:413 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 303: Result of 16-bit expression is truncated to fit in 1-bit target.
+WARNING:HDLCompiler:413 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 305: Result of 16-bit expression is truncated to fit in 1-bit target.
+WARNING:HDLCompiler:413 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 307: Result of 16-bit expression is truncated to fit in 1-bit target.
+WARNING:HDLCompiler:634 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v" Line 38: Net <data_in[15]> does not have a driver.
+Back to vhdl to continue elaboration
+
+Elaborating entity <serial_output> (architecture <RTL>) with generics from library <work>.
+INFO:HDLCompiler:679 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/serial_out.vhd" Line 122. Case statement is complete. others clause is never selected
+
+Elaborating entity <SERIAL_INPUT> (architecture <RTL>) with generics from library <work>.
+INFO:HDLCompiler:679 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/serial_in.vhd" Line 188. Case statement is complete. others clause is never selected
+WARNING:HDLCompiler:634 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/sp605.vhd" Line 224: Net <INPUT_RS232_RX[15]> does not have a driver.
+
+=========================================================================
+*                           HDL Synthesis                               *
+=========================================================================
+
+Synthesizing Unit <SP605>.
+    Related source file is "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/sp605.vhd".
+WARNING:Xst:647 - Input <RX> is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+INFO:Xst:3210 - "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/sp605.vhd" line 235: Output port <GTXCLK> of the instance <gigabit_ethernet_inst_1> is unconnected or connected to loadless signal.
+WARNING:Xst:653 - Signal <INPUT_RS232_RX<15:8>> is used but never assigned. This sourceless signal will be automatically connected to value GND.
+    Found 1-bit register for signal <INTERNAL_RST>.
+    Found 4-bit register for signal <GPIO_LEDS>.
+    Found 1-bit register for signal <NOT_LOCKED>.
+    WARNING:Xst:2404 -  FFs/Latches <OUTPUT_LEDS_ACK<0:0>> (without init value) have a constant value of 1 in block <SP605>.
+    Summary:
+	inferred   6 D-type flip-flop(s).
+Unit <SP605> synthesized.
+
+Synthesizing Unit <gigabit_ethernet>.
+    Related source file is "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/gigabit_ethernet.vhd".
+WARNING:Xst:647 - Input <TXCLK> is never used. This port will be preserved and left unconnected if it belongs to a top-level block or it belongs to a sub-block and the hierarchy of this sub-block is preserved.
+    Found 512x16-bit dual-port RAM <Mram_TX_MEMORY> for signal <TX_MEMORY>.
+    Found 2048x16-bit dual-port RAM <Mram_RX_MEMORY> for signal <RX_MEMORY>.
+    Found 32x11-bit dual-port RAM <Mram_RX_START_ADDRESS_BUFFER> for signal <RX_START_ADDRESS_BUFFER>.
+    Found 32x11-bit dual-port RAM <Mram_RX_PACKET_LENGTH_BUFFER> for signal <RX_PACKET_LENGTH_BUFFER>.
+    Found 16-bit register for signal <TX_PACKET_LENGTH>.
+    Found 2-bit register for signal <TX_PACKET_STATE>.
+    Found 16-bit register for signal <TX_WRITE_DATA>.
+    Found 11-bit register for signal <TX_WRITE_ADDRESS>.
+    Found 11-bit register for signal <TX_IN_COUNT>.
+    Found 1-bit register for signal <GO>.
+    Found 9-bit register for signal <TX_WRITE_ADDRESS_DEL<8:0>>.
+    Found 16-bit register for signal <TX_READ_DATA>.
+    Found 1-bit register for signal <GO_DEL>.
+    Found 1-bit register for signal <GO_SYNC>.
+    Found 1-bit register for signal <DONE_DEL>.
+    Found 1-bit register for signal <DONE_SYNC>.
+    Found 4-bit register for signal <TX_PHY_STATE>.
+    Found 11-bit register for signal <TX_READ_ADDRESS>.
+    Found 11-bit register for signal <TX_OUT_COUNT>.
+    Found 8-bit register for signal <TXD>.
+    Found 1-bit register for signal <TXEN>.
+    Found 32-bit register for signal <TX_CRC>.
+    Found 1-bit register for signal <DONE>.
+    Found 1-bit register for signal <RX_WRITE_ENABLE>.
+    Found 3-bit register for signal <RX_PHY_STATE>.
+    Found 1-bit register for signal <RX_ERROR>.
+    Found 11-bit register for signal <RX_START_ADDRESS>.
+    Found 11-bit register for signal <RX_PACKET_LENGTH>.
+    Found 32-bit register for signal <RX_CRC>.
+    Found 16-bit register for signal <RX_WRITE_DATA>.
+    Found 5-bit register for signal <RX_WRITE_BUFFER>.
+    Found 32-bit register for signal <RX_BUFFER_BUSY>.
+    Found 11-bit register for signal <RX_WRITE_ADDRESS>.
+    Found 32-bit register for signal <RX_BUFFER_BUSY_DEL>.
+    Found 32-bit register for signal <RX_BUFFER_BUSY_SYNC>.
+    Found 3-bit register for signal <RX_PACKET_STATE>.
+    Found 5-bit register for signal <RX_READ_BUFFER>.
+    Found 11-bit register for signal <RX_START_ADDRESS_SYNC>.
+    Found 11-bit register for signal <RX_PACKET_LENGTH_SYNC>.
+    Found 16-bit register for signal <RX>.
+    Found 1-bit register for signal <RX_STB>.
+    Found 11-bit register for signal <RX_READ_ADDRESS>.
+    Found 11-bit register for signal <RX_END_ADDRESS>.
+    Found 1-bit register for signal <TX_WRITE>.
+    Found finite state machine <FSM_0> for signal <TX_PACKET_STATE>.
+    -----------------------------------------------------------------------
+    | States             | 3                                              |
+    | Transitions        | 7                                              |
+    | Inputs             | 3                                              |
+    | Outputs            | 3                                              |
+    | Clock              | CLK (rising_edge)                              |
+    | Reset              | RST (positive)                                 |
+    | Reset type         | synchronous                                    |
+    | Reset State        | get_length                                     |
+    | Power Up State     | get_length                                     |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found finite state machine <FSM_1> for signal <TX_PHY_STATE>.
+    -----------------------------------------------------------------------
+    | States             | 16                                             |
+    | Transitions        | 19                                             |
+    | Inputs             | 2                                              |
+    | Outputs            | 5                                              |
+    | Clock              | CLK_125_MHZ (rising_edge)                      |
+    | Reset              | RST (positive)                                 |
+    | Reset type         | synchronous                                    |
+    | Reset State        | wait_new_packet                                |
+    | Power Up State     | wait_new_packet                                |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found finite state machine <FSM_2> for signal <RX_PHY_STATE>.
+    -----------------------------------------------------------------------
+    | States             | 6                                              |
+    | Transitions        | 16                                             |
+    | Inputs             | 8                                              |
+    | Outputs            | 5                                              |
+    | Clock              | RXCLK (rising_edge)                            |
+    | Reset              | RST (positive)                                 |
+    | Reset type         | synchronous                                    |
+    | Reset State        | wait_start                                     |
+    | Power Up State     | wait_start                                     |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found finite state machine <FSM_3> for signal <RX_PACKET_STATE>.
+    -----------------------------------------------------------------------
+    | States             | 6                                              |
+    | Transitions        | 11                                             |
+    | Inputs             | 4                                              |
+    | Outputs            | 4                                              |
+    | Clock              | CLK (rising_edge)                              |
+    | Reset              | RST (positive)                                 |
+    | Reset type         | synchronous                                    |
+    | Reset State        | wait_initialise                                |
+    | Power Up State     | wait_initialise                                |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found 12-bit subtractor for signal <n0968> created at line 1308.
+    Found 11-bit adder for signal <TX_WRITE_ADDRESS[10]_GND_6_o_add_3_OUT> created at line 297.
+    Found 11-bit adder for signal <TX_READ_ADDRESS[10]_GND_6_o_add_37_OUT> created at line 409.
+    Found 11-bit adder for signal <RX_PACKET_LENGTH[10]_GND_6_o_add_77_OUT> created at line 1241.
+    Found 5-bit adder for signal <RX_WRITE_BUFFER[4]_GND_6_o_add_91_OUT> created at line 526.
+    Found 11-bit adder for signal <RX_WRITE_ADDRESS[10]_GND_6_o_add_144_OUT> created at line 1241.
+    Found 11-bit adder for signal <RX_START_ADDRESS_SYNC[10]_GND_6_o_add_162_OUT> created at line 615.
+    Found 11-bit adder for signal <RX_READ_ADDRESS[10]_GND_6_o_add_163_OUT> created at line 1241.
+    Found 5-bit adder for signal <RX_READ_BUFFER[4]_GND_6_o_add_169_OUT> created at line 634.
+    Found 11-bit subtractor for signal <GND_6_o_GND_6_o_sub_5_OUT<10:0>> created at line 298.
+    Found 11-bit subtractor for signal <GND_6_o_GND_6_o_sub_33_OUT<10:0>> created at line 1308.
+    Found 11-bit subtractor for signal <GND_6_o_GND_6_o_sub_43_OUT<10:0>> created at line 420.
+    Found 1-bit 32-to-1 multiplexer for signal <RX_READ_BUFFER[4]_RX_BUFFER_BUSY_SYNC[31]_Mux_152_o> created at line 597.
+    Found 11-bit comparator greater for signal <RX_PACKET_LENGTH[10]_GND_6_o_LessThan_82_o> created at line 509
+    Found 11-bit comparator greater for signal <PWR_6_o_RX_PACKET_LENGTH[10]_LessThan_83_o> created at line 511
+    Found 11-bit comparator equal for signal <RX_READ_ADDRESS[10]_RX_END_ADDRESS[10]_equal_168_o> created at line 628
+    Summary:
+	inferred   4 RAM(s).
+	inferred  11 Adder/Subtractor(s).
+	inferred 399 D-type flip-flop(s).
+	inferred   3 Comparator(s).
+	inferred  24 Multiplexer(s).
+	inferred   4 Finite State Machine(s).
+Unit <gigabit_ethernet> synthesized.
+
+Synthesizing Unit <user_design>.
+    Related source file is "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/user_design.v".
+WARNING:Xst:653 - Signal <data_in> is used but never assigned. This sourceless signal will be automatically connected to value GND.
+WARNING:Xst:3035 - Index value(s) does not match array range for signal <memory>, simulation mismatch.
+    Found 7x16-bit single-port RAM <Mram_memory> for signal <memory>.
+    Found 34-bit register for signal <program_counter>.
+    Found 16-bit register for signal <register_4>.
+    Found 16-bit register for signal <register_3>.
+    Found 16-bit register for signal <register_8>.
+    Found 16-bit register for signal <address>.
+    Found 16-bit register for signal <s_output_rs232_tx>.
+    Found 16-bit register for signal <s_output_rs232_tx_stb>.
+    Found 16-bit register for signal <register_1>.
+    Found 16-bit register for signal <register_6>.
+    Found 16-bit register for signal <register_7>.
+    Found 16-bit register for signal <register_2>.
+    Found 16-bit register for signal <register_0>.
+    Found 16-bit register for signal <s_output_leds>.
+    Found 16-bit register for signal <s_output_leds_stb>.
+    Found 16-bit register for signal <s_output_eth_tx>.
+    Found 16-bit register for signal <s_output_eth_tx_stb>.
+    Found 16-bit register for signal <s_input_eth_rx_ack>.
+    Found 16-bit register for signal <s_input_rs232_rx_ack>.
+    Found 16-bit register for signal <data_out>.
+    Found 34-bit adder for signal <program_counter[33]_GND_8_o_add_4_OUT> created at line 77.
+    Found 16-bit adder for signal <register_8[15]_register_2[15]_add_5_OUT> created at line 105.
+    Found 16-bit adder for signal <register_8[15]_GND_8_o_add_14_OUT> created at line 177.
+    WARNING:Xst:2404 -  FFs/Latches <write_enable<0:0>> (without init value) have a constant value of 0 in block <user_design>.
+    Summary:
+	inferred   1 RAM(s).
+	inferred   3 Adder/Subtractor(s).
+	inferred 322 D-type flip-flop(s).
+	inferred  44 Multiplexer(s).
+Unit <user_design> synthesized.
+
+Synthesizing Unit <serial_output>.
+    Related source file is "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/serial_out.vhd".
+        CLOCK_FREQUENCY = 50000000
+        BAUD_RATE = 115200
+    Found 1-bit register for signal <X16CLK_EN>.
+    Found 1-bit register for signal <S_IN1_ACK>.
+    Found 8-bit register for signal <DATA>.
+    Found 4-bit register for signal <STATE>.
+    Found 1-bit register for signal <TX>.
+    Found 12-bit register for signal <BAUD_COUNT>.
+    Found finite state machine <FSM_4> for signal <STATE>.
+    -----------------------------------------------------------------------
+    | States             | 12                                             |
+    | Transitions        | 25                                             |
+    | Inputs             | 3                                              |
+    | Outputs            | 4                                              |
+    | Clock              | CLK (rising_edge)                              |
+    | Reset              | RST (positive)                                 |
+    | Reset type         | synchronous                                    |
+    | Reset State        | idle                                           |
+    | Power Up State     | idle                                           |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found 12-bit adder for signal <BAUD_COUNT[11]_GND_9_o_add_1_OUT> created at line 1241.
+    Summary:
+	inferred   1 Adder/Subtractor(s).
+	inferred  23 D-type flip-flop(s).
+	inferred  10 Multiplexer(s).
+	inferred   1 Finite State Machine(s).
+Unit <serial_output> synthesized.
+
+Synthesizing Unit <SERIAL_INPUT>.
+    Related source file is "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/source/serial_in.vhd".
+        CLOCK_FREQUENCY = 50000000
+        BAUD_RATE = 115200
+    Found 1-bit register for signal <X16CLK_EN>.
+    Found 2-bit register for signal <SERIAL_DEGLITCH>.
+    Found 1-bit register for signal <INT_SERIAL>.
+    Found 2-bit register for signal <COUNT>.
+    Found 4-bit register for signal <BIT_SPACING>.
+    Found 4-bit register for signal <STATE>.
+    Found 8-bit register for signal <OUT1>.
+    Found 1-bit register for signal <OUT1_STB>.
+    Found 12-bit register for signal <BAUD_COUNT>.
+    Found finite state machine <FSM_5> for signal <STATE>.
+    -----------------------------------------------------------------------
+    | States             | 12                                             |
+    | Transitions        | 35                                             |
+    | Inputs             | 5                                              |
+    | Outputs            | 5                                              |
+    | Clock              | CLK (rising_edge)                              |
+    | Reset              | RST (positive)                                 |
+    | Reset type         | synchronous                                    |
+    | Reset State        | idle                                           |
+    | Power Up State     | idle                                           |
+    | Encoding           | auto                                           |
+    | Implementation     | LUT                                            |
+    -----------------------------------------------------------------------
+    Found 12-bit adder for signal <BAUD_COUNT[11]_GND_10_o_add_1_OUT> created at line 1241.
+    Found 2-bit adder for signal <COUNT[1]_GND_10_o_add_9_OUT> created at line 99.
+    Found 4-bit adder for signal <BIT_SPACING[3]_GND_10_o_add_17_OUT> created at line 115.
+    Found 2-bit subtractor for signal <GND_10_o_GND_10_o_sub_7_OUT<1:0>> created at line 93.
+    Summary:
+	inferred   3 Adder/Subtractor(s).
+	inferred  31 D-type flip-flop(s).
+	inferred  29 Multiplexer(s).
+	inferred   1 Finite State Machine(s).
+Unit <SERIAL_INPUT> synthesized.
+
+=========================================================================
+HDL Synthesis Report
+
+Macro Statistics
+# RAMs                                                 : 5
+ 2048x16-bit dual-port RAM                             : 1
+ 32x11-bit dual-port RAM                               : 2
+ 512x16-bit dual-port RAM                              : 1
+ 7x16-bit single-port RAM                              : 1
+# Adders/Subtractors                                   : 18
+ 11-bit adder                                          : 6
+ 11-bit subtractor                                     : 2
+ 12-bit adder                                          : 2
+ 12-bit subtractor                                     : 1
+ 16-bit adder                                          : 2
+ 2-bit addsub                                          : 1
+ 34-bit adder                                          : 1
+ 4-bit adder                                           : 1
+ 5-bit adder                                           : 2
+# Registers                                            : 71
+ 1-bit register                                        : 19
+ 11-bit register                                       : 11
+ 12-bit register                                       : 2
+ 16-bit register                                       : 23
+ 2-bit register                                        : 2
+ 32-bit register                                       : 5
+ 34-bit register                                       : 1
+ 4-bit register                                        : 2
+ 5-bit register                                        : 2
+ 8-bit register                                        : 3
+ 9-bit register                                        : 1
+# Comparators                                          : 3
+ 11-bit comparator equal                               : 1
+ 11-bit comparator greater                             : 2
+# Multiplexers                                         : 107
+ 1-bit 2-to-1 multiplexer                              : 17
+ 1-bit 32-to-1 multiplexer                             : 1
+ 11-bit 2-to-1 multiplexer                             : 7
+ 12-bit 2-to-1 multiplexer                             : 2
+ 16-bit 2-to-1 multiplexer                             : 18
+ 32-bit 2-to-1 multiplexer                             : 3
+ 34-bit 2-to-1 multiplexer                             : 29
+ 4-bit 2-to-1 multiplexer                              : 13
+ 5-bit 2-to-1 multiplexer                              : 3
+ 8-bit 2-to-1 multiplexer                              : 14
+# FSMs                                                 : 6
+# Xors                                                 : 183
+ 1-bit xor2                                            : 114
+ 1-bit xor3                                            : 35
+ 1-bit xor4                                            : 31
+ 1-bit xor5                                            : 3
+
+=========================================================================
+INFO:Xst:1767 - HDL ADVISOR - Resource sharing has identified that some arithmetic operations in this design can share the same physical resources for reduced device utilization. For improved clock frequency you may try to disable resource sharing.
+
+=========================================================================
+*                       Advanced HDL Synthesis                          *
+=========================================================================
+
+INFO:Xst:2261 - The FF/Latch <register_4_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 14 FFs/Latches, which will be removed : <register_4_2> <register_4_3> <register_4_4> <register_4_5> <register_4_6> <register_4_7> <register_4_8> <register_4_9> <register_4_10> <register_4_11> <register_4_12> <register_4_13> <register_4_14> <register_4_15> 
+INFO:Xst:2261 - The FF/Latch <register_6_0> in Unit <USER_DESIGN_INST_1> is equivalent to the following FF/Latch, which will be removed : <register_6_2> 
+INFO:Xst:2261 - The FF/Latch <s_output_eth_tx_stb_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 14 FFs/Latches, which will be removed : <s_output_eth_tx_stb_2> <s_output_eth_tx_stb_3> <s_output_eth_tx_stb_4> <s_output_eth_tx_stb_5> <s_output_eth_tx_stb_6> <s_output_eth_tx_stb_7> <s_output_eth_tx_stb_8> <s_output_eth_tx_stb_9> <s_output_eth_tx_stb_10> <s_output_eth_tx_stb_11> <s_output_eth_tx_stb_12> <s_output_eth_tx_stb_13> <s_output_eth_tx_stb_14> <s_output_eth_tx_stb_15> 
+INFO:Xst:2261 - The FF/Latch <register_0_3> in Unit <USER_DESIGN_INST_1> is equivalent to the following FF/Latch, which will be removed : <register_0_4> 
+INFO:Xst:2261 - The FF/Latch <register_0_0> in Unit <USER_DESIGN_INST_1> is equivalent to the following 13 FFs/Latches, which will be removed : <register_0_1> <register_0_2> <register_0_5> <register_0_6> <register_0_7> <register_0_8> <register_0_9> <register_0_10> <register_0_11> <register_0_12> <register_0_13> <register_0_14> <register_0_15> 
+INFO:Xst:2261 - The FF/Latch <s_input_eth_rx_ack_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 14 FFs/Latches, which will be removed : <s_input_eth_rx_ack_2> <s_input_eth_rx_ack_3> <s_input_eth_rx_ack_4> <s_input_eth_rx_ack_5> <s_input_eth_rx_ack_6> <s_input_eth_rx_ack_7> <s_input_eth_rx_ack_8> <s_input_eth_rx_ack_9> <s_input_eth_rx_ack_10> <s_input_eth_rx_ack_11> <s_input_eth_rx_ack_12> <s_input_eth_rx_ack_13> <s_input_eth_rx_ack_14> <s_input_eth_rx_ack_15> 
+INFO:Xst:2261 - The FF/Latch <s_output_rs232_tx_stb_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 14 FFs/Latches, which will be removed : <s_output_rs232_tx_stb_2> <s_output_rs232_tx_stb_3> <s_output_rs232_tx_stb_4> <s_output_rs232_tx_stb_5> <s_output_rs232_tx_stb_6> <s_output_rs232_tx_stb_7> <s_output_rs232_tx_stb_8> <s_output_rs232_tx_stb_9> <s_output_rs232_tx_stb_10> <s_output_rs232_tx_stb_11> <s_output_rs232_tx_stb_12> <s_output_rs232_tx_stb_13> <s_output_rs232_tx_stb_14> <s_output_rs232_tx_stb_15> 
+INFO:Xst:2261 - The FF/Latch <s_input_rs232_rx_ack_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 14 FFs/Latches, which will be removed : <s_input_rs232_rx_ack_2> <s_input_rs232_rx_ack_3> <s_input_rs232_rx_ack_4> <s_input_rs232_rx_ack_5> <s_input_rs232_rx_ack_6> <s_input_rs232_rx_ack_7> <s_input_rs232_rx_ack_8> <s_input_rs232_rx_ack_9> <s_input_rs232_rx_ack_10> <s_input_rs232_rx_ack_11> <s_input_rs232_rx_ack_12> <s_input_rs232_rx_ack_13> <s_input_rs232_rx_ack_14> <s_input_rs232_rx_ack_15> 
+INFO:Xst:2261 - The FF/Latch <s_output_leds_stb_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 14 FFs/Latches, which will be removed : <s_output_leds_stb_2> <s_output_leds_stb_3> <s_output_leds_stb_4> <s_output_leds_stb_5> <s_output_leds_stb_6> <s_output_leds_stb_7> <s_output_leds_stb_8> <s_output_leds_stb_9> <s_output_leds_stb_10> <s_output_leds_stb_11> <s_output_leds_stb_12> <s_output_leds_stb_13> <s_output_leds_stb_14> <s_output_leds_stb_15> 
+INFO:Xst:2261 - The FF/Latch <register_6_1> in Unit <USER_DESIGN_INST_1> is equivalent to the following 13 FFs/Latches, which will be removed : <register_6_3> <register_6_4> <register_6_5> <register_6_6> <register_6_7> <register_6_8> <register_6_9> <register_6_10> <register_6_11> <register_6_12> <register_6_13> <register_6_14> <register_6_15> 
+WARNING:Xst:1710 - FF/Latch <register_7_6> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_7> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_8> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_9> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_10> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_11> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_12> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_13> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_14> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_15> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_4_0> (without init value) has a constant value of 1 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_4_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_6_0> (without init value) has a constant value of 1 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_6_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_0_0> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_0_3> (without init value) has a constant value of 1 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <s_output_eth_tx_stb_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <s_output_rs232_tx_stb_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <s_output_leds_stb_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <s_input_eth_rx_ack_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <s_input_rs232_rx_ack_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_0> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_2> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_3> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_4> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_5> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_6> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_7> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_8> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_9> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_10> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_5> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_4> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_3> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_2> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_7_0> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_15> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_14> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_13> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_12> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <register_1_11> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_15> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_14> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_13> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_12> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_11> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_10> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_9> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_8> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_7> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_6> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_5> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_4> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_3> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_2> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_1> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_0> (without init value) has a constant value of 0 in block <USER_DESIGN_INST_1>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_11> of sequential type is unconnected in block <gigabit_ethernet_inst_1>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_12> of sequential type is unconnected in block <gigabit_ethernet_inst_1>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_13> of sequential type is unconnected in block <gigabit_ethernet_inst_1>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_14> of sequential type is unconnected in block <gigabit_ethernet_inst_1>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_15> of sequential type is unconnected in block <gigabit_ethernet_inst_1>.
+WARNING:Xst:2677 - Node <address_3> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_4> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_5> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_6> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_7> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_8> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_9> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_10> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_11> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_12> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_13> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_14> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <address_15> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_8> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_9> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_10> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_11> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_12> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_13> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_14> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_rs232_tx_15> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_4> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_5> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_6> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_7> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_8> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_9> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_10> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_11> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_12> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_13> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_14> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2677 - Node <s_output_leds_15> of sequential type is unconnected in block <USER_DESIGN_INST_1>.
+WARNING:Xst:2404 -  FFs/Latches <register_4<15:1>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <register_6<15:3>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <register_0<15:5>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <s_output_leds_stb<15:1>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <s_output_rs232_tx_stb<15:1>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <s_output_eth_tx_stb<15:1>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <s_input_eth_rx_ack<15:1>> (without init value) have a constant value of 0 in block <user_design>.
+WARNING:Xst:2404 -  FFs/Latches <s_input_rs232_rx_ack<15:1>> (without init value) have a constant value of 0 in block <user_design>.
+
+Synthesizing (advanced) Unit <SERIAL_INPUT>.
+The following registers are absorbed into counter <COUNT>: 1 register on signal <COUNT>.
+The following registers are absorbed into counter <BAUD_COUNT>: 1 register on signal <BAUD_COUNT>.
+Unit <SERIAL_INPUT> synthesized (advanced).
+
+Synthesizing (advanced) Unit <gigabit_ethernet>.
+The following registers are absorbed into counter <TX_IN_COUNT>: 1 register on signal <TX_IN_COUNT>.
+The following registers are absorbed into counter <RX_WRITE_ADDRESS>: 1 register on signal <RX_WRITE_ADDRESS>.
+The following registers are absorbed into counter <RX_PACKET_LENGTH>: 1 register on signal <RX_PACKET_LENGTH>.
+The following registers are absorbed into counter <TX_WRITE_ADDRESS>: 1 register on signal <TX_WRITE_ADDRESS>.
+The following registers are absorbed into counter <TX_READ_ADDRESS>: 1 register on signal <TX_READ_ADDRESS>.
+The following registers are absorbed into counter <RX_WRITE_BUFFER>: 1 register on signal <RX_WRITE_BUFFER>.
+INFO:Xst:3226 - The RAM <Mram_RX_MEMORY> will be implemented as a BLOCK RAM, absorbing the following register(s): <RX_READ_ADDRESS>
+    -----------------------------------------------------------------------
+    | ram_type           | Block                               |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 2048-word x 16-bit                  |          |
+    |     mode           | write-first                         |          |
+    |     clkA           | connected to signal <RXCLK>         | rise     |
+    |     weA            | connected to signal <RX_WRITE_ENABLE> | high     |
+    |     addrA          | connected to signal <RX_WRITE_ADDRESS> |          |
+    |     diA            | connected to signal <RX_WRITE_DATA> |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+    | Port B                                                              |
+    |     aspect ratio   | 2048-word x 16-bit                  |          |
+    |     mode           | write-first                         |          |
+    |     clkB           | connected to signal <CLK>           | rise     |
+    |     addrB          | connected to signal <RX_PACKET_STATE[2]_X_6_o_wide_mux_183_OUT> |          |
+    |     doB            | connected to internal node          |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+INFO:Xst:3226 - The RAM <Mram_TX_MEMORY> will be implemented as a BLOCK RAM, absorbing the following register(s): <TX_READ_DATA>
+    -----------------------------------------------------------------------
+    | ram_type           | Block                               |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 512-word x 16-bit                   |          |
+    |     mode           | write-first                         |          |
+    |     clkA           | connected to signal <CLK>           | rise     |
+    |     weA            | connected to signal <TX_WRITE>      | high     |
+    |     addrA          | connected to signal <TX_WRITE_ADDRESS_DEL> |          |
+    |     diA            | connected to signal <TX_WRITE_DATA> |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+    | Port B                                                              |
+    |     aspect ratio   | 512-word x 16-bit                   |          |
+    |     mode           | write-first                         |          |
+    |     clkB           | connected to signal <CLK_125_MHZ>   | rise     |
+    |     addrB          | connected to signal <TX_READ_ADDRESS> |          |
+    |     doB            | connected to signal <TX_READ_DATA>  |          |
+    -----------------------------------------------------------------------
+    | optimization       | speed                               |          |
+    -----------------------------------------------------------------------
+INFO:Xst:3231 - The small RAM <Mram_RX_START_ADDRESS_BUFFER> will be implemented on LUTs in order to maximize performance and save block RAM resources. If you want to force its implementation on block, use option/constraint ram_style.
+    -----------------------------------------------------------------------
+    | ram_type           | Distributed                         |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 32-word x 11-bit                    |          |
+    |     clkA           | connected to signal <RXCLK>         | rise     |
+    |     weA            | connected to internal node          | high     |
+    |     addrA          | connected to signal <RX_WRITE_BUFFER> |          |
+    |     diA            | connected to signal <RX_START_ADDRESS> |          |
+    -----------------------------------------------------------------------
+    | Port B                                                              |
+    |     aspect ratio   | 32-word x 11-bit                    |          |
+    |     addrB          | connected to signal <RX_READ_BUFFER> |          |
+    |     doB            | connected to internal node          |          |
+    -----------------------------------------------------------------------
+INFO:Xst:3231 - The small RAM <Mram_RX_PACKET_LENGTH_BUFFER> will be implemented on LUTs in order to maximize performance and save block RAM resources. If you want to force its implementation on block, use option/constraint ram_style.
+    -----------------------------------------------------------------------
+    | ram_type           | Distributed                         |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 32-word x 11-bit                    |          |
+    |     clkA           | connected to signal <RXCLK>         | rise     |
+    |     weA            | connected to internal node          | high     |
+    |     addrA          | connected to signal <RX_WRITE_BUFFER> |          |
+    |     diA            | connected to signal <RX_PACKET_LENGTH> |          |
+    -----------------------------------------------------------------------
+    | Port B                                                              |
+    |     aspect ratio   | 32-word x 11-bit                    |          |
+    |     addrB          | connected to signal <RX_READ_BUFFER> |          |
+    |     doB            | connected to internal node          |          |
+    -----------------------------------------------------------------------
+Unit <gigabit_ethernet> synthesized (advanced).
+
+Synthesizing (advanced) Unit <serial_output>.
+The following registers are absorbed into counter <BAUD_COUNT>: 1 register on signal <BAUD_COUNT>.
+Unit <serial_output> synthesized (advanced).
+
+Synthesizing (advanced) Unit <user_design>.
+INFO:Xst:3231 - The small RAM <Mram_memory> will be implemented on LUTs in order to maximize performance and save block RAM resources. If you want to force its implementation on block, use option/constraint ram_style.
+    -----------------------------------------------------------------------
+    | ram_type           | Distributed                         |          |
+    -----------------------------------------------------------------------
+    | Port A                                                              |
+    |     aspect ratio   | 7-word x 16-bit                     |          |
+    |     clkA           | connected to signal <clk>           | rise     |
+    |     weA            | connected to signal <GND>           | high     |
+    |     addrA          | connected to signal <address>       |          |
+    |     diA            | connected to signal <GND>           |          |
+    |     doA            | connected to internal node          |          |
+    -----------------------------------------------------------------------
+Unit <user_design> synthesized (advanced).
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_11> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_12> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_13> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_14> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_PACKET_LENGTH_15> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <address_3> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_4> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_5> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_6> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_7> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_8> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_9> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_10> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_11> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_12> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_13> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_14> of sequential type is unconnected in block <user_design>.
+WARNING:Xst:2677 - Node <address_15> of sequential type is unconnected in block <user_design>.
+
+=========================================================================
+Advanced HDL Synthesis Report
+
+Macro Statistics
+# RAMs                                                 : 5
+ 2048x16-bit dual-port block RAM                       : 1
+ 32x11-bit dual-port distributed RAM                   : 2
+ 512x16-bit dual-port block RAM                        : 1
+ 7x16-bit single-port distributed RAM                  : 1
+# Adders/Subtractors                                   : 9
+ 11-bit adder                                          : 2
+ 11-bit subtractor                                     : 2
+ 16-bit adder                                          : 2
+ 34-bit adder                                          : 1
+ 4-bit adder                                           : 1
+ 5-bit adder                                           : 1
+# Counters                                             : 9
+ 11-bit down counter                                   : 1
+ 11-bit up counter                                     : 4
+ 12-bit up counter                                     : 2
+ 2-bit updown counter                                  : 1
+ 5-bit up counter                                      : 1
+# Registers                                            : 547
+ Flip-Flops                                            : 547
+# Comparators                                          : 3
+ 11-bit comparator equal                               : 1
+ 11-bit comparator greater                             : 2
+# Multiplexers                                         : 150
+ 1-bit 2-to-1 multiplexer                              : 71
+ 1-bit 32-to-1 multiplexer                             : 1
+ 11-bit 2-to-1 multiplexer                             : 1
+ 16-bit 2-to-1 multiplexer                             : 16
+ 32-bit 2-to-1 multiplexer                             : 3
+ 34-bit 2-to-1 multiplexer                             : 29
+ 4-bit 2-to-1 multiplexer                              : 13
+ 5-bit 2-to-1 multiplexer                              : 2
+ 8-bit 2-to-1 multiplexer                              : 14
+# FSMs                                                 : 6
+# Xors                                                 : 183
+ 1-bit xor2                                            : 114
+ 1-bit xor3                                            : 35
+ 1-bit xor4                                            : 31
+ 1-bit xor5                                            : 3
+
+=========================================================================
+
+=========================================================================
+*                         Low Level Synthesis                           *
+=========================================================================
+WARNING:Xst:1710 - FF/Latch <register_7_5> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_6> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_7> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_8> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_9> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_10> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_11> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_12> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_13> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_14> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_15> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_4> (without init value) has a constant value of 1 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_6_0> (without init value) has a constant value of 1 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_6_1> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_6_2> (without init value) has a constant value of 1 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_0_0> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_0_1> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_0_2> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_0_3> (without init value) has a constant value of 1 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_0_4> (without init value) has a constant value of 1 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_0> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_1> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_2> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_3> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_4> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_5> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_6> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_7> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_8> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_9> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_4> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_3> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_2> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_1> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_7_0> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_15> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_14> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_13> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_12> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_11> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_1_10> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_15> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_14> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_13> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_12> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_11> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_10> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_9> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_8> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_7> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_6> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_5> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_4> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_3> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_2> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_1> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <register_2_0> (without init value) has a constant value of 0 in block <user_design>. This FF/Latch will be trimmed during the optimization process.
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <gigabit_ethernet_inst_1/FSM_0> on signal <TX_PACKET_STATE[1:2]> with gray encoding.
+-------------------------
+ State       | Encoding
+-------------------------
+ get_length  | 00
+ get_data    | 01
+ send_packet | 11
+-------------------------
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <gigabit_ethernet_inst_1/FSM_1> on signal <TX_PHY_STATE[1:4]> with user encoding.
+-----------------------------
+ State           | Encoding
+-----------------------------
+ wait_new_packet | 0000
+ preamble_0      | 0001
+ preamble_1      | 0010
+ preamble_2      | 0011
+ preamble_3      | 0100
+ preamble_4      | 0101
+ preamble_5      | 0110
+ preamble_6      | 0111
+ sfd             | 1000
+ send_data_hi    | 1001
+ send_data_lo    | 1010
+ send_crc_3      | 1011
+ send_crc_2      | 1100
+ send_crc_1      | 1101
+ send_crc_0      | 1110
+ done_state      | 1111
+-----------------------------
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <gigabit_ethernet_inst_1/FSM_3> on signal <RX_PACKET_STATE[1:3]> with user encoding.
+-----------------------------
+ State           | Encoding
+-----------------------------
+ wait_initialise | 000
+ wait_new_packet | 001
+ send_data       | 010
+ prefetch0       | 011
+ prefetch1       | 100
+ send_length     | 101
+-----------------------------
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <gigabit_ethernet_inst_1/FSM_2> on signal <RX_PHY_STATE[1:3]> with user encoding.
+-------------------------------
+ State             | Encoding
+-------------------------------
+ wait_start        | 000
+ preamble          | 001
+ data_high         | 010
+ data_low          | 011
+ end_of_frame      | 100
+ notify_new_packet | 101
+-------------------------------
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <SERIAL_INPUT_INST_1/FSM_5> on signal <STATE[1:4]> with user encoding.
+-------------------------
+ State       | Encoding
+-------------------------
+ idle        | 0000
+ start       | 0001
+ rx0         | 0010
+ rx1         | 0011
+ rx2         | 0100
+ rx3         | 0101
+ rx4         | 0110
+ rx5         | 0111
+ rx6         | 1000
+ rx7         | 1001
+ stop        | 1010
+ output_data | 1011
+-------------------------
+Analyzing FSM <MFsm> for best encoding.
+Optimizing FSM <SERIAL_OUTPUT_INST_1/FSM_4> on signal <STATE[1:4]> with user encoding.
+---------------------
+ State   | Encoding
+---------------------
+ idle    | 0000
+ start   | 0001
+ wait_en | 0010
+ tx0     | 0011
+ tx1     | 0100
+ tx2     | 0101
+ tx3     | 0110
+ tx4     | 0111
+ tx5     | 1000
+ tx6     | 1001
+ tx7     | 1010
+ stop    | 1011
+---------------------
+WARNING:Xst:2677 - Node <RX_PACKET_LENGTH_SYNC_0> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_WRITE_ADDRESS_9> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_WRITE_ADDRESS_10> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_READ_ADDRESS_9> of sequential type is unconnected in block <gigabit_ethernet>.
+WARNING:Xst:2677 - Node <TX_READ_ADDRESS_10> of sequential type is unconnected in block <gigabit_ethernet>.
+
+Optimizing unit <SP605> ...
+
+Optimizing unit <gigabit_ethernet> ...
+
+Optimizing unit <SERIAL_INPUT> ...
+
+Optimizing unit <user_design> ...
+
+Optimizing unit <serial_output> ...
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_15> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_14> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_13> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_12> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_11> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_10> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_9> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_8> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_7> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_6> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_5> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_leds_4> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_15> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_14> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_13> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_12> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_11> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_10> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_9> of sequential type is unconnected in block <SP605>.
+WARNING:Xst:2677 - Node <USER_DESIGN_INST_1/s_output_rs232_tx_8> of sequential type is unconnected in block <SP605>.
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory15> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory13> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory12> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory14> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory10> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory9> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory11> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory7> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory6> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory8> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory4> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory3> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory5> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory1> are equivalent, second RAM is removed
+INFO:Xst:2399 - RAMs <USER_DESIGN_INST_1/Mram_memory16>, <USER_DESIGN_INST_1/Mram_memory2> are equivalent, second RAM is removed
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_7> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_8> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_9> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_10> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_11> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_12> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_13> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_14> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_15> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_16> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_17> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_18> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_19> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_20> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_21> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_22> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_23> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_24> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_25> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_26> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_27> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_OUTPUT_INST_1/BAUD_COUNT_9> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_OUTPUT_INST_1/BAUD_COUNT_10> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_OUTPUT_INST_1/BAUD_COUNT_11> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_leds_1> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_leds_3> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_0> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_1> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_2> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_3> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_4> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_5> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_6> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_7> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_8> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_9> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_10> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_11> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_12> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_13> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_14> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/s_output_eth_tx_15> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_6> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1293 - FF/Latch <gigabit_ethernet_inst_1/TX_IN_COUNT_9> has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1293 - FF/Latch <gigabit_ethernet_inst_1/TX_IN_COUNT_10> has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_11> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_10> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_9> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_8> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_7> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_6> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_5> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_33> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_32> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_31> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_30> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_29> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1710 - FF/Latch <USER_DESIGN_INST_1/program_counter_28> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_5> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_6> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_7> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_8> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_9> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_10> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_11> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_12> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_13> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_14> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_15> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <GPIO_LEDS_3> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <GPIO_LEDS_1> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_4> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_3> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_2> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_1> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_WRITE_DATA_0> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_10> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_9> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_8> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_7> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_6> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_5> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_4> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_3> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_2> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_1> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+WARNING:Xst:1895 - Due to other FF/Latch trimming, FF/Latch <gigabit_ethernet_inst_1/TX_PACKET_LENGTH_0> (without init value) has a constant value of 0 in block <SP605>. This FF/Latch will be trimmed during the optimization process.
+INFO:Xst:2261 - The FF/Latch <SERIAL_INPUT_INST_1/BAUD_COUNT_0> in Unit <SP605> is equivalent to the following FF/Latch, which will be removed : <SERIAL_OUTPUT_INST_1/BAUD_COUNT_0> 
+INFO:Xst:2261 - The FF/Latch <USER_DESIGN_INST_1/data_out_15> in Unit <SP605> is equivalent to the following 15 FFs/Latches, which will be removed : <USER_DESIGN_INST_1/data_out_14> <USER_DESIGN_INST_1/data_out_13> <USER_DESIGN_INST_1/data_out_12> <USER_DESIGN_INST_1/data_out_11> <USER_DESIGN_INST_1/data_out_10> <USER_DESIGN_INST_1/data_out_9> <USER_DESIGN_INST_1/data_out_8> <USER_DESIGN_INST_1/data_out_7> <USER_DESIGN_INST_1/data_out_6> <USER_DESIGN_INST_1/data_out_5> <USER_DESIGN_INST_1/data_out_4> <USER_DESIGN_INST_1/data_out_3> <USER_DESIGN_INST_1/data_out_2> <USER_DESIGN_INST_1/data_out_1> <USER_DESIGN_INST_1/data_out_0> 
+INFO:Xst:2261 - The FF/Latch <USER_DESIGN_INST_1/s_output_rs232_tx_7> in Unit <SP605> is equivalent to the following 6 FFs/Latches, which will be removed : <USER_DESIGN_INST_1/s_output_rs232_tx_6> <USER_DESIGN_INST_1/s_output_rs232_tx_5> <USER_DESIGN_INST_1/s_output_rs232_tx_4> <USER_DESIGN_INST_1/s_output_rs232_tx_3> <USER_DESIGN_INST_1/s_output_rs232_tx_2> <USER_DESIGN_INST_1/s_output_rs232_tx_1> 
+INFO:Xst:2261 - The FF/Latch <USER_DESIGN_INST_1/s_output_leds_2> in Unit <SP605> is equivalent to the following FF/Latch, which will be removed : <USER_DESIGN_INST_1/s_output_leds_0> 
+INFO:Xst:2261 - The FF/Latch <GPIO_LEDS_0> in Unit <SP605> is equivalent to the following FF/Latch, which will be removed : <GPIO_LEDS_2> 
+INFO:Xst:2261 - The FF/Latch <SERIAL_OUTPUT_INST_1/DATA_7> in Unit <SP605> is equivalent to the following 6 FFs/Latches, which will be removed : <SERIAL_OUTPUT_INST_1/DATA_6> <SERIAL_OUTPUT_INST_1/DATA_5> <SERIAL_OUTPUT_INST_1/DATA_4> <SERIAL_OUTPUT_INST_1/DATA_3> <SERIAL_OUTPUT_INST_1/DATA_2> <SERIAL_OUTPUT_INST_1/DATA_1> 
+
+Mapping all equations...
+Building and optimizing final netlist ...
+Found area constraint ratio of 100 (+ 5) on block SP605, actual ratio is 3.
+FlipFlop INTERNAL_RST has been replicated 2 time(s)
+
+Final Macro Processing ...
+
+Processing Unit <SP605> :
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/DONE_SYNC>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/GO_SYNC>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_31>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_30>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_29>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_28>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_27>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_26>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_25>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_24>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_23>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_22>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_21>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_20>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_19>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_18>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_17>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_16>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_15>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_14>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_13>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_12>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_11>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_10>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_9>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_8>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_7>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_6>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_5>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_4>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_3>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_2>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_1>.
+	Found 2-bit shift register for signal <gigabit_ethernet_inst_1/RX_BUFFER_BUSY_SYNC_0>.
+Unit <SP605> processed.
+
+=========================================================================
+Final Register Report
+
+Macro Statistics
+# Registers                                            : 388
+ Flip-Flops                                            : 388
+# Shift Registers                                      : 34
+ 2-bit shift register                                  : 34
+
+=========================================================================
+
+=========================================================================
+*                           Partition Report                            *
+=========================================================================
+
+Partition Implementation Status
+-------------------------------
+
+  No Partitions were found in this design.
+
+-------------------------------
+
+=========================================================================
+*                            Design Summary                             *
+=========================================================================
+
+Top Level Output File Name         : SP605.ngc
+
+Primitive and Black Box Usage:
+------------------------------
+# BELS                             : 882
+#      GND                         : 1
+#      INV                         : 10
+#      LUT1                        : 43
+#      LUT2                        : 84
+#      LUT3                        : 82
+#      LUT4                        : 90
+#      LUT5                        : 119
+#      LUT6                        : 254
+#      MUXCY                       : 86
+#      MUXF7                       : 17
+#      VCC                         : 1
+#      XORCY                       : 95
+# FlipFlops/Latches                : 423
+#      FD                          : 85
+#      FDE                         : 274
+#      FDR                         : 34
+#      FDRE                        : 26
+#      FDS                         : 3
+#      ODDR2                       : 1
+# RAMS                             : 8
+#      RAM16X1S                    : 1
+#      RAM32M                      : 4
+#      RAMB16BWER                  : 2
+#      RAMB8BWER                   : 1
+# Shift Registers                  : 34
+#      SRLC16E                     : 34
+# Clock Buffers                    : 6
+#      BUFG                        : 5
+#      BUFGP                       : 1
+# IO Buffers                       : 30
+#      IBUF                        : 12
+#      IBUFGDS                     : 1
+#      OBUF                        : 17
+# DCMs                             : 1
+#      DCM_SP                      : 1
+
+Device utilization summary:
+---------------------------
+
+Selected Device : 6slx45tfgg484-3 
+
+
+Slice Logic Utilization: 
+ Number of Slice Registers:             423  out of  54576     0%  
+ Number of Slice LUTs:                  733  out of  27288     2%  
+    Number used as Logic:               682  out of  27288     2%  
+    Number used as Memory:               51  out of   6408     0%  
+       Number used as RAM:               17
+       Number used as SRL:               34
+
+Slice Logic Distribution: 
+ Number of LUT Flip Flop pairs used:    769
+   Number with an unused Flip Flop:     346  out of    769    44%  
+   Number with an unused LUT:            36  out of    769     4%  
+   Number of fully used LUT-FF pairs:   387  out of    769    50%  
+   Number of unique control sets:        31
+
+IO Utilization: 
+ Number of IOs:                          35
+ Number of bonded IOBs:                  32  out of    296    10%  
+
+Specific Feature Utilization:
+ Number of Block RAM/FIFO:                3  out of    116     2%  
+    Number using Block RAM only:          3
+ Number of BUFG/BUFGCTRLs:                6  out of     16    37%  
+
+---------------------------
+Partition Resource Summary:
+---------------------------
+
+  No Partitions were found in this design.
+
+---------------------------
+
+
+=========================================================================
+Timing Report
+
+NOTE: THESE TIMING NUMBERS ARE ONLY A SYNTHESIS ESTIMATE.
+      FOR ACCURATE TIMING INFORMATION PLEASE REFER TO THE TRACE REPORT
+      GENERATED AFTER PLACE-and-ROUTE.
+
+Clock Information:
+------------------
+-----------------------------------+------------------------+-------+
+Clock Signal                       | Clock buffer(FF name)  | Load  |
+-----------------------------------+------------------------+-------+
+CLK_P                              | DCM_SP:CLKDV           | 267   |
+CLK_P                              | DCM_SP:CLKFX           | 72    |
+CLK_P                              | DCM_SP:CLKFX180        | 1     |
+RXCLK                              | BUFGP                  | 129   |
+-----------------------------------+------------------------+-------+
+
+Asynchronous Control Signals Information:
+----------------------------------------
+No asynchronous control signals found in this design
+
+Timing Summary:
+---------------
+Speed Grade: -3
+
+   Minimum period: 6.405ns (Maximum Frequency: 156.140MHz)
+   Minimum input arrival time before clock: 6.189ns
+   Maximum output required time after clock: 5.436ns
+   Maximum combinational path delay: No path found
+
+Timing Details:
+---------------
+All values displayed in nanoseconds (ns)
+
+=========================================================================
+Timing constraint: Default period analysis for Clock 'CLK_P'
+  Clock period: 6.405ns (frequency: 156.140MHz)
+  Total number of paths / destination ports: 7147 / 552
+-------------------------------------------------------------------------
+Delay:               5.124ns (Levels of Logic = 3)
+  Source:            gigabit_ethernet_inst_1/Mram_TX_MEMORY (RAM)
+  Destination:       gigabit_ethernet_inst_1/TX_CRC_5 (FF)
+  Source Clock:      CLK_P rising 1.2X
+  Destination Clock: CLK_P rising 1.2X
+
+  Data Path: gigabit_ethernet_inst_1/Mram_TX_MEMORY to gigabit_ethernet_inst_1/TX_CRC_5
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     RAMB8BWER:CLKBRDCLK->DOBDO4    9   1.850   0.934  gigabit_ethernet_inst_1/Mram_TX_MEMORY (gigabit_ethernet_inst_1/TX_READ_DATA<4>)
+     LUT3:I1->O            5   0.203   0.943  gigabit_ethernet_inst_1/Mxor__n1484_xo<0>1 (gigabit_ethernet_inst_1/_n1484)
+     LUT6:I3->O            1   0.205   0.684  gigabit_ethernet_inst_1/Mmux__n1122192 (gigabit_ethernet_inst_1/Mmux__n1122191)
+     LUT4:I2->O            1   0.203   0.000  gigabit_ethernet_inst_1/Mmux__n1122193 (gigabit_ethernet_inst_1/_n1122<27>)
+     FDE:D                     0.102          gigabit_ethernet_inst_1/TX_CRC_5
+    ----------------------------------------
+    Total                      5.124ns (2.563ns logic, 2.561ns route)
+                                       (50.0% logic, 50.0% route)
+
+=========================================================================
+Timing constraint: Default period analysis for Clock 'RXCLK'
+  Clock period: 4.944ns (frequency: 202.263MHz)
+  Total number of paths / destination ports: 1014 / 301
+-------------------------------------------------------------------------
+Delay:               4.944ns (Levels of Logic = 5)
+  Source:            gigabit_ethernet_inst_1/RX_PACKET_LENGTH_4 (FF)
+  Destination:       gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1 (FF)
+  Source Clock:      RXCLK rising
+  Destination Clock: RXCLK rising
+
+  Data Path: gigabit_ethernet_inst_1/RX_PACKET_LENGTH_4 to gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FDE:C->Q              3   0.447   1.015  gigabit_ethernet_inst_1/RX_PACKET_LENGTH_4 (gigabit_ethernet_inst_1/RX_PACKET_LENGTH_4)
+     LUT6:I0->O            1   0.203   0.580  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11 (gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In11)
+     LUT2:I1->O            1   0.205   0.580  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12 (gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In12)
+     LUT6:I5->O            1   0.205   0.580  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13 (gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In13)
+     LUT6:I5->O            2   0.205   0.617  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In110 (gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In1)
+     LUT4:I3->O            1   0.205   0.000  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In2 (gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1-In)
+     FDR:D                     0.102          gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd1
+    ----------------------------------------
+    Total                      4.944ns (1.572ns logic, 3.372ns route)
+                                       (31.8% logic, 68.2% route)
+
+=========================================================================
+Timing constraint: Default OFFSET IN BEFORE for Clock 'RXCLK'
+  Total number of paths / destination ports: 634 / 106
+-------------------------------------------------------------------------
+Offset:              6.189ns (Levels of Logic = 4)
+  Source:            RXD<0> (PAD)
+  Destination:       gigabit_ethernet_inst_1/RX_PACKET_LENGTH_10 (FF)
+  Destination Clock: RXCLK rising
+
+  Data Path: RXD<0> to gigabit_ethernet_inst_1/RX_PACKET_LENGTH_10
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     IBUF:I->O            14   1.222   1.062  RXD_0_IBUF (RXD_0_IBUF)
+     LUT2:I0->O            1   0.203   0.808  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3-In2_SW0 (N12)
+     LUT6:I3->O            5   0.205   0.715  gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3-In2 (gigabit_ethernet_inst_1/RX_PHY_STATE_FSM_FFd3-In2)
+     LUT6:I5->O           43   0.205   1.448  gigabit_ethernet_inst_1/_n1162_inv1 (gigabit_ethernet_inst_1/_n1162_inv)
+     FDE:CE                    0.322          gigabit_ethernet_inst_1/RX_CRC_0
+    ----------------------------------------
+    Total                      6.189ns (2.157ns logic, 4.032ns route)
+                                       (34.8% logic, 65.2% route)
+
+=========================================================================
+Timing constraint: Default OFFSET IN BEFORE for Clock 'CLK_P'
+  Total number of paths / destination ports: 1 / 1
+-------------------------------------------------------------------------
+Offset:              1.903ns (Levels of Logic = 1)
+  Source:            RS232_RX (PAD)
+  Destination:       SERIAL_INPUT_INST_1/SERIAL_DEGLITCH_0 (FF)
+  Destination Clock: CLK_P rising 0.5X
+
+  Data Path: RS232_RX to SERIAL_INPUT_INST_1/SERIAL_DEGLITCH_0
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     IBUF:I->O             1   1.222   0.579  RS232_RX_IBUF (RS232_RX_IBUF)
+     FDS:D                     0.102          SERIAL_INPUT_INST_1/SERIAL_DEGLITCH_0
+    ----------------------------------------
+    Total                      1.903ns (1.324ns logic, 0.579ns route)
+                                       (69.6% logic, 30.4% route)
+
+=========================================================================
+Timing constraint: Default OFFSET OUT AFTER for Clock 'CLK_P'
+  Total number of paths / destination ports: 13 / 13
+-------------------------------------------------------------------------
+Offset:              5.436ns (Levels of Logic = 2)
+  Source:            INTERNAL_RST (FF)
+  Destination:       PHY_RESET (PAD)
+  Source Clock:      CLK_P rising 0.5X
+
+  Data Path: INTERNAL_RST to PHY_RESET
+                                Gate     Net
+    Cell:in->out      fanout   Delay   Delay  Logical Name (Net Name)
+    ----------------------------------------  ------------
+     FD:C->Q              63   0.447   1.633  INTERNAL_RST (INTERNAL_RST)
+     INV:I->O              1   0.206   0.579  gigabit_ethernet_inst_1/_n10311_INV_0 (PHY_RESET_OBUF)
+     OBUF:I->O                 2.571          PHY_RESET_OBUF (PHY_RESET)
+    ----------------------------------------
+    Total                      5.436ns (3.224ns logic, 2.212ns route)
+                                       (59.3% logic, 40.7% route)
+
+=========================================================================
+
+Cross Clock Domains Report:
+--------------------------
+
+Clock to Setup on destination clock CLK_P
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+CLK_P          |    6.081|         |         |         |
+RXCLK          |    1.844|         |         |         |
+---------------+---------+---------+---------+---------+
+
+Clock to Setup on destination clock RXCLK
+---------------+---------+---------+---------+---------+
+               | Src:Rise| Src:Fall| Src:Rise| Src:Fall|
+Source Clock   |Dest:Rise|Dest:Rise|Dest:Fall|Dest:Fall|
+---------------+---------+---------+---------+---------+
+CLK_P          |    2.510|         |         |         |
+RXCLK          |    4.944|         |         |         |
+---------------+---------+---------+---------+---------+
+
+=========================================================================
+
+
+Total REAL time to Xst completion: 16.00 secs
+Total CPU time to Xst completion: 15.64 secs
+ 
+--> 
+
+
+Total memory usage is 420200 kilobytes
+
+Number of errors   :    0 (   0 filtered)
+Number of warnings :  307 (   0 filtered)
+Number of infos    :   38 (   0 filtered)
+

@@ -1,0 +1,146 @@
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -i -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
+xst -intstyle ise -ifn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.xst" -ofn "/media/sdb1/Projects/Chips-2.0/Board_Designs/SP605/synthesis/sp605/SP605.syr" 
+ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc SP605.ucf -p xc6slx45t-fgg484-3 SP605.ngc SP605.ngd  
+map -intstyle ise -p xc6slx45t-fgg484-3 -w -logic_opt off -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt off -ir off -pr off -lc off -power off -o SP605_map.ncd SP605.ngd SP605.pcf 
+par -w -intstyle ise -ol high -mt off SP605_map.ncd SP605.ncd SP605.pcf 
+trce -intstyle ise -v 3 -s 3 -n 3 -fastpaths -xml SP605.twx SP605.ncd -o SP605.twr SP605.pcf -ucf SP605.ucf 
+bitgen -intstyle ise -f SP605.ut SP605.ncd 
