@@ -1,8 +1,8 @@
 
 int main(){
-  int a = 15;
-  int b = 8;
-  assert(a%b == 7);
+  int a = 5;
+  int b = 2;
+  assert(a/b == 2);
   return 0;
 }
 

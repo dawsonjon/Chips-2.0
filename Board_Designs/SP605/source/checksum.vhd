@@ -41,6 +41,7 @@ begin
         S_DATA_IN_ACK <= '1';
         if S_DATA_IN_ACK = '1' and DATA_IN_STB = '1' then
           S_DATA_IN_ACK <= '0';
+			 CHECKSUM <= X"00000000";
           LEN <= DATA_IN;
           STATE <= GET_DATA;
           COUNT <= 0;
