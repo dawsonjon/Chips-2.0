@@ -1,10 +1,12 @@
 //name : user_design
 //tag : c components
+//input : input_checksum:16
 //input : input_eth_rx:16
 //input : input_rs232_rx:16
 //output : output_rs232_tx:16
 //output : output_leds:16
 //output : output_eth_tx:16
+//output : output_checksum:16
 //source_file : user_design.c
 ///User_Design
 ///===========
@@ -13,26 +15,32 @@
 
   
 `timescale 1ns/1ps
-module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_stb,output_rs232_tx_ack,output_leds_ack,output_eth_tx_ack,clk,rst,output_rs232_tx,output_leds,output_eth_tx,output_rs232_tx_stb,output_leds_stb,output_eth_tx_stb,input_eth_rx_ack,input_rs232_rx_ack);
+module user_design(input_checksum,input_eth_rx,input_rs232_rx,input_checksum_stb,input_eth_rx_stb,input_rs232_rx_stb,output_rs232_tx_ack,output_leds_ack,output_eth_tx_ack,output_checksum_ack,clk,rst,output_rs232_tx,output_leds,output_eth_tx,output_checksum,output_rs232_tx_stb,output_leds_stb,output_eth_tx_stb,output_checksum_stb,input_checksum_ack,input_eth_rx_ack,input_rs232_rx_ack);
+  input     [15:0] input_checksum;
   input     [15:0] input_eth_rx;
   input     [15:0] input_rs232_rx;
+  input     input_checksum_stb;
   input     input_eth_rx_stb;
   input     input_rs232_rx_stb;
   input     output_rs232_tx_ack;
   input     output_leds_ack;
   input     output_eth_tx_ack;
+  input     output_checksum_ack;
   input     clk;
   input     rst;
   output    [15:0] output_rs232_tx;
   output    [15:0] output_leds;
   output    [15:0] output_eth_tx;
+  output    [15:0] output_checksum;
   output    output_rs232_tx_stb;
   output    output_leds_stb;
   output    output_eth_tx_stb;
+  output    output_checksum_stb;
+  output    input_checksum_ack;
   output    input_eth_rx_ack;
   output    input_rs232_rx_ack;
   reg       [15:0] timer;
-  reg       [215:0] program_counter;
+  reg       [416:0] program_counter;
   reg       [15:0] address;
   reg       [15:0] data_out;
   reg       [15:0] data_in;
@@ -85,15 +93,39 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
   reg       [15:0] register_45;
   reg       [15:0] register_46;
   reg       [15:0] register_47;
+  reg       [15:0] register_48;
+  reg       [15:0] register_49;
+  reg       [15:0] register_50;
+  reg       [15:0] register_51;
+  reg       [15:0] register_52;
+  reg       [15:0] register_53;
+  reg       [15:0] register_54;
+  reg       [15:0] register_55;
+  reg       [15:0] register_56;
+  reg       [15:0] register_57;
+  reg       [15:0] register_58;
+  reg       [15:0] register_59;
+  reg       [15:0] register_60;
+  reg       [15:0] register_61;
+  reg       [15:0] register_62;
+  reg       [15:0] register_63;
+  reg       [15:0] register_64;
+  reg       [15:0] register_65;
+  reg       [15:0] register_66;
+  reg       [15:0] register_67;
+  reg       [15:0] register_68;
   reg       [15:0] s_output_rs232_tx_stb;
   reg       [15:0] s_output_leds_stb;
   reg       [15:0] s_output_eth_tx_stb;
+  reg       [15:0] s_output_checksum_stb;
   reg       [15:0] s_output_rs232_tx;
   reg       [15:0] s_output_leds;
   reg       [15:0] s_output_eth_tx;
+  reg       [15:0] s_output_checksum;
+  reg       [15:0] s_input_checksum_ack;
   reg       [15:0] s_input_eth_rx_ack;
   reg       [15:0] s_input_rs232_rx_ack;
-  reg [15:0] memory [1140:0];
+  reg [15:0] memory [1178:0];
 
   //////////////////////////////////////////////////////////////////////////////
   // MEMORY INITIALIZATION                                                      
@@ -122,43 +154,81 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
     memory[16'd13] = 16'd116;
     memory[16'd14] = 16'd104;
     memory[16'd15] = 16'd0;
-    memory[16'd80] = 16'd103;
-    memory[16'd81] = 16'd101;
-    memory[16'd82] = 16'd116;
-    memory[16'd83] = 16'd95;
-    memory[16'd84] = 16'd105;
-    memory[16'd85] = 16'd112;
-    memory[16'd86] = 16'd0;
-    memory[16'd87] = 16'd105;
-    memory[16'd88] = 16'd112;
-    memory[16'd89] = 16'd0;
-    memory[16'd90] = 16'd97;
-    memory[16'd91] = 16'd114;
+    memory[16'd16] = 16'd112;
+    memory[16'd17] = 16'd117;
+    memory[16'd18] = 16'd116;
+    memory[16'd19] = 16'd95;
+    memory[16'd20] = 16'd105;
+    memory[16'd21] = 16'd112;
+    memory[16'd22] = 16'd0;
+    memory[16'd87] = 16'd103;
+    memory[16'd88] = 16'd101;
+    memory[16'd89] = 16'd116;
+    memory[16'd90] = 16'd95;
+    memory[16'd91] = 16'd105;
     memory[16'd92] = 16'd112;
     memory[16'd93] = 16'd0;
-    memory[16'd94] = 16'd111;
-    memory[16'd95] = 16'd116;
-    memory[16'd96] = 16'd104;
-    memory[16'd97] = 16'd101;
-    memory[16'd98] = 16'd114;
-    memory[16'd99] = 16'd0;
-    memory[16'd1124] = 16'd69;
-    memory[16'd1125] = 16'd116;
-    memory[16'd1126] = 16'd104;
-    memory[16'd1127] = 16'd101;
-    memory[16'd1128] = 16'd114;
-    memory[16'd1129] = 16'd110;
-    memory[16'd1130] = 16'd101;
-    memory[16'd1131] = 16'd116;
-    memory[16'd1132] = 16'd32;
-    memory[16'd1133] = 16'd77;
-    memory[16'd1134] = 16'd111;
-    memory[16'd1135] = 16'd110;
-    memory[16'd1136] = 16'd105;
-    memory[16'd1137] = 16'd116;
-    memory[16'd1138] = 16'd111;
-    memory[16'd1139] = 16'd114;
-    memory[16'd1140] = 16'd0;
+    memory[16'd94] = 16'd105;
+    memory[16'd95] = 16'd112;
+    memory[16'd96] = 16'd0;
+    memory[16'd97] = 16'd97;
+    memory[16'd98] = 16'd100;
+    memory[16'd99] = 16'd100;
+    memory[16'd100] = 16'd114;
+    memory[16'd101] = 16'd101;
+    memory[16'd102] = 16'd115;
+    memory[16'd103] = 16'd115;
+    memory[16'd104] = 16'd32;
+    memory[16'd105] = 16'd103;
+    memory[16'd106] = 16'd111;
+    memory[16'd107] = 16'd111;
+    memory[16'd108] = 16'd100;
+    memory[16'd109] = 16'd0;
+    memory[16'd110] = 16'd105;
+    memory[16'd111] = 16'd99;
+    memory[16'd112] = 16'd109;
+    memory[16'd113] = 16'd112;
+    memory[16'd114] = 16'd0;
+    memory[16'd115] = 16'd112;
+    memory[16'd116] = 16'd105;
+    memory[16'd117] = 16'd110;
+    memory[16'd118] = 16'd103;
+    memory[16'd119] = 16'd95;
+    memory[16'd120] = 16'd114;
+    memory[16'd121] = 16'd101;
+    memory[16'd122] = 16'd113;
+    memory[16'd123] = 16'd117;
+    memory[16'd124] = 16'd101;
+    memory[16'd125] = 16'd115;
+    memory[16'd126] = 16'd116;
+    memory[16'd127] = 16'd0;
+    memory[16'd128] = 16'd97;
+    memory[16'd129] = 16'd114;
+    memory[16'd130] = 16'd112;
+    memory[16'd131] = 16'd0;
+    memory[16'd132] = 16'd111;
+    memory[16'd133] = 16'd116;
+    memory[16'd134] = 16'd104;
+    memory[16'd135] = 16'd101;
+    memory[16'd136] = 16'd114;
+    memory[16'd137] = 16'd0;
+    memory[16'd1162] = 16'd69;
+    memory[16'd1163] = 16'd116;
+    memory[16'd1164] = 16'd104;
+    memory[16'd1165] = 16'd101;
+    memory[16'd1166] = 16'd114;
+    memory[16'd1167] = 16'd110;
+    memory[16'd1168] = 16'd101;
+    memory[16'd1169] = 16'd116;
+    memory[16'd1170] = 16'd32;
+    memory[16'd1171] = 16'd77;
+    memory[16'd1172] = 16'd111;
+    memory[16'd1173] = 16'd110;
+    memory[16'd1174] = 16'd105;
+    memory[16'd1175] = 16'd116;
+    memory[16'd1176] = 16'd111;
+    memory[16'd1177] = 16'd114;
+    memory[16'd1178] = 16'd0;
   end
 
 
@@ -192,8 +262,8 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
         register_12 <= 16'd1029;
         register_31 <= 16'd49320;
         register_32 <= 16'd257;
-        program_counter <= 16'd194;
-        register_41 <= 16'd1;
+        program_counter <= 16'd397;
+        register_62 <= 16'd1;
       end
 
       16'd1:
@@ -208,68 +278,68 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd3:
       begin
-        register_46 <= register_3;
+        register_67 <= register_3;
       end
 
       16'd4:
       begin
-        register_46 <= $signed(register_46) + $signed(register_2);
+        register_67 <= $signed(register_67) + $signed(register_2);
       end
 
       16'd5:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
       16'd6:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
       16'd7:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
       16'd8:
       begin
-        register_46 <= $signed(register_46) != $signed(16'd0);
+        register_67 <= $signed(register_67) != $signed(16'd0);
       end
 
       16'd9:
       begin
-        if (register_46 == 16'h0000)
+        if (register_67 == 16'h0000)
           program_counter <= 19;
       end
 
       16'd10:
       begin
-        register_46 <= register_3;
+        register_67 <= register_3;
       end
 
       16'd11:
       begin
-        register_46 <= $signed(register_46) + $signed(register_2);
+        register_67 <= $signed(register_67) + $signed(register_2);
       end
 
       16'd12:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
       16'd13:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
       16'd14:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
       16'd15:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 15;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -280,17 +350,17 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd16:
       begin
-        register_46 <= register_3;
+        register_67 <= register_3;
       end
 
       16'd17:
       begin
-        register_46 <= $signed(register_46) + $signed(16'd1);
+        register_67 <= $signed(register_67) + $signed(16'd1);
       end
 
       16'd18:
       begin
-        register_3 <= register_46;
+        register_3 <= register_67;
         program_counter <= 16'd20;
       end
 
@@ -312,17 +382,17 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd22:
       begin
-        register_46 <= register_6;
+        register_67 <= register_6;
       end
 
       16'd23:
       begin
-        register_46 <= $signed(register_46) > $signed(16'd9);
+        register_67 <= $signed(register_67) > $signed(16'd9);
       end
 
       16'd24:
       begin
-        if (register_46 == 16'h0000)
+        if (register_67 == 16'h0000)
           program_counter <= 28;
       end
 
@@ -372,12 +442,12 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd33:
       begin
-        register_46 <= register_5;
+        register_67 <= register_5;
       end
 
       16'd34:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 34;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -405,12 +475,12 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd38:
       begin
-        register_46 <= register_5;
+        register_67 <= register_5;
       end
 
       16'd39:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 39;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -421,12 +491,12 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd40:
       begin
-        register_46 <= 16'd32;
+        register_67 <= 16'd32;
       end
 
       16'd41:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 41;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -454,12 +524,12 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd45:
       begin
-        register_46 <= register_5;
+        register_67 <= register_5;
       end
 
       16'd46:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 46;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -482,12 +552,12 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd49:
       begin
-        register_46 <= register_5;
+        register_67 <= register_5;
       end
 
       16'd50:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 50;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -498,12 +568,12 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd51:
       begin
-        register_46 <= 16'd32;
+        register_67 <= 16'd32;
       end
 
       16'd52:
       begin
-        s_output_rs232_tx <= register_46;
+        s_output_rs232_tx <= register_67;
         program_counter <= 52;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
@@ -532,7 +602,7 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd56:
       begin
-        register_46 <= register_1;
+        register_67 <= register_1;
         register_17 <= 16'd0;
         register_18 <= 16'd0;
         register_19 <= 16'd0;
@@ -540,7 +610,7 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd57:
       begin
-        register_46 <= input_eth_rx;
+        register_67 <= input_eth_rx;
         program_counter <= 57;
         s_input_eth_rx_ack <= 1'b1;
        if (s_input_eth_rx_ack == 1'b1 && input_eth_rx_stb == 1'b1) begin
@@ -551,41 +621,41 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd58:
       begin
-        register_17 <= register_46;
-        register_46 <= 16'd0;
+        register_17 <= register_67;
+        register_67 <= 16'd0;
       end
 
       16'd59:
       begin
-        register_18 <= register_46;
-        register_46 <= 16'd0;
+        register_18 <= register_67;
+        register_67 <= 16'd0;
       end
 
       16'd60:
       begin
-        register_19 <= register_46;
+        register_19 <= register_67;
       end
 
       16'd61:
       begin
-        register_46 <= register_19;
-        register_47 <= register_17;
+        register_67 <= register_19;
+        register_68 <= register_17;
       end
 
       16'd62:
       begin
-        register_46 <= $signed(register_46) < $signed(register_47);
+        register_67 <= $signed(register_67) < $signed(register_68);
       end
 
       16'd63:
       begin
-        if (register_46 == 16'h0000)
+        if (register_67 == 16'h0000)
           program_counter <= 73;
       end
 
       16'd64:
       begin
-        register_46 <= input_eth_rx;
+        register_67 <= input_eth_rx;
         program_counter <= 64;
         s_input_eth_rx_ack <= 1'b1;
        if (s_input_eth_rx_ack == 1'b1 && input_eth_rx_stb == 1'b1) begin
@@ -596,427 +666,1594 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
 
       16'd65:
       begin
-        register_47 <= register_18;
+        register_68 <= register_18;
       end
 
       16'd66:
       begin
-        register_47 <= $signed(register_47) + $signed(register_15);
+        register_68 <= $signed(register_68) + $signed(register_15);
       end
 
       16'd67:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_18;
+        register_67 <= register_18;
       end
 
       16'd68:
       begin
-        register_46 <= $signed(register_46) + $signed(16'd1);
+        register_67 <= $signed(register_67) + $signed(16'd1);
       end
 
       16'd69:
       begin
-        register_18 <= register_46;
+        register_18 <= register_67;
       end
 
       16'd70:
       begin
-        register_46 <= register_19;
+        register_67 <= register_19;
       end
 
       16'd71:
       begin
-        register_46 <= $signed(register_46) + $signed(16'd2);
+        register_67 <= $signed(register_67) + $signed(16'd2);
       end
 
       16'd72:
       begin
-        register_19 <= register_46;
+        register_19 <= register_67;
         program_counter <= 16'd61;
       end
 
       16'd73:
       begin
+        register_67 <= 16'd0;
+        register_68 <= register_10;
+      end
+
+      16'd74:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_15);
+      end
+
+      16'd75:
+      begin
+        address <= register_67;
+      end
+
+      16'd76:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd77:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd78:
+      begin
+        register_67 <= $signed(register_67) != $signed(register_68);
+      end
+
+      16'd79:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 86;
+      end
+
+      16'd80:
+      begin
+        register_67 <= 16'd0;
+      end
+
+      16'd81:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_15);
+      end
+
+      16'd82:
+      begin
+        address <= register_67;
+      end
+
+      16'd83:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd84:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd85:
+      begin
+        register_67 <= $signed(register_67) != $signed(16'd65535);
+      end
+
+      16'd86:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 89;
+      end
+
+      16'd87:
+      begin
+        program_counter <= 16'd57;
+      end
+
+      16'd88:
+      begin
+        program_counter <= 16'd89;
+      end
+
+      16'd89:
+      begin
+        register_67 <= 16'd1;
+        register_68 <= register_11;
+      end
+
+      16'd90:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_15);
+      end
+
+      16'd91:
+      begin
+        address <= register_67;
+      end
+
+      16'd92:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd93:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd94:
+      begin
+        register_67 <= $signed(register_67) != $signed(register_68);
+      end
+
+      16'd95:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 102;
+      end
+
+      16'd96:
+      begin
+        register_67 <= 16'd1;
+      end
+
+      16'd97:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_15);
+      end
+
+      16'd98:
+      begin
+        address <= register_67;
+      end
+
+      16'd99:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd100:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd101:
+      begin
+        register_67 <= $signed(register_67) != $signed(16'd65535);
+      end
+
+      16'd102:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 105;
+      end
+
+      16'd103:
+      begin
+        program_counter <= 16'd57;
+      end
+
+      16'd104:
+      begin
+        program_counter <= 16'd105;
+      end
+
+      16'd105:
+      begin
+        register_67 <= 16'd2;
+        register_68 <= register_12;
+      end
+
+      16'd106:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_15);
+      end
+
+      16'd107:
+      begin
+        address <= register_67;
+      end
+
+      16'd108:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd109:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd110:
+      begin
+        register_67 <= $signed(register_67) != $signed(register_68);
+      end
+
+      16'd111:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 118;
+      end
+
+      16'd112:
+      begin
+        register_67 <= 16'd2;
+      end
+
+      16'd113:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_15);
+      end
+
+      16'd114:
+      begin
+        address <= register_67;
+      end
+
+      16'd115:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd116:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd117:
+      begin
+        register_67 <= $signed(register_67) != $signed(16'd65535);
+      end
+
+      16'd118:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 121;
+      end
+
+      16'd119:
+      begin
+        program_counter <= 16'd57;
+      end
+
+      16'd120:
+      begin
+        program_counter <= 16'd121;
+      end
+
+      16'd121:
+      begin
+        program_counter <= 16'd123;
+      end
+
+      16'd122:
+      begin
+        program_counter <= 16'd57;
+      end
+
+      16'd123:
+      begin
         register_14 <= register_17;
         program_counter <= register_13;
       end
 
-      16'd74:
+      16'd124:
       begin
         register_28 <= 16'd0;
         register_29 <= 16'd0;
         register_30 <= 16'd8;
       end
 
-      16'd75:
+      16'd125:
       begin
         register_2 <= register_30;
         program_counter <= 16'd2;
-        register_0 <= 16'd76;
+        register_0 <= 16'd126;
       end
 
-      16'd76:
+      16'd126:
       begin
-        register_46 <= register_1;
-        register_47 <= 16'd0;
+        register_67 <= register_1;
+        register_68 <= 16'd0;
       end
 
-      16'd77:
+      16'd127:
       begin
-        register_46 <= register_24;
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_67 <= register_24;
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd78:
+      16'd128:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_25;
-        register_47 <= 16'd1;
+        register_67 <= register_25;
+        register_68 <= 16'd1;
       end
 
-      16'd79:
+      16'd129:
       begin
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd80:
+      16'd130:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_26;
-        register_47 <= 16'd2;
+        register_67 <= register_26;
+        register_68 <= 16'd2;
       end
 
-      16'd81:
+      16'd131:
       begin
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd82:
+      16'd132:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_10;
-        register_47 <= 16'd3;
+        register_67 <= register_10;
+        register_68 <= 16'd3;
       end
 
-      16'd83:
+      16'd133:
       begin
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd84:
+      16'd134:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_11;
-        register_47 <= 16'd4;
+        register_67 <= register_11;
+        register_68 <= 16'd4;
       end
 
-      16'd85:
+      16'd135:
       begin
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd86:
+      16'd136:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_12;
-        register_47 <= 16'd5;
+        register_67 <= register_12;
+        register_68 <= 16'd5;
       end
 
-      16'd87:
+      16'd137:
       begin
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd88:
+      16'd138:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_27;
-        register_47 <= 16'd6;
+        register_67 <= register_27;
+        register_68 <= 16'd6;
       end
 
-      16'd89:
+      16'd139:
       begin
-        register_47 <= $signed(register_47) + $signed(register_22);
+        register_68 <= $signed(register_68) + $signed(register_22);
       end
 
-      16'd90:
+      16'd140:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_23;
+        register_67 <= register_23;
       end
 
-      16'd91:
+      16'd141:
       begin
-        s_output_eth_tx <= register_46;
-        program_counter <= 91;
+        s_output_eth_tx <= register_67;
+        program_counter <= 141;
         s_output_eth_tx_stb <= 1'b1;
         if (s_output_eth_tx_stb == 1'b1 && output_eth_tx_ack == 1'b1) begin
           s_output_eth_tx_stb <= 1'b0;
-          program_counter <= 92;
+          program_counter <= 142;
         end
       end
 
-      16'd92:
+      16'd142:
       begin
-        register_46 <= 16'd0;
+        register_67 <= 16'd0;
       end
 
-      16'd93:
+      16'd143:
       begin
-        register_29 <= register_46;
-        register_46 <= 16'd0;
+        register_29 <= register_67;
+        register_67 <= 16'd0;
       end
 
-      16'd94:
+      16'd144:
       begin
-        register_28 <= register_46;
+        register_28 <= register_67;
       end
 
-      16'd95:
+      16'd145:
       begin
-        register_46 <= register_28;
-        register_47 <= register_23;
+        register_67 <= register_28;
+        register_68 <= register_23;
       end
 
-      16'd96:
+      16'd146:
       begin
-        register_46 <= $signed(register_46) < $signed(register_47);
+        register_67 <= $signed(register_67) < $signed(register_68);
       end
 
-      16'd97:
+      16'd147:
       begin
-        if (register_46 == 16'h0000)
-          program_counter <= 110;
+        if (register_67 == 16'h0000)
+          program_counter <= 160;
       end
 
-      16'd98:
+      16'd148:
       begin
-        register_46 <= register_29;
+        register_67 <= register_29;
       end
 
-      16'd99:
+      16'd149:
       begin
-        register_46 <= $signed(register_46) + $signed(register_22);
+        register_67 <= $signed(register_67) + $signed(register_22);
       end
 
-      16'd100:
+      16'd150:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd101:
+      16'd151:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd102:
+      16'd152:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd103:
+      16'd153:
       begin
-        s_output_eth_tx <= register_46;
-        program_counter <= 103;
+        s_output_eth_tx <= register_67;
+        program_counter <= 153;
         s_output_eth_tx_stb <= 1'b1;
         if (s_output_eth_tx_stb == 1'b1 && output_eth_tx_ack == 1'b1) begin
           s_output_eth_tx_stb <= 1'b0;
-          program_counter <= 104;
+          program_counter <= 154;
         end
       end
 
-      16'd104:
+      16'd154:
       begin
-        register_46 <= register_29;
+        register_67 <= register_29;
       end
 
-      16'd105:
+      16'd155:
       begin
-        register_46 <= $signed(register_46) + $signed(16'd1);
+        register_67 <= $signed(register_67) + $signed(16'd1);
       end
 
-      16'd106:
+      16'd156:
       begin
-        register_29 <= register_46;
+        register_29 <= register_67;
       end
 
-      16'd107:
+      16'd157:
       begin
-        register_46 <= register_28;
+        register_67 <= register_28;
       end
 
-      16'd108:
+      16'd158:
       begin
-        register_46 <= $signed(register_46) + $signed(16'd2);
+        register_67 <= $signed(register_67) + $signed(16'd2);
       end
 
-      16'd109:
+      16'd159:
       begin
-        register_28 <= register_46;
-        program_counter <= 16'd95;
+        register_28 <= register_67;
+        program_counter <= 16'd145;
       end
 
-      16'd110:
+      16'd160:
       begin
         register_21 <= 16'd0;
         program_counter <= register_20;
       end
 
-      16'd111:
+      16'd161:
       begin
-        register_36 <= 16'd16;
-        register_37 <= 16'd80;
+        register_40 <= 16'd16;
       end
 
-      16'd112:
+      16'd162:
       begin
-        register_2 <= register_37;
+        register_2 <= register_40;
         program_counter <= 16'd2;
-        register_0 <= 16'd113;
+        register_0 <= 16'd163;
       end
 
-      16'd113:
+      16'd163:
       begin
-        register_46 <= register_1;
+        register_67 <= register_1;
+        register_41 <= 16'd0;
+        register_42 <= 16'd0;
+        register_68 <= 16'd7;
       end
 
-      16'd114:
+      16'd164:
       begin
-        register_15 <= register_35;
+        register_67 <= 16'd17664;
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd165:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_36;
+        register_68 <= 16'd8;
+      end
+
+      16'd166:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd20);
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd167:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= 16'd0;
+        register_68 <= 16'd9;
+      end
+
+      16'd168:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd169:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= 16'd16384;
+        register_68 <= 16'd10;
+      end
+
+      16'd170:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd171:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_37;
+        register_68 <= 16'd11;
+      end
+
+      16'd172:
+      begin
+        register_67 <= $signed(16'd65280) | $signed(register_67);
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd173:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= 16'd0;
+        register_68 <= 16'd12;
+      end
+
+      16'd174:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd175:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_31;
+        register_68 <= 16'd13;
+      end
+
+      16'd176:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd177:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_32;
+        register_68 <= 16'd14;
+      end
+
+      16'd178:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd179:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_38;
+        register_68 <= 16'd15;
+      end
+
+      16'd180:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd181:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_39;
+        register_68 <= 16'd16;
+      end
+
+      16'd182:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd183:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_36;
+      end
+
+      16'd184:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd20);
+      end
+
+      16'd185:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd7);
+      end
+
+      16'd186:
+      begin
+        register_41 <= register_67;
+        register_67 <= 16'd10;
+      end
+
+      16'd187:
+      begin
+        s_output_checksum <= register_67;
+        program_counter <= 187;
+        s_output_checksum_stb <= 1'b1;
+        if (s_output_checksum_stb == 1'b1 && output_checksum_ack == 1'b1) begin
+          s_output_checksum_stb <= 1'b0;
+          program_counter <= 188;
+        end
+      end
+
+      16'd188:
+      begin
+        register_67 <= 16'd7;
+      end
+
+      16'd189:
+      begin
+        register_42 <= register_67;
+      end
+
+      16'd190:
+      begin
+        register_67 <= register_42;
+      end
+
+      16'd191:
+      begin
+        register_67 <= $signed(register_67) <= $signed(16'd16);
+      end
+
+      16'd192:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 202;
+      end
+
+      16'd193:
+      begin
+        register_67 <= register_42;
+      end
+
+      16'd194:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_35);
+      end
+
+      16'd195:
+      begin
+        address <= register_67;
+      end
+
+      16'd196:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd197:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd198:
+      begin
+        s_output_checksum <= register_67;
+        program_counter <= 198;
+        s_output_checksum_stb <= 1'b1;
+        if (s_output_checksum_stb == 1'b1 && output_checksum_ack == 1'b1) begin
+          s_output_checksum_stb <= 1'b0;
+          program_counter <= 199;
+        end
+      end
+
+      16'd199:
+      begin
+        register_67 <= register_42;
+      end
+
+      16'd200:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd1);
+      end
+
+      16'd201:
+      begin
+        register_42 <= register_67;
+        program_counter <= 16'd190;
+      end
+
+      16'd202:
+      begin
+        register_67 <= input_checksum;
+        program_counter <= 202;
+        s_input_checksum_ack <= 1'b1;
+       if (s_input_checksum_ack == 1'b1 && input_checksum_stb == 1'b1) begin
+          s_input_checksum_ack <= 1'b0;
+          program_counter <= 16'd203;
+        end
+      end
+
+      16'd203:
+      begin
+        register_68 <= 16'd12;
+      end
+
+      16'd204:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_35);
+      end
+
+      16'd205:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_41;
+      end
+
+      16'd206:
+      begin
+        register_67 <= $signed(register_67) < $signed(16'd64);
+      end
+
+      16'd207:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 210;
+      end
+
+      16'd208:
+      begin
+        register_67 <= 16'd64;
+      end
+
+      16'd209:
+      begin
+        register_41 <= register_67;
+        program_counter <= 16'd210;
+      end
+
+      16'd210:
+      begin
+        register_22 <= register_35;
+        register_23 <= register_41;
+        register_24 <= 16'd27888;
+        register_25 <= 16'd18847;
+        register_26 <= 16'd24971;
+        register_27 <= 16'd2048;
+        program_counter <= 16'd124;
+        register_20 <= 16'd211;
+      end
+
+      16'd211:
+      begin
+        register_67 <= register_21;
+        register_34 <= 16'd0;
+        program_counter <= register_33;
+      end
+
+      16'd212:
+      begin
+        register_46 <= 16'd23;
+        register_47 <= 16'd0;
+        register_48 <= 16'd0;
+        register_49 <= 16'd0;
+        register_50 <= 16'd0;
+        register_51 <= 16'd0;
+        register_52 <= 16'd0;
+        register_53 <= 16'd0;
+        register_54 <= 16'd0;
+        register_55 <= 16'd87;
+      end
+
+      16'd213:
+      begin
+        register_2 <= register_55;
+        program_counter <= 16'd2;
+        register_0 <= 16'd214;
+      end
+
+      16'd214:
+      begin
+        register_67 <= register_1;
+      end
+
+      16'd215:
+      begin
+        register_15 <= register_45;
         program_counter <= 16'd54;
-        register_13 <= 16'd115;
+        register_13 <= 16'd216;
       end
 
-      16'd115:
+      16'd216:
       begin
-        register_46 <= register_14;
+        register_67 <= register_14;
       end
 
-      16'd116:
+      16'd217:
       begin
-        register_23 <= register_46;
-        register_46 <= 16'd6;
+        register_41 <= register_67;
+        register_67 <= 16'd6;
       end
 
-      16'd117:
+      16'd218:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
+        register_67 <= $signed(register_67) + $signed(register_45);
       end
 
-      16'd118:
+      16'd219:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd119:
+      16'd220:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd120:
+      16'd221:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd121:
+      16'd222:
       begin
-        register_46 <= $signed(register_46) == $signed(16'd2048);
+        register_67 <= $signed(register_67) == $signed(16'd2048);
       end
 
-      16'd122:
+      16'd223:
       begin
-        if (register_46 == 16'h0000)
-          program_counter <= 126;
+        if (register_67 == 16'h0000)
+          program_counter <= 329;
       end
 
-      16'd123:
+      16'd224:
       begin
-        register_38 <= 16'd87;
+        register_56 <= 16'd94;
       end
 
-      16'd124:
+      16'd225:
       begin
-        register_2 <= register_38;
+        register_2 <= register_56;
         program_counter <= 16'd2;
-        register_0 <= 16'd125;
+        register_0 <= 16'd226;
       end
 
-      16'd125:
+      16'd226:
       begin
-        register_46 <= register_1;
-        program_counter <= 16'd192;
+        register_67 <= register_1;
       end
 
-      16'd126:
+      16'd227:
       begin
-        register_46 <= 16'd6;
+        register_67 <= 16'd7;
       end
 
-      16'd127:
+      16'd228:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
+        register_67 <= $signed(register_67) + $signed(register_45);
       end
 
-      16'd128:
+      16'd229:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd129:
+      16'd230:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd130:
+      16'd231:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd131:
+      16'd232:
       begin
-        register_46 <= $signed(register_46) == $signed(16'd2054);
+        register_67 <= $signed(register_67) >>> $signed(16'd8);
       end
 
-      16'd132:
+      16'd233:
       begin
-        if (register_46 == 16'h0000)
-          program_counter <= 189;
+        register_67 <= $signed(register_67) & $signed(16'd15);
       end
 
-      16'd133:
+      16'd234:
       begin
-        register_39 <= 16'd90;
+        register_67 <= $signed(register_67) << $signed(16'd1);
       end
 
-      16'd134:
+      16'd235:
       begin
-        register_2 <= register_39;
+        register_49 <= register_67;
+        register_67 <= 16'd7;
+      end
+
+      16'd236:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= register_49;
+      end
+
+      16'd237:
+      begin
+        address <= register_67;
+        register_68 <= $signed(register_68) * $signed(16'd4);
+      end
+
+      16'd238:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd239:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd240:
+      begin
+        register_67 <= $signed(register_67) & $signed(16'd255);
+      end
+
+      16'd241:
+      begin
+        register_48 <= register_67;
+        register_67 <= register_49;
+      end
+
+      16'd242:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd7);
+      end
+
+      16'd243:
+      begin
+        register_50 <= register_67;
+        register_67 <= register_48;
+      end
+
+      16'd244:
+      begin
+        register_67 <= $signed(register_67) - $signed(register_68);
+        register_68 <= register_31;
+      end
+
+      16'd245:
+      begin
+        register_51 <= register_67;
+        register_67 <= 16'd15;
+      end
+
+      16'd246:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+      end
+
+      16'd247:
+      begin
+        address <= register_67;
+      end
+
+      16'd248:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd249:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd250:
+      begin
+        register_67 <= $signed(register_67) != $signed(register_68);
+      end
+
+      16'd251:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 254;
+      end
+
+      16'd252:
+      begin
+        program_counter <= 16'd215;
+      end
+
+      16'd253:
+      begin
+        program_counter <= 16'd254;
+      end
+
+      16'd254:
+      begin
+        register_67 <= 16'd16;
+        register_68 <= register_32;
+      end
+
+      16'd255:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+      end
+
+      16'd256:
+      begin
+        address <= register_67;
+      end
+
+      16'd257:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd258:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd259:
+      begin
+        register_67 <= $signed(register_67) != $signed(register_68);
+      end
+
+      16'd260:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 263;
+      end
+
+      16'd261:
+      begin
+        program_counter <= 16'd215;
+      end
+
+      16'd262:
+      begin
+        program_counter <= 16'd263;
+      end
+
+      16'd263:
+      begin
+        register_57 <= 16'd97;
+      end
+
+      16'd264:
+      begin
+        register_2 <= register_57;
         program_counter <= 16'd2;
-        register_0 <= 16'd135;
+        register_0 <= 16'd265;
       end
 
-      16'd135:
+      16'd265:
       begin
-        register_46 <= register_1;
-        register_47 <= 16'd7;
-        register_22 <= register_36;
+        register_67 <= register_1;
+        register_9 <= 16'd11;
+      end
+
+      16'd266:
+      begin
+        register_9 <= $signed(register_9) + $signed(register_45);
+      end
+
+      16'd267:
+      begin
+        address <= register_9;
+      end
+
+      16'd268:
+      begin
+        register_9 <= data_out;
+      end
+
+      16'd269:
+      begin
+        register_9 <= data_out;
+        program_counter <= 16'd30;
+        register_7 <= 16'd270;
+      end
+
+      16'd270:
+      begin
+        register_67 <= register_8;
+      end
+
+      16'd271:
+      begin
+        register_67 <= 16'd11;
+      end
+
+      16'd272:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+      end
+
+      16'd273:
+      begin
+        address <= register_67;
+      end
+
+      16'd274:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd275:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd276:
+      begin
+        register_67 <= $signed(register_67) & $signed(16'd255);
+      end
+
+      16'd277:
+      begin
+        register_67 <= $signed(register_67) == $signed(16'd1);
+      end
+
+      16'd278:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 328;
+      end
+
+      16'd279:
+      begin
+        register_58 <= 16'd110;
+      end
+
+      16'd280:
+      begin
+        register_2 <= register_58;
+        program_counter <= 16'd2;
+        register_0 <= 16'd281;
+      end
+
+      16'd281:
+      begin
+        register_67 <= register_1;
+      end
+
+      16'd282:
+      begin
+        register_67 <= register_50;
+      end
+
+      16'd283:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+      end
+
+      16'd284:
+      begin
+        address <= register_67;
+      end
+
+      16'd285:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd286:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd287:
+      begin
+        register_67 <= $signed(register_67) == $signed(16'd2048);
+      end
+
+      16'd288:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 327;
+      end
+
+      16'd289:
+      begin
+        register_59 <= 16'd115;
+      end
+
+      16'd290:
+      begin
+        register_2 <= register_59;
+        program_counter <= 16'd2;
+        register_0 <= 16'd291;
+      end
+
+      16'd291:
+      begin
+        register_67 <= register_1;
+      end
+
+      16'd292:
+      begin
+        register_67 <= register_50;
+      end
+
+      16'd293:
+      begin
+        register_53 <= register_67;
+        register_67 <= 16'd17;
+      end
+
+      16'd294:
+      begin
+        register_54 <= register_67;
+        register_9 <= register_53;
+        program_counter <= 16'd30;
+        register_7 <= 16'd295;
+      end
+
+      16'd295:
+      begin
+        register_67 <= register_8;
+        register_9 <= register_54;
+        program_counter <= 16'd30;
+        register_7 <= 16'd296;
+      end
+
+      16'd296:
+      begin
+        register_67 <= register_8;
+      end
+
+      16'd297:
+      begin
+        register_67 <= 16'd0;
+      end
+
+      16'd298:
+      begin
+        register_52 <= register_67;
+      end
+
+      16'd299:
+      begin
+        register_67 <= register_52;
+        register_68 <= register_51;
+      end
+
+      16'd300:
+      begin
+        register_67 <= $signed(register_67) < $signed(register_68);
+      end
+
+      16'd301:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 315;
+      end
+
+      16'd302:
+      begin
+        register_67 <= register_53;
+        register_68 <= register_54;
+      end
+
+      16'd303:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= $signed(register_68) + $signed(register_46);
+      end
+
+      16'd304:
+      begin
+        address <= register_67;
+      end
+
+      16'd305:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd306:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd307:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= register_54;
+      end
+
+      16'd308:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd1);
+      end
+
+      16'd309:
+      begin
+        register_54 <= register_67;
+        register_67 <= register_53;
+      end
+
+      16'd310:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd1);
+      end
+
+      16'd311:
+      begin
+        register_53 <= register_67;
+      end
+
+      16'd312:
+      begin
+        register_67 <= register_52;
+      end
+
+      16'd313:
+      begin
+        register_67 <= $signed(register_67) + $signed(16'd2);
+      end
+
+      16'd314:
+      begin
+        register_52 <= register_67;
+        program_counter <= 16'd299;
+      end
+
+      16'd315:
+      begin
+        register_67 <= 16'd0;
+        register_68 <= 16'd17;
+        register_35 <= register_46;
+        register_36 <= register_48;
+        register_37 <= 16'd1;
+        register_38 <= 16'd13;
+        register_39 <= 16'd14;
+      end
+
+      16'd316:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_46);
+        register_38 <= $signed(register_38) + $signed(register_45);
+        register_39 <= $signed(register_39) + $signed(register_45);
+      end
+
+      16'd317:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+        register_67 <= 16'd0;
+        register_68 <= 16'd18;
+      end
+
+      16'd318:
+      begin
+        register_68 <= $signed(register_68) + $signed(register_46);
+      end
+
+      16'd319:
+      begin
+        address <= register_68;
+        data_in <= register_67;
+        write_enable <= 1'b1;
+      end
+
+      16'd320:
+      begin
+        address <= register_38;
+      end
+
+      16'd321:
+      begin
+        register_38 <= data_out;
+      end
+
+      16'd322:
+      begin
+        register_38 <= data_out;
+      end
+
+      16'd323:
+      begin
+        address <= register_39;
+      end
+
+      16'd324:
+      begin
+        register_39 <= data_out;
+      end
+
+      16'd325:
+      begin
+        register_39 <= data_out;
+        program_counter <= 16'd161;
+        register_33 <= 16'd326;
+      end
+
+      16'd326:
+      begin
+        register_67 <= register_34;
+        program_counter <= 16'd327;
+      end
+
+      16'd327:
+      begin
+        program_counter <= 16'd328;
+      end
+
+      16'd328:
+      begin
+        program_counter <= 16'd395;
+      end
+
+      16'd329:
+      begin
+        register_67 <= 16'd6;
+      end
+
+      16'd330:
+      begin
+        register_67 <= $signed(register_67) + $signed(register_45);
+      end
+
+      16'd331:
+      begin
+        address <= register_67;
+      end
+
+      16'd332:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd333:
+      begin
+        register_67 <= data_out;
+      end
+
+      16'd334:
+      begin
+        register_67 <= $signed(register_67) == $signed(16'd2054);
+      end
+
+      16'd335:
+      begin
+        if (register_67 == 16'h0000)
+          program_counter <= 392;
+      end
+
+      16'd336:
+      begin
+        register_60 <= 16'd128;
+      end
+
+      16'd337:
+      begin
+        register_2 <= register_60;
+        program_counter <= 16'd2;
+        register_0 <= 16'd338;
+      end
+
+      16'd338:
+      begin
+        register_67 <= register_1;
+        register_68 <= 16'd7;
+        register_22 <= register_46;
         register_23 <= 16'd64;
         register_24 <= 16'd11;
         register_25 <= 16'd12;
@@ -1024,534 +2261,518 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
         register_27 <= 16'd2054;
       end
 
-      16'd136:
+      16'd339:
       begin
-        register_46 <= 16'd1;
-        register_47 <= $signed(register_47) + $signed(register_36);
-        register_24 <= $signed(register_24) + $signed(register_35);
-        register_25 <= $signed(register_25) + $signed(register_35);
-        register_26 <= $signed(register_26) + $signed(register_35);
+        register_67 <= 16'd1;
+        register_68 <= $signed(register_68) + $signed(register_46);
+        register_24 <= $signed(register_24) + $signed(register_45);
+        register_25 <= $signed(register_25) + $signed(register_45);
+        register_26 <= $signed(register_26) + $signed(register_45);
       end
 
-      16'd137:
+      16'd340:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd2048;
-        register_47 <= 16'd8;
+        register_67 <= 16'd2048;
+        register_68 <= 16'd8;
       end
 
-      16'd138:
+      16'd341:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd139:
+      16'd342:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd1540;
-        register_47 <= 16'd9;
+        register_67 <= 16'd1540;
+        register_68 <= 16'd9;
       end
 
-      16'd140:
+      16'd343:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd141:
+      16'd344:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd2;
-        register_47 <= 16'd10;
+        register_67 <= 16'd2;
+        register_68 <= 16'd10;
       end
 
-      16'd142:
+      16'd345:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd143:
+      16'd346:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_10;
-        register_47 <= 16'd11;
+        register_67 <= register_10;
+        register_68 <= 16'd11;
       end
 
-      16'd144:
+      16'd347:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd145:
+      16'd348:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_11;
-        register_47 <= 16'd12;
+        register_67 <= register_11;
+        register_68 <= 16'd12;
       end
 
-      16'd146:
+      16'd349:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd147:
+      16'd350:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_12;
-        register_47 <= 16'd13;
+        register_67 <= register_12;
+        register_68 <= 16'd13;
       end
 
-      16'd148:
+      16'd351:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd149:
+      16'd352:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_31;
-        register_47 <= 16'd14;
+        register_67 <= register_31;
+        register_68 <= 16'd14;
       end
 
-      16'd150:
+      16'd353:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd151:
+      16'd354:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= register_32;
-        register_47 <= 16'd15;
+        register_67 <= register_32;
+        register_68 <= 16'd15;
       end
 
-      16'd152:
+      16'd355:
       begin
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd153:
+      16'd356:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd11;
-        register_47 <= 16'd16;
+        register_67 <= 16'd11;
+        register_68 <= 16'd16;
       end
 
-      16'd154:
+      16'd357:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd155:
+      16'd358:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd156:
+      16'd359:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd157:
+      16'd360:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd158:
+      16'd361:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd12;
-        register_47 <= 16'd17;
+        register_67 <= 16'd12;
+        register_68 <= 16'd17;
       end
 
-      16'd159:
+      16'd362:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd160:
+      16'd363:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd161:
+      16'd364:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd162:
+      16'd365:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd163:
+      16'd366:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd13;
-        register_47 <= 16'd18;
+        register_67 <= 16'd13;
+        register_68 <= 16'd18;
       end
 
-      16'd164:
+      16'd367:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd165:
+      16'd368:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd166:
+      16'd369:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd167:
+      16'd370:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd168:
+      16'd371:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd14;
-        register_47 <= 16'd19;
+        register_67 <= 16'd14;
+        register_68 <= 16'd19;
       end
 
-      16'd169:
+      16'd372:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd170:
+      16'd373:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd171:
+      16'd374:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd172:
+      16'd375:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd173:
+      16'd376:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
-        register_46 <= 16'd15;
-        register_47 <= 16'd20;
+        register_67 <= 16'd15;
+        register_68 <= 16'd20;
       end
 
-      16'd174:
+      16'd377:
       begin
-        register_46 <= $signed(register_46) + $signed(register_35);
-        register_47 <= $signed(register_47) + $signed(register_36);
+        register_67 <= $signed(register_67) + $signed(register_45);
+        register_68 <= $signed(register_68) + $signed(register_46);
       end
 
-      16'd175:
+      16'd378:
       begin
-        address <= register_46;
+        address <= register_67;
       end
 
-      16'd176:
+      16'd379:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd177:
+      16'd380:
       begin
-        register_46 <= data_out;
+        register_67 <= data_out;
       end
 
-      16'd178:
+      16'd381:
       begin
-        address <= register_47;
-        data_in <= register_46;
+        address <= register_68;
+        data_in <= register_67;
         write_enable <= 1'b1;
       end
 
-      16'd179:
+      16'd382:
       begin
         address <= register_24;
       end
 
-      16'd180:
+      16'd383:
       begin
         register_24 <= data_out;
       end
 
-      16'd181:
+      16'd384:
       begin
         register_24 <= data_out;
       end
 
-      16'd182:
+      16'd385:
       begin
         address <= register_25;
       end
 
-      16'd183:
+      16'd386:
       begin
         register_25 <= data_out;
       end
 
-      16'd184:
+      16'd387:
       begin
         register_25 <= data_out;
       end
 
-      16'd185:
+      16'd388:
       begin
         address <= register_26;
       end
 
-      16'd186:
+      16'd389:
       begin
         register_26 <= data_out;
       end
 
-      16'd187:
+      16'd390:
       begin
         register_26 <= data_out;
-        program_counter <= 16'd74;
-        register_20 <= 16'd188;
+        program_counter <= 16'd124;
+        register_20 <= 16'd391;
       end
 
-      16'd188:
+      16'd391:
       begin
-        register_46 <= register_21;
-        program_counter <= 16'd192;
+        register_67 <= register_21;
+        program_counter <= 16'd395;
       end
 
-      16'd189:
+      16'd392:
       begin
-        register_40 <= 16'd94;
+        register_61 <= 16'd132;
       end
 
-      16'd190:
+      16'd393:
       begin
-        register_2 <= register_40;
+        register_2 <= register_61;
         program_counter <= 16'd2;
-        register_0 <= 16'd191;
+        register_0 <= 16'd394;
       end
 
-      16'd191:
+      16'd394:
       begin
-        register_46 <= register_1;
+        register_67 <= register_1;
       end
 
-      16'd192:
+      16'd395:
       begin
-        program_counter <= 16'd114;
+        program_counter <= 16'd215;
       end
 
-      16'd193:
+      16'd396:
       begin
-        register_34 <= register_23;
-        program_counter <= register_33;
+        register_44 <= register_41;
+        program_counter <= register_43;
       end
 
-      16'd194:
+      16'd397:
       begin
-        register_43 <= 16'd0;
-        register_44 <= 16'd100;
-        register_46 <= 16'd13;
+        register_64 <= 16'd0;
+        register_65 <= 16'd138;
+        register_67 <= 16'd13;
       end
 
-      16'd195:
+      16'd398:
       begin
-        s_output_rs232_tx <= register_46;
-        program_counter <= 195;
+        s_output_rs232_tx <= register_67;
+        program_counter <= 398;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
           s_output_rs232_tx_stb <= 1'b0;
-          program_counter <= 196;
+          program_counter <= 399;
         end
       end
 
-      16'd196:
+      16'd399:
       begin
-        register_46 <= 16'd10;
+        register_67 <= 16'd10;
       end
 
-      16'd197:
+      16'd400:
       begin
-        s_output_rs232_tx <= register_46;
-        program_counter <= 197;
+        s_output_rs232_tx <= register_67;
+        program_counter <= 400;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
           s_output_rs232_tx_stb <= 1'b0;
-          program_counter <= 198;
+          program_counter <= 401;
         end
       end
 
-      16'd198:
+      16'd401:
       begin
-        register_45 <= 16'd1124;
+        register_66 <= 16'd1162;
       end
 
-      16'd199:
+      16'd402:
       begin
-        register_2 <= register_45;
+        register_2 <= register_66;
         program_counter <= 16'd2;
-        register_0 <= 16'd200;
+        register_0 <= 16'd403;
       end
 
-      16'd200:
+      16'd403:
       begin
-        register_46 <= register_1;
+        register_67 <= register_1;
       end
 
-      16'd201:
+      16'd404:
       begin
-        register_46 <= 16'd13;
+        register_67 <= 16'd13;
       end
 
-      16'd202:
+      16'd405:
       begin
-        s_output_rs232_tx <= register_46;
-        program_counter <= 202;
+        s_output_rs232_tx <= register_67;
+        program_counter <= 405;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
           s_output_rs232_tx_stb <= 1'b0;
-          program_counter <= 203;
+          program_counter <= 406;
         end
       end
 
-      16'd203:
+      16'd406:
       begin
-        register_46 <= 16'd10;
+        register_67 <= 16'd10;
       end
 
-      16'd204:
+      16'd407:
       begin
-        s_output_rs232_tx <= register_46;
-        program_counter <= 204;
+        s_output_rs232_tx <= register_67;
+        program_counter <= 407;
         s_output_rs232_tx_stb <= 1'b1;
         if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
           s_output_rs232_tx_stb <= 1'b0;
-          program_counter <= 205;
+          program_counter <= 408;
         end
       end
 
-      16'd205:
+      16'd408:
       begin
-        register_35 <= register_44;
-        program_counter <= 16'd111;
-        register_33 <= 16'd206;
+        register_45 <= register_65;
+        program_counter <= 16'd212;
+        register_43 <= 16'd409;
       end
 
-      16'd206:
+      16'd409:
       begin
-        register_46 <= register_34;
+        register_67 <= register_44;
       end
 
-      16'd207:
+      16'd410:
       begin
-        register_46 <= 16'd5;
+        register_67 <= 16'd5;
       end
 
-      16'd208:
+      16'd411:
       begin
-        s_output_leds <= register_46;
-        program_counter <= 208;
+        s_output_leds <= register_67;
+        program_counter <= 411;
         s_output_leds_stb <= 1'b1;
         if (s_output_leds_stb == 1'b1 && output_leds_ack == 1'b1) begin
           s_output_leds_stb <= 1'b0;
-          program_counter <= 209;
+          program_counter <= 412;
         end
       end
 
-      16'd209:
+      16'd412:
       begin
-        register_46 <= 16'd0;
+        register_67 <= 16'd5;
       end
 
-      16'd210:
+      16'd413:
       begin
-        s_output_eth_tx <= register_46;
-        program_counter <= 210;
-        s_output_eth_tx_stb <= 1'b1;
-        if (s_output_eth_tx_stb == 1'b1 && output_eth_tx_ack == 1'b1) begin
-          s_output_eth_tx_stb <= 1'b0;
-          program_counter <= 211;
+        s_output_checksum <= register_67;
+        program_counter <= 413;
+        s_output_checksum_stb <= 1'b1;
+        if (s_output_checksum_stb == 1'b1 && output_checksum_ack == 1'b1) begin
+          s_output_checksum_stb <= 1'b0;
+          program_counter <= 414;
         end
       end
 
-      16'd211:
+      16'd414:
       begin
-        register_46 <= input_eth_rx;
-        program_counter <= 211;
-        s_input_eth_rx_ack <= 1'b1;
-       if (s_input_eth_rx_ack == 1'b1 && input_eth_rx_stb == 1'b1) begin
-          s_input_eth_rx_ack <= 1'b0;
-          program_counter <= 16'd212;
-        end
-      end
-
-      16'd212:
-      begin
-        register_46 <= 16'd1;
-      end
-
-      16'd213:
-      begin
-        s_output_rs232_tx <= register_46;
-        program_counter <= 213;
-        s_output_rs232_tx_stb <= 1'b1;
-        if (s_output_rs232_tx_stb == 1'b1 && output_rs232_tx_ack == 1'b1) begin
-          s_output_rs232_tx_stb <= 1'b0;
-          program_counter <= 214;
-        end
-      end
-
-      16'd214:
-      begin
-        register_46 <= input_rs232_rx;
-        program_counter <= 214;
+        register_67 <= input_rs232_rx;
+        program_counter <= 414;
         s_input_rs232_rx_ack <= 1'b1;
        if (s_input_rs232_rx_ack == 1'b1 && input_rs232_rx_stb == 1'b1) begin
           s_input_rs232_rx_ack <= 1'b0;
-          program_counter <= 16'd215;
+          program_counter <= 16'd415;
         end
       end
 
-      16'd215:
+      16'd415:
       begin
-        register_42 <= 16'd0;
-        program_counter <= register_41;
+        register_67 <= input_checksum;
+        program_counter <= 415;
+        s_input_checksum_ack <= 1'b1;
+       if (s_input_checksum_ack == 1'b1 && input_checksum_stb == 1'b1) begin
+          s_input_checksum_ack <= 1'b0;
+          program_counter <= 16'd416;
+        end
+      end
+
+      16'd416:
+      begin
+        register_63 <= 16'd0;
+        program_counter <= register_62;
       end
 
     endcase
@@ -1559,6 +2780,7 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
       program_counter <= 0;
     end
   end
+  assign input_checksum_ack = s_input_checksum_ack;
   assign input_eth_rx_ack = s_input_eth_rx_ack;
   assign input_rs232_rx_ack = s_input_rs232_rx_ack;
   assign output_rs232_tx_stb = s_output_rs232_tx_stb;
@@ -1567,5 +2789,7 @@ module user_design(input_eth_rx,input_rs232_rx,input_eth_rx_stb,input_rs232_rx_s
   assign output_leds = s_output_leds;
   assign output_eth_tx_stb = s_output_eth_tx_stb;
   assign output_eth_tx = s_output_eth_tx;
+  assign output_checksum_stb = s_output_checksum_stb;
+  assign output_checksum = s_output_checksum;
 
 endmodule

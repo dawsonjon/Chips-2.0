@@ -123,29 +123,40 @@ architecture RTL of SP605 is
       CLK : in std_logic;
       RST : in std_logic;
 		
-		OUTPUT_LEDS : out std_logic_vector(15 downto 0);
-		OUTPUT_LEDS_STB : out std_logic;
-		OUTPUT_LEDS_ACK : in std_logic;
+      OUTPUT_LEDS : out std_logic_vector(15 downto 0);
+      OUTPUT_LEDS_STB : out std_logic;
+      OUTPUT_LEDS_ACK : in std_logic;
 
       --ETH RX STREAM
-      INPUT_ETH_RX            : in std_logic_vector(15 downto 0);
-      INPUT_ETH_RX_STB        : in std_logic;
-      INPUT_ETH_RX_ACK        : out std_logic;
+      INPUT_ETH_RX : in std_logic_vector(15 downto 0);
+      INPUT_ETH_RX_STB : in std_logic;
+      INPUT_ETH_RX_ACK : out std_logic;
 
       --ETH TX STREAM
-      output_eth_tx            : out std_logic_vector(15 downto 0);
-      OUTPUT_ETH_TX_STB        : out std_logic;
-      OUTPUT_ETH_TX_ACK        : in std_logic;
+      output_eth_tx : out std_logic_vector(15 downto 0);
+      OUTPUT_ETH_TX_STB : out std_logic;
+      OUTPUT_ETH_TX_ACK : in std_logic;
 
       --RS232 RX STREAM
-      INPUT_RS232_RX          : in std_logic_vector(15 downto 0);
-      INPUT_RS232_RX_STB      : in std_logic;
-      INPUT_RS232_RX_ACK      : out std_logic;
+      INPUT_RS232_RX : in std_logic_vector(15 downto 0);
+      INPUT_RS232_RX_STB : in std_logic;
+      INPUT_RS232_RX_ACK : out std_logic;
 
       --RS232 TX STREAM
-      OUTPUT_RS232_TX          : out std_logic_vector(15 downto 0);
-      OUTPUT_RS232_TX_STB      : out std_logic;
-      OUTPUT_RS232_TX_ACK      : in std_logic
+      OUTPUT_RS232_TX : out std_logic_vector(15 downto 0);
+      OUTPUT_RS232_TX_STB : out std_logic;
+      OUTPUT_RS232_TX_ACK : in std_logic;
+
+      --CHECKSUM HARDWARE
+      INPUT_CHECKSUM : in std_logic_vector(15 downto 0);
+      INPUT_CHECKSUM_STB : in std_logic;
+      INPUT_CHECKSUM_ACK : out std_logic;
+
+      --CHECKSUM HARDWARE
+      OUTPUT_CHECKSUM : out std_logic_vector(15 downto 0);
+      OUTPUT_CHECKSUM_STB : out std_logic;
+      OUTPUT_CHECKSUM_ACK : in std_logic
+
     );
   end component;
 
@@ -180,6 +191,21 @@ architecture RTL of SP605 is
       IN1_ACK : out std_logic
     );
   end component serial_output;
+
+  component CHECKSUM is
+    port(
+      CLK : in std_logic;
+      RST : in std_logic;
+
+      DATA_IN : in std_logic_vector(15 downto 0);
+      DATA_IN_STB : in std_logic;
+      DATA_IN_ACK : out std_logic;
+
+      DATA_OUT : out std_logic_vector(15 downto 0);
+      DATA_OUT_STB : out std_logic;
+      DATA_OUT_ACK : in std_logic
+    );
+  end component CHECKSUM;
 
   --chips signals
   signal CLK : std_logic;
@@ -229,6 +255,16 @@ architecture RTL of SP605 is
   signal OUTPUT_RS232_TX          : std_logic_vector(15 downto 0);
   signal OUTPUT_RS232_TX_STB      : std_logic;
   signal OUTPUT_RS232_TX_ACK      : std_logic;
+
+  --CHECKSUM HARDWARE
+  signal INPUT_CHECKSUM : std_logic_vector(15 downto 0);
+  signal INPUT_CHECKSUM_STB : std_logic;
+  signal INPUT_CHECKSUM_ACK : std_logic;
+
+  --CHECKSUM HARDWARE
+  signal OUTPUT_CHECKSUM : std_logic_vector(15 downto 0);
+  signal OUTPUT_CHECKSUM_STB : std_logic;
+  signal OUTPUT_CHECKSUM_ACK : std_logic;
 
 begin
 
@@ -288,7 +324,17 @@ begin
       --RS232 TX STREAM
       OUTPUT_RS232_TX => OUTPUT_RS232_TX,
       OUTPUT_RS232_TX_STB => OUTPUT_RS232_TX_STB,
-      OUTPUT_RS232_TX_ACK => OUTPUT_RS232_TX_ACK
+      OUTPUT_RS232_TX_ACK => OUTPUT_RS232_TX_ACK,
+
+      --CHECKSUM HARDWARE
+      INPUT_CHECKSUM  => INPUT_CHECKSUM,
+      INPUT_CHECKSUM_STB  => INPUT_CHECKSUM_STB,
+      INPUT_CHECKSUM_ACK  => INPUT_CHECKSUM_ACK,
+
+      --CHECKSUM HARDWARE
+      OUTPUT_CHECKSUM => OUTPUT_CHECKSUM,
+      OUTPUT_CHECKSUM_STB => OUTPUT_CHECKSUM_STB,
+      OUTPUT_CHECKSUM_ACK => OUTPUT_CHECKSUM_ACK
     );
 
   SERIAL_OUTPUT_INST_1 : serial_output generic map(
@@ -317,6 +363,18 @@ begin
       OUT1_ACK => INPUT_RS232_RX_ACK
     );
 
+  CHECKSUM_INST_1 : CHECKSUM port map(
+      CLK => CLK,
+      RST => RST,
+
+      DATA_IN => OUTPUT_CHECKSUM,
+      DATA_IN_STB => OUTPUT_CHECKSUM_STB,
+      DATA_IN_ACK => OUTPUT_CHECKSUM_ACK,
+
+      DATA_OUT => INPUT_CHECKSUM,
+      DATA_OUT_STB => INPUT_CHECKSUM_STB,
+      DATA_OUT_ACK => INPUT_CHECKSUM_ACK
+    );
 
   process
   begin

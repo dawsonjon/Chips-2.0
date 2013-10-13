@@ -36,11 +36,17 @@ int get_ethernet_packet(int packet[]){
         int number_of_bytes, index;
 	int byte;
 
-	number_of_bytes = input_eth_rx();
-	index = 0;
-	for(byte=0; byte<number_of_bytes; byte+=2){
-		packet[index] = input_eth_rx();
-		index ++;
+	while(1){
+		number_of_bytes = input_eth_rx();
+		index = 0;
+		for(byte=0; byte<number_of_bytes; byte+=2){
+			packet[index] = input_eth_rx();
+			index ++;
+		}
+		if(packet[0] != local_mac_address_hi && packet[0] != 0xffff) continue;
+		if(packet[1] != local_mac_address_med && packet[1] != 0xffff) continue;
+		if(packet[2] != local_mac_address_lo && packet[2] != 0xffff) continue;
+		break;
 	}
 	return number_of_bytes;
 }
@@ -80,13 +86,98 @@ int put_ethernet_packet(
 int local_ip_address_hi = 0xc0A8;//192/168
 int local_ip_address_lo = 0x0101;//1/1
 
+int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int ip_lo){
+	print_string("put_ip");
+	int number_of_bytes, i;
+
+        //Form IP header
+	packet[7] = 0x4500;              //Version 4 header length 5x32
+	packet[8] = (total_length + 20); //IP length + ethernet header
+	packet[9] = 0x0000;              //Identification
+	packet[10] = 0x4000;             //don't fragment
+	packet[11] = 0xFF00 | protocol;  //ttl|protocol
+	packet[12] = 0x0000;             //checksum
+	packet[13] = local_ip_address_hi;//source_high
+	packet[14] = local_ip_address_lo;//source_low
+	packet[15] = ip_hi;              //dest_high
+	packet[16] = ip_lo;              //dest_low
+	number_of_bytes = total_length + 20 + 7;
+
+	//calculate checksum
+        output_checksum(10);
+	for(i=7; i<=16; i++){
+		output_checksum(packet[i]);
+	}
+	packet[12] = input_checksum();
+
+
+	//enforce minimum ethernet frame size
+	if(number_of_bytes < 64){
+		number_of_bytes = 64;
+	}
+
+	//send packet over ethernet
+	put_ethernet_packet(
+		packet,                  //packet
+		number_of_bytes,         //number_of_bytes
+	       	0x6cf0,                  //destination mac address
+		0x499f,                  //
+		0x618b,                  //
+		0x0800);                 //protocol IPv4
+	return 0;
+}
+
 int get_ip_packet(int packet[]){
 	int tx_packet[64];
+	int ip_payload;
+	int total_length;
+	int header_length;
+	int payload_start;
+	int payload_length;
+	int i, from, to;
+
 	print_string("get_ip");
 	while(1){
 		number_of_bytes = get_ethernet_packet(packet);
 		if (packet[6] == 0x0800){ //IPv4
 			print_string("ip");
+			//check the destination address matches, and return
+			header_length = ((packet[7] >> 8) & 0xf) << 1; //in words
+			total_length = (packet[7] & 0xff); //in bytes
+			payload_start = header_length + 7; //in words
+			payload_length = total_length - (header_length * 4); //in bytes
+			if(packet[15] != local_ip_address_hi) continue;
+			if(packet[16] != local_ip_address_lo) continue;
+			print_string("address good");
+			print_hex(packet[11]);
+			if((packet[11] & 0xff) == 1){//ICMP
+				print_string("icmp");
+				if(packet[payload_start] == 0x0800){//ping request
+					print_string("ping_request");
+					from = payload_start; to = 17;
+					print_hex(from);
+					print_hex(to);
+
+					//copy icmp packet to response
+					for(i=0; i<payload_length; i+=2){
+						tx_packet[to] = packet[from];
+						to++; from++;
+					}
+
+					tx_packet[17] = 0;//ping response
+					tx_packet[18] = 0;//checksum
+
+					put_ip_packet(
+						tx_packet,
+						total_length,
+						1,//icmp
+						packet[13], //remote ip
+						packet[14]  //remote ip
+					);
+				}
+					        
+			}
+
 		} 
 		else if (packet[6] == 0x0806){ //ARP
 			print_string("arp");
@@ -132,17 +223,13 @@ int user_design()
 	output_rs232_tx(13);
 	output_rs232_tx(10);
 
-
         get_ip_packet(rx_packet);
-
-
 
 
         //dummy access to peripherals
 	output_leds(0x5);
-	output_eth_tx(0);
-	input_eth_rx();
-	output_rs232_tx(1);
+	output_checksum(0x5);
 	input_rs232_rx();
+	input_checksum();
 	return 0;
 }
