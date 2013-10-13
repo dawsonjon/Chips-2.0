@@ -34,6 +34,62 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("type_compatibility 1",
+"""
+int main(){
+  int a = 4;
+  char b = 6;
+  b = a;
+  assert(b==4);
+  return 0;
+}
+"""
+)
+
+test("type_compatibility 2",
+"""
+int main(){
+  int a[2];
+  char b[2];
+  b = a;
+  return 0;
+}
+"""
+)
+
+test("type_compatibility 3",
+"""
+int main(){
+  int a[2];
+  char b[2];
+  a = b;
+  return 0;
+}
+"""
+)
+
+test("type_compatibility 4",
+"""
+int main(){
+  long a[2];
+  char b[2];
+  a = b;
+  return 0;
+}
+"""
+)
+
+test("type_compatibility 5",
+"""
+int main(){
+  long a[2];
+  char b[2];
+  a = b;
+  return 0;
+}
+"""
+)
+
 test("string 1 a",
 """
 int main(){

@@ -1,8 +1,8 @@
 
 int main(){
-  char c[] = "a\n";
-  assert(c[0] == 97);
-  assert(c[1] == 10);
-  assert(c[2] == 0);
+  int a = 15;
+  int b = 8;
+  assert(a%b == 7);
   return 0;
 }
+
