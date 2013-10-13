@@ -1,10 +1,8 @@
 
 int main(){
-  assert(0);
-  return 0;
-}
-
-//last function is always main
-int real_main(){
+  char c[] = "a\n";
+  assert(c[0] == 97);
+  assert(c[1] == 10);
+  assert(c[2] == 0);
   return 0;
 }

@@ -436,7 +436,7 @@ class Parser:
                 if self.tokens.peek() == "=":
                     self.tokens.expect("=")
                     initializer = self.tokens.get()
-                    initializer = [ord(i) for i in initializer.strip('"')] + [0]
+                    initializer = [ord(i) for i in initializer.strip('"').decode("string_escape")] + [0]
                     size = len(initializer)
                 if size is None:
                     self.tokens.error("array size must be specified if not initialized")
@@ -627,7 +627,7 @@ class Parser:
                 self.tokens.error("%s is not a character literal"%token)
         elif token.startswith('"'):
             try:
-                initializer = [ord(i) for i in token.strip('"')] + [0]
+                initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
                 size = len(initializer)
                 initialize_memory = self.initialize_memory
                 declaration = ArrayDeclaration(self.allocator, size, "char[]", initializer, self.initialize_memory)

@@ -198,6 +198,28 @@ int main(){
 }
 """, True)
 
+test("string 7a",
+"""
+int main(){
+  char c[] = "a\\n";
+  assert(c[0] == 97);
+  assert(c[1] == 10);
+  assert(c[2] == 0);
+  return 0;
+}
+""")
+
+test("string 7b",
+"""
+int main(){
+  char c[] = "a\\n";
+  assert(c[0] == 97);
+  assert(c[1] == 10);
+  assert(c[2] == 0);
+  return 0;
+}
+""", True)
+
 test("char 1",
 """
 int main(){
