@@ -1,3 +1,23 @@
+////////////////////////////////////////////////////////////////////////////////
+// TCP-IP User Settings
+//
+
+int local_mac_address_hi = 0x0001;
+int local_mac_address_med = 0x0203;
+int local_mac_address_lo = 0x0405;
+int local_ip_address_hi = 0xc0A8;//192/168
+int local_ip_address_lo = 0x0101;//1/1
+
+////////////////////////////////////////////////////////////////////////////////
+// TCP-IP GLOBALS
+//
+
+int tx_packet[512];
+
+////////////////////////////////////////////////////////////////////////////////
+// DEBUG FUNCTIONS
+//
+
 int print_string(char value[]){
 	int i = 0;
 	while( value[i] != 0 ){
@@ -26,12 +46,6 @@ int print_hex(int value){
 ////////////////////////////////////////////////////////////////////////////////
 // Data Link Layer - Ethernet
 //
-
-int local_mac_address_hi = 0x0001;
-int local_mac_address_med = 0x0203;
-int local_mac_address_lo = 0x0405;
-
-int tx_packet[512];
 
 int put_ethernet_packet(
 		int packet[], 
@@ -116,8 +130,6 @@ int get_ethernet_packet(int packet[]){
 ////////////////////////////////////////////////////////////////////////////////
 // Network Layer - Internet Protocol
 //
-int local_ip_address_hi = 0xc0A8;//192/168
-int local_ip_address_lo = 0x0101;//1/1
 
 int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int ip_lo){
 	print_string("put_ip\n");
