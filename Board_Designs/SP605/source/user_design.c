@@ -31,28 +31,7 @@ int local_mac_address_hi = 0x0001;
 int local_mac_address_med = 0x0203;
 int local_mac_address_lo = 0x0405;
 
-int get_ethernet_packet(int packet[]){
-	print_string("get_eth\n");
-        int number_of_bytes, index;
-	int byte;
-
-	while(1){
-		number_of_bytes = input_eth_rx();
-		print_string("reading bytes: "); print_hex(number_of_bytes); print_string("\n");
-		index = 0;
-		for(byte=0; byte<number_of_bytes; byte+=2){
-			packet[index] = input_eth_rx();
-			index ++;
-		}
-		print_string("done\n");
-		if(packet[0] != local_mac_address_hi && packet[0] != 0xffff) continue;
-		if(packet[1] != local_mac_address_med && packet[1] != 0xffff) continue;
-		if(packet[2] != local_mac_address_lo && packet[2] != 0xffff) continue;
-		print_string("mac good\n");
-		break;
-	}
-	return number_of_bytes;
-}
+int tx_packet[512];
 
 int put_ethernet_packet(
 		int packet[], 
@@ -82,6 +61,57 @@ int put_ethernet_packet(
 	}
 	return 0;
 }
+
+int get_ethernet_packet(int packet[]){
+	print_string("get_eth\n");
+        int number_of_bytes, index;
+	int byte;
+
+	while(1){
+		number_of_bytes = input_eth_rx();
+		print_string("reading bytes: "); print_hex(number_of_bytes); print_string("\n");
+		index = 0;
+		for(byte=0; byte<number_of_bytes; byte+=2){
+			packet[index] = input_eth_rx();
+			index ++;
+		}
+		print_string("done\n");
+		if(packet[0] != local_mac_address_hi && packet[0] != 0xffff) continue;
+		if(packet[1] != local_mac_address_med && packet[1] != 0xffff) continue;
+		if(packet[2] != local_mac_address_lo && packet[2] != 0xffff) continue;
+		print_string("mac good\n");
+	        if (packet[6] == 0x0806){ //ARP
+			print_string("arp\n");
+
+			//construct and send an ARP response
+			tx_packet[7] = 0x0001; //HTYPE ethernet
+			tx_packet[8] = 0x0800; //PTYPE IPV4
+			tx_packet[9] = 0x0604; //HLEN, PLEN
+			tx_packet[10] = 0x0002; //OPER=REPLY
+			tx_packet[11] = local_mac_address_hi; //SENDER_HARDWARE_ADDRESS
+			tx_packet[12] = local_mac_address_med; //SENDER_HARDWARE_ADDRESS
+			tx_packet[13] = local_mac_address_lo; //SENDER_HARDWARE_ADDRESS
+			tx_packet[14] = local_ip_address_hi; //SENDER_PROTOCOL_ADDRESS
+			tx_packet[15] = local_ip_address_lo; //SENDER_PROTOCOL_ADDRESS
+			tx_packet[16] = packet[11]; //TARGET_HARDWARE_ADDRESS
+			tx_packet[17] = packet[12]; //
+			tx_packet[18] = packet[13]; //
+			tx_packet[19] = packet[14]; //TARGET_PROTOCOL_ADDRESS
+			tx_packet[20] = packet[15]; //
+			put_ethernet_packet(
+				tx_packet, 
+				64,
+				packet[11],
+		                packet[12],
+		                packet[13],
+				0x0806);
+		}
+
+		break;
+	}
+	return number_of_bytes;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Network Layer - Internet Protocol
@@ -130,7 +160,6 @@ int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int i
 }
 
 int get_ip_packet(int packet[]){
-	int tx_packet[512];
 	int ip_payload;
 	int total_length;
 	int header_length;
@@ -186,32 +215,6 @@ int get_ip_packet(int packet[]){
 				}
 					        
 			}
-
-		} else if (packet[6] == 0x0806){ //ARP
-			print_string("arp\n");
-
-			//construct and send an ARP response
-			tx_packet[7] = 0x0001; //HTYPE ethernet
-			tx_packet[8] = 0x0800; //PTYPE IPV4
-			tx_packet[9] = 0x0604; //HLEN, PLEN
-			tx_packet[10] = 0x0002; //OPER=REPLY
-			tx_packet[11] = local_mac_address_hi; //SENDER_HARDWARE_ADDRESS
-			tx_packet[12] = local_mac_address_med; //SENDER_HARDWARE_ADDRESS
-			tx_packet[13] = local_mac_address_lo; //SENDER_HARDWARE_ADDRESS
-			tx_packet[14] = local_ip_address_hi; //SENDER_PROTOCOL_ADDRESS
-			tx_packet[15] = local_ip_address_lo; //SENDER_PROTOCOL_ADDRESS
-			tx_packet[16] = packet[11]; //TARGET_HARDWARE_ADDRESS
-			tx_packet[17] = packet[12]; //
-			tx_packet[18] = packet[13]; //
-			tx_packet[19] = packet[14]; //TARGET_PROTOCOL_ADDRESS
-			tx_packet[20] = packet[15]; //
-			put_ethernet_packet(
-				tx_packet, 
-				64,
-				packet[11],
-		                packet[12],
-		                packet[13],
-				0x0806);
 
 		} else {
 			print_string("other");
