@@ -10,7 +10,7 @@
 `timescale 1ns/1ps
 module real_main;
   reg       [15:0] timer;
-  reg       [4:0] program_counter;
+  reg       [7:0] program_counter;
   reg       [15:0] address;
   reg       [15:0] data_out;
   reg       [15:0] data_in;
