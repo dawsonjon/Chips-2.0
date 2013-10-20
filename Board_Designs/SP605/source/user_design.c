@@ -90,42 +90,129 @@ int get_ethernet_packet(int packet[]){
 			index ++;
 		}
 		print_string("done\n");
+
+                //Filter out packets not meant for us
 		if(packet[0] != local_mac_address_hi && packet[0] != 0xffff) continue;
 		if(packet[1] != local_mac_address_med && packet[1] != 0xffff) continue;
 		if(packet[2] != local_mac_address_lo && packet[2] != 0xffff) continue;
 		print_string("mac good\n");
+
+                //Process ARP requests within the data link layer
 	        if (packet[6] == 0x0806){ //ARP
 			print_string("arp\n");
 
-			//construct and send an ARP response
-			tx_packet[7] = 0x0001; //HTYPE ethernet
-			tx_packet[8] = 0x0800; //PTYPE IPV4
-			tx_packet[9] = 0x0604; //HLEN, PLEN
-			tx_packet[10] = 0x0002; //OPER=REPLY
-			tx_packet[11] = local_mac_address_hi; //SENDER_HARDWARE_ADDRESS
-			tx_packet[12] = local_mac_address_med; //SENDER_HARDWARE_ADDRESS
-			tx_packet[13] = local_mac_address_lo; //SENDER_HARDWARE_ADDRESS
-			tx_packet[14] = local_ip_address_hi; //SENDER_PROTOCOL_ADDRESS
-			tx_packet[15] = local_ip_address_lo; //SENDER_PROTOCOL_ADDRESS
-			tx_packet[16] = packet[11]; //TARGET_HARDWARE_ADDRESS
-			tx_packet[17] = packet[12]; //
-			tx_packet[18] = packet[13]; //
-			tx_packet[19] = packet[14]; //TARGET_PROTOCOL_ADDRESS
-			tx_packet[20] = packet[15]; //
-			put_ethernet_packet(
-				tx_packet, 
-				64,
-				packet[11],
-		                packet[12],
-		                packet[13],
-				0x0806);
+			//respond to requests
+			if (packet[10] == 0x0001){
+				//construct and send an ARP response
+				tx_packet[7] = 0x0001; //HTYPE ethernet
+				tx_packet[8] = 0x0800; //PTYPE IPV4
+				tx_packet[9] = 0x0604; //HLEN, PLEN
+				tx_packet[10] = 0x0002; //OPER=REPLY
+				tx_packet[11] = local_mac_address_hi; //SENDER_HARDWARE_ADDRESS
+				tx_packet[12] = local_mac_address_med; //SENDER_HARDWARE_ADDRESS
+				tx_packet[13] = local_mac_address_lo; //SENDER_HARDWARE_ADDRESS
+				tx_packet[14] = local_ip_address_hi; //SENDER_PROTOCOL_ADDRESS
+				tx_packet[15] = local_ip_address_lo; //SENDER_PROTOCOL_ADDRESS
+				tx_packet[16] = packet[11]; //TARGET_HARDWARE_ADDRESS
+				tx_packet[17] = packet[12]; //
+				tx_packet[18] = packet[13]; //
+				tx_packet[19] = packet[14]; //TARGET_PROTOCOL_ADDRESS
+				tx_packet[20] = packet[15]; //
+				put_ethernet_packet(
+					tx_packet, 
+					64,
+					packet[11],
+					packet[12],
+					packet[13],
+					0x0806);
+			}
+			continue;
 		}
-
 		break;
 	}
 	return number_of_bytes;
 }
 
+int arp_ip_hi[16];
+int arp_ip_lo[16];
+int arp_mac_0[16];
+int arp_mac_1[16];
+int arp_mac_2[16];
+int arp_pointer = 0;
+
+//return the location of the ip address in the arp cache table
+int get_arp_cache(int ip_hi, int ip_lo){
+
+        int number_of_bytes;
+	int byte;
+	int packet[16];
+	int i;
+
+	//Is the requested IP in the ARP cache?
+	for(i=0; i<16; i++){
+		if(arp_ip_hi[i] == ip_hi && arp_ip_lo[i] == ip_lo){
+			print_string("cache hit\n");
+			return i;
+		}
+	}
+
+	print_string("cache miss\n");
+        //It is not, so send an arp request
+	tx_packet[7] = 0x0001; //HTYPE ethernet
+	tx_packet[8] = 0x0800; //PTYPE IPV4
+	tx_packet[9] = 0x0604; //HLEN, PLEN
+	tx_packet[10] = 0x0001; //OPER=REQUEST
+	tx_packet[11] = local_mac_address_hi; //SENDER_HARDWARE_ADDRESS
+	tx_packet[12] = local_mac_address_med; //SENDER_HARDWARE_ADDRESS
+	tx_packet[13] = local_mac_address_lo; //SENDER_HARDWARE_ADDRESS
+	tx_packet[14] = local_ip_address_hi; //SENDER_PROTOCOL_ADDRESS
+	tx_packet[15] = local_ip_address_lo; //SENDER_PROTOCOL_ADDRESS
+	tx_packet[19] = ip_hi; //TARGET_PROTOCOL_ADDRESS
+	tx_packet[20] = ip_lo; //
+	put_ethernet_packet(
+		tx_packet, 
+		64,
+		0xffff, //broadcast via ethernet
+		0xffff,
+		0xffff,
+		0x0806);
+
+	print_string("arp request\n");
+
+        //wait for a response
+	while(1){
+
+		number_of_bytes = input_eth_rx();
+		i = 0;
+		for(byte=0; byte<number_of_bytes; byte+=2){
+			//only keep the part of the packet we care about
+			if(i < 16){
+				packet[i] = input_eth_rx();
+			} else {
+				input_eth_rx();
+			}
+			i++;
+		}
+		print_string("got_packet\n");
+
+                //Process ARP requests within the data link layer
+	        if (packet[6] == 0x0806 && packet[10] == 0x0002){
+			print_string("arp response\n");
+			if (packet[14] == ip_hi && packet[15] == ip_lo){
+				print_string("updating cache\n");
+				arp_ip_hi[arp_pointer] = ip_hi;
+				arp_ip_lo[arp_pointer] = ip_lo;
+				arp_mac_0[arp_pointer] = packet[11];
+				arp_mac_1[arp_pointer] = packet[12];
+				arp_mac_2[arp_pointer] = packet[13];
+				i = arp_pointer;
+				arp_pointer++;
+				if(arp_pointer == 16) arp_pointer = 0;
+				return i;
+			}
+		}
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Network Layer - Internet Protocol
@@ -133,7 +220,10 @@ int get_ethernet_packet(int packet[]){
 
 int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int ip_lo){
 	print_string("put_ip\n");
-	int number_of_bytes, i;
+	int number_of_bytes, i, arp_cache;
+
+	//see if the requested IP address is in the arp cache
+	arp_cache = get_arp_cache(ip_hi, ip_lo);
 
         //Form IP header
 	packet[7] = 0x4500;              //Version 4 header length 5x32
@@ -164,9 +254,9 @@ int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int i
 	put_ethernet_packet(
 		packet,                  //packet
 		number_of_bytes,         //number_of_bytes
-	       	0x6cf0,                  //destination mac address
-		0x499f,                  //
-		0x618b,                  //
+	       	arp_mac_0[arp_cache],    //destination mac address
+		arp_mac_1[arp_cache],    //
+		arp_mac_2[arp_cache],    //
 		0x0800);                 //protocol IPv4
 	return 0;
 }
