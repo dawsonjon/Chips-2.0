@@ -24,7 +24,7 @@ module arbiter(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,outp
   output    input_a_ack;
   output    input_b_ack;
   reg       [15:0] timer;
-  reg       [13:0] program_counter;
+  reg       [15:0] program_counter;
   reg       [15:0] address;
   reg       [15:0] data_out;
   reg       [15:0] data_in;

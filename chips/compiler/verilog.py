@@ -11,6 +11,17 @@ def unique(l):
 
   return dict(zip(l, l)).keys()
 
+def log2(frames):
+
+  """Integer only algorithm to calculate the number of bits needed to store a number"""
+
+  bits = 1
+  power = 2
+  while power < frames:
+      bits += 1
+      power *= 2
+  return power
+
 def generate_CHIP(input_file, 
                   name, 
                   frames, 
@@ -107,10 +118,11 @@ def generate_CHIP(input_file,
       division_wires = [ ]
       division_parameters = [ ]
 
+
   #create list of signals
   signals = [
     ("timer", 16),
-    ("program_counter", len(frames)),
+    ("program_counter", log2(len(frames))),
     ("address", 16),
     ("data_out", 16),
     ("data_in", 16),
