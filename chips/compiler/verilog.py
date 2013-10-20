@@ -20,7 +20,7 @@ def log2(frames):
   while power < frames:
       bits += 1
       power *= 2
-  return power
+  return bits
 
 def generate_CHIP(input_file, 
                   name, 
