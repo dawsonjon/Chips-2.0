@@ -1,0 +1,66 @@
+NET  clk_p            LOC = K21  | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE;
+NET  clk_n            LOC = K22  | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE;
+
+Net rst LOC= H8 | IOSTANDARD = LVCMOS15;
+## System level constraints
+Net rst TIG;
+
+## RS232 PORT
+Net RS232_RX LOC=H17 | IOSTANDARD = LVCMOS25;
+Net RS232_TX LOC=B21 | IOSTANDARD = LVCMOS25;
+
+##
+#NET "GPIO_BUTTONS<0>"               LOC = "F3";    ## 2   on SW4 pushbutton (active-high)
+#NET "GPIO_BUTTONS<1>"               LOC = "G6";    ## 2   on SW7 pushbutton (active-high)
+#NET "GPIO_BUTTONS<2>"               LOC = "F5";    ## 2   on SW5 pushbutton (active-high)
+#NET "GPIO_BUTTONS<3>"               LOC = "C1";    ## 2   on SW8 pushbutton (active-high)
+
+##
+#NET "GPIO_HEADER<0>"                LOC = "G7";    ## 1   on U52 (level shifter, U52.20 <-> GPIO_HEADER_0 <-> series R280 200 ohm <-> 1 on J55
+#NET "GPIO_HEADER<1>"                LOC = "H6";    ## 3   on U52 (level shifter, U52.18 <-> GPIO_HEADER_0 <-> series R281 200 ohm <-> 2 on J55
+#NET "GPIO_HEADER<2>"                LOC = "D1";    ## 4   on U52 (level shifter, U52.17 <-> GPIO_HEADER_0 <-> series R282 200 ohm <-> 3 on J55
+#NET "GPIO_HEADER<3>"                LOC = "R7";    ## 5   on U52 (level shifter, U52.16 <-> GPIO_HEADER_0 <-> series R283 200 ohm <-> 4 on J55
+
+##
+NET "GPIO_LEDS<0>"                  LOC = "D17";   ## 2   on DS3 LED
+NET "GPIO_LEDS<1>"                  LOC = "AB4";   ## 2   on DS4 LED
+NET "GPIO_LEDS<2>"                  LOC = "D21";   ## 2   on DS5 LED
+NET "GPIO_LEDS<3>"                  LOC = "W15";   ## 2   on DS6 LED
+
+##
+#NET "GPIO_SWITCHES<0>"               LOC = "C18";   ## 1   on S2 DIP switch (active-high)
+#NET "GPIO_SWITCHES<1>"              LOC = "Y6";    ## 2   on S2 DIP switch (active-high)
+#NET "GPIO_SWITCHES<2>"               LOC = "W6";    ## 3   on S2 DIP switch (active-high)
+#NET "GPIO_SWITCHES<3>"               LOC = "E4";    ## 4   on S2 DIP switch (active-high)
+
+##
+NET "RXCLK"                       LOC = "P20";   ## 7   ON U46
+NET "PHY_RESET"                   LOC = "J22";   ## 36  ON U46
+NET "RXDV"                        LOC = "T22";   ## 4   on U46
+NET "RXER"                        LOC = "U20";   ## 8   on U46
+NET "RXD<0>"                      LOC = "P19";   ## 3   on U46
+NET "RXD<1>"                      LOC = "Y22";   ## 128 on U46
+NET "RXD<2>"                      LOC = "Y21";   ## 126 on U46
+NET "RXD<3>"                      LOC = "W22";   ## 125 on U46
+NET "RXD<4>"                      LOC = "W20";   ## 124 on U46
+NET "RXD<5>"                      LOC = "V22";   ## 123 on U46
+NET "RXD<6>"                      LOC = "V21";   ## 121 on U46
+NET "RXD<7>"                      LOC = "U22";   ## 120 on U46
+NET "TXCLK"                       LOC = "L20";   ## 10  on U46
+NET "TXEN"                        LOC = "T8";    ## 16  on U46
+NET "GTXCLK"                      LOC = "AB7";   ## 14  on U46
+NET "TXD<0>"                      LOC = "U10";   ## 18  on U46
+NET "TXD<1>"                      LOC = "T10";   ## 19  on U46
+NET "TXD<2>"                      LOC = "AB8";   ## 20  on U46
+NET "TXD<3>"                      LOC = "AA8";   ## 24  on U46
+NET "TXD<4>"                      LOC = "AB9";   ## 25  on U46
+NET "TXD<5>"                      LOC = "Y9";    ## 26  on U46
+NET "TXD<6>"                      LOC = "Y12";   ## 28  on U46
+NET "TXD<7>"                      LOC = "W12";   ## 29  on U46
+NET "TXER"                        LOC = "U8";    ## 13  on U46
+
+NET "CLK_P" TNM_NET = "CLK_P";
+TIMESPEC "TS_CLK_P" = PERIOD "CLK_P" 5.0 ns HIGH 50% INPUT_JITTER 50.0ps;
+
+NET "RXCLK" TNM_NET = "RXCLK";
+TIMESPEC "TS_RXCLK" = PERIOD "RXCLK" 8000 ps HIGH 50 %;
