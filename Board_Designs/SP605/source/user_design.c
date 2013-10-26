@@ -7,6 +7,7 @@ int local_mac_address_med = 0x0203;
 int local_mac_address_lo = 0x0405;
 int local_ip_address_hi = 0xc0A8;//192/168
 int local_ip_address_lo = 0x0101;//1/1
+int local_port = 23;//telnet
 
 ////////////////////////////////////////////////////////////////////////////////
 // TCP-IP GLOBALS
@@ -43,6 +44,22 @@ int print_hex(int value){
 	return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// UTILITY FUNCTIONS
+//
+
+typedef struct int_32 {int hi, int lo};
+
+int double_add(int a_hi, int a_lo, int b_hi, int b_lo){
+	int result_lo = a_lo + b_lo;
+	int result_hi = a_hi + b_hi;
+	if((a_lo | b_lo) & 0x8000){
+		if(!(result_lo & 0x8000)){
+			result_hi += 1;
+		}
+	}
+}
+			
 ////////////////////////////////////////////////////////////////////////////////
 // Data Link Layer - Ethernet
 //
@@ -92,8 +109,11 @@ int get_ethernet_packet(int packet[]){
 		print_string("done\n");
 
                 //Filter out packets not meant for us
+		print_hex(packet[0]); print_string("\n");
 		if(packet[0] != local_mac_address_hi && packet[0] != 0xffff) continue;
+		print_hex(packet[1]); print_string("\n");
 		if(packet[1] != local_mac_address_med && packet[1] != 0xffff) continue;
+		print_hex(packet[2]); print_string("\n");
 		if(packet[2] != local_mac_address_lo && packet[2] != 0xffff) continue;
 		print_string("mac good\n");
 
@@ -227,7 +247,7 @@ int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int i
 
         //Form IP header
 	packet[7] = 0x4500;              //Version 4 header length 5x32
-	packet[8] = total_length;        //IP length + ethernet header
+	packet[8] = total_length;        //IP data + header
 	packet[9] = 0x0000;              //Identification
 	packet[10] = 0x4000;             //don't fragment
 	packet[11] = 0xFF00 | protocol;  //ttl|protocol
@@ -316,23 +336,232 @@ int get_ip_packet(int packet[]){
 					);
 				}
 					        
+			} else if((packet[11] & 0xff) == 6){//TCP
+				return number_of_bytes;
 			}
-
 		} else {
 			print_string("other");
 		}
 	}
-	return number_of_bytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Transport Layer - TCP
+//
+
+int remote_ip_hi, remote_ip_lo;
+
+int tx_source=0;
+int tx_dest=0;
+int tx_seq_hi=0;
+int tx_seq_lo=0;
+int tx_ack_hi=0;
+int tx_ack_lo=0;
+int tx_window=255;
+
+int tx_fin_flag=0;
+int tx_syn_flag=0;
+int tx_rst_flag=0;
+int tx_psh_flag=0;
+int tx_ack_flag=0;
+int tx_urg_flag=0;
+
+int rx_source=0;
+int rx_dest=0;
+int rx_seq_hi=0;
+int rx_seq_lo=0;
+int rx_ack_hi=0;
+int rx_ack_lo=0;
+int rx_window=0;
+
+int rx_fin_flag=0;
+int rx_syn_flag=0;
+int rx_rst_flag=0;
+int rx_psh_flag=0;
+int rx_ack_flag=0;
+int rx_urg_flag=0;
+
+int put_tcp_packet(int tx_packet [], int tx_length){
+
+	print_string("put tcp\n");
+
+        int payload_start = 17;
+	int checksum_length;
+	int packet_length;
+	int index;
+
+	//encode TCP header
+	tx_packet[payload_start + 0] = tx_source;
+	tx_packet[payload_start + 1] = tx_dest;
+	tx_packet[payload_start + 2] = tx_seq_hi;
+	tx_packet[payload_start + 3] = tx_seq_lo;
+	tx_packet[payload_start + 4] = tx_ack_hi;
+	tx_packet[payload_start + 5] = tx_ack_lo;
+	tx_packet[payload_start + 6] = 0x5000; //5 long words
+	tx_packet[payload_start + 7] = tx_window;
+	tx_packet[payload_start + 8] = 0;
+	tx_packet[payload_start + 9] = 0;
+
+
+	//encode flags
+	
+	if(tx_fin_flag) tx_packet[payload_start + 6] |= 0x01;
+	if(tx_syn_flag) tx_packet[payload_start + 6] |= 0x02;
+	if(tx_rst_flag) tx_packet[payload_start + 6] |= 0x04;
+	if(tx_psh_flag) tx_packet[payload_start + 6] |= 0x08;
+	if(tx_ack_flag) tx_packet[payload_start + 6] |= 0x10;
+	if(tx_urg_flag) tx_packet[payload_start + 6] |= 0x20;
+
+	//calculate checksum
+	//length of payload + header + pseudo_header in words
+	checksum_length = (tx_length + 20 + 12 + 1) >> 1; 
+        output_checksum(checksum_length);
+        output_checksum(local_ip_address_hi);
+        output_checksum(local_ip_address_lo);
+        output_checksum(remote_ip_hi);
+        output_checksum(remote_ip_lo);
+        output_checksum(0x0006);
+        output_checksum(tx_length+20);//tcp_header + tcp_payload in bytes
+
+	packet_length = (tx_length + 20 + 1) >> 1; 
+	index = payload_start;
+	for(i=0; i<packet_length; i++){
+		output_checksum(tx_packet[index]);
+		index++;
+	}
+	tx_packet[payload_start + 8] = input_checksum();
+
+	put_ip_packet(
+		tx_packet,
+		tx_length + 40,
+		6,//tcp
+		remote_ip_hi, //remote ip
+		remote_ip_lo  //remote ip
+	);
+	return 0;
+}
+
+int get_tcp_packet(int rx_packet []){
+
+	print_string("get tcp\n");
+
+        int number_of_bytes, header_length, payload_start, total_length, payload_length, payload_end, tcp_header_length, rx_length;
+
+	number_of_bytes = get_ip_packet(rx_packet);
+
+	//decode lengths from the IP header
+	header_length = ((rx_packet[7] >> 8) & 0xf) << 1;                  //in words
+	payload_start = header_length + 7;                                 //in words
+	total_length = rx_packet[8];                                       //in bytes
+	payload_length = ((total_length+1) >> 1) - header_length;          //in words
+	payload_end = payload_start + payload_length - 1;                  //in words
+	tcp_header_length = ((rx_packet[payload_start + 6] & 0xf000)>>11); //in words
+	rx_length = payload_length - tcp_header_length;                    //in words
+
+	//decode TCP header
+	rx_source = rx_packet[payload_start + 0];
+	rx_dest   = rx_packet[payload_start + 1];
+	rx_seq_hi = rx_packet[payload_start + 2];
+	rx_seq_lo = rx_packet[payload_start + 3];
+	rx_ack_hi = rx_packet[payload_start + 4];
+	rx_ack_lo = rx_packet[payload_start + 5];
+	rx_window = rx_packet[payload_start + 7];
+
+	print_string("source: "); print_hex(rx_source); print_string("\n");
+	print_string("dest: "); print_hex(rx_dest); print_string("\n");
+	print_string("seq_hi: "); print_hex(rx_seq_hi); print_string("\n");
+	print_string("seq_lo: "); print_hex(rx_seq_lo); print_string("\n");
+	print_string("ack_hi: "); print_hex(rx_ack_hi); print_string("\n");
+	print_string("ack_lo: "); print_hex(rx_ack_lo); print_string("\n");
+	print_string("window: "); print_hex(rx_window); print_string("\n");
+
+	//decode flags
+	rx_fin_flag = rx_packet[payload_start + 6] & 0x01;
+	rx_syn_flag = rx_packet[payload_start + 6] & 0x02;
+	rx_rst_flag = rx_packet[payload_start + 6] & 0x04;
+	rx_psh_flag = rx_packet[payload_start + 6] & 0x08;
+	rx_ack_flag = rx_packet[payload_start + 6] & 0x10;
+	rx_urg_flag = rx_packet[payload_start + 6] & 0x20;
+
+	print_string("flags: "); print_hex(rx_packet[payload_start + 6]); print_string("\n");
+	return 0;
+
+
 }
 
 int user_design()
 {
 
-	int i = 0;
 	int rx_packet[1024];
+	int tx_packet[1024];
+	int tx_start = 27;
+	int listen = 1;
+	int syn_rxd = 2;
+	int established = 3;
+	int state = listen;
+
 
 	print_string("\nEthernet Monitor\n");
-        get_ip_packet(rx_packet);
+
+
+        while(1){ 
+
+		if(state == listen){
+
+			print_string("waiting for connection\n");
+			get_tcp_packet(rx_packet);
+			if(rx_syn_flag){
+				print_string("incomming connection from: ");
+				print_hex(rx_packet[13]);
+				print_hex(rx_packet[14]);
+				print_string("\n");
+
+				remote_ip_hi = rx_packet[13];
+				remote_ip_lo = rx_packet[14];
+				tx_dest = rx_source;
+				tx_source = local_port;
+
+				tx_ack_lo = rx_seq_lo + 1;
+				tx_ack_hi = rx_seq_hi;
+
+				tx_syn_flag = 1;
+				tx_ack_flag = 1;
+				state = syn_rxd;
+				put_tcp_packet(tx_packet, 0);
+			}
+
+		} else if(state == syn_rxd){
+
+			print_string("waiting for acknowledgement\n");
+			get_tcp_packet(rx_packet);
+			if(rx_ack_flag){
+				state = established;
+				tx_syn_flag = 0;
+			}
+
+		} else if(state == established) {
+
+			print_string("connection established\n");
+
+			//transfer client data to the application
+			//tcp_get_packet(rx_packet);
+		//	if(rx_length){
+		//		application_put_data(rx_packet, rx_start, rx_length);
+		//		tx_ack = rx_seq + rx_length;
+		//		tx_ack_flag = 1;
+			//}
+
+			//transfer application data to the client
+		//	if(rx_ack == tx_seq + tx_length){
+		//		tx_seq = rx_ack + rx_window;
+		//		tx_length = rx_window;
+		//		application_get_data(tx_packet, tx_start, tx_length);
+				//tcp_put_packet(tx_packet, 255);
+			//}
+
+		}
+
+	}
 
 
         //dummy access to peripherals
