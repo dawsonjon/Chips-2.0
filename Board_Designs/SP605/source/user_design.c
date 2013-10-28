@@ -367,7 +367,7 @@ int tx_dest=0;
 int tx_seq[2];
 int next_tx_seq[2];
 int tx_ack[2];
-int tx_window=255;
+int tx_window=1460; //ethernet MTU - 40 bytes for TCP/IP header
 
 int tx_fin_flag=0;
 int tx_syn_flag=0;
@@ -480,14 +480,6 @@ int get_tcp_packet(int rx_packet []){
 	rx_ack[0] = rx_packet[payload_start + 5];
 	rx_window = rx_packet[payload_start + 7];
 
-	//print_string("source: "); print_hex(rx_source); print_string("\n");
-	//print_string("dest: "); print_hex(rx_dest); print_string("\n");
-	//print_string("seq_hi: "); print_hex(rx_seq[1]); print_string("\n");
-	//print_string("seq_lo: "); print_hex(rx_seq[0]); print_string("\n");
-	//print_string("ack_hi: "); print_hex(rx_ack[1]); print_string("\n");
-	//print_string("ack_lo: "); print_hex(rx_ack[0]); print_string("\n");
-	//print_string("window: "); print_hex(rx_window); print_string("\n");
-
 	//decode flags
 	rx_fin_flag = rx_packet[payload_start + 6] & 0x01;
 	rx_syn_flag = rx_packet[payload_start + 6] & 0x02;
@@ -595,7 +587,7 @@ int user_design()
 
 		} else if(state == syn_rxd){
 
-			get_tcp_packet(rx_packet);
+		 	get_tcp_packet(rx_packet);
 			if(rx_ack_flag){
 				print_string("connection established\n");
 				state = established;
@@ -645,12 +637,7 @@ int user_design()
 					//TODO check tx_length < rx_window
 				}
 
-				//timeout
-				//timer--;
-				//if(new_rx_data || new_tx_data || timer == 0){
-					put_tcp_packet(tx_packet, tx_length);
-					//timer = 10000;
-				//}
+				put_tcp_packet(tx_packet, tx_length);
 
 			}
 
@@ -666,6 +653,11 @@ int user_design()
 			}
 
 			//TODO, retry if no acknowledgement
+		}
+
+		if(rx_rst_flag){
+			print_string("connection reset by client\n");
+		       	state = listen;
 		}
 
 
