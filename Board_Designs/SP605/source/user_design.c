@@ -19,30 +19,31 @@ int tx_packet[512];
 // DEBUG FUNCTIONS
 //
 
-int print_string(char value[]){
-	int i = 0;
-	while( value[i] != 0 ){
-		output_rs232_tx(value[i]);
-		i++;
-	}
+//int print_string(char value[]){
+//	int i = 0;
+//	while( value[i] != 0 ){
+//		output_rs232_tx(value[i]);
+//		i++;
+//	}
+//
+//	return 0;
+//}
 
-	return 0;
-}
+//int nibble_to_hex(int nibble){
+//	if( nibble > 9 ) return nibble + ('a' - 10);
+//	return nibble + '0';
+//}
 
-int nibble_to_hex(int nibble){
-	if( nibble > 9 ) return nibble + ('a' - 10);
-	return nibble + '0';
-}
-
-int print_hex(int value){
-	output_rs232_tx(nibble_to_hex((value >> 12) & 0xf));
-	output_rs232_tx(nibble_to_hex((value >> 8)  & 0xf));
-	output_rs232_tx(' ');
-	output_rs232_tx(nibble_to_hex((value >> 4)  & 0xf));
-	output_rs232_tx(nibble_to_hex((value     )  & 0xf));
-	output_rs232_tx(' ');
-	return 0;
-}
+//int print_hex(int value){
+//
+//	output_rs232_tx(nibble_to_hex((value >> 12) & 0xf));
+//	output_rs232_tx(nibble_to_hex((value >> 8)  & 0xf));
+//	output_rs232_tx(' ');
+//	output_rs232_tx(nibble_to_hex((value >> 4)  & 0xf));
+//	output_rs232_tx(nibble_to_hex((value     )  & 0xf));
+//	output_rs232_tx(' ');
+//	return 0;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITY FUNCTIONS
@@ -84,7 +85,6 @@ int put_ethernet_packet(
 		int protocol){
 
         int byte, index;
-	print_string("put_eth\n");
 
         //set up ethernet header
 	packet[0] = destination_mac_address_hi;
@@ -105,32 +105,25 @@ int put_ethernet_packet(
 }
 
 int get_ethernet_packet(int packet[]){
-	print_string("get_eth\n");
+
         int number_of_bytes, index;
 	int byte;
 
 	while(1){
 		number_of_bytes = input_eth_rx();
-		//print_string("reading bytes: "); print_hex(number_of_bytes); print_string("\n");
 		index = 0;
 		for(byte=0; byte<number_of_bytes; byte+=2){
 			packet[index] = input_eth_rx();
 			index ++;
 		}
-		//print_string("done\n");
 
                 //Filter out packets not meant for us
-		//print_hex(packet[0]); print_string("\n");
 		if(packet[0] != local_mac_address_hi && packet[0] != 0xffff) continue;
-		//print_hex(packet[1]); print_string("\n");
 		if(packet[1] != local_mac_address_med && packet[1] != 0xffff) continue;
-		//print_hex(packet[2]); print_string("\n");
 		if(packet[2] != local_mac_address_lo && packet[2] != 0xffff) continue;
-		//print_string("mac good\n");
 
                 //Process ARP requests within the data link layer
 	        if (packet[6] == 0x0806){ //ARP
-			//print_string("arp\n");
 
 			//respond to requests
 			if (packet[10] == 0x0001){
@@ -182,12 +175,10 @@ int get_arp_cache(int ip_hi, int ip_lo){
 	//Is the requested IP in the ARP cache?
 	for(i=0; i<16; i++){
 		if(arp_ip_hi[i] == ip_hi && arp_ip_lo[i] == ip_lo){
-			//print_string("cache hit\n");
 			return i;
 		}
 	}
 
-	//print_string("cache miss\n");
         //It is not, so send an arp request
 	tx_packet[7] = 0x0001; //HTYPE ethernet
 	tx_packet[8] = 0x0800; //PTYPE IPV4
@@ -208,8 +199,6 @@ int get_arp_cache(int ip_hi, int ip_lo){
 		0xffff,
 		0x0806);
 
-	//print_string("arp request\n");
-
         //wait for a response
 	while(1){
 
@@ -224,13 +213,10 @@ int get_arp_cache(int ip_hi, int ip_lo){
 			}
 			i++;
 		}
-		//print_string("got_packet\n");
 
                 //Process ARP requests within the data link layer
 	        if (packet[6] == 0x0806 && packet[10] == 0x0002){
-			//print_string("arp response\n");
 			if (packet[14] == ip_hi && packet[15] == ip_lo){
-				//print_string("updating cache\n");
 				arp_ip_hi[arp_pointer] = ip_hi;
 				arp_ip_lo[arp_pointer] = ip_lo;
 				arp_mac_0[arp_pointer] = packet[11];
@@ -250,7 +236,6 @@ int get_arp_cache(int ip_hi, int ip_lo){
 //
 
 int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int ip_lo){
-	print_string("put_ip\n");
 	int number_of_bytes, i, arp_cache;
 
 	//see if the requested IP address is in the arp cache
@@ -301,16 +286,13 @@ int get_ip_packet(int packet[]){
 	int i, from, to;
 	int payload_end;
 
-	print_string("get_ip\n");
 	while(1){
 		number_of_bytes = get_ethernet_packet(packet);
 
 		if (packet[6] == 0x0800){ //IPv4
-			//print_string("ip\n");
 			//check the destination address matches, and return
 			if(packet[15] != local_ip_address_hi) continue;
 			if(packet[16] != local_ip_address_lo) continue;
-			//print_string("ip address good\n");
 			if((packet[11] & 0xff) == 1){//ICMP
 
 				header_length = ((packet[7] >> 8) & 0xf) << 1;                   //in words
@@ -319,9 +301,7 @@ int get_ip_packet(int packet[]){
 				payload_length = ((total_length+1) >> 1) - header_length;        //in words
 				payload_end = payload_start + payload_length - 1;                //in words
 
-				//print_string("icmp\n");
 				if(packet[payload_start] == 0x0800){//ping request
-					//print_string("ping_request\n");
 
 					//copy icmp packet to response
 					to = 19;//assume that 17 and 18 are 0
@@ -350,8 +330,6 @@ int get_ip_packet(int packet[]){
 			} else if((packet[11] & 0xff) == 6){//TCP
 				return number_of_bytes;
 			}
-		} else {
-			//print_string("other");
 		}
 	}
 }
@@ -390,8 +368,6 @@ int rx_ack_flag=0;
 int rx_urg_flag=0;
 
 int put_tcp_packet(int tx_packet [], int tx_length){
-
-	print_string("put tcp\n");
 
         int payload_start = 17;
 	int checksum_length;
@@ -453,8 +429,6 @@ int rx_length, rx_start;
 
 int get_tcp_packet(int rx_packet []){
 
-	print_string("get tcp\n");
-
         int number_of_bytes, header_length, payload_start, total_length, payload_length, payload_end, tcp_header_length;
 
 	number_of_bytes = get_ip_packet(rx_packet);
@@ -466,10 +440,8 @@ int get_tcp_packet(int rx_packet []){
 	total_length = rx_packet[8];                                       //in bytes
 	payload_length = total_length - (header_length << 1);              //in bytes
 	tcp_header_length = ((rx_packet[payload_start + 6] & 0xf000)>>10); //in bytes
-	print_string("tcp_header_length ");print_hex(tcp_header_length); print_string("\n");
 	rx_length = payload_length - tcp_header_length;                    //in bytes
 	rx_start = payload_start + (tcp_header_length >> 1);               //in words
-	print_string("rx_length ");print_hex(rx_length); print_string("\n");
 
 	//decode TCP header
 	rx_source = rx_packet[payload_start + 0];
@@ -488,7 +460,6 @@ int get_tcp_packet(int rx_packet []){
 	rx_ack_flag = rx_packet[payload_start + 6] & 0x10;
 	rx_urg_flag = rx_packet[payload_start + 6] & 0x20;
 
-	//print_string("flags: "); print_hex(rx_packet[payload_start + 6]); print_string("\n");
 	return 0;
 
 
@@ -496,7 +467,6 @@ int get_tcp_packet(int rx_packet []){
 
 int application_put_data(int packet[], int start, int length){
 	int i, index, data;
-	print_string("echo data:\n");
 
 	index = start;
 	for(i=length; i>0; i-=2){
@@ -507,7 +477,6 @@ int application_put_data(int packet[], int start, int length){
 		output_rs232_tx(data & 0xff);	
 		index++;
 	}
-	print_string("\n");
 	return 0;
 }
 
@@ -557,19 +526,12 @@ int user_design()
 	tx_seq[0] = 0;
 	tx_seq[1] = 0;
 
-	print_string("\nEthernet Monitor\n");
-
-
         while(1){ 
 
 		if(state == listen){
 
 			get_tcp_packet(rx_packet);
 			if(rx_syn_flag){
-				print_string("incomming connection from: ");
-				print_hex(rx_packet[13]);
-				print_hex(rx_packet[14]);
-				print_string("\n");
 
 				remote_ip_hi = rx_packet[13];
 				remote_ip_lo = rx_packet[14];
@@ -582,14 +544,12 @@ int user_design()
 				tx_ack_flag = 1;
 				state = syn_rxd;
 				put_tcp_packet(tx_packet, 0);
-				print_string("waiting for acknowledgement\n");
 			}
 
 		} else if(state == syn_rxd){
 
 		 	get_tcp_packet(rx_packet);
 			if(rx_ack_flag){
-				print_string("connection established\n");
 				state = established;
 				tx_seq[1] = rx_ack[1];
 				tx_seq[0] = rx_ack[0];
@@ -608,20 +568,18 @@ int user_design()
 
 			if(rx_fin_flag){
 
-				//disconnect
+				//client disconnect
 				tx_ack_flag = 1;
 				tx_fin_flag = 1;
 				calc_ack(tx_ack, rx_seq, 1);
 				state = wait_close;
 				put_tcp_packet(tx_packet, 0);
-				print_string("waiting for close ack\n");
 
 			} else {
 
 				//tcp -> application
 				new_rx_data = calc_ack(tx_ack, rx_seq, rx_length);
 				if(new_rx_data){
-					print_string("incoming data:\n");
 					application_put_data(rx_packet, rx_start, rx_length);
 				}
 
@@ -631,9 +589,6 @@ int user_design()
 					tx_seq[0] = next_tx_seq[0];
 					tx_seq[1] = next_tx_seq[1];
 					calc_ack(next_tx_seq, tx_seq, tx_length);
-					print_string("sending data\n");
-					print_hex(tx_seq[0]);
-					print_hex(tx_seq[1]);
 					//TODO check tx_length < rx_window
 				}
 
@@ -645,7 +600,6 @@ int user_design()
 
 			get_tcp_packet(rx_packet);
 			if(rx_ack_flag){
-				print_string("connection closed\n");
 				state = listen;
 				tx_syn_flag = 0;
 				tx_fin_flag = 0;
@@ -656,18 +610,18 @@ int user_design()
 		}
 
 		if(rx_rst_flag){
-			print_string("connection reset by client\n");
+			//client reset
 		       	state = listen;
 		}
 
 
 	}
 
-
         //dummy access to peripherals
 	output_leds(0x5);
 	output_checksum(0x5);
 	input_rs232_rx();
+	input_rs232_tx(1);
 	input_checksum();
 	return 0;
 }
