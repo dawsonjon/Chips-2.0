@@ -16,7 +16,7 @@ if "compile" in sys.argv or "all" in sys.argv:
     os.system("../../../c2verilog ../source/user_design.c")
 
 if "build" in sys.argv or "all" in sys.argv:
-    os.system("%s/xflow -synth xst_mixed.opt -p XC6Slx45t-fgg484 -implement balanced.opt -config bitgen.opt SP605.prj"%xilinx)
+    os.system("%s/xflow -synth xst_mixed.opt -p XC6Slx45t-fgg484 -implement balanced.opt -config bitgen.opt SP605"%xilinx)
 
 if "download" in sys.argv or "all" in sys.argv:
     command_file = open("download.cmd", 'w')

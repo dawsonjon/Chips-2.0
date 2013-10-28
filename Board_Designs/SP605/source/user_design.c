@@ -49,14 +49,26 @@ int print_hex(int value){
 //
 
 int calc_ack(int ack[], int seq[], int length){
-	ack[0] = seq[0] + length;
-	ack[1] = seq[1];
+	//given a two word sequence number and a one word length
+	//calculate a two word acknowledgement number
+	//check whether we have new data or not
+	int new_ack_0;
+	int new_ack_1;
+	int return_value = 0;
+	new_ack_0 = seq[0] + length;
+	new_ack_1 = seq[1];
 	if((seq[0] | length) & 0x8000){
-		if(!(ack[0] & 0x8000)){
-			ack[1] = ack[1] + 1;
+		if(!(new_ack_0 & 0x8000)){
+			new_ack_1 = new_ack_1 + 1;
 		}
 	}
-	return 0;
+	//Is this data we have allready acknowledged?
+	if((new_ack_0 != ack[0]) || (new_ack_1 != ack[1])){
+		ack[0] = new_ack_0;
+		ack[1] = new_ack_1;
+		return_value = 1;
+	}
+	return return_value;
 }
 			
 ////////////////////////////////////////////////////////////////////////////////
@@ -353,6 +365,7 @@ int remote_ip_hi, remote_ip_lo;
 int tx_source=0;
 int tx_dest=0;
 int tx_seq[2];
+int next_tx_seq[2];
 int tx_ack[2];
 int tx_window=255;
 
@@ -490,19 +503,46 @@ int get_tcp_packet(int rx_packet []){
 }
 
 int application_put_data(int packet[], int start, int length){
-	int i, index;
+	int i, index, data;
 	print_string("echo data:\n");
 
 	index = start;
-	for(i=length; i>0; i--){
+	for(i=length; i>0; i-=2){
+		data = packet[index];
 		if (i > 1) {
-			output_rs232_tx(packet[index] >> 8);	
+			output_rs232_tx(data >> 8);	
 		}
-		output_rs232_tx(packet[index] & 0xf);	
+		output_rs232_tx(data & 0xff);	
 		index++;
 	}
 	print_string("\n");
 	return 0;
+}
+
+int application_get_data(int packet[], int start){
+	int data[] = "Message to outside world\n";
+	int i, word, index;
+	index = start;
+
+	i = 0;
+	while(1){
+		if(data[i]){
+			word = data[i] << 8;
+		} else {
+			break;
+		}
+		i++;
+		if(data[i]){
+			word |= data[i];
+		} else {
+			packet[index] = word;
+			break;
+		}
+		packet[index] = word;
+		i++;
+		index++;
+	}
+	return i;
 }
 
 int user_design()
@@ -511,10 +551,17 @@ int user_design()
 	int rx_packet[1024];
 	int tx_packet[1024];
 	int tx_start = 27;
+
 	int listen = 1;
 	int syn_rxd = 2;
 	int established = 3;
+	int wait_close = 4;
+
 	int state = listen;
+	int new_rx_data = 0;
+	int new_tx_data = 0;
+	int tx_length;
+	int timer;
 	tx_seq[0] = 0;
 	tx_seq[1] = 0;
 
@@ -552,32 +599,75 @@ int user_design()
 			if(rx_ack_flag){
 				print_string("connection established\n");
 				state = established;
+				tx_seq[1] = rx_ack[1];
+				tx_seq[0] = rx_ack[0];
+				next_tx_seq[1] = rx_ack[1];
+				next_tx_seq[0] = rx_ack[0];
 				tx_syn_flag = 0;
+				tx_ack_flag = 0;
 			}
 			//TODO, retry if no acknowledgement
 
 		} else if(state == established) {
 
-
 			//transfer client data to the application
 			get_tcp_packet(rx_packet);
-			if(rx_length){
-				print_string("incoming data:\n");
-				application_put_data(rx_packet, rx_start, rx_length);
-				calc_ack(tx_ack, rx_seq, rx_length);
+			tx_ack_flag = 1;
+
+			if(rx_fin_flag){
+
+				//disconnect
 				tx_ack_flag = 1;
-				put_tcp_packet(tx_packet, 0);//send acknowledgement
+				tx_fin_flag = 1;
+				calc_ack(tx_ack, rx_seq, 1);
+				state = wait_close;
+				put_tcp_packet(tx_packet, 0);
+				print_string("waiting for close ack\n");
+
+			} else {
+
+				//tcp -> application
+				new_rx_data = calc_ack(tx_ack, rx_seq, rx_length);
+				if(new_rx_data){
+					print_string("incoming data:\n");
+					application_put_data(rx_packet, rx_start, rx_length);
+				}
+
+				//application -> tcp
+				if(rx_ack_flag && (next_tx_seq[1] == rx_ack[1]) && (next_tx_seq[0] == rx_ack[0])){
+					tx_length = application_get_data(tx_packet, tx_start);
+					tx_seq[0] = next_tx_seq[0];
+					tx_seq[1] = next_tx_seq[1];
+					calc_ack(next_tx_seq, tx_seq, tx_length);
+					print_string("sending data\n");
+					print_hex(tx_seq[0]);
+					print_hex(tx_seq[1]);
+					//TODO check tx_length < rx_window
+				}
+
+				//timeout
+				//timer--;
+				//if(new_rx_data || new_tx_data || timer == 0){
+					put_tcp_packet(tx_packet, tx_length);
+					//timer = 10000;
+				//}
+
 			}
 
-			//transfer application data to the client
-		//	if(rx_ack == tx_seq + tx_length){
-		//		tx_seq = rx_ack + rx_window;
-		//		tx_length = rx_window;
-		//		application_get_data(tx_packet, tx_start, tx_length);
-				//tcp_put_packet(tx_packet, 255);
-			//}
+		} else if(state == wait_close) {
 
+			get_tcp_packet(rx_packet);
+			if(rx_ack_flag){
+				print_string("connection closed\n");
+				state = listen;
+				tx_syn_flag = 0;
+				tx_fin_flag = 0;
+				tx_ack_flag = 0;
+			}
+
+			//TODO, retry if no acknowledgement
 		}
+
 
 	}
 
