@@ -530,7 +530,10 @@ int user_design()
 
 		if(state == listen){
 
-			get_tcp_packet(rx_packet);
+			while(1){
+				get_tcp_packet(rx_packet);
+				if(rx_dest == local_port) break;
+			}
 			if(rx_syn_flag){
 
 				remote_ip_hi = rx_packet[13];
@@ -548,7 +551,10 @@ int user_design()
 
 		} else if(state == syn_rxd){
 
-		 	get_tcp_packet(rx_packet);
+			while(1){
+				get_tcp_packet(rx_packet);
+				if(rx_dest == local_port) break;
+			}
 			if(rx_ack_flag){
 				state = established;
 				tx_seq[1] = rx_ack[1];
@@ -562,10 +568,12 @@ int user_design()
 
 		} else if(state == established) {
 
-			//transfer client data to the application
-			get_tcp_packet(rx_packet);
-			tx_ack_flag = 1;
+			while(1){
+				get_tcp_packet(rx_packet);
+				if(rx_dest == local_port) break;
+			}
 
+			tx_ack_flag = 1;
 			if(rx_fin_flag){
 
 				//client disconnect
@@ -598,7 +606,10 @@ int user_design()
 
 		} else if(state == wait_close) {
 
-			get_tcp_packet(rx_packet);
+			while(1){
+				get_tcp_packet(rx_packet);
+				if(rx_dest == local_port) break;
+			}
 			if(rx_ack_flag){
 				state = listen;
 				tx_syn_flag = 0;
