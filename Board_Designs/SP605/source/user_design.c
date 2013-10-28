@@ -621,7 +621,7 @@ int user_design()
 	output_leds(0x5);
 	output_checksum(0x5);
 	input_rs232_rx();
-	input_rs232_tx(1);
+	output_rs232_tx(1);
 	input_checksum();
 	return 0;
 }
