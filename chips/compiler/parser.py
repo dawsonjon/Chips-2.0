@@ -608,7 +608,7 @@ class Parser:
         required_arguments = function_call.function.arguments
         actual_arguments = function_call.arguments
         for required, actual in zip(required_arguments, actual_arguments):
-            if required.type_ != actual.type_:
+            if not compatible(required.type_, actual.type_):
                 self.tokens.error("Type mismatch expected type : %s got: %s."%(
                     required.type_,
                     actual.type_
