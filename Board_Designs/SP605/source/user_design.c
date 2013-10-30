@@ -2,35 +2,34 @@
 // TCP-IP User Settings
 //
 
-int local_mac_address_hi = 0x0001;
-int local_mac_address_med = 0x0203;
-int local_mac_address_lo = 0x0405;
-int local_ip_address_hi = 0xc0A8;//192/168
-int local_ip_address_lo = 0x0101;//1/1
-int local_port = 23;//telnet
+unsigned local_mac_address_hi = 0x0001;
+unsigned local_mac_address_med = 0x0203;
+unsigned local_mac_address_lo = 0x0405;
+unsigned local_ip_address_hi = 0xc0A8;//192/168
+unsigned local_ip_address_lo = 0x0101;//1/1
+unsigned local_port = 23;//telnet
 
 ////////////////////////////////////////////////////////////////////////////////
 // TCP-IP GLOBALS
 //
 
-int tx_packet[512];
+unsigned tx_packet[512];
 
 ////////////////////////////////////////////////////////////////////////////////
 // Checksum calculation routines
 //
  
 //store checksum in a global variable
-//ints are 16 bits, so use an array of 2 to hold a 32 bit number
+//unsigneds are 16 bits, so use an array of 2 to hold a 32 bit number
  
-int checksum[2];
+unsigned checksum;
  
 //Reset checksum before calculation
 //
  
-int reset_checksum(){
-  checksum[0] = 0;
-  checksum[1] = 0;
- 
+unsigned reset_checksum(){
+  checksum = 0;
+
   //success
   return 0;
 }
@@ -38,19 +37,15 @@ int reset_checksum(){
 //Add 16 bit data value to 32 bit checksum value
 //
  
-int add_checksum(int data){
-  int temp;
+unsigned add_checksum(unsigned data){
+  unsigned temp;
  
   //perform addition
-  temp = checksum[0] + data;
+  temp = checksum + data;
  
-  //Check for carry in lower word
-  //If the MSB is set in either operand, then it should be set in the result
-  //If the MSB is not set in the result, then overflow must have ocured
-  if((checksum[0] | data) & 0x8000){
-    if(!(temp & 0x8000)) checksum[1] += 1;
-  }
-  checksum[0] = temp;
+  //Check for carry
+  if(temp < data) temp++;
+  checksum = temp;
  
   //success
   return 0;
@@ -59,16 +54,16 @@ int add_checksum(int data){
 //Retrieve the calculated checksum
 //
  
-int check_checksum(){
-  return ~(checksum[0] + checksum[1]);
+unsigned check_checksum(){
+  return ~checksum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // DEBUG FUNCTIONS
 //
 
-//int print_string(char value[]){
-//	int i = 0;
+//unsigned prunsigned_string(char value[]){
+//	unsigned i = 0;
 //	while( value[i] != 0 ){
 //		output_rs232_tx(value[i]);
 //		i++;
@@ -77,12 +72,12 @@ int check_checksum(){
 //	return 0;
 //}
 
-//int nibble_to_hex(int nibble){
+//unsigned nibble_to_hex(unsigned nibble){
 //	if( nibble > 9 ) return nibble + ('a' - 10);
 //	return nibble + '0';
 //}
 
-//int print_hex(int value){
+//unsigned prunsigned_hex(unsigned value){
 //
 //	output_rs232_tx(nibble_to_hex((value >> 12) & 0xf));
 //	output_rs232_tx(nibble_to_hex((value >> 8)  & 0xf));
@@ -97,20 +92,17 @@ int check_checksum(){
 // UTILITY FUNCTIONS
 //
 
-int calc_ack(int ack[], int seq[], int length){
+unsigned calc_ack(unsigned ack[], unsigned seq[], unsigned length){
 	//given a two word sequence number and a one word length
 	//calculate a two word acknowledgement number
 	//check whether we have new data or not
-	int new_ack_0;
-	int new_ack_1;
-	int return_value = 0;
+	unsigned new_ack_0;
+	unsigned new_ack_1;
+	unsigned return_value = 0;
 	new_ack_0 = seq[0] + length;
 	new_ack_1 = seq[1];
-	if((seq[0] | length) & 0x8000){
-		if(!(new_ack_0 & 0x8000)){
-			new_ack_1 = new_ack_1 + 1;
-		}
-	}
+	if(new_ack_0 < length) new_ack_1 = new_ack_1 + 1;
+
 	//Is this data we have allready acknowledged?
 	if((new_ack_0 != ack[0]) || (new_ack_1 != ack[1])){
 		ack[0] = new_ack_0;
@@ -124,15 +116,15 @@ int calc_ack(int ack[], int seq[], int length){
 // Data Link Layer - Ethernet
 //
 
-int put_ethernet_packet(
-		int packet[], 
-		int number_of_bytes,
-		int destination_mac_address_hi,
-		int destination_mac_address_med,
-		int destination_mac_address_lo,
-		int protocol){
+unsigned put_ethernet_packet(
+		unsigned packet[], 
+		unsigned number_of_bytes,
+		unsigned destination_mac_address_hi,
+		unsigned destination_mac_address_med,
+		unsigned destination_mac_address_lo,
+		unsigned protocol){
 
-        int byte, index;
+        unsigned byte, index;
 
         //set up ethernet header
 	packet[0] = destination_mac_address_hi;
@@ -152,10 +144,10 @@ int put_ethernet_packet(
 	return 0;
 }
 
-int get_ethernet_packet(int packet[]){
+unsigned get_ethernet_packet(unsigned packet[]){
 
-        int number_of_bytes, index;
-	int byte;
+        unsigned number_of_bytes, index;
+	unsigned byte;
 
 	while(1){
 		number_of_bytes = input_eth_rx();
@@ -205,20 +197,20 @@ int get_ethernet_packet(int packet[]){
 	return number_of_bytes;
 }
 
-int arp_ip_hi[16];
-int arp_ip_lo[16];
-int arp_mac_0[16];
-int arp_mac_1[16];
-int arp_mac_2[16];
-int arp_pointer = 0;
+unsigned arp_ip_hi[16];
+unsigned arp_ip_lo[16];
+unsigned arp_mac_0[16];
+unsigned arp_mac_1[16];
+unsigned arp_mac_2[16];
+unsigned arp_pounsigneder = 0;
 
 //return the location of the ip address in the arp cache table
-int get_arp_cache(int ip_hi, int ip_lo){
+unsigned get_arp_cache(unsigned ip_hi, unsigned ip_lo){
 
-        int number_of_bytes;
-	int byte;
-	int packet[16];
-	int i;
+        unsigned number_of_bytes;
+	unsigned byte;
+	unsigned packet[16];
+	unsigned i;
 
 	//Is the requested IP in the ARP cache?
 	for(i=0; i<16; i++){
@@ -265,14 +257,14 @@ int get_arp_cache(int ip_hi, int ip_lo){
                 //Process ARP requests within the data link layer
 	        if (packet[6] == 0x0806 && packet[10] == 0x0002){
 			if (packet[14] == ip_hi && packet[15] == ip_lo){
-				arp_ip_hi[arp_pointer] = ip_hi;
-				arp_ip_lo[arp_pointer] = ip_lo;
-				arp_mac_0[arp_pointer] = packet[11];
-				arp_mac_1[arp_pointer] = packet[12];
-				arp_mac_2[arp_pointer] = packet[13];
-				i = arp_pointer;
-				arp_pointer++;
-				if(arp_pointer == 16) arp_pointer = 0;
+				arp_ip_hi[arp_pounsigneder] = ip_hi;
+				arp_ip_lo[arp_pounsigneder] = ip_lo;
+				arp_mac_0[arp_pounsigneder] = packet[11];
+				arp_mac_1[arp_pounsigneder] = packet[12];
+				arp_mac_2[arp_pounsigneder] = packet[13];
+				i = arp_pounsigneder;
+				arp_pounsigneder++;
+				if(arp_pounsigneder == 16) arp_pounsigneder = 0;
 				return i;
 			}
 		}
@@ -283,8 +275,8 @@ int get_arp_cache(int ip_hi, int ip_lo){
 // Network Layer - Internet Protocol
 //
 
-int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int ip_lo){
-	int number_of_bytes, i, arp_cache;
+unsigned put_ip_packet(unsigned packet[], unsigned total_length, unsigned protocol, unsigned ip_hi, unsigned ip_lo){
+	unsigned number_of_bytes, i, arp_cache;
 
 	//see if the requested IP address is in the arp cache
 	arp_cache = get_arp_cache(ip_hi, ip_lo);
@@ -325,14 +317,14 @@ int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int i
 	return 0;
 }
 
-int get_ip_packet(int packet[]){
-	int ip_payload;
-	int total_length;
-	int header_length;
-	int payload_start;
-	int payload_length;
-	int i, from, to;
-	int payload_end;
+unsigned get_ip_packet(unsigned packet[]){
+	unsigned ip_payload;
+	unsigned total_length;
+	unsigned header_length;
+	unsigned payload_start;
+	unsigned payload_length;
+	unsigned i, from, to;
+	unsigned payload_end;
 
 	while(1){
 		number_of_bytes = get_ethernet_packet(packet);
@@ -384,40 +376,40 @@ int get_ip_packet(int packet[]){
 // Transport Layer - TCP
 //
 
-int remote_ip_hi, remote_ip_lo;
+unsigned remote_ip_hi, remote_ip_lo;
 
-int tx_source=0;
-int tx_dest=0;
-int tx_seq[2];
-int next_tx_seq[2];
-int tx_ack[2];
-int tx_window=1460; //ethernet MTU - 40 bytes for TCP/IP header
+unsigned tx_source=0;
+unsigned tx_dest=0;
+unsigned tx_seq[2];
+unsigned next_tx_seq[2];
+unsigned tx_ack[2];
+unsigned tx_window=1460; //ethernet MTU - 40 bytes for TCP/IP header
 
-int tx_fin_flag=0;
-int tx_syn_flag=0;
-int tx_rst_flag=0;
-int tx_psh_flag=0;
-int tx_ack_flag=0;
-int tx_urg_flag=0;
+unsigned tx_fin_flag=0;
+unsigned tx_syn_flag=0;
+unsigned tx_rst_flag=0;
+unsigned tx_psh_flag=0;
+unsigned tx_ack_flag=0;
+unsigned tx_urg_flag=0;
 
-int rx_source=0;
-int rx_dest=0;
-int rx_seq[2];
-int rx_ack[2];
-int rx_window=0;
+unsigned rx_source=0;
+unsigned rx_dest=0;
+unsigned rx_seq[2];
+unsigned rx_ack[2];
+unsigned rx_window=0;
 
-int rx_fin_flag=0;
-int rx_syn_flag=0;
-int rx_rst_flag=0;
-int rx_psh_flag=0;
-int rx_ack_flag=0;
-int rx_urg_flag=0;
+unsigned rx_fin_flag=0;
+unsigned rx_syn_flag=0;
+unsigned rx_rst_flag=0;
+unsigned rx_psh_flag=0;
+unsigned rx_ack_flag=0;
+unsigned rx_urg_flag=0;
 
-int put_tcp_packet(int tx_packet [], int tx_length){
+unsigned put_tcp_packet(unsigned tx_packet [], unsigned tx_length){
 
-        int payload_start = 17;
-	int packet_length;
-	int index;
+        unsigned payload_start = 17;
+	unsigned packet_length;
+	unsigned index;
 
 	//encode TCP header
 	tx_packet[payload_start + 0] = tx_source;
@@ -469,11 +461,11 @@ int put_tcp_packet(int tx_packet [], int tx_length){
 	return 0;
 }
 
-int rx_length, rx_start;
+unsigned rx_length, rx_start;
 
-int get_tcp_packet(int rx_packet []){
+unsigned get_tcp_packet(unsigned rx_packet []){
 
-        int number_of_bytes, header_length, payload_start, total_length, payload_length, payload_end, tcp_header_length;
+        unsigned number_of_bytes, header_length, payload_start, total_length, payload_length, payload_end, tcp_header_length;
 
 	number_of_bytes = get_ip_packet(rx_packet);
 
@@ -509,11 +501,11 @@ int get_tcp_packet(int rx_packet []){
 
 }
 
-int application_put_data(int packet[], int start, int length){
-	int i, index, data;
+unsigned application_put_data(unsigned packet[], unsigned start, unsigned length){
+	unsigned i, index, data;
 
 	index = start;
-	for(i=length; i>0; i-=2){
+	for(i=0; i<length; i+=2){
 		data = packet[index];
 		if (i > 1) {
 			output_rs232_tx(data >> 8);	
@@ -524,9 +516,9 @@ int application_put_data(int packet[], int start, int length){
 	return 0;
 }
 
-int application_get_data(int packet[], int start){
-	int data[] = "Message to outside world\n";
-	int i, word, index;
+unsigned application_get_data(unsigned packet[], unsigned start){
+	unsigned data[] = "Message to outside world\n";
+	unsigned i, word, index;
 	index = start;
 
 	i = 0;
@@ -550,23 +542,23 @@ int application_get_data(int packet[], int start){
 	return i;
 }
 
-int user_design()
+unsigned user_design()
 {
 
-	int rx_packet[1024];
-	int tx_packet[1024];
-	int tx_start = 27;
+	unsigned rx_packet[1024];
+	unsigned tx_packet[1024];
+	unsigned tx_start = 27;
 
-	int listen = 1;
-	int syn_rxd = 2;
-	int established = 3;
-	int wait_close = 4;
+	unsigned listen = 1;
+	unsigned syn_rxd = 2;
+	unsigned established = 3;
+	unsigned wait_close = 4;
 
-	int state = listen;
-	int new_rx_data = 0;
-	int new_tx_data = 0;
-	int tx_length;
-	int timer;
+	unsigned state = listen;
+	unsigned new_rx_data = 0;
+	unsigned new_tx_data = 0;
+	unsigned tx_length;
+	unsigned timer;
 	tx_seq[0] = 0;
 	tx_seq[1] = 0;
 
