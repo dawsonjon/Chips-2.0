@@ -1,10 +1,8 @@
 
 int main(){
-  assert(0);
+  int a = 0;
+  int b = 32767;
+  assert(a/b == 0);
   return 0;
 }
 
-//last function is always main
-int real_main(){
-  return 0;
-}
