@@ -16,34 +16,52 @@ int local_port = 23;//telnet
 int tx_packet[512];
 
 ////////////////////////////////////////////////////////////////////////////////
-// DEBUG FUNCTIONS
+// Checksum calculation routines
 //
-
-//int print_string(char value[]){
-//	int i = 0;
-//	while( value[i] != 0 ){
-//		output_rs232_tx(value[i]);
-//		i++;
-//	}
+ 
+//store checksum in a global variable
+//ints are 16 bits, so use an array of 2 to hold a 32 bit number
+ 
+int checksum[2];
+ 
+//Reset checksum before calculation
 //
-//	return 0;
-//}
-
-//int nibble_to_hex(int nibble){
-//	if( nibble > 9 ) return nibble + ('a' - 10);
-//	return nibble + '0';
-//}
-
-//int print_hex(int value){
+ 
+int reset_checksum(){
+  checksum[0] = 0;
+  checksum[1] = 0;
+ 
+  //success
+  return 0;
+}
+ 
+//Add 16 bit data value to 32 bit checksum value
 //
-//	output_rs232_tx(nibble_to_hex((value >> 12) & 0xf));
-//	output_rs232_tx(nibble_to_hex((value >> 8)  & 0xf));
-//	output_rs232_tx(' ');
-//	output_rs232_tx(nibble_to_hex((value >> 4)  & 0xf));
-//	output_rs232_tx(nibble_to_hex((value     )  & 0xf));
-//	output_rs232_tx(' ');
-//	return 0;
-//}
+ 
+int add_checksum(int data){
+  int temp;
+ 
+  //perform addition
+  temp = checksum[0] + data;
+ 
+  //Check for carry in lower word
+  //If the MSB is set in either operand, then it should be set in the result
+  //If the MSB is not set in the result, then overflow must have ocured
+  if((checksum[0] | data) & 0x8000){
+    if(!(temp & 0x8000)) checksum[1] += 1;
+  }
+  checksum[0] = temp;
+ 
+  //success
+  return 0;
+}
+ 
+//Retrieve the calculated checksum
+//
+ 
+int check_checksum(){
+  return ~(checksum[0] + checksum[1]);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // UTILITY FUNCTIONS
@@ -255,11 +273,11 @@ int put_ip_packet(int packet[], int total_length, int protocol, int ip_hi, int i
 	number_of_bytes = total_length + 14;
 
 	//calculate checksum
-        output_checksum(10);
+        reset_checksum();
 	for(i=7; i<=16; i++){
-		output_checksum(packet[i]);
+		add_checksum(packet[i]);
 	}
-	packet[12] = input_checksum();
+	packet[12] = check_checksum();
 
 	//enforce minimum ethernet frame size
 	if(number_of_bytes < 64){
@@ -370,7 +388,6 @@ int rx_urg_flag=0;
 int put_tcp_packet(int tx_packet [], int tx_length){
 
         int payload_start = 17;
-	int checksum_length;
 	int packet_length;
 	int index;
 
@@ -398,22 +415,21 @@ int put_tcp_packet(int tx_packet [], int tx_length){
 
 	//calculate checksum
 	//length of payload + header + pseudo_header in words
-	checksum_length = (tx_length + 20 + 12 + 1) >> 1; 
-        output_checksum(checksum_length);
-        output_checksum(local_ip_address_hi);
-        output_checksum(local_ip_address_lo);
-        output_checksum(remote_ip_hi);
-        output_checksum(remote_ip_lo);
-        output_checksum(0x0006);
-        output_checksum(tx_length+20);//tcp_header + tcp_payload in bytes
+	reset_checksum();
+        add_checksum(local_ip_address_hi);
+        add_checksum(local_ip_address_lo);
+        add_checksum(remote_ip_hi);
+        add_checksum(remote_ip_lo);
+        add_checksum(0x0006);
+        add_checksum(tx_length+20);//tcp_header + tcp_payload in bytes
 
 	packet_length = (tx_length + 20 + 1) >> 1; 
 	index = payload_start;
 	for(i=0; i<packet_length; i++){
-		output_checksum(tx_packet[index]);
+		add_checksum(tx_packet[index]);
 		index++;
 	}
-	tx_packet[payload_start + 8] = input_checksum();
+	tx_packet[payload_start + 8] = check_checksum();
 
 	put_ip_packet(
 		tx_packet,
@@ -630,9 +646,7 @@ int user_design()
 
         //dummy access to peripherals
 	output_leds(0x5);
-	output_checksum(0x5);
 	input_rs232_rx();
 	output_rs232_tx(1);
-	input_checksum();
 	return 0;
 }
