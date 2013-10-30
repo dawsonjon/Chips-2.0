@@ -101,6 +101,7 @@ def generate_CHIP(input_file,
         ("stb", 1),
         ("ack", 1),
         ("sign", 1),
+        ("is_signed", 1),
       ]
 
       division_wires = [
@@ -298,6 +299,13 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["/"] and "left" in instruction:
 
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        is_signed  <= 1'b0;\n")
+        else:
+            output_file.write(
+              "        is_signed  <= 1'b1;\n")
+
         output_file.write(
           "        divisor  <= $signed(16'd%i);\n"%(instruction["left"]&0xffff))
         output_file.write(
@@ -311,6 +319,13 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] in ["/"] and "right" in instruction:
+
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        is_signed  <= 1'b0;\n")
+        else:
+            output_file.write(
+              "        is_signed  <= 1'b1;\n")
 
         output_file.write(
           "        divisor  <= $signed(register_%s);\n"%instruction["src"])
@@ -326,6 +341,13 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["%"] and "left" in instruction:
 
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        is_signed  <= 1'b0;\n")
+        else:
+            output_file.write(
+              "        is_signed  <= 1'b1;\n")
+
         output_file.write(
           "        divisor  <= $signed(16'd%i);\n"%(instruction["left"]&0xffff))
         output_file.write(
@@ -340,6 +362,13 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["%"] and "right" in instruction:
 
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        is_signed  <= 1'b0;\n")
+        else:
+            output_file.write(
+              "        is_signed  <= 1'b1;\n")
+
         output_file.write(
           "        divisor  <= $signed(register_%s);\n"%instruction["src"])
         output_file.write(
@@ -353,6 +382,14 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] in ["%"]:
+
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        is_signed  <= 1'b0;\n")
+        else:
+            output_file.write(
+              "        is_signed  <= 1'b1;\n")
+
         output_file.write(
           "        divisor  <= $signed(register_%s);\n"%instruction["src"])
         output_file.write(
@@ -366,6 +403,14 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] in ["/"]:
+
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        is_signed  <= 1'b0;\n")
+        else:
+            output_file.write(
+              "        is_signed  <= 1'b1;\n")
+
         output_file.write(
           "        divisor  <= $signed(register_%s);\n"%instruction["src"])
         output_file.write(
@@ -379,37 +424,61 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] in binary_operators and "left" in instruction:
-        #Verilog uses >>> as an arithmetic right shift
-        if instruction["op"] == ">>":
-            instruction["op"] = ">>>"
-        output_file.write(
-          "        register_%s <= $signed(16'd%s) %s $signed(register_%s);\n"%(
-          instruction["dest"],
-          instruction["left"]&0xffff,
-          instruction["op"],
-          instruction["srcb"]))
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        register_%s <= $unsigned(16'd%s) %s $unsigned(register_%s);\n"%(
+              instruction["dest"],
+              instruction["left"]&0xffff,
+              instruction["op"],
+              instruction["srcb"]))
+        else:
+            #Verilog uses >>> as an arithmetic right shift
+            if instruction["op"] == ">>":
+                instruction["op"] = ">>>"
+            output_file.write(
+              "        register_%s <= $signed(16'd%s) %s $signed(register_%s);\n"%(
+              instruction["dest"],
+              instruction["left"]&0xffff,
+              instruction["op"],
+              instruction["srcb"]))
 
       elif instruction["op"] in binary_operators and "right" in instruction:
-        #Verilog uses >>> as an arithmetic right shift
-        if instruction["op"] == ">>":
-            instruction["op"] = ">>>"
-        output_file.write(
-          "        register_%s <= $signed(register_%s) %s $signed(16'd%s);\n"%(
-          instruction["dest"],
-          instruction["src"],
-          instruction["op"],
-          instruction["right"] & 0xffff))
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        register_%s <= $unsigned(register_%s) %s $unsigned(16'd%s);\n"%(
+              instruction["dest"],
+              instruction["src"],
+              instruction["op"],
+              instruction["right"] & 0xffff))
+        else:
+            #Verilog uses >>> as an arithmetic right shift
+            if instruction["op"] == ">>":
+                instruction["op"] = ">>>"
+            output_file.write(
+              "        register_%s <= $signed(register_%s) %s $signed(16'd%s);\n"%(
+              instruction["dest"],
+              instruction["src"],
+              instruction["op"],
+              instruction["right"] & 0xffff))
 
       elif instruction["op"] in binary_operators:
-        #Verilog uses >>> as an arithmetic right shift
-        if instruction["op"] == ">>":
-            instruction["op"] = ">>>"
-        output_file.write(
-          "        register_%s <= $signed(register_%s) %s $signed(register_%s);\n"%(
-          instruction["dest"],
-          instruction["src"],
-          instruction["op"],
-          instruction["srcb"]))
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              "        register_%s <= $unsigned(register_%s) %s $unsigned(register_%s);\n"%(
+              instruction["dest"],
+              instruction["src"],
+              instruction["op"],
+              instruction["srcb"]))
+        else:
+            #Verilog uses >>> as an arithmetic right shift
+            if instruction["op"] == ">>":
+                instruction["op"] = ">>>"
+            output_file.write(
+              "        register_%s <= $signed(register_%s) %s $signed(register_%s);\n"%(
+              instruction["dest"],
+              instruction["src"],
+              instruction["op"],
+              instruction["srcb"]))
 
       elif instruction["op"] == "jmp_if_false":
         output_file.write("        if (register_%s == 16'h0000)\n"%(instruction["src"]));
@@ -499,12 +568,20 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] == "report":
-        output_file.write(
-          '        $display ("%%d (report at line: %s in file: %s)", $signed(register_%s));\n'%(
-          instruction["line"],
-          instruction["file"],
-          instruction["src"],
-        ))
+        if instruction["type"] == "unsigned":
+            output_file.write(
+              '        $display ("%%d (report at line: %s in file: %s)", $unsigned(register_%s));\n'%(
+              instruction["line"],
+              instruction["file"],
+              instruction["src"],
+            ))
+        else:
+            output_file.write(
+              '        $display ("%%d (report at line: %s in file: %s)", $signed(register_%s));\n'%(
+              instruction["line"],
+              instruction["file"],
+              instruction["src"],
+            ))
 
       elif instruction["op"] == "stop":
         #If we are in testbench mode stop the simulation
@@ -546,8 +623,13 @@ def generate_CHIP(input_file,
       output_file.write("    ack <= 1'b0;\n\n")
       output_file.write("    case (state)\n\n")
       output_file.write("      start: begin\n\n")
-      output_file.write("        a <= divisor[15]?-divisor:divisor;\n")
-      output_file.write("        b <= dividend[15]?-dividend:dividend;\n")
+      output_file.write("        if(is_signed == 1'b1) begin\n")
+      output_file.write("          a <= divisor[15]?-divisor:divisor;\n")
+      output_file.write("          b <= dividend[15]?-dividend:dividend;\n")
+      output_file.write("        end else begin\n")
+      output_file.write("          a <= divisor;\n")
+      output_file.write("          b <= dividend;\n")
+      output_file.write("        end\n")
       output_file.write("        remainder <= 15'd0;\n")
       output_file.write("        z <= 15'd0;\n")
       output_file.write("        sign  <= divisor[15] ^ dividend[15];\n")
@@ -573,8 +655,13 @@ def generate_CHIP(input_file,
       output_file.write("        end\n\n")
       output_file.write("      end //calculate\n\n")
       output_file.write("      finish: begin\n\n")
-      output_file.write("        quotient <= sign?-z:z;\n")
-      output_file.write("        modulo <= mod_sign?-(remainder/2):(remainder/2);\n")
+      output_file.write("        if(is_signed == 1'b1) begin\n")
+      output_file.write("          quotient <= sign?-z:z;\n")
+      output_file.write("          modulo <= mod_sign?-(remainder/2):(remainder/2);\n")
+      output_file.write("        end else begin\n")
+      output_file.write("          quotient <= z;\n")
+      output_file.write("          modulo <= remainder/2;\n")
+      output_file.write("        end\n")
       output_file.write("        ack      <= 1'b1;\n")
       output_file.write("        state    <= acknowledge;\n\n")
       output_file.write("      end //finish\n\n")

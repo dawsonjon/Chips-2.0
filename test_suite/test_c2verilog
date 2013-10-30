@@ -34,6 +34,32 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("type_unsigned 1",
+"""
+int main(){
+  unsigned a = 0xffff;
+  unsigned b = 0x7fff;
+  assert(a==0xffff);
+  assert(a > b);
+
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 2",
+"""
+int main(){
+  unsigned a = 0xffff;
+  unsigned b = 0x7fff;
+  assert(a==0xffff);
+  assert(b < a);
+
+  return 0;
+}
+"""
+)
+
 test("type_compatibility 1",
 """
 int main(){

@@ -85,7 +85,7 @@ class Report:
     result = self.allocator.new()
     instructions = self.expression.generate(result)
     self.allocator.free(result)
-    instructions.append({"op":"report", "src":result, "line":self.line, "file":self.filename})
+    instructions.append({"op":"report", "src":result, "line":self.line, "file":self.filename, "type":self.expression.type_})
     return instructions
 
 class WaitClocks:
@@ -128,7 +128,7 @@ class Switch:
     test = self.allocator.new()
     instructions = self.expression.generate(result)
     for value, case in self.cases.iteritems():
-      instructions.append({"op":"==", "dest":test, "src":result, "right":value})
+      instructions.append({"op":"==", "dest":test, "src":result, "right":value, "type":"int"})
       instructions.append({"op":"jmp_if_true", "src":test, "label":"case_%s"%id(case)})
     if hasattr(self, "default"):
       instructions.append({"op":"goto", "label":"case_%s"%id(self.default)})
@@ -329,6 +329,10 @@ class Binary:
     self.operator = operator
     self.allocator = allocator
     self.type_ = self.left.type_
+    if self.left.type_ == "unsigned" and self.right.type_ in ["int", "short", "long", "char"]:
+        self.type_ = "unsigned"
+    if self.right.type_ == "unsigned" and self.left.type_ in ["int", "short", "long", "char"]:
+        self.type_ = "unsigned"
 
   def generate(self, result):
     try:
@@ -336,19 +340,25 @@ class Binary:
       instructions.append({"op"  :self.operator,
                            "dest":result,
                            "left":value(self.left),
-                           "srcb":result})
+                           "srcb":result,
+                           "type":self.type_})
     except NotConstant:
       try:
         instructions = self.left.generate(result)
         instructions.append({"op"   :self.operator,
                              "dest" :result,
                              "src"  :result,
-                             "right":value(self.right)})
+                             "right":value(self.right),
+                             "type" :self.type_})
       except NotConstant:
         instructions = self.left.generate(result)
         right = self.allocator.new()
         instructions.extend(self.right.generate(right))
-        instructions.append({"op":self.operator, "dest":result, "src":result, "srcb":right})
+        instructions.append({"op"  :self.operator, 
+                             "dest":result, 
+                             "src" :result, 
+                             "srcb":right,
+                             "type":self.type_})
         self.allocator.free(right)
     return instructions
 
@@ -439,7 +449,8 @@ class ArrayIndex:
     instructions.append({"op"    :"+",
                          "dest"  :result,
                          "src"   :result,
-                         "srcb"  :self.declaration.register})
+                         "srcb"  :self.declaration.register,
+                         "type"  :self.type_})
     instructions.append({"op"    :"memory_read_request",
                          "src"   :result})
     instructions.append({"op"    :"memory_read",
@@ -485,7 +496,8 @@ class Assignment:
       instructions.append({"op"    :"+",
                            "dest"  :index,
                            "src"   :index,
-                           "srcb"  :self.lvalue.declaration.register})
+                           "srcb"  :self.lvalue.declaration.register,
+                           "type"  :self.type_})
       instructions.append({"op"    :"memory_write",
                            "src"   :index,
                            "srcb"  :result})

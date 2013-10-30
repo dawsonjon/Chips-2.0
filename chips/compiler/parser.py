@@ -44,7 +44,7 @@ class Parser:
         
         #check if it is a global declaration
         if self.tokens.peek() != "(":
-            if type_ not in ["int", "short", "long", "char"] + self.structs:
+            if type_ not in ["unsigned", "int", "short", "long", "char"] + self.structs:
                 self.tokens.error("unknown type")
             return self.parse_global_declaration(type_, name)
 
@@ -53,14 +53,14 @@ class Parser:
         function.name = name
         function.type_ = type_
         function.return_address = self.allocator.new(function.name+" return address")
-        if type_ not in ["int", "short", "long", "char", "void"]:
+        if type_ not in ["unsigned", "int", "short", "long", "char", "void"]:
             self.tokens.error("unknown type")
         if type_ != "void":
             function.return_value = self.allocator.new(function.name+" return value")
         function.arguments = []
         while self.tokens.peek() != ")":
             type_ = self.tokens.get()
-            if type_ not in ["int", "short", "long", "char"]:
+            if type_ not in ["unsigned", "int", "short", "long", "char"]:
                 self.tokens.error("unknown type")
             argument = self.tokens.get()
             if self.tokens.peek() == "[":
@@ -144,7 +144,7 @@ class Parser:
         return wait_clocks
 
     def parse_statement(self):
-        if self.tokens.peek() in ["int", "short", "long", "char"] + self.structs:
+        if self.tokens.peek() in ["unsigned", "int", "short", "long", "char"] + self.structs:
             return self.parse_compound_declaration()
         elif self.tokens.peek() == "struct":
             return self.parse_struct_declaration()
@@ -225,7 +225,7 @@ class Parser:
         self.tokens.expect("if")
         self.tokens.expect("(")
         if_.expression = self.parse_expression()
-        if if_.expression.type_ not in ["int", "short", "long", "char"]:
+        if if_.expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
                 "if statement conditional must be an integer like expression"
             )
@@ -244,7 +244,7 @@ class Parser:
         self.tokens.expect("switch")
         self.tokens.expect("(")
         expression = self.parse_expression()
-        if expression.type_ not in ["int", "short", "long", "char"]:
+        if expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
                 "switch statement expression must be an integer like expression"
             )
@@ -261,7 +261,7 @@ class Parser:
     def parse_case(self):
         self.tokens.expect("case")
         expression = self.parse_expression()
-        if expression.type_ not in ["int", "short", "long", "char"]:
+        if expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
                 "case expression must be an integer like expression"
             )
@@ -309,7 +309,7 @@ class Parser:
         break_ = Break()
         break_.loop = loop
         if_.allocator = self.allocator
-        if expression.type_ not in ["int", "short", "long", "char"]:
+        if expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
                 "if statement conditional must be an integer like expression"
             )
@@ -329,7 +329,7 @@ class Parser:
         self.tokens.expect(";")
         if self.tokens.peek() != ";":
             for_.expression = self.parse_expression()
-            if for_.expression.type_ not in ["int", "short", "long", "char"]:
+            if for_.expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
                 self.tokens.error(
                     "for statement conditional must be an integer like expression"
                 )
@@ -424,7 +424,7 @@ class Parser:
         #struct declaration
         if type_ in self.structs:
             declaration = self.scope[type_]
-        elif type_ in ["int", "short", "long", "char"]:
+        elif type_ in ["unsigned", "int", "short", "long", "char"]:
             #array declaration 
             if self.tokens.peek() == "[":
                 size = None
@@ -648,14 +648,14 @@ class Parser:
         return self.parse_variable_array_struct(instance)
  
     def parse_variable_array_struct(self, instance):
-        if instance.type_ in ["int", "short", "long", "char"]:
+        if instance.type_ in ["unsigned", "int", "short", "long", "char"]:
             return Variable(instance, self.allocator)
         elif instance.type_.endswith("[]"):
             if self.tokens.peek() == "[":
                 self.tokens.expect("[")
                 index_expression = self.parse_expression()
                 self.tokens.expect("]")
-                if index_expression.type_ not in ["int", "short", "long", "char"]:
+                if index_expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
                     self.tokens.error(
                         "array indices must be an integer like expression"
                     )
@@ -671,9 +671,9 @@ class Parser:
 def compatible(left, right):
     if left == right:
         return True
-    if left in ["int", "short", "long", "char"] and right in ["int", "short", "long", "char"]:
+    if left in ["unsigned", "int", "short", "long", "char"] and right in ["unsigned", "int", "short", "long", "char"]:
         return True
-    if left in ["int[]", "short[]", "long[]", "char[]"] and right in ["int[]", "short[]", "long[]", "char[]"]:
+    if left in ["unsigned[]", "int[]", "short[]", "long[]", "char[]"] and right in ["unsigned[]", "int[]", "short[]", "long[]", "char[]"]:
         return True
     return False
 
