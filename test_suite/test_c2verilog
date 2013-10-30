@@ -60,6 +60,19 @@ int main(){
 """
 )
 
+test("type_unsigned 3",
+"""
+int test(unsigned a){
+    return a;
+}
+  
+int main(){
+  assert(test(3) == 3);
+  return 0;
+}
+"""
+)
+
 test("type_compatibility 1",
 """
 int main(){
