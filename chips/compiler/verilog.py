@@ -22,6 +22,12 @@ def log2(frames):
       power *= 2
   return bits
 
+def to_gray(i):
+
+  """Convert integer to gray code"""
+
+  return (i >> 1) ^ i
+
 def generate_CHIP(input_file, 
                   name, 
                   frames, 
@@ -274,9 +280,9 @@ def generate_CHIP(input_file,
 
   #A frame is executed in each state
   for location, frame in enumerate(frames):
-    output_file.write("      16'd%s:\n"%location)
+    output_file.write("      16'd%s:\n"%to_gray(location))
     output_file.write("      begin\n")
-    output_file.write("        program_counter <= 16'd%s;\n"%(location+1))
+    output_file.write("        program_counter <= 16'd%s;\n"%to_gray(location+1))
     for instruction in frame:
 
       if instruction["op"] == "literal":
@@ -314,7 +320,7 @@ def generate_CHIP(input_file,
           "        register_%s <= quotient;\n"%instruction["dest"])
         output_file.write("        stb <= 1'b0;\n")
         output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%location)
+        output_file.write("          program_counter <= %s;\n"%to_gray(location))
         output_file.write("          stb <= 1'b1;\n")
         output_file.write("        end\n")
 
@@ -335,7 +341,7 @@ def generate_CHIP(input_file,
           "        register_%s <= quotient;\n"%instruction["dest"])
         output_file.write("        stb <= 1'b0;\n")
         output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%location)
+        output_file.write("          program_counter <= %s;\n"%to_gray(location))
         output_file.write("          stb <= 1'b1;\n")
         output_file.write("        end\n")
 
@@ -356,7 +362,7 @@ def generate_CHIP(input_file,
           "        register_%s <= modulo;\n"%instruction["dest"])
         output_file.write("        stb <= 1'b0;\n")
         output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%location)
+        output_file.write("          program_counter <= %s;\n"%to_gray(location))
         output_file.write("          stb <= 1'b1;\n")
         output_file.write("        end\n")
 
@@ -377,7 +383,7 @@ def generate_CHIP(input_file,
           "        register_%s <= modulo;\n"%instruction["dest"])
         output_file.write("        stb <= 1'b0;\n")
         output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%location)
+        output_file.write("          program_counter <= %s;\n"%to_gray(location))
         output_file.write("          stb <= 1'b1;\n")
         output_file.write("        end\n")
 
@@ -398,7 +404,7 @@ def generate_CHIP(input_file,
           "        register_%s <= modulo;\n"%instruction["dest"])
         output_file.write("        stb <= 1'b0;\n")
         output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%location)
+        output_file.write("          program_counter <= %s;\n"%to_gray(location))
         output_file.write("          stb <= 1'b1;\n")
         output_file.write("        end\n")
 
@@ -419,7 +425,7 @@ def generate_CHIP(input_file,
           "        register_%s <= quotient;\n"%instruction["dest"])
         output_file.write("        stb <= 1'b0;\n")
         output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%location)
+        output_file.write("          program_counter <= %s;\n"%to_gray(location))
         output_file.write("          stb <= 1'b1;\n")
         output_file.write("        end\n")
 
@@ -482,35 +488,35 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] == "jmp_if_false":
         output_file.write("        if (register_%s == 16'h0000)\n"%(instruction["src"]));
-        output_file.write("          program_counter <= %s;\n"%(instruction["label"]&0xffff))
+        output_file.write("          program_counter <= %s;\n"%to_gray(instruction["label"]&0xffff))
 
       elif instruction["op"] == "jmp_if_true":
         output_file.write("        if (register_%s != 16'h0000)\n"%(instruction["src"]));
-        output_file.write("          program_counter <= 16'd%s;\n"%(instruction["label"]&0xffff))
+        output_file.write("          program_counter <= 16'd%s;\n"%to_gray(instruction["label"]&0xffff))
 
       elif instruction["op"] == "jmp_and_link":
-        output_file.write("        program_counter <= 16'd%s;\n"%(instruction["label"]&0xffff))
+        output_file.write("        program_counter <= 16'd%s;\n"%to_gray(instruction["label"]&0xffff))
         output_file.write("        register_%s <= 16'd%s;\n"%(
-          instruction["dest"], (location+1)&0xffff))
+          instruction["dest"], to_gray((location+1)&0xffff)))
 
       elif instruction["op"] == "jmp_to_reg":
         output_file.write(
           "        program_counter <= register_%s;\n"%instruction["src"])
 
       elif instruction["op"] == "goto":
-        output_file.write("        program_counter <= 16'd%s;\n"%(instruction["label"]&0xffff))
+        output_file.write("        program_counter <= 16'd%s;\n"%(to_gray(instruction["label"]&0xffff)))
 
       elif instruction["op"] == "read":
         output_file.write("        register_%s <= input_%s;\n"%(
           instruction["dest"], instruction["input"]))
-        output_file.write("        program_counter <= %s;\n"%location)
+        output_file.write("        program_counter <= %s;\n"%to_gray(location))
         output_file.write("        s_input_%s_ack <= 1'b1;\n"%instruction["input"])
         output_file.write( "       if (s_input_%s_ack == 1'b1 && input_%s_stb == 1'b1) begin\n"%(
           instruction["input"],
           instruction["input"]
         ))
         output_file.write("          s_input_%s_ack <= 1'b0;\n"%instruction["input"])
-        output_file.write("          program_counter <= 16'd%s;\n"%(location+1))
+        output_file.write("          program_counter <= 16'd%s;\n"%to_gray(location+1))
         output_file.write("        end\n")
 
       elif instruction["op"] == "ready":
@@ -521,7 +527,7 @@ def generate_CHIP(input_file,
       elif instruction["op"] == "write":
         output_file.write("        s_output_%s <= register_%s;\n"%(
           instruction["output"], instruction["src"]))
-        output_file.write("        program_counter <= %s;\n"%location)
+        output_file.write("        program_counter <= %s;\n"%to_gray(location))
         output_file.write("        s_output_%s_stb <= 1'b1;\n"%instruction["output"])
         output_file.write(
           "        if (s_output_%s_stb == 1'b1 && output_%s_ack == 1'b1) begin\n"%(
@@ -529,7 +535,7 @@ def generate_CHIP(input_file,
           instruction["output"]
         ))
         output_file.write("          s_output_%s_stb <= 1'b0;\n"%instruction["output"])
-        output_file.write("          program_counter <= %s;\n"%(location+1))
+        output_file.write("          program_counter <= %s;\n"%to_gray(location+1))
         output_file.write("        end\n")
 
       elif instruction["op"] == "memory_read_request":
@@ -598,6 +604,10 @@ def generate_CHIP(input_file,
   output_file.write("      program_counter <= 0;\n")
   if has_divider:
       output_file.write("      stb <= 1'b0;\n")
+  for i in inputs:
+      output_file.write("      s_input_%s_ack <= 0;\n"%(i))
+  for i in outputs:
+      output_file.write("      s_output_%s_stb <= 0;\n"%(i))
   output_file.write("    end\n")
   output_file.write("  end\n")
   for i in inputs:
