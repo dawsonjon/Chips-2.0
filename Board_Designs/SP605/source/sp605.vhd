@@ -118,15 +118,11 @@ architecture RTL of SP605 is
     );
   end component gigabit_ethernet;
 
-  component USER_DESIGN is
+  component SERVER is
     port(
       CLK : in std_logic;
       RST : in std_logic;
 		
-      OUTPUT_LEDS : out std_logic_vector(15 downto 0);
-      OUTPUT_LEDS_STB : out std_logic;
-      OUTPUT_LEDS_ACK : in std_logic;
-
       --ETH RX STREAM
       INPUT_ETH_RX : in std_logic_vector(15 downto 0);
       INPUT_ETH_RX_STB : in std_logic;
@@ -136,6 +132,38 @@ architecture RTL of SP605 is
       output_eth_tx : out std_logic_vector(15 downto 0);
       OUTPUT_ETH_TX_STB : out std_logic;
       OUTPUT_ETH_TX_ACK : in std_logic;
+
+      --SOCKET RX STREAM
+      INPUT_SOCKET : in std_logic_vector(15 downto 0);
+      INPUT_SOCKET_STB : in std_logic;
+      INPUT_SOCKET_ACK : out std_logic;
+
+      --SOCKET TX STREAM
+      OUTPUT_SOCKET : out std_logic_vector(15 downto 0);
+      OUTPUT_SOCKET_STB : out std_logic;
+      OUTPUT_SOCKET_ACK : in std_logic
+
+    );
+  end component;
+
+  component USER_DESIGN is
+    port(
+      CLK : in std_logic;
+      RST : in std_logic;
+		
+      OUTPUT_LEDS : out std_logic_vector(15 downto 0);
+      OUTPUT_LEDS_STB : out std_logic;
+      OUTPUT_LEDS_ACK : in std_logic;
+
+      --SOCKET RX STREAM
+      INPUT_SOCKET : in std_logic_vector(15 downto 0);
+      INPUT_SOCKET_STB : in std_logic;
+      INPUT_SOCKET_ACK : out std_logic;
+
+      --SOCKET TX STREAM
+      OUTPUT_SOCKET : out std_logic_vector(15 downto 0);
+      OUTPUT_SOCKET_STB : out std_logic;
+      OUTPUT_SOCKET_ACK : in std_logic;
 
       --RS232 RX STREAM
       INPUT_RS232_RX : in std_logic_vector(15 downto 0);
@@ -212,24 +240,34 @@ architecture RTL of SP605 is
   signal OUTPUT_LEDS_ACK : std_logic;
   
   --ETH RX STREAM
-  signal ETH_RX            : std_logic_vector(15 downto 0);
-  signal ETH_RX_STB        : std_logic;
-  signal ETH_RX_ACK        : std_logic;
+  signal ETH_RX          : std_logic_vector(15 downto 0);
+  signal ETH_RX_STB      : std_logic;
+  signal ETH_RX_ACK      : std_logic;
 
   --ETH TX STREAM
-  signal ETH_TX            : std_logic_vector(15 downto 0);
-  signal ETH_TX_STB        : std_logic;
-  signal ETH_TX_ACK        : std_logic;
+  signal ETH_TX          : std_logic_vector(15 downto 0);
+  signal ETH_TX_STB      : std_logic;
+  signal ETH_TX_ACK      : std_logic;
 
   --RS232 RX STREAM
-  signal INPUT_RS232_RX          : std_logic_vector(15 downto 0);
-  signal INPUT_RS232_RX_STB      : std_logic;
-  signal INPUT_RS232_RX_ACK      : std_logic;
+  signal INPUT_RS232_RX     : std_logic_vector(15 downto 0);
+  signal INPUT_RS232_RX_STB : std_logic;
+  signal INPUT_RS232_RX_ACK : std_logic;
 
   --RS232 TX STREAM
-  signal OUTPUT_RS232_TX          : std_logic_vector(15 downto 0);
+  signal OUTPUT_RS232_TX     : std_logic_vector(15 downto 0);
   signal OUTPUT_RS232_TX_STB      : std_logic;
   signal OUTPUT_RS232_TX_ACK      : std_logic;
+
+  --SOCKET RX STREAM
+  signal INPUT_SOCKET          : std_logic_vector(15 downto 0);
+  signal INPUT_SOCKET_STB      : std_logic;
+  signal INPUT_SOCKET_ACK      : std_logic;
+
+  --SOCKET TX STREAM
+  signal OUTPUT_SOCKET          : std_logic_vector(15 downto 0);
+  signal OUTPUT_SOCKET_STB      : std_logic;
+  signal OUTPUT_SOCKET_ACK      : std_logic;
 
 begin
 
@@ -263,14 +301,10 @@ begin
       RX_ACK      => ETH_RX_ACK
     );
 
-  USER_DESIGN_INST_1 : USER_DESIGN port map(
+  SERVER_INST_1 : SERVER port map(
       CLK => CLK,
       RST => INTERNAL_RST,
 		
-      OUTPUT_LEDS => OUTPUT_LEDS,
-      OUTPUT_LEDS_STB => OUTPUT_LEDS_STB,
-      OUTPUT_LEDS_ACK => OUTPUT_LEDS_ACK,
-
       --ETH RX STREAM
       INPUT_ETH_RX => ETH_RX,
       INPUT_ETH_RX_STB => ETH_RX_STB,
@@ -282,6 +316,26 @@ begin
       OUTPUT_ETH_TX_ACK => ETH_TX_ACK,
 
       --RS232 RX STREAM
+      INPUT_SOCKET => INPUT_SOCKET,
+      INPUT_SOCKET_STB => INPUT_SOCKET_STB,
+      INPUT_SOCKET_ACK => INPUT_SOCKET_ACK,
+
+      --RS232 TX STREAM
+      OUTPUT_SOCKET => OUTPUT_SOCKET,
+      OUTPUT_SOCKET_STB => OUTPUT_SOCKET_STB,
+      OUTPUT_SOCKET_ACK => OUTPUT_SOCKET_ACK
+
+    );
+
+  USER_DESIGN_INST_1 : USER_DESIGN port map(
+      CLK => CLK,
+      RST => INTERNAL_RST,
+		
+      OUTPUT_LEDS => OUTPUT_LEDS,
+      OUTPUT_LEDS_STB => OUTPUT_LEDS_STB,
+      OUTPUT_LEDS_ACK => OUTPUT_LEDS_ACK,
+
+      --RS232 RX STREAM
       INPUT_RS232_RX => INPUT_RS232_RX,
       INPUT_RS232_RX_STB => INPUT_RS232_RX_STB,
       INPUT_RS232_RX_ACK => INPUT_RS232_RX_ACK,
@@ -289,7 +343,17 @@ begin
       --RS232 TX STREAM
       OUTPUT_RS232_TX => OUTPUT_RS232_TX,
       OUTPUT_RS232_TX_STB => OUTPUT_RS232_TX_STB,
-      OUTPUT_RS232_TX_ACK => OUTPUT_RS232_TX_ACK
+      OUTPUT_RS232_TX_ACK => OUTPUT_RS232_TX_ACK,
+
+      --SOCKET STREAM
+      INPUT_SOCKET => OUTPUT_SOCKET,
+      INPUT_SOCKET_STB => OUTPUT_SOCKET_STB,
+      INPUT_SOCKET_ACK => OUTPUT_SOCKET_ACK,
+
+      --SOCKET STREAM
+      OUTPUT_SOCKET => INPUT_SOCKET,
+      OUTPUT_SOCKET_STB => INPUT_SOCKET_STB,
+      OUTPUT_SOCKET_ACK => INPUT_SOCKET_ACK
 
     );
 
