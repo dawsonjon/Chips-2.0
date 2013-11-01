@@ -445,19 +445,26 @@ class ArrayIndex:
 
   def generate(self, result):
     instructions = []
-    instructions.extend(self.index_expression.generate(result))
+    offset = self.allocator.new()
+    address = self.allocator.new()
+    instructions.extend(self.index_expression.generate(offset))
     instructions.append({"op"    :"+",
-                         "dest"  :result,
-                         "src"   :result,
+                         "dest"  :address,
+                         "src"   :offset,
                          "srcb"  :self.declaration.register,
                          "type"  :self.type_})
     instructions.append({"op"    :"memory_read_request",
-                         "src"   :result})
+                         "src"   :address,
+                         "sequence": id(self)})
+    instructions.append({"op"    :"memory_read_wait",
+                         "src"   :address,
+                         "sequence": id(self)})
     instructions.append({"op"    :"memory_read",
-                         "dest"  :result})
-    #quick hack to work around memory latency
-    instructions.append({"op"    :"memory_read",
-                         "dest"  :result})
+                         "src"   :address,
+                         "dest"  :result,
+                         "sequence": id(self)})
+    self.allocator.free(address)
+    self.allocator.free(offset)
     return instructions
 
 class Variable:
