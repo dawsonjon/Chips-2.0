@@ -22,17 +22,36 @@ def parallelise(instructions):
         registers.append(instruction[field])
     return registers
 
-  def accesses_memory(instruction):
+  def memory_clash(a, b):
 
-    """Return the array modified by this instruction if any"""
+    """do instructions result in a memory clash"""
 
-    return instruction["op"] in ["memory_write", "memory_read_request", "memory_read", "memory_write_literal"]
+    if a["op"] in ["memory_write", "memory_write_literal"]:
+        return b["op"] in ["memory_write", "memory_write_literal", "memory_read", "memory_read_wait", "memory_read_request"]
+
+    if b["op"] in ["memory_write", "memory_write_literal"]:
+        return a["op"] in ["memory_write", "memory_write_literal", "memory_read", "memory_read_wait", "memory_read_request"]
+
+    if a["op"] in ["memory_read", "memory_read_wait", "memory_read_request", "memory_write", "memory_write_literal"]:
+        return b["op"] == a["op"]
+
+    if b["op"] in ["memory_read", "memory_read_wait", "memory_read_request", "memory_write", "memory_write_literal"]:
+        return b["op"] == a["op"]
+
+  def is_part_of_read(a, b):
+
+    """requests, waits and reads with the same sequence number must not be concurrent"""
+
+    read_instructions = ["memory_read_request", "memory_read_wait", "memory_read"]
+    if (a["op"] in read_instructions) and (b["op"] in read_instructions):
+        return a["sequence"] == b["sequence"]
+    return False
 
   def is_solitary(instruction):
 
     """Return True if an instruction cannot be executed in parallel with other instructions"""
 
-    return instruction["op"] in ["read", "write", "ready", "label"]
+    return instruction["op"] in ["read", "write", "ready", "label", "/", "%"]
 
   def is_jump(instruction):
 
@@ -53,7 +72,9 @@ def parallelise(instructions):
           return True
         if modifies_register(i) == modifies_register(instruction):
           return True
-      if accesses_memory(i) and accesses_memory(instruction):
+      if memory_clash(i, instruction):
+          return True
+      if is_part_of_read(i, instruction):
           return True
       if is_jump(i):
         return True
@@ -61,7 +82,9 @@ def parallelise(instructions):
       if modifies_register(instruction) is not None:
         if modifies_register(instruction) in uses_registers(i):
           return True
-      if accesses_memory(i) and accesses_memory(instruction):
+      if memory_clash(i, instruction):
+          return True
+      if is_part_of_read(i, instruction):
           return True
     if is_jump(instruction) and preceding:
       return True
@@ -92,4 +115,5 @@ def parallelise(instructions):
     frame = [instructions.pop(0)]
     add_instructions(frame, instructions)
     frames.append(frame)
+
   return frames

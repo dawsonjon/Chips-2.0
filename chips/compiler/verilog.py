@@ -543,6 +543,9 @@ def generate_CHIP(input_file,
           "        address <= register_%s;\n"%(instruction["src"])
         )
 
+      elif instruction["op"] == "memory_read_wait":
+        pass
+
       elif instruction["op"] == "memory_read":
         output_file.write(
           "        register_%s <= data_out;\n"%(instruction["dest"])
