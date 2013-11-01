@@ -269,7 +269,6 @@ def generate_CHIP(input_file,
   output_file.write("    end\n\n")
   output_file.write("    data_out <= memory[address];\n")
   output_file.write("    write_enable <= 1'b0;\n")
-  output_file.write("    program_counter <= program_counter + 1;\n")
   output_file.write("    timer <= 16'h0000;\n\n")
   output_file.write("    case(program_counter)\n\n")
 
@@ -277,6 +276,7 @@ def generate_CHIP(input_file,
   for location, frame in enumerate(frames):
     output_file.write("      16'd%s:\n"%location)
     output_file.write("      begin\n")
+    output_file.write("        program_counter <= 16'd%s;\n"%(location+1))
     for instruction in frame:
 
       if instruction["op"] == "literal":
