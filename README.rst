@@ -5,13 +5,11 @@ Chips
 Introduction
 ------------
 
-Chips is a suite of FPGA (chip) design tools. Design chips by connecting
-components using the *schematix* graphical schematic editor. Chips includes a
-*toolbox* of usefull components, but you can also create components in C using
-the built in *c2verilog* compiler (you can also use verilog or VHDL).
+Chips is a fast and simple way to design Logic Devices. You can think of
+a Chips design as a network on a chip. Many C Programs are all executing in
+parallel, streaming data between each other using fast on-chip connections.
 
-Screenshots
------------
-
-.. image:: https://raw.github.com/dawsonjon/Schematix/master/documents/screenshots.png
-
+The interface is simple, design components using C, and connect them together
+to form a chip using a simple python API. Behind the scenes, chips will comvert
+C programs into efficient verilog implementation based on interconnected Finite
+State Machines.

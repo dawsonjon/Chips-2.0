@@ -1,5 +1,5 @@
-class ChipsError(Exception)
-    pass
+from chips.compiler.exceptions import C2CHIPError
+import chips.compiler.compiler
 
 class Chip:
 
@@ -31,35 +31,35 @@ class Chip:
 
         for i in self.wires:
             if i.source is None:
-                raise ChipsError("wire %s has no source"%i.name)
+                raise C2CHIPError("wire %s has no source"%i.name)
             if i.sink is None:
-                raise ChipsError("wire %s has no sink"%i.name)
+                raise C2CHIPError("wire %s has no sink"%i.name)
 
         for i in self.inputs:
             if i.sink is None:
-                raise ChipsError("input %s has no sink"%i.name)
+                raise C2CHIPError("input %s has no sink"%i.name)
 
         for i in self.outputs:
             if i.source is None:
-                raise ChipsError("output %s has no source"%i.name)
+                raise C2CHIPError("output %s has no source"%i.name)
 
-        output_file = open(name + ".v")
+        output_file = open(self.name + ".v", "w")
         output_file.write("module %s;\n"%self.name)
-        for i in inputs:
+        for i in self.inputs:
             output_file.write("  input  [15:0] %s;\n"%i.name)
             output_file.write("  input  [15:0] %s_stb;\n"%i.name)
             output_file.write("  output [15:0] %s_ack;\n"%i.name)
-        for i in outputs:
+        for i in self.outputs:
             output_file.write("  output [15:0] %s;\n"%i.name)
             output_file.write("  output [15:0] %s_stb;\n"%i.name)
             output_file.write("  input  [15:0] %s_ack;\n"%i.name)
-        for i in wires:
+        for i in self.wires:
             output_file.write("  wire   [15:0] %s;\n"%i.name)
             output_file.write("  wire   [15:0] %s_stb;\n"%i.name)
             output_file.write("  wire   [15:0] %s_ack;\n"%i.name)
         for instance in self.instances:
             component = instance.component.name
-            output_file.write("  module %s_%s %s(\n"%(id(instancce), component, component))
+            output_file.write("  module %s_%s %s(\n    "%(id(instance), component, component))
             ports = []
             for i in instance.inputs:
                 ports.append(i.name)
@@ -83,29 +83,21 @@ class Component:
     C code, and extract the name, inputs, outputs and the documentation from the
     code.
     
-    You can create a component like this::
-
-        my_component = Component(C_code = \"\"\"
-            int adder(){ //The component name will be adder
-                output_z(input_a + input_b); //This will create inputs a, and b, and outputs z.
-            }\"\"\"
-        )
-
     If you want to keep the C file seperate you can read it in from a file like
     this::
 
-        my_component = Adder(C_code = open(adder.c).read())
+        my_component = Adder(C_file="adder.c")
 
     Once you have defined a component you can use the __call__ method to create
     an instance of the component.
     
     """
 
-    def __init__(self, C_code):
+    def __init__(self, C_file):
 
         """Takes a single string argument, the C code to compile"""
 
-        self.name, self.inputs, self.outputs, self.doc = compiler.compiler(C_code)
+        self.name, self.inputs, self.outputs, self.doc = chips.compiler.compiler.comp(C_file)
 
     def __call__(self, chip, inputs, outputs):
 
@@ -113,7 +105,7 @@ class Component:
             + chip, the chip that the component instance belongs to.
             + inputs, a list of *Wires* (or *Inputs*) to connect to the component inputs
             + outputs, a list of *Wires* (or *Outputs*) to connect to the component outputs"""
-        return _Instance(self, chip, inputs, output)
+        return _Instance(self, chip, inputs, outputs)
 
 
 class _Instance:
@@ -126,24 +118,25 @@ class _Instance:
         self.inputs = inputs
         self.outputs = outputs
         self.component = component
-        self.name, self.input_ports, self.output_ports, self.doc = compiler.compiler(C_code)
         self.chip.instances.append(self)
 
-        if len(self.input_ports) != len(self.inputs):
-            raise ChipsError("Instance %s does not have the right number or inputs"%self.name)
+        if len(self.component.inputs) != len(self.inputs):
+            raise C2CHIPError("Instance %s does not have the right number or inputs"%self.name)
 
-        if len(self.output_ports) != len(self.outputs):
-            raise ChipsError("Instance %s does not have the right number or outputs"%self.name)
+        if len(self.component.outputs) != len(self.outputs):
+            raise C2CHIPError("Instance %s does not have the right number or outputs"%self.name)
 
         for i in inputs:
-            if i.source is not None:
-                raise ChipsError("%s allready has a source"%i.name)
+            print "in"
+            if i.sink is not None:
+                raise C2CHIPError("%s allready has a sink"%i.name)
             i.sink = self
 
         for i in outputs:
-            if i.sink is not None:
-                raise ChipsError("%s has allready has a sink"%i.name)
-            i.soure = self
+            print "out"
+            if i.source is not None:
+                raise C2CHIPError("%s has allready has a source"%i.name)
+            i.source = self
 
 class Wire:
 
