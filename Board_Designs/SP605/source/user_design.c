@@ -34,7 +34,7 @@ unsigned user_design()
 	unsigned length;
 	unsigned i, index;
 	unsigned data[1460];
-	unsigned response[] = "HTTP/1.1 200 OK\r\nDate: Thu Oct 31 19:16:00 2013\r\nServer: blah\r\nContent-Type: text/html\r\nConent-Length 118\r\n\r\n<html><head><title>An Example Page</title></head><body>Hello World, this is a very simple HTML document.</body> </html>";
+	unsigned response[] = "HTTP/1.1 200 OK\r\nDate: Thu Oct 31 19:16:00 2013\r\nServer: blah\r\nContent-Type: text/html\r\nContent-Length: 118\r\n\r\n<html><head><title>An Example Page</title></head><body>Hello World, this is a very simple HTML document.</body> </html>";
 	unsigned word;
 	while(1){
 
@@ -45,9 +45,9 @@ unsigned user_design()
 			index++;
 		}
 
-		output_socket(229);
+		output_socket(231);
 		index = 0;
-		for(i=0;i<229;i+=2){
+		for(i=0;i<231;i+=2){
 			word = response[index] << 8;
 			index++;
 			word |= response[index] & 0xff;
