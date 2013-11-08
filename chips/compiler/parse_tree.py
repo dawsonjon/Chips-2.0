@@ -335,45 +335,50 @@ class Binary:
         self.type_ = "unsigned"
 
   def generate(self, result):
+    new_register = self.allocator.new()
     try:
-      instructions = self.right.generate(result)
+      instructions = self.right.generate(new_register)
       instructions.append({"op"  :self.operator,
                            "dest":result,
                            "left":value(self.left),
-                           "srcb":result,
+                           "srcb":new_register,
                            "type":self.type_})
     except NotConstant:
       try:
-        instructions = self.left.generate(result)
+        instructions = self.left.generate(new_register)
         instructions.append({"op"   :self.operator,
                              "dest" :result,
-                             "src"  :result,
+                             "src"  :new_register,
                              "right":value(self.right),
                              "type" :self.type_})
       except NotConstant:
-        instructions = self.left.generate(result)
+        instructions = self.left.generate(new_register)
         right = self.allocator.new()
         instructions.extend(self.right.generate(right))
         instructions.append({"op"  :self.operator, 
                              "dest":result, 
-                             "src" :result, 
+                             "src" :new_register, 
                              "srcb":right,
                              "type":self.type_})
         self.allocator.free(right)
+    self.allocator.free(new_register)
     return instructions
 
   def value(self):
     return eval("%s %s %s"%(value(self.left), self.operator, value(self.right)))
 
 class Unary:
-  def __init__(self, operator, expression):
+  def __init__(self, operator, expression, allocator):
     self.expression = constant_fold(expression)
     self.operator = operator
     self.type_ = self.expression.type_
+    self.allocator = allocator
 
   def generate(self, result):
-    instructions = self.expression.generate(result)
-    instructions.extend([{"op":self.operator, "dest":result, "src":result}])
+    new_register = self.allocator.new()
+    instructions = self.expression.generate(new_register)
+    instructions.extend([{"op":self.operator, "dest":result, "src":new_register}])
+    self.allocator.free(new_register)
     return instructions
 
   def value(self):
@@ -499,16 +504,18 @@ class Assignment:
 
     elif self.lvalue.storage == "memory":
       index = self.allocator.new()
+      address = self.allocator.new()
       instructions.extend(self.lvalue.index_expression.generate(index))
       instructions.append({"op"    :"+",
-                           "dest"  :index,
+                           "dest"  :address,
                            "src"   :index,
                            "srcb"  :self.lvalue.declaration.register,
                            "type"  :self.type_})
       instructions.append({"op"    :"memory_write",
-                           "src"   :index,
+                           "src"   :address,
                            "srcb"  :result})
       self.allocator.free(index)
+      self.allocator.free(address)
 
     return instructions
 

@@ -690,3 +690,5 @@ def generate_CHIP(input_file,
       output_file.write("  end\n\n")
       output_file.write("  assign difference = remainder - b;\n\n")
   output_file.write("\nendmodule\n")
+
+  return inputs, outputs
