@@ -5,18 +5,14 @@ try:
 
     my_chip = Chip("my_chip")
 
-    a = Wire(my_chip)
-    b = Wire(my_chip)
-    z = Wire(my_chip)
+    a = Input(my_chip, "a")
+    b = Input(my_chip, "b")
+    z = Output(my_chip, "z")
 
-    stim = Component("stimulus.c")
-    stim(my_chip, inputs=[], outputs=[a])
-    stim(my_chip, inputs=[], outputs=[b])
-    Component("adder.c")(my_chip, inputs=[a, b], outputs=[z])
-    response = Component("response.c")
-    response(my_chip, inputs=[z], outputs=[])
+    Component("adder.c")(my_chip, inputs={"a":a, "b":b}, outputs={"z":z})
 
     my_chip.generate_verilog()
+    my_chip.generate_testbench()
 
 except C2CHIPError as err:
     print "Error in file:", err.filename, "at line:", err.lineno

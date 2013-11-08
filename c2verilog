@@ -33,7 +33,8 @@ if __name__ == "__main__":
 
   #parse command line
   input_file = sys.argv[-1]
-  reuse = "no_reuse" not in sys.argv
+  #reuse = "no_reuse" not in sys.argv
+  reuse=False
   initialize_memory = "no_initialize_memory" not in sys.argv
 
   try:

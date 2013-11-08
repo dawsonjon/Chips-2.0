@@ -33,6 +33,7 @@ module adder(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,output
   reg       [15:0] register_1;
   reg       [15:0] register_2;
   reg       [15:0] register_3;
+  reg       [15:0] register_4;
   reg       [15:0] s_output_z_stb;
   reg       [15:0] s_output_z;
   reg       [15:0] s_input_a_ack;
@@ -91,7 +92,7 @@ module adder(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,output
       16'd3:
       begin
         program_counter <= 16'd2;
-        register_2 <= input_a;
+        register_3 <= input_a;
         program_counter <= 3;
         s_input_a_ack <= 1'b1;
        if (s_input_a_ack == 1'b1 && input_a_stb == 1'b1) begin
@@ -103,7 +104,7 @@ module adder(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,output
       16'd2:
       begin
         program_counter <= 16'd6;
-        register_3 <= input_b;
+        register_4 <= input_b;
         program_counter <= 2;
         s_input_b_ack <= 1'b1;
        if (s_input_b_ack == 1'b1 && input_b_stb == 1'b1) begin
@@ -115,7 +116,7 @@ module adder(input_a,input_b,input_a_stb,input_b_stb,output_z_ack,clk,rst,output
       16'd6:
       begin
         program_counter <= 16'd7;
-        register_2 <= $signed(register_2) + $signed(register_3);
+        register_2 <= $signed(register_3) + $signed(register_4);
       end
 
       16'd7:
