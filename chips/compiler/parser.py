@@ -532,7 +532,7 @@ class Parser:
         elif self.tokens.peek() == "~":
             operator = self.tokens.get()
             expression = self.parse_paren_expression()
-            return Unary("~", expression)
+            return Unary("~", expression, self.allocator)
         else:
             return self.parse_paren_expression()
 
