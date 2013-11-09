@@ -13,8 +13,8 @@ shutil.copyfile("xilinx_input/SP605.prj", os.path.join(working_directory, "SP605
 os.chdir(working_directory)
 
 if "compile" in sys.argv or "all" in sys.argv:
-    retval = os.system("../../../c2verilog ../source/user_design.c")
-    retval = os.system("../../../c2verilog ../source/server.c")
+    retval = os.system("../../../c2verilog no_reuse ../source/user_design.c")
+    retval = os.system("../../../c2verilog no_reuse ../source/server.c")
     if retval != 0:
         sys.exit(-1)
 

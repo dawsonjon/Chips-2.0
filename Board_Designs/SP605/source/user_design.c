@@ -45,6 +45,7 @@ unsigned put_char(char x){
 
 unsigned flush(){
 	if(!high) output_socket(data);
+	high = 1;
 	return 0;
 }
 
@@ -94,33 +95,32 @@ unsigned put_decimal(unsigned value){
 
 
 unsigned HTTP_GET_response(int body[]){
-	unsigned header_length;
+	//unsigned header_length;
 	unsigned body_length;
-	unsigned header[] = 
-"HTTP/1.1 200 OK\r\n\
-Date: Thu Oct 31 19:16:00 2013\r\n\
-Server: chips-web/0.0\r\n\
-Content-Type: text/html\r\n\
-Content-Length: ";
-
-	//calculate length of header
-	header_length = 0;
-	while(header[header_length]){
-		header_length ++;
-	}
+//	unsigned header[] = 
+//"HTTP/1.1 200 OK\r\n\
+//Date: Thu Oct 31 19:16:00 2013\r\n\
+//Server: chips-web/0.0\r\n\
+//Content-Type: text/html\r\n\
+//Content-Length: ";
+//
+//	//calculate length of header
+//	header_length = 0;
+//	while(header[header_length]){
+//		header_length ++;
+//	}
 
 	//calculate length of body
 	body_length = 0;
 	while(body[body_length]){
 		body_length ++;
 	}
-	print_string("Sending Response: "); print_hex(header_length + body_length + 9); print_string("bytes\n");
 
 	//send via socket interface
-	output_socket(header_length + body_length + 9);
-	put_string(header);
-	put_decimal(body_length);
-	put_string("\r\n\r\n");
+	output_socket(body_length);
+	//put_string(header);
+	//put_decimal(body_length);
+	//put_string("\r\n\r\n");
 	put_string(body);
 	flush();
 	return 0;
