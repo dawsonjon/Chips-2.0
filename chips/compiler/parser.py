@@ -533,6 +533,10 @@ class Parser:
             operator = self.tokens.get()
             expression = self.parse_paren_expression()
             return Unary("~", expression, self.allocator)
+        elif self.tokens.peek() == "sizeof":
+            operator = self.tokens.get()
+            expression = self.parse_unary_expression()
+            return SizeOf(expression)
         else:
             return self.parse_paren_expression()
 
@@ -554,6 +558,22 @@ class Parser:
                 return self.parse_variable(name)
         else:
             return self.parse_number()
+
+    def parse_file_read(self):
+        self.tokens.expect("(")
+        file_name = self.tokens.get()
+        file_name = file_name.strip('"').decode("string_escape")
+        self.tokens.expect(")")
+        return FileRead(file_name)
+
+    def parse_file_write(self):
+        self.tokens.expect("(")
+        expression = self.parse_expression()
+        self.tokens.expect(",")
+        file_name = self.tokens.get()
+        file_name = file_name.strip('"').decode("string_escape")
+        self.tokens.expect(")")
+        return FileWrite(file_name, expression)
 
     def parse_input(self, name):
         input_name = name.replace("input_", "")
@@ -581,6 +601,10 @@ class Parser:
             return self.parse_ready(name)
         if name.startswith("output_"):
             return self.parse_output(name)
+        if name == "file_read":
+            return self.parse_file_read()
+        if name == "file_write":
+            return self.parse_file_write()
         function_call = FunctionCall()
         function_call.arguments = []
         self.tokens.expect("(")

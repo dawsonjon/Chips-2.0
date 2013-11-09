@@ -34,6 +34,22 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("sizeof 1",
+"""
+int main(){
+  unsigned a = 0xffff;
+  unsigned b = 0x7fff;
+  unsigned c[4];
+  unsigned d[] = "asdfg";
+  assert(sizeof a == 2);
+  assert(sizeof b == 2);
+  assert(sizeof c == 8);
+  assert(sizeof d == 12);
+  return 0;
+}
+"""
+)
+
 test("type_unsigned 1",
 """
 int main(){

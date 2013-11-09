@@ -71,6 +71,8 @@ def generate_CHIP(input_file,
   #list all inputs and outputs used in the program
   inputs = unique([i["input"] for frame in frames for i in frame if "input" in i])
   outputs = unique([i["output"] for frame in frames for i in frame if "output" in i])
+  input_files = unique([i["file_name"] for frame in frames for i in frame if "file_read" == i["op"]])
+  output_files = unique([i["file_name"] for frame in frames for i in frame if "file_write" == i["op"]])
   testbench = not inputs and not outputs and not no_tb_mode
 
   #Do not generate a port in testbench mode
@@ -177,6 +179,16 @@ def generate_CHIP(input_file,
   else:
       output_file.write(";\n")
 
+  output_file.write("  integer file_count;\n")
+
+  input_files = dict(zip(input_files, ["input_file_%s"%i for i, j in enumerate(input_files)]))
+  for i in input_files.values():
+      output_file.write("  integer %s;\n"%i)
+
+  output_files = dict(zip(output_files, ["output_file_%s"%i for i, j in enumerate(output_files)]))
+  for i in output_files.values():
+      output_file.write("  integer %s;\n"%i)
+
 
   def write_declaration(object_type, name, size, value=None):
       if size == 1:
@@ -258,6 +270,14 @@ def generate_CHIP(input_file,
       for location, content in memory_content.iteritems():
           output_file.write("    memory[16'd%s] = 16'd%s;\n"%(location, content))
       output_file.write("  end\n\n")
+
+  output_file.write("  \n  initial\n")
+  output_file.write("  begin\n")
+  for file_name, file_ in input_files.iteritems():
+      output_file.write("    %s = $fopenr(\"%s\");\n"%(file_, file_name))
+  for file_name, file_ in output_files.iteritems():
+      output_file.write("    %s = $fopen(\"%s\");\n"%(file_, file_name))
+  output_file.write("  end\n\n")
 
   output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
   output_file.write("  // FSM IMPLEMENTAION OF C PROCESS                                             \n")
@@ -506,6 +526,14 @@ def generate_CHIP(input_file,
       elif instruction["op"] == "goto":
         output_file.write("        program_counter <= 16'd%s;\n"%(to_gray(instruction["label"]&0xffff)))
 
+      elif instruction["op"] == "file_read":
+        output_file.write("        file_count = $fscanf(%s, \"%%d\\n\", register_%s);\n"%(
+          input_files[instruction["file_name"]], instruction["dest"]))
+
+      elif instruction["op"] == "file_write":
+        output_file.write("        $fdisplay(%s, \"%%d\", register_%s);\n"%(
+          output_files[instruction["file_name"]], instruction["src"]))
+
       elif instruction["op"] == "read":
         output_file.write("        register_%s <= input_%s;\n"%(
           instruction["dest"], instruction["input"]))
@@ -595,6 +623,10 @@ def generate_CHIP(input_file,
       elif instruction["op"] == "stop":
         #If we are in testbench mode stop the simulation
         #If we are part of a larger design, other C programs may still be running
+        for file_ in input_files.values():
+            output_file.write("        $fclose(%s);\n"%file_)
+        for file_ in output_files.values():
+            output_file.write("        $fclose(%s);\n"%file_)
         if testbench:
             output_file.write('        $finish;\n')
         output_file.write("        program_counter <= program_counter;\n")

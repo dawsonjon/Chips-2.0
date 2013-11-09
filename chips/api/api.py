@@ -45,6 +45,8 @@ class Chip:
 
         output_file = open(self.name + ".v", "w")
         output_file.write("module %s;\n"%self.name)
+        output_file.write("  input  clk;\n")
+        output_file.write("  input  rst;\n")
         for i in self.inputs:
             output_file.write("  input  [15:0] %s;\n"%i.name)
             output_file.write("  input  [15:0] %s_stb;\n"%i.name)
@@ -61,16 +63,64 @@ class Chip:
             component = instance.component.name
             output_file.write("  module %s_%s %s(\n    "%(id(instance), component, component))
             ports = []
-            for i in instance.inputs:
-                ports.append(i.name)
-                ports.append(i.name + "_stb")
-                ports.append(i.name + "_ack")
-            for i in instance.outputs:
-                ports.append(i.name)
-                ports.append(i.name + "_stb")
-                ports.append(i.name + "_ack")
+            for name, i in instance.inputs.iteritems():
+                ports.append(".input_%s(%s)"%(name, i.name))
+                ports.append(".input_%s_stb(%s_stb)"%(name, i.name))
+                ports.append(".input_%s_ack(%s_ack)"%(name, i.name))
+            for name, i in instance.outputs.iteritems():
+                ports.append(".output_%s(%s)"%(name, i.name))
+                ports.append(".output_%s_stb(%s_stb)"%(name, i.name))
+                ports.append(".output_%s_ack(%s_ack)"%(name, i.name))
             output_file.write(",\n    ".join(ports))
             output_file.write(");\n")
+        output_file.write("endmodule\n")
+        output_file.close()
+
+    def generate_testbench(self):
+
+        """Generate verilog for the test bench"""
+
+        output_file = open(self.name + "_tb.v", "w")
+        output_file.write("module %s;\n"%self.name)
+        output_file.write("  reg  clk;\n")
+        output_file.write("  reg  rst;\n")
+        for i in self.inputs:
+            output_file.write("  wire  [15:0] %s;\n"%i.name)
+            output_file.write("  wire  [15:0] %s_stb;\n"%i.name)
+            output_file.write("  wire  [15:0] %s_ack;\n"%i.name)
+        for i in self.outputs:
+            output_file.write("  wire  [15:0] %s;\n"%i.name)
+            output_file.write("  wire  [15:0] %s_stb;\n"%i.name)
+            output_file.write("  wire  [15:0] %s_ack;\n"%i.name)
+
+        output_file.write("  \n  initial\n")
+        output_file.write("  begin\n")
+        output_file.write("    rst <= 1'b1;\n")
+        output_file.write("    #50 rst <= 1'b0;\n")
+        output_file.write("  end\n\n")
+
+        output_file.write("  \n  initial\n")
+        output_file.write("  begin\n")
+        output_file.write("    clk <= 1'b0;\n")
+        output_file.write("    while (1) begin\n")
+        output_file.write("      #5 clk <= ~clk;\n")
+        output_file.write("    end\n")
+        output_file.write("  end\n\n")
+
+        output_file.write("  module uut %s(\n    "%(self.name))
+        ports = []
+        ports.append(".clk(clk)")
+        ports.append(".rst(rst)")
+        for i in self.inputs:
+            ports.append(".%s(%s)"%(i.name, i.name))
+            ports.append(".%s_stb(%s_stb)"%(i.name, i.name))
+            ports.append(".%s_ack(%s_ack)"%(i.name, i.name))
+        for i in self.outputs:
+            ports.append(".%s(%s)"%(i.name, i.name))
+            ports.append(".%s_stb(%s_stb)"%(i.name, i.name))
+            ports.append(".%s_ack(%s_ack)"%(i.name, i.name))
+        output_file.write(",\n    ".join(ports))
+        output_file.write(");\n")
         output_file.write("endmodule\n")
         output_file.close()
 
@@ -126,17 +176,23 @@ class _Instance:
         if len(self.component.outputs) != len(self.outputs):
             raise C2CHIPError("Instance %s does not have the right number or outputs"%self.name)
 
-        for i in inputs:
-            print "in"
+        for i in inputs.values():
             if i.sink is not None:
                 raise C2CHIPError("%s allready has a sink"%i.name)
             i.sink = self
 
-        for i in outputs:
-            print "out"
+        for i in outputs.values():
             if i.source is not None:
                 raise C2CHIPError("%s has allready has a source"%i.name)
             i.source = self
+
+        for i in inputs.keys():
+            if i not in self.component.inputs:
+                raise C2CHIPError("%s is not an input of component %s"%(i, component.name))
+
+        for i in outputs.keys():
+            if i not in self.component.outputs:
+                raise C2CHIPError("%s has allready has a source %s"%(i, component.name))
 
 class Wire:
 
