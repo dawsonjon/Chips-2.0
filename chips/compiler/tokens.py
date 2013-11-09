@@ -41,8 +41,14 @@ class Tokens:
             #include files
             line = line+" "
             if line.strip().startswith("#include"):
+                filename = self.filename
+                lineno = self.lineno
+                self.tokens.extend(tokens)
                 self.filename = line.strip().replace("#include", "").strip(' ><"')
                 self.scan(self.filename)
+                self.lineno = lineno
+                self.filename = filename
+                tokens = []
                 continue 
     
             newline = True
