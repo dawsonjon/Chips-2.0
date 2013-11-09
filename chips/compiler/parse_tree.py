@@ -421,6 +421,18 @@ class Output:
     instructions.append({"op"   :"write", "src"  :result, "output":self.name})
     return instructions
 
+class FileWrite:
+  def __init__(self, name, expression):
+    self.name = name
+    self.expression = expression
+    self.type_ = "int"
+    self.size = expression.size
+
+  def generate(self, result):
+    instructions = self.expression.generate(result);
+    instructions.append({"op"   :"file_write", "src"  :result, "file_name":self.name})
+    return instructions
+
 class Input:
   def __init__(self, name):
     self.name = name
@@ -429,6 +441,15 @@ class Input:
 
   def generate(self, result):
       return [{"op"   :"read", "dest" :result, "input":self.name}]
+
+class FileRead:
+  def __init__(self, name):
+    self.name = name
+    self.type_ = "int"
+    self.size = 2
+
+  def generate(self, result):
+      return [{"op"   :"file_read", "dest" :result, "file_name":self.name}]
 
 class Ready:
   def __init__(self, name):

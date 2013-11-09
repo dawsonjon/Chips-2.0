@@ -70,8 +70,8 @@ if __name__ == "__main__":
     import tempfile
     import shutil
     verilog_file = os.path.abspath("%s.v"%name)
-    tempdir = tempfile.mkdtemp()
-    os.chdir(tempdir)
+    #tempdir = tempfile.mkdtemp()
+    #os.chdir(tempdir)
     os.system("iverilog -o %s %s"%(name, verilog_file))
     if "run" in sys.argv:
       result = os.system("vvp %s"%name)
@@ -79,6 +79,6 @@ if __name__ == "__main__":
         sys.exit(1)
       else:
         sys.exit(0)
-    shutil.rmtree(tempdir)
+    #shutil.rmtree(tempdir)
 
   #Add more tools here ...
