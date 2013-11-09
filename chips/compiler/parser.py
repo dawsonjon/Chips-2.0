@@ -533,6 +533,10 @@ class Parser:
             operator = self.tokens.get()
             expression = self.parse_paren_expression()
             return Unary("~", expression, self.allocator)
+        elif self.tokens.peek() == "sizeof":
+            operator = self.tokens.get()
+            expression = self.parse_unary_expression()
+            return SizeOf(expression)
         else:
             return self.parse_paren_expression()
 

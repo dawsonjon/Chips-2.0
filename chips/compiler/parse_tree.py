@@ -197,16 +197,18 @@ class VariableDeclaration:
     self.initializer = initializer
     self.allocator = allocator
     self.type_ = type_
+    self.size = 2
     self.name = name
   def instance(self):
     register = self.allocator.new("variable "+self.name)
-    return VariableInstance(register, self.initializer, self.type_)
+    return VariableInstance(register, self.initializer, self.type_, self.size)
 
 class VariableInstance:
-  def __init__(self, register, initializer, type_):
+  def __init__(self, register, initializer, type_, size):
     self.register = register
     self.type_ = type_
     self.initializer = initializer
+    self.size = size
   def generate(self):
     return self.initializer.generate(self.register)
 
@@ -273,6 +275,7 @@ class StructInstance:
 class Argument:
   def __init__(self, name, type_, parser):
     self.type_=type_
+    self.size=2
     parser.scope[name] = self
     self.register = parser.allocator.new("function argument "+name)
   def generate(self): return []
@@ -308,6 +311,7 @@ class ANDOR:
     self.right = constant_fold(right)
     self.op = op
     self.type_ = "int"
+    self.size = left.size
 
   def generate(self, result):
     instructions = self.left.generate(result)
@@ -329,6 +333,7 @@ class Binary:
     self.operator = operator
     self.allocator = allocator
     self.type_ = self.left.type_
+    self.size = left.size
     if self.left.type_ == "unsigned" and self.right.type_ in ["int", "short", "long", "char"]:
         self.type_ = "unsigned"
     if self.right.type_ == "unsigned" and self.left.type_ in ["int", "short", "long", "char"]:
@@ -367,11 +372,15 @@ class Binary:
   def value(self):
     return eval("%s %s %s"%(value(self.left), self.operator, value(self.right)))
 
+def SizeOf(expression):
+    return Constant(expression.size)
+
 class Unary:
   def __init__(self, operator, expression, allocator):
     self.expression = constant_fold(expression)
     self.operator = operator
     self.type_ = self.expression.type_
+    self.size = expression.size
     self.allocator = allocator
 
   def generate(self, result):
@@ -385,6 +394,8 @@ class Unary:
     return eval("%s%s"%(self.operator, value(self.expression)))
 
 class FunctionCall:
+  def __init__(self):
+      self.size = 2
   def generate(self, result):
     instructions = []
     for expression, argument in zip(self.arguments, self.function.arguments):
@@ -403,6 +414,7 @@ class Output:
     self.name = name
     self.expression = expression
     self.type_ = "int"
+    self.size = expression.size
 
   def generate(self, result):
     instructions = self.expression.generate(result);
@@ -413,6 +425,7 @@ class Input:
   def __init__(self, name):
     self.name = name
     self.type_ = "int"
+    self.size = 2
 
   def generate(self, result):
       return [{"op"   :"read", "dest" :result, "input":self.name}]
@@ -421,6 +434,7 @@ class Ready:
   def __init__(self, name):
     self.name = name
     self.type_ = "int"
+    self.size = 2
 
   def generate(self, result):
       return [{"op"   :"ready", "dest" :result, "input":self.name}]
@@ -431,6 +445,7 @@ class Array:
     self.allocator = allocator
     self.storage = "register"
     self.type_ = self.declaration.type_
+    self.size = int(self.declaration.size) * 2
 
   def generate(self, result):
     instructions = []
@@ -447,6 +462,7 @@ class ArrayIndex:
     self.index_expression = index_expression
     self.storage = "memory"
     self.type_ = self.declaration.type_.rstrip("[]")
+    self.size = 2
 
   def generate(self, result):
     instructions = []
@@ -478,6 +494,7 @@ class Variable:
     self.allocator = allocator
     self.storage = "register"
     self.type_ = self.declaration.type_
+    self.size = self.declaration.size
 
   def generate(self, result):
     instructions = []
@@ -493,6 +510,7 @@ class Assignment:
     self.expression = expression
     self.allocator = allocator
     self.type_ = "int"
+    self.size = 2
 
   def generate(self, result):
     instructions = self.expression.generate(result)
@@ -523,6 +541,7 @@ class Constant:
   def __init__(self, value):
     self._value = value
     self.type_ = "int"
+    self.size = 2
 
   def generate(self, result):
     instructions = [{"op":"literal", "dest":result, "literal":self._value}]
