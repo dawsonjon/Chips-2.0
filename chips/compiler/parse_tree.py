@@ -525,13 +525,37 @@ class Variable:
                            "src" :self.declaration.register})
     return instructions
 
+class PostIncrement:
+  def  __init__(self, operator, lvalue, allocator):
+    self.operator = operator
+    self.lvalue = lvalue
+    self.allocator = allocator
+    self.type_ = self.lvalue.declaration.type_
+    self.size = self.lvalue.declaration.size
+
+  def generate(self, result):
+
+    instructions = []
+
+    instructions.append({"op"    :"move",
+                         "src"   :self.lvalue.declaration.register,
+                         "dest"  :result})
+
+    instructions.append({"op"    :self.operator,
+                         "dest"  :self.lvalue.declaration.register,
+                         "right" :1,
+                         "src"   :self.lvalue.declaration.register,
+                         "type"  :self.type_})
+    
+    return instructions
+
 class Assignment:
   def __init__(self, lvalue, expression, allocator):
     self.lvalue = lvalue
     self.expression = expression
     self.allocator = allocator
-    self.type_ = "int"
-    self.size = 2
+    self.type_ = self.lvalue.declaration.type_
+    self.size = self.lvalue.declaration.size
 
   def generate(self, result):
     instructions = self.expression.generate(result)

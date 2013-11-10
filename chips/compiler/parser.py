@@ -185,8 +185,7 @@ class Parser:
 
     def parse_assignment(self):
         assignment_operators = [
-            "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>=", 
-            "++", "--"
+            "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>=" 
         ]
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
@@ -197,13 +196,6 @@ class Parser:
             operator = self.tokens.get()
             if operator == "=":
                 expression = self.parse_ternary_expression()
-            elif operator in ["++", "--"]:
-                expression = Binary(
-                    operator[:-1],
-                    lvalue, 
-                    Constant(1), 
-                    self.allocator
-                )
             else:
                 expression = Binary(
                     operator[:-1], 
@@ -523,22 +515,33 @@ class Parser:
     def parse_unary_expression(self):
         if self.tokens.peek() == "!":
             operator = self.tokens.get()
-            expression = self.parse_paren_expression()
+            expression = self.parse_postfix_expression()
             return Binary("==", expression, Constant(0), self.allocator)
         elif self.tokens.peek() == "-":
             operator = self.tokens.get()
-            expression = self.parse_paren_expression()
+            expression = self.parse_postfix_expression()
             return Binary("-", Constant(0), expression, self.allocator)
         elif self.tokens.peek() == "~":
             operator = self.tokens.get()
-            expression = self.parse_paren_expression()
+            expression = self.parse_postfix_expression()
             return Unary("~", expression, self.allocator)
         elif self.tokens.peek() == "sizeof":
             operator = self.tokens.get()
             expression = self.parse_unary_expression()
             return SizeOf(expression)
         else:
-            return self.parse_paren_expression()
+            return self.parse_postfix_expression()
+
+    def parse_postfix_expression(self):
+        expression = self.parse_paren_expression()
+        while self.tokens.peek() in ["++", "--"]:
+            operator = self.tokens.get()
+            expression = PostIncrement(
+                operator[:-1],
+                expression, 
+                self.allocator
+            )
+        return expression
 
     def parse_paren_expression(self):
         if self.tokens.peek() == "(":
