@@ -59,15 +59,15 @@ class Parser:
             function.return_value = self.allocator.new(function.name+" return value")
         function.arguments = []
         while self.tokens.peek() != ")":
-            type_ = self.tokens.get()
-            if type_ not in ["unsigned", "int", "short", "long", "char"]:
+            argument_type_ = self.tokens.get()
+            if argument_type_ not in ["unsigned", "int", "short", "long", "char"]:
                 self.tokens.error("unknown type")
             argument = self.tokens.get()
             if self.tokens.peek() == "[":
                 self.tokens.expect("[")
                 self.tokens.expect("]")
-                type_+="[]"
-            function.arguments.append(Argument(argument, type_, self))
+                argument_type_+="[]"
+            function.arguments.append(Argument(argument, argument_type_, self))
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
             else:

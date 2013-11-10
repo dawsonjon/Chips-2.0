@@ -34,6 +34,22 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("void 1",
+"""
+void func(unsigned i){
+}
+void main(){
+  int a = 1;
+  assert(a++ == 1);
+  assert(a++ == 2);
+  assert(a == 3);
+  assert(a-- == 3);
+  assert(a-- == 2);
+  assert(a == 1);
+}
+"""
+)
+
 test("postfix 1",
 """
 int main(){
