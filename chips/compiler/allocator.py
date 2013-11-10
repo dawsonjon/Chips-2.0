@@ -9,24 +9,37 @@ class Allocator:
   def __init__(self, reuse):
     self.registers = []
     self.all_registers = {}
-    self.memory_size = 0
+    self.memory_size_2 = 0
+    self.memory_size_4 = 0
     self.reuse = reuse
-    self.memory_content = {}
+    self.memory_content_2 = {}
+    self.memory_content_4 = {}
 
-  def new_array(self, size, contents):
-    reg = self.memory_size
-    self.memory_size += int(size)
-    if contents is not None:
-        for location, value in enumerate(contents, reg):
-            self.memory_content[location] = value
-    return reg
+  def new_array(self, size, contents, element_size):
+    if element_size == 2:
+        reg = self.memory_size_2
+        self.memory_size_2 += int(size)
+        if contents is not None:
+            for location, value in enumerate(contents, reg):
+                self.memory_content_2[location] = value
+        return reg
+    elif element_size == 4:
+        reg = self.memory_size_4
+        self.memory_size_4 += int(size)
+        if contents is not None:
+            for location, value in enumerate(contents, reg):
+                self.memory_content_4[location] = value
+        return reg
 
-  def new(self, name="temporary_register"):
+
+
+  def new(self, size, name="temporary_register"):
+    assert type(size) == int
     reg = 0
     while reg in self.registers:
       reg += 1
     self.registers.append(reg)
-    self.all_registers[reg] = name
+    self.all_registers[reg] = (name, size)
     return reg
 
   def free(self, register):

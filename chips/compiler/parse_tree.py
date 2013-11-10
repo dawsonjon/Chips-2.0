@@ -27,11 +27,11 @@ def truncate(number):
 
   """Truncate arithmetic results to the target number of bits"""
 
-  sign = number & 0x10000
-  number = number & 0xffff
-  if sign:
-    number =  ~0xffff | number
-  return number
+  #sign = number & 0x10000
+  #number = number & 0xffff
+  #if sign:
+    #number =  ~0xffff | number
+  return int(number)
 
 class Process:
   def generate(self):
@@ -65,7 +65,7 @@ class Continue:
 
 class Assert:
   def generate(self):
-    result = self.allocator.new()
+    result = self.allocator.new(self.expression.size)
     instructions = self.expression.generate(result)
     self.allocator.free(result)
     instructions.append({"op":"assert", "src":result, "line":self.line, "file":self.filename})
@@ -82,15 +82,19 @@ class Return:
 
 class Report:
   def generate(self):
-    result = self.allocator.new()
+    result = self.allocator.new(self.expression.size)
     instructions = self.expression.generate(result)
     self.allocator.free(result)
-    instructions.append({"op":"report", "src":result, "line":self.line, "file":self.filename, "type":self.expression.type_})
+    instructions.append({"op":"report", 
+                         "src":result, 
+                         "line":self.line,
+                         "file":self.filename, 
+                         "signed":self.expression.signed})
     return instructions
 
 class WaitClocks:
   def generate(self):
-    result = self.allocator.new()
+    result = self.allocator.new(self.expression.size)
     instructions = self.expression.generate(result)
     self.allocator.free(result)
     instructions.append({"op":"wait_clocks", "src":result})
@@ -107,7 +111,7 @@ class If:
         else:
           return []
     except NotConstant:
-      result = self.allocator.new()
+      result = self.allocator.new(self.expression.size)
       instructions = []
       instructions.extend(self.expression.generate(result))
       instructions.append({"op"   :"jmp_if_false",
@@ -124,11 +128,11 @@ class If:
 
 class Switch:
   def generate(self):
-    result = self.allocator.new()
-    test = self.allocator.new()
+    result = self.allocator.new(self.expression.size)
+    test = self.allocator.new(self.expression.size)
     instructions = self.expression.generate(result)
     for value, case in self.cases.iteritems():
-      instructions.append({"op":"==", "dest":test, "src":result, "right":value, "type":"int"})
+      instructions.append({"op":"==", "dest":test, "src":result, "right":value, "signed":True})
       instructions.append({"op":"jmp_if_true", "src":test, "label":"case_%s"%id(case)})
     if hasattr(self, "default"):
       instructions.append({"op":"goto", "label":"case_%s"%id(self.default)})
@@ -160,12 +164,12 @@ class For:
     instructions = []
     if hasattr(self, "statement1"):
       instructions.extend(self.statement1.generate())
-    result = self.allocator.new()
     instructions.append({"op":"label", "label":"begin_%s"%id(self)})
     if hasattr(self, "expression"):
+      result = self.allocator.new(self.expression.size)
       instructions.extend(self.expression.generate(result))
       instructions.append({"op":"jmp_if_false", "src":result, "label":"end_%s"%id(self)})
-    self.allocator.free(result)
+      self.allocator.free(result)
     instructions.extend(self.statement3.generate())
     instructions.append({"op":"label", "label":"continue_%s"%id(self)})
     if hasattr(self, "statement2"):
@@ -193,45 +197,84 @@ class CompoundDeclaration:
     return instructions
 
 class VariableDeclaration:
-  def __init__(self, allocator, initializer, name, type_):
+  def __init__(self, allocator, initializer, name, type_, size, signed):
     self.initializer = initializer
     self.allocator = allocator
     self.type_ = type_
-    self.size = 2
+    self.size = size
+    self.signed = signed
     self.name = name
   def instance(self):
-    register = self.allocator.new("variable "+self.name)
-    return VariableInstance(register, self.initializer, self.type_, self.size)
+    register = self.allocator.new(self.size, "variable "+self.name)
+    return VariableInstance(register, self.initializer, self.type_, self.size, self.signed)
 
 class VariableInstance:
-  def __init__(self, register, initializer, type_, size):
+  def __init__(self, register, initializer, type_, size, signed):
     self.register = register
     self.type_ = type_
     self.initializer = initializer
     self.size = size
+    self.signed = signed
   def generate(self):
     return self.initializer.generate(self.register)
 
 class ArrayDeclaration:
-  def __init__(self, allocator, size, type_, initializer = None, initialize_memory = False):
+  def __init__(self, 
+               allocator, 
+               size, 
+               type_, 
+               element_type, 
+               element_size, 
+               element_signed,
+               initializer = None, 
+               initialize_memory = False):
+
     self.allocator = allocator
-    self.size = size
     self.type_ = type_
+    self.size = size
+    self.signed = False
+    self.element_type = element_type
+    self.element_size = element_size
+    self.element_signed = element_signed
     self.initializer = initializer
     self.initialize_memory = initialize_memory
+
   def instance(self):
-    location = self.allocator.new_array(self.size, self.initializer)
-    register = self.allocator.new("array")
-    return ArrayInstance(location, register, self.size, self.type_, self.initializer, self.initialize_memory)
+    location = self.allocator.new_array(self.size, self.initializer, self.element_size)
+    register = self.allocator.new(2, "array")
+    return ArrayInstance(location, 
+                         register, 
+                         self.size, 
+                         self.type_, 
+                         self.initializer, 
+                         self.initialize_memory,
+                         self.element_type,
+                         self.element_size,
+                         self.element_signed)
 
 class ArrayInstance:
-  def __init__(self, location, register, size, type_, initializer, initialize_memory):
+  def __init__(self, 
+               location, 
+               register, 
+               size, 
+               type_, 
+               initializer, 
+               initialize_memory,
+               element_type,
+               element_size,
+               element_signed):
+
     self.register = register
     self.location = location
-    self.size = size
     self.type_ = type_
+    self.size = size
+    self.signed = False
+    self.element_type = element_type
+    self.element_size = element_size
+    self.element_signed = element_signed
     self.initializer = initializer
     self.initialize_memory = initialize_memory
+
   def generate(self, result=None):
       instructions = []
       #If initialize memory is true, the memory content will initialised (as at configuration time)
@@ -239,16 +282,27 @@ class ArrayInstance:
       if not self.initialize_memory and self.initializer is not None:
           location = 0
           for value in self.initializer:
-              instructions.append({"op":"memory_write_literal", "address":location, "value":value})
+              instructions.append({
+                  "op":"memory_write_literal", 
+                  "address":location, 
+                  "value":value, 
+                  "element_size":self.element_size
+              })
               location += 1
-      instructions.append({"op":"literal", "literal":self.location, "dest":self.register})
+      instructions.append({
+          "op":"literal", 
+          "literal":self.location, 
+          "dest":self.register
+      })
       #this bit here is to make string literals work, 
       #in this case an array instance is created implicitly, 
       #but the value of the expression is the array register.
       if result is not None and result != self.register:
-          instructions.append({"op"  :"move",
-                               "dest":result,
-                               "src" :self.register})
+          instructions.append({
+              "op"  :"move",
+              "dest":result,
+              "src" :self.register
+          })
       return instructions
 
 class StructDeclaration:
@@ -273,11 +327,23 @@ class StructInstance:
     return instructions
 
 class Argument:
-  def __init__(self, name, type_, parser):
+  def __init__(self, 
+        name, 
+        type_, 
+        size, 
+        signed, 
+        parser, 
+        element_type, 
+        element_size, 
+        element_signed):
     self.type_=type_
-    self.size=2
+    self.size=size
+    self.signed=signed
+    self.element_type = element_type
+    self.element_size = element_size
+    self.element_signed = element_signed
     parser.scope[name] = self
-    self.register = parser.allocator.new("function argument "+name)
+    self.register = parser.allocator.new(size, "function argument "+name)
   def generate(self): return []
 
 class DiscardExpression:
@@ -286,7 +352,7 @@ class DiscardExpression:
     self.allocator = allocator
 
   def generate(self):
-    result = self.allocator.new()
+    result = self.allocator.new(self.expression.size)
     instructions = self.expression.generate(result)
     self.allocator.free(result)
     return instructions
@@ -312,6 +378,7 @@ class ANDOR:
     self.op = op
     self.type_ = "int"
     self.size = left.size
+    self.signed = left.signed
 
   def generate(self, result):
     instructions = self.left.generate(result)
@@ -333,21 +400,18 @@ class Binary:
     self.operator = operator
     self.allocator = allocator
     self.type_ = self.left.type_
-    self.size = left.size
-    if self.left.type_ == "unsigned" and self.right.type_ in ["int", "short", "long", "char"]:
-        self.type_ = "unsigned"
-    if self.right.type_ == "unsigned" and self.left.type_ in ["int", "short", "long", "char"]:
-        self.type_ = "unsigned"
+    self.size = max(left.size, right.size)
+    self.signed = left.signed and right.signed
 
   def generate(self, result):
-    new_register = self.allocator.new()
+    new_register = self.allocator.new(self.size)
     try:
       instructions = self.right.generate(new_register)
       instructions.append({"op"  :self.operator,
                            "dest":result,
                            "left":value(self.left),
                            "srcb":new_register,
-                           "type":self.type_})
+                           "signed":self.signed})
     except NotConstant:
       try:
         instructions = self.left.generate(new_register)
@@ -355,16 +419,16 @@ class Binary:
                              "dest" :result,
                              "src"  :new_register,
                              "right":value(self.right),
-                             "type" :self.type_})
+                             "signed" :self.signed})
       except NotConstant:
         instructions = self.left.generate(new_register)
-        right = self.allocator.new()
+        right = self.allocator.new(self.right.size)
         instructions.extend(self.right.generate(right))
         instructions.append({"op"  :self.operator, 
                              "dest":result, 
                              "src" :new_register, 
                              "srcb":right,
-                             "type":self.type_})
+                             "signed":self.signed})
         self.allocator.free(right)
     self.allocator.free(new_register)
     return instructions
@@ -381,10 +445,11 @@ class Unary:
     self.operator = operator
     self.type_ = self.expression.type_
     self.size = expression.size
+    self.signed = expression.signed
     self.allocator = allocator
 
   def generate(self, result):
-    new_register = self.allocator.new()
+    new_register = self.allocator.new(self.size)
     instructions = self.expression.generate(new_register)
     instructions.extend([{"op":self.operator, "dest":result, "src":new_register}])
     self.allocator.free(new_register)
@@ -394,8 +459,6 @@ class Unary:
     return eval("%s%s"%(self.operator, value(self.expression)))
 
 class FunctionCall:
-  def __init__(self):
-      self.size = 2
   def generate(self, result):
     instructions = []
     for expression, argument in zip(self.arguments, self.function.arguments):
@@ -467,6 +530,7 @@ class Array:
     self.storage = "register"
     self.type_ = self.declaration.type_
     self.size = int(self.declaration.size) * 2
+    self.signed = False
 
   def generate(self, result):
     instructions = []
@@ -482,29 +546,33 @@ class ArrayIndex:
     self.allocator = allocator
     self.index_expression = index_expression
     self.storage = "memory"
-    self.type_ = self.declaration.type_.rstrip("[]")
-    self.size = 2
+    self.type_  = self.declaration.element_type
+    self.size   = self.declaration.element_size
+    self.signed = self.declaration.element_signed
 
   def generate(self, result):
     instructions = []
-    offset = self.allocator.new()
-    address = self.allocator.new()
+    offset = self.allocator.new(2)
+    address = self.allocator.new(2)
     instructions.extend(self.index_expression.generate(offset))
     instructions.append({"op"    :"+",
                          "dest"  :address,
                          "src"   :offset,
                          "srcb"  :self.declaration.register,
-                         "type"  :self.type_})
+                         "signed":False})
     instructions.append({"op"    :"memory_read_request",
                          "src"   :address,
-                         "sequence": id(self)})
+                         "sequence": id(self),
+                         "element_size":self.size})
     instructions.append({"op"    :"memory_read_wait",
                          "src"   :address,
-                         "sequence": id(self)})
+                         "sequence": id(self),
+                         "element_size":self.size})
     instructions.append({"op"    :"memory_read",
                          "src"   :address,
                          "dest"  :result,
-                         "sequence": id(self)})
+                         "sequence": id(self),
+                         "element_size":self.size})
     self.allocator.free(address)
     self.allocator.free(offset)
     return instructions
@@ -516,6 +584,7 @@ class Variable:
     self.storage = "register"
     self.type_ = self.declaration.type_
     self.size = self.declaration.size
+    self.signed = self.declaration.signed
 
   def generate(self, result):
     instructions = []
@@ -532,6 +601,7 @@ class PostIncrement:
     self.allocator = allocator
     self.type_ = self.lvalue.declaration.type_
     self.size = self.lvalue.declaration.size
+    self.signed = self.lvalue.declaration.signed
 
   def generate(self, result):
 
@@ -545,7 +615,7 @@ class PostIncrement:
                          "dest"  :self.lvalue.declaration.register,
                          "right" :1,
                          "src"   :self.lvalue.declaration.register,
-                         "type"  :self.type_})
+                         "signed":self.signed})
     
     return instructions
 
@@ -554,8 +624,9 @@ class Assignment:
     self.lvalue = lvalue
     self.expression = expression
     self.allocator = allocator
-    self.type_ = self.lvalue.declaration.type_
-    self.size = self.lvalue.declaration.size
+    self.type_ = self.lvalue.type_
+    self.size = self.lvalue.size
+    self.signed = self.lvalue.signed
 
   def generate(self, result):
     instructions = self.expression.generate(result)
@@ -566,27 +637,29 @@ class Assignment:
                              "src"  : result})
 
     elif self.lvalue.storage == "memory":
-      index = self.allocator.new()
-      address = self.allocator.new()
+      index = self.allocator.new(2)
+      address = self.allocator.new(2)
       instructions.extend(self.lvalue.index_expression.generate(index))
-      instructions.append({"op"    :"+",
-                           "dest"  :address,
-                           "src"   :index,
-                           "srcb"  :self.lvalue.declaration.register,
-                           "type"  :self.type_})
+      instructions.append({"op"     :"+",
+                           "dest"   :address,
+                           "src"    :index,
+                           "srcb"   :self.lvalue.declaration.register,
+                           "signed" :self.signed})
       instructions.append({"op"    :"memory_write",
                            "src"   :address,
-                           "srcb"  :result})
+                           "srcb"  :result,
+                           "element_size" :self.lvalue.declaration.element_size})
       self.allocator.free(index)
       self.allocator.free(address)
 
     return instructions
 
 class Constant:
-  def __init__(self, value):
+  def __init__(self, value, size=2, signed=True):
     self._value = value
     self.type_ = "int"
-    self.size = 2
+    self.size = size
+    self.signed = signed
 
   def generate(self, result):
     instructions = [{"op":"literal", "dest":result, "literal":self._value}]

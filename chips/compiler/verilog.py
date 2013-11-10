@@ -33,9 +33,11 @@ def generate_CHIP(input_file,
                   frames, 
                   output_file, 
                   registers, 
-                  memory_size, 
+                  memory_size_2, 
+                  memory_size_4, 
                   initialize_memory,
-                  memory_content, 
+                  memory_content_2, 
+                  memory_content_4, 
                   no_tb_mode=False):
 
   """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
@@ -132,12 +134,16 @@ def generate_CHIP(input_file,
   signals = [
     ("timer", 16),
     ("program_counter", log2(len(frames))),
-    ("address", 16),
-    ("data_out", 16),
-    ("data_in", 16),
-    ("write_enable", 1),
+    ("address_2", 16),
+    ("data_out_2", 16),
+    ("data_in_2", 16),
+    ("write_enable_2", 1),
+    ("address_4", 16),
+    ("data_out_4", 32),
+    ("data_in_4", 32),
+    ("write_enable_4", 1),
   ] + [
-    ("register_%s"%(register), 16) for register in registers
+    ("register_%s"%(register), definition[1]*8) for register, definition in registers.iteritems()
   ] + [
     ("s_output_" + i + "_stb", 16) for i in outputs
   ] + [
@@ -164,10 +170,18 @@ def generate_CHIP(input_file,
   for i in outputs:
       output_file.write("//output : output_%s:16\n"%i)
   output_file.write("//source_file : %s\n"%input_file)
-  output_file.write("///%s\n"%name.title())
   output_file.write("///%s\n"%"".join(["=" for i in name]))
   output_file.write("///\n")
   output_file.write("///*Created by C2CHIP*\n\n")
+
+
+  output_file.write("// Register Allocation\n")
+  output_file.write("// ===================\n")
+  output_file.write("//   %s   %s   %s  \n"%("Register".center(20), "Name".center(20), "Size".center(20)))
+  for register, definition in registers.iteritems():
+      register_name, size = definition
+      output_file.write("//   %s   %s   %s  \n"%(str(register).center(20), register_name.center(20), str(size).center(20)))
+
   output_file.write("  \n`timescale 1ns/1ps\n")
   output_file.write("module %s"%name)
 
@@ -221,8 +235,12 @@ def generate_CHIP(input_file,
   for name, size, value in parameters:
       write_declaration("  parameter ", name, size, value)
 
-  memory_size = int(memory_size)
-  output_file.write("  reg [15:0] memory [%i:0];\n"%(memory_size-1))
+  memory_size_2 = int(memory_size_2)
+  memory_size_4 = int(memory_size_4)
+  if memory_size_2:
+      output_file.write("  reg [15:0] memory_2 [%i:0];\n"%(memory_size_2-1))
+  if memory_size_4:
+      output_file.write("  reg [31:0] memory_4 [%i:0];\n"%(memory_size_4-1))
 
   #generate clock and reset in testbench mode
   if testbench:
@@ -255,29 +273,40 @@ def generate_CHIP(input_file,
   binary_operators = ["+", "-", "*", "/", "|", "&", "^", "<<", ">>", "<",">", ">=",
     "<=", "==", "!="]
 
-  output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
-  output_file.write("  // MEMORY INITIALIZATION                                                      \n")
-  output_file.write("  //                                                                            \n")
-  output_file.write("  // In order to reduce program size, array contents have been stored into      \n") 
-  output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n") 
-  output_file.write("  // initialized when the FPGA configures.                                      \n") 
-  output_file.write("  // Memory will not be re-initialized at reset.                                \n") 
-  output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n") 
 
-  if initialize_memory:
+  if initialize_memory and (memory_content_2 or memory_content_4):
+
+      output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
+      output_file.write("  // MEMORY INITIALIZATION                                                      \n")
+      output_file.write("  //                                                                            \n")
+      output_file.write("  // In order to reduce program size, array contents have been stored into      \n") 
+      output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n") 
+      output_file.write("  // initialized when the FPGA configures.                                      \n") 
+      output_file.write("  // Memory will not be re-initialized at reset.                                \n") 
+      output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n") 
+
       output_file.write("  \n  initial\n")
       output_file.write("  begin\n")
-      for location, content in memory_content.iteritems():
-          output_file.write("    memory[16'd%s] = 16'd%s;\n"%(location, content))
+      for location, content in memory_content_2.iteritems():
+          output_file.write("    memory_2[%s] = %s;\n"%(location, content))
+      for location, content in memory_content_4.iteritems():
+          output_file.write("    memory_4[%s] = %s;\n"%(location, content))
       output_file.write("  end\n\n")
 
-  output_file.write("  \n  initial\n")
-  output_file.write("  begin\n")
-  for file_name, file_ in input_files.iteritems():
-      output_file.write("    %s = $fopenr(\"%s\");\n"%(file_, file_name))
-  for file_name, file_ in output_files.iteritems():
-      output_file.write("    %s = $fopen(\"%s\");\n"%(file_, file_name))
-  output_file.write("  end\n\n")
+  if input_files or output_files:
+
+      output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
+      output_file.write("  // OPEN FILES                                                                 \n")
+      output_file.write("  //                                                                            \n")
+      output_file.write("  // Open all files used at the start of the process                            \n") 
+
+      output_file.write("  \n  initial\n")
+      output_file.write("  begin\n")
+      for file_name, file_ in input_files.iteritems():
+          output_file.write("    %s = $fopenr(\"%s\");\n"%(file_, file_name))
+      for file_name, file_ in output_files.iteritems():
+          output_file.write("    %s = $fopen(\"%s\");\n"%(file_, file_name))
+      output_file.write("  end\n\n")
 
   output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
   output_file.write("  // FSM IMPLEMENTAION OF C PROCESS                                             \n")
@@ -290,11 +319,24 @@ def generate_CHIP(input_file,
 
   output_file.write("  \n  always @(posedge clk)\n")
   output_file.write("  begin\n\n")
-  output_file.write("    if (write_enable == 1'b1) begin\n")
-  output_file.write("      memory[address] <= data_in;\n")
-  output_file.write("    end\n\n")
-  output_file.write("    data_out <= memory[address];\n")
-  output_file.write("    write_enable <= 1'b0;\n")
+
+  if memory_size_2:
+      output_file.write("    //implement memory for 2 byte x n arrays\n")
+      output_file.write("    if (write_enable_2 == 1'b1) begin\n")
+      output_file.write("      memory_2[address_2] <= data_in_2;\n")
+      output_file.write("    end\n")
+      output_file.write("    data_out_2 <= memory_2[address_2];\n")
+      output_file.write("    write_enable_2 <= 1'b0;\n\n")
+
+  if memory_size_4:
+      output_file.write("    //implement memory for 4 byte x n arrays\n")
+      output_file.write("    if (write_enable_4 == 1'b1) begin\n")
+      output_file.write("      memory_4[address_4] <= data_in_4;\n")
+      output_file.write("    end\n")
+      output_file.write("    data_out_4 <= memory_4[address_4];\n")
+      output_file.write("    write_enable_4 <= 1'b0;\n\n")
+
+  output_file.write("    //implement timer\n")
   output_file.write("    timer <= 16'h0000;\n\n")
   output_file.write("    case(program_counter)\n\n")
 
@@ -307,9 +349,9 @@ def generate_CHIP(input_file,
 
       if instruction["op"] == "literal":
         output_file.write(
-          "        register_%s <= 16'd%s;\n"%(
+          "        register_%s <= %s;\n"%(
           instruction["dest"],
-          instruction["literal"]&0xffff))
+          instruction["literal"]))
 
       elif instruction["op"] == "move":
         output_file.write(
@@ -325,7 +367,7 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["/"] and "left" in instruction:
 
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        is_signed  <= 1'b0;\n")
         else:
@@ -346,7 +388,7 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["/"] and "right" in instruction:
 
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        is_signed  <= 1'b0;\n")
         else:
@@ -367,7 +409,7 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["%"] and "left" in instruction:
 
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        is_signed  <= 1'b0;\n")
         else:
@@ -388,7 +430,7 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["%"] and "right" in instruction:
 
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        is_signed  <= 1'b0;\n")
         else:
@@ -409,7 +451,7 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["%"]:
 
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        is_signed  <= 1'b0;\n")
         else:
@@ -430,7 +472,7 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] in ["/"]:
 
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        is_signed  <= 1'b0;\n")
         else:
@@ -450,11 +492,11 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] in binary_operators and "left" in instruction:
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
-              "        register_%s <= $unsigned(16'd%s) %s $unsigned(register_%s);\n"%(
+              "        register_%s <= %s %s $unsigned(register_%s);\n"%(
               instruction["dest"],
-              instruction["left"]&0xffff,
+              instruction["left"],
               instruction["op"],
               instruction["srcb"]))
         else:
@@ -462,33 +504,33 @@ def generate_CHIP(input_file,
             if instruction["op"] == ">>":
                 instruction["op"] = ">>>"
             output_file.write(
-              "        register_%s <= $signed(16'd%s) %s $signed(register_%s);\n"%(
+              "        register_%s <= %s %s $signed(register_%s);\n"%(
               instruction["dest"],
-              instruction["left"]&0xffff,
+              instruction["left"],
               instruction["op"],
               instruction["srcb"]))
 
       elif instruction["op"] in binary_operators and "right" in instruction:
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
-              "        register_%s <= $unsigned(register_%s) %s $unsigned(16'd%s);\n"%(
+              "        register_%s <= $unsigned(register_%s) %s %s;\n"%(
               instruction["dest"],
               instruction["src"],
               instruction["op"],
-              instruction["right"] & 0xffff))
+              instruction["right"]))
         else:
             #Verilog uses >>> as an arithmetic right shift
             if instruction["op"] == ">>":
                 instruction["op"] = ">>>"
             output_file.write(
-              "        register_%s <= $signed(register_%s) %s $signed(16'd%s);\n"%(
+              "        register_%s <= $signed(register_%s) %s %s;\n"%(
               instruction["dest"],
               instruction["src"],
               instruction["op"],
-              instruction["right"] & 0xffff))
+              instruction["right"]))
 
       elif instruction["op"] in binary_operators:
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               "        register_%s <= $unsigned(register_%s) %s $unsigned(register_%s);\n"%(
               instruction["dest"],
@@ -507,11 +549,11 @@ def generate_CHIP(input_file,
               instruction["srcb"]))
 
       elif instruction["op"] == "jmp_if_false":
-        output_file.write("        if (register_%s == 16'h0000)\n"%(instruction["src"]));
+        output_file.write("        if (register_%s == 0)\n"%(instruction["src"]));
         output_file.write("          program_counter <= %s;\n"%to_gray(instruction["label"]&0xffff))
 
       elif instruction["op"] == "jmp_if_true":
-        output_file.write("        if (register_%s != 16'h0000)\n"%(instruction["src"]));
+        output_file.write("        if (register_%s != 0)\n"%(instruction["src"]));
         output_file.write("          program_counter <= 16'd%s;\n"%to_gray(instruction["label"]&0xffff))
 
       elif instruction["op"] == "jmp_and_link":
@@ -548,7 +590,7 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] == "ready":
-        output_file.write("        register_%s <= 16'd0;\n"%instruction["dest"])
+        output_file.write("        register_%s <= 0;\n"%instruction["dest"])
         output_file.write("        register_%s[0] <= input_%s_stb;\n"%(
           instruction["dest"], instruction["input"]))
 
@@ -568,7 +610,9 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] == "memory_read_request":
         output_file.write(
-          "        address <= register_%s;\n"%(instruction["src"])
+          "        address_%s <= register_%s;\n"%(
+              instruction["element_size"],
+              instruction["src"])
         )
 
       elif instruction["op"] == "memory_read_wait":
@@ -576,21 +620,39 @@ def generate_CHIP(input_file,
 
       elif instruction["op"] == "memory_read":
         output_file.write(
-          "        register_%s <= data_out;\n"%(instruction["dest"])
+          "        register_%s <= data_out_%s;\n"%(
+              instruction["dest"],
+              instruction["element_size"])
         )
 
       elif instruction["op"] == "memory_write":
-        output_file.write("        address <= register_%s;\n"%(instruction["src"]))
-        output_file.write("        data_in <= register_%s;\n"%(instruction["srcb"]))
-        output_file.write("        write_enable <= 1'b1;\n")
+        output_file.write("        address_%s <= register_%s;\n"%(
+            instruction["element_size"],
+            instruction["src"])
+        )
+        output_file.write("        data_in_%s <= register_%s;\n"%(
+            instruction["element_size"],
+            instruction["srcb"])
+        )
+        output_file.write("        write_enable_%s <= 1'b1;\n"%(
+            instruction["element_size"])
+        )
 
       elif instruction["op"] == "memory_write_literal":
-        output_file.write("        address <= 16'd%s;\n"%(instruction["address"]))
-        output_file.write("        data_in <= 16'd%s;\n"%(instruction["value"]))
-        output_file.write("        write_enable <= 1'b1;\n")
+        output_file.write("        address_%s <= 16'd%s;\n"%(
+            instruction["element_size"],
+            instruction["address"])
+        )
+        output_file.write("        data_in_%s <= %s;\n"%(
+            instruction["element_size"],
+            instruction["value"])
+        )
+        output_file.write("        write_enable_%s <= 1'b1;\n"%(
+            instruction["element_size"])
+        )
 
       elif instruction["op"] == "assert":
-        output_file.write( "        if (register_%s == 16'h0000) begin\n"%instruction["src"])
+        output_file.write( "        if (register_%s == 0) begin\n"%instruction["src"])
         output_file.write( "          $display(\"Assertion failed at line: %s in file: %s\");\n"%(
           instruction["line"],
           instruction["file"]
@@ -605,7 +667,7 @@ def generate_CHIP(input_file,
         output_file.write("        end\n")
 
       elif instruction["op"] == "report":
-        if instruction["type"] == "unsigned":
+        if not instruction["signed"]:
             output_file.write(
               '        $display ("%%d (report at line: %s in file: %s)", $unsigned(register_%s));\n'%(
               instruction["line"],

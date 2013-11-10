@@ -35,39 +35,87 @@ class Parser:
         process.main = self.main
         return process
 
+    def parse_type_specifier(self):
+        type_specifiers = []
+
+        while self.tokens.peek() in ["signed", "unsigned", "short", "long", "char", "int", "void"] + self.structs:
+            type_specifiers.append(self.tokens.get())
+
+        signed = True
+        if "unsigned" in type_specifiers:
+            signed = False
+            if "signed" in type_specifiers:
+                self.tokens.error("Cannot be signed and unsigned")
+
+        size = 2
+        if "long" in type_specifiers:
+            if "short" in type_specifiers:
+                self.tokens.error("Cannot be long and short")
+            size = 4
+
+        type_ = "int"
+        for i in type_specifiers:
+            if i in self.structs:
+                type_ = i
+                size = 2
+                signed = False
+
+        if "void" in type_specifiers:
+            type_ = "void"
+            size = 2
+            signed = False
+
+
+        return type_, size, signed
+
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
         stored_scope = self.scope
-        type_ = self.tokens.get()
+        type_, size, signed = self.parse_type_specifier()
         name = self.tokens.get()
         
         #check if it is a global declaration
         if self.tokens.peek() != "(":
-            if type_ not in ["unsigned", "int", "short", "long", "char"] + self.structs:
-                self.tokens.error("unknown type")
-            return self.parse_global_declaration(type_, name)
+            return self.parse_global_declaration(type_, size, signed, name)
 
         #otherwise continue parsing a function
         self.tokens.expect("(")
         function.name = name
         function.type_ = type_
-        function.return_address = self.allocator.new(function.name+" return address")
-        if type_ not in ["unsigned", "int", "short", "long", "char", "void"]:
-            self.tokens.error("unknown type")
+        function.size = size
+        function.signed = signed
+        function.return_address = self.allocator.new(2, function.name+" return address")
         if type_ != "void":
-            function.return_value = self.allocator.new(function.name+" return value")
+            function.return_value = self.allocator.new(2, function.name+" return value")
         function.arguments = []
         while self.tokens.peek() != ")":
-            argument_type_ = self.tokens.get()
-            if argument_type_ not in ["unsigned", "int", "short", "long", "char"]:
-                self.tokens.error("unknown type")
+            argument_type, argument_size, argument_signed = self.parse_type_specifier()
+            if argument_type in ["void"]:
+                self.tokens.error("argument cannot be void")
             argument = self.tokens.get()
+            element_type = None
+            element_size = None
+            element_signed = None
             if self.tokens.peek() == "[":
                 self.tokens.expect("[")
                 self.tokens.expect("]")
-                argument_type_+="[]"
-            function.arguments.append(Argument(argument, argument_type_, self))
+                element_type = argument_type
+                element_size = argument_size
+                element_signed = argument_signed
+                argument_type+="[]"
+                argument_size = 2
+                argument_signed = False
+
+            function.arguments.append(Argument(
+                argument, 
+                argument_type, 
+                argument_size, 
+                argument_signed, 
+                self,
+                element_type,
+                element_size,
+                element_signed))
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
             else:
@@ -253,7 +301,7 @@ class Parser:
     def parse_case(self):
         self.tokens.expect("case")
         expression = self.parse_expression()
-        if expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
+        if expression.type_ not in ["int"]:
             self.tokens.error(
                 "case expression must be an integer like expression"
             )
@@ -301,7 +349,7 @@ class Parser:
         break_ = Break()
         break_.loop = loop
         if_.allocator = self.allocator
-        if expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
+        if expression.type_ not in ["int"]:
             self.tokens.error(
                 "if statement conditional must be an integer like expression"
             )
@@ -350,9 +398,9 @@ class Parser:
         self.tokens.expect("{")
         members = {}
         while self.tokens.peek() != "}":
-            type_ = self.tokens.get()
+            type_, size, signed = self.parse_type_specifier()
             name = self.tokens.get()
-            members[name] = self.parse_declaration(type_, name)
+            members[name] = self.parse_declaration(type_, size, signed, name)
             self.tokens.expect(";")
         self.tokens.expect("}")
         return members
@@ -382,10 +430,10 @@ class Parser:
         self.scope[name] = instance
         return instance
 
-    def parse_global_declaration(self, type_, name):
+    def parse_global_declaration(self, type_, size, signed, name):
         instances = []
         while True:
-            instance = self.parse_declaration(type_, name).instance()
+            instance = self.parse_declaration(type_, size, signed, name).instance()
             self.scope[name] = instance
             instances.append(instance)
             if self.tokens.peek() == ",":
@@ -397,11 +445,11 @@ class Parser:
         return CompoundDeclaration(instances)
 
     def parse_compound_declaration(self):
-        type_ = self.tokens.get()
+        type_, size, signed = self.parse_type_specifier()
         instances = []
         while True:
             name = self.tokens.get()
-            instance = self.parse_declaration(type_, name).instance()
+            instance = self.parse_declaration(type_, size, signed, name).instance()
             self.scope[name] = instance
             instances.append(instance)
             if self.tokens.peek() == ",":
@@ -412,29 +460,36 @@ class Parser:
         self.tokens.expect(";")
         return CompoundDeclaration(instances)
 
-    def parse_declaration(self, type_, name):
+    def parse_declaration(self, type_, size, signed, name):
         #struct declaration
         if type_ in self.structs:
             declaration = self.scope[type_]
-        elif type_ in ["unsigned", "int", "short", "long", "char"]:
+        elif type_ in ["int"]:
             #array declaration 
             if self.tokens.peek() == "[":
-                size = None
+                array_size = None
                 self.tokens.expect("[")
                 if self.tokens.peek() != "]":
-                    size = self.tokens.get()
+                    array_size = int(self.tokens.get())
                 self.tokens.expect("]")
                 initializer = None
                 if self.tokens.peek() == "=":
                     self.tokens.expect("=")
                     initializer = self.tokens.get()
                     initializer = [ord(i) for i in initializer.strip('"').decode("string_escape")] + [0]
-                    size = len(initializer)
-                if size is None:
+                    array_size = len(initializer)
+                if array_size is None:
                     self.tokens.error("array size must be specified if not initialized")
-                type_+="[]"
+                array_type=type_+"[]"
                 initialize_memory = self.initialize_memory
-                declaration = ArrayDeclaration(self.allocator, size, type_, initializer, self.initialize_memory)
+                declaration = ArrayDeclaration(self.allocator, 
+                                               array_size, 
+                                               array_type, 
+                                               type_,
+                                               size,
+                                               signed,
+                                               initializer, 
+                                               self.initialize_memory)
 
             #simple variable declaration 
             else:
@@ -447,7 +502,9 @@ class Parser:
                     self.allocator, 
                     initializer, 
                     name,
-                    type_
+                    type_,
+                    size,
+                    signed
                 )
 
         return declaration
@@ -624,6 +681,8 @@ class Parser:
 
         function_call.function = self.scope[name]
         function_call.type_ = function_call.function.type_
+        function_call.size = function_call.function.size
+        function_call.signed = function_call.function.signed
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
@@ -646,6 +705,8 @@ class Parser:
 
     def parse_number(self):
         token = self.tokens.get()
+        size = 2
+        signed = True
         if token.startswith("'"):
             try:
                 token = eval(token)
@@ -657,16 +718,41 @@ class Parser:
                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
                 size = len(initializer)
                 initialize_memory = self.initialize_memory
-                declaration = ArrayDeclaration(self.allocator, size, "char[]", initializer, self.initialize_memory)
+                declaration = ArrayDeclaration(
+                    self.allocator, 
+                    size, 
+                    "int[]", 
+                    "int", 
+                    2, 
+                    False, 
+                    initializer, 
+                    self.initialize_memory)
                 return declaration.instance()
             except SyntaxError:
                 self.tokens.error("%s is not a character literal"%token)
         else:
             try:
+                if "U" in token.upper():
+                    signed = False
+                if "L" in token.upper():
+                    size = 4
+                token = token.upper().replace("U", "")
                 value = int(eval(token))
+
+                if signed:
+                    if value > 2**((size * 8)-1) - 1:
+                        self.tokens.error("value too large")
+                    if value < -(2**((size * 8)-1)):
+                        self.tokens.error("value too small")
+                else:
+                    if value > 2**(size * 8) - 1:
+                        self.tokens.error("value too large")
+                    if value < 0:
+                        self.tokens.error("value too small")
+
             except SyntaxError:
                 self.tokens.error("%s is not an integer literal"%token)
-        return Constant(value)
+        return Constant(value, size, signed)
 
     def parse_variable(self, name):
         if name not in self.scope:
@@ -696,11 +782,4 @@ class Parser:
             return self.parse_variable_array_struct(instance)
 
 def compatible(left, right):
-    if left == right:
-        return True
-    if left in ["unsigned", "int", "short", "long", "char"] and right in ["unsigned", "int", "short", "long", "char"]:
-        return True
-    if left in ["unsigned[]", "int[]", "short[]", "long[]", "char[]"] and right in ["unsigned[]", "int[]", "short[]", "long[]", "char[]"]:
-        return True
-    return False
-
+    return left == right

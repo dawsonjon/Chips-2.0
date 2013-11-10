@@ -34,6 +34,143 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("long 1",
+"""
+void main(){
+  long a = 100000L;
+  assert(a==100000L);
+}
+"""
+)
+
+test("long 2",
+"""
+void main(){
+  long a = 100000L;
+  assert(sizeof a == 4);
+}
+"""
+)
+
+test("long 3",
+"""
+void main(){
+  long a = 0xffffL;
+  assert(a+1 != 0);
+  assert(a+1 == 0x10000L);
+}
+"""
+)
+
+test("long 4",
+"""
+void main(){
+  long a = 0xffffL;
+  long b = 0xffffL;
+  assert(a+b == 0x1fffeL);
+}
+"""
+)
+test("long 5",
+"""
+void main(){
+  long a = 0xffffffffUL;
+  long b = 0x0;
+  assert(a < b);
+}
+"""
+)
+test("long 6",
+"""
+void main(){
+  unsigned long a = 0xffffffffUL;
+  long b = 0x0;
+  assert(a > b);
+}
+"""
+)
+
+test("long 7",
+"""
+void test_long(long a){
+    assert(a+1 != 0);
+    assert(a+1 == 0x10000L);
+}
+
+void main(){
+  long a = 0xffffL;
+  test_long(a);
+}
+"""
+)
+
+test("long 8",
+"""
+void test_long(unsigned long a){
+    assert(a > 0);
+}
+
+void main(){
+  unsigned long a = 0xffffffffUL;
+  test_long(a);
+}
+"""
+)
+
+test("long 9",
+"""
+void test_long(long a){
+    assert(a < 0);
+}
+
+void main(){
+  unsigned long a = 0xffffffffUL;
+  test_long(a);
+}
+"""
+)
+
+test("long 10",
+"""
+void test_long(unsigned long a){
+    assert(a > 0);
+}
+
+void main(){
+  long a = 0xffffffffUL;
+  test_long(a);
+}
+"""
+)
+
+test("long 11",
+"""
+void main(){
+  long a[2];
+  a[0] = 0xffffffffUL;
+  a[1] = 0xffffffffUL;
+  assert(a[1] == 0xffffffffUL);
+}
+"""
+)
+
+test("long 12",
+"""
+void main(){
+  long a[2];
+  int b[2];
+  a[0] = 1;
+  b[0] = 2;
+  a[1] = 3;
+  b[1] = 4;
+  assert(a[0] == 1);
+  assert(b[0] == 2);
+  assert(a[1] == 3);
+  assert(b[1] == 4);
+}
+"""
+)
+
 test("void 1",
 """
 void func(unsigned i){
@@ -65,10 +202,11 @@ int main(){
 """
 )
 
+
 test("sizeof 1",
 """
 int main(){
-  unsigned a = 0xffff;
+  unsigned a = 0xffffU;
   unsigned b = 0x7fff;
   unsigned c[4];
   unsigned d[] = "asdfg";
@@ -84,9 +222,9 @@ int main(){
 test("type_unsigned 1",
 """
 int main(){
-  unsigned a = 0xffff;
+  unsigned a = 0xffffU;
   unsigned b = 0x7fff;
-  assert(a==0xffff);
+  assert(a==0xffffU);
   assert(a > b);
 
   return 0;
@@ -97,9 +235,9 @@ int main(){
 test("type_unsigned 2",
 """
 int main(){
-  unsigned a = 0xffff;
+  unsigned a = 0xffffU;
   unsigned b = 0x7fff;
-  assert(a==0xffff);
+  assert(a==0xffffU);
   assert(b < a);
 
   return 0;
@@ -115,6 +253,54 @@ int test(unsigned a){
   
 int main(){
   assert(test(3) == 3);
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 4",
+"""
+int main(){
+  int a = 1;
+  unsigned b = 1;
+  assert(a == b);
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 5",
+"""
+int main(){
+  int a = 1;
+  assert(a == 1);
+  return 0;
+}
+"""
+)
+test("type_unsigned 6",
+"""
+int main(){
+  int a = 1;
+  assert(1 == a);
+  return 0;
+}
+"""
+)
+test("type_unsigned 7",
+"""
+int main(){
+  unsigned b = 1;
+  assert(1 == b);
+  return 0;
+}
+"""
+)
+test("type_unsigned 8",
+"""
+int main(){
+  unsigned b = 1;
+  assert(b == 1);
   return 0;
 }
 """
@@ -365,8 +551,8 @@ int main(){
 test("char 1",
 """
 int main(){
-  int char = 'a';
-  assert(char == 97);
+  int c = 'a';
+  assert(c == 97);
   return 0;
 }
 
@@ -374,8 +560,8 @@ int main(){
 test("char 2",
 """
 int main(){
-  int char = 'A';
-  assert(char == 65);
+  int c = 'A';
+  assert(c == 65);
   return 0;
 }
 
@@ -383,26 +569,17 @@ int main(){
 test("char 3",
 """
 int main(){
-  int char = '1';
-  assert(char == 49);
+  int c = '1';
+  assert(c == 49);
   return 0;
 }
 
 """)
-test_fails("char 4",
+test("char 4",
 """
 int main(){
-  int char = '1;
-  assert(char == 49);
-  return 0;
-}
-
-""")
-test("char 5",
-"""
-int main(){
-  int char = '\\n';
-  assert(char == 10);
+  int c = '\\n';
+  assert(c == 10);
   return 0;
 }
 
@@ -643,8 +820,8 @@ int main(){
 test("division 13",
 """
 int main(){
-  int a = -32768;
-  int b = -32768;
+  int a = -32767-1;
+  int b = -32767-1;
   assert(a/b == 1);
   return 0;
 }

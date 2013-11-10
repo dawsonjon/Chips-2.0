@@ -86,7 +86,7 @@ class Tokens:
     
                 #number
                 elif token[0].isdigit():
-                    if char.isdigit() or char.upper() in ".XABCDEF":
+                    if char.upper() in "UXABCDEFL0123456789": 
                         token += char
                     else:
                         tokens.append((self.filename, self.lineno, token))

@@ -55,9 +55,11 @@ if __name__ == "__main__":
               frames, 
               output_file, 
               parser.allocator.all_registers,
-              parser.allocator.memory_size, 
+              parser.allocator.memory_size_2, 
+              parser.allocator.memory_size_4, 
               initialize_memory, 
-              parser.allocator.memory_content)
+              parser.allocator.memory_content_2,
+              parser.allocator.memory_content_4)
       output_file.close()
   except C2CHIPError as err:
       print "Error in file:", err.filename, "at line:", err.lineno
