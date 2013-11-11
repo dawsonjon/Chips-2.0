@@ -34,6 +34,46 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("unsigned divide 1",
+"""
+void main(){
+  unsigned a = 10;
+  unsigned b = 5;
+  assert(a/b==2);
+}
+"""
+)
+
+test("long unsigned divide 1",
+"""
+void main(){
+  long unsigned a = 1000000L;
+  long unsigned b = 500000L;
+  assert(a/b==2);
+}
+"""
+)
+
+test("divide 1",
+"""
+void main(){
+  int a = 10;
+  int b = 5;
+  assert(a/b==2);
+}
+"""
+)
+
+test("long divide 1",
+"""
+void main(){
+  long a = 1000000L;
+  long b = 500000L;
+  assert(a/b==2);
+}
+"""
+)
+
 test("long 1",
 """
 void main(){

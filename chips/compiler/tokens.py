@@ -3,8 +3,10 @@ __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
 import os.path
+import StringIO
 
 from chips.compiler.exceptions import C2CHIPError
+from chips.compiler.builtins import builtins
 
 operators = [
   "!", "~", "+", "-", "*", "/", "//", "%", "=", "==", "<", ">", "<=", ">=",
@@ -22,18 +24,19 @@ class Tokens:
        self.tokens = []
        self.filename = None
        self.lineno = None
+       self.scan("built in", StringIO.StringIO(builtins))
        self.scan(filename)
 
-    def scan(self, filename):
+    def scan(self, filename, input_file=None):
   
         """Convert the test file into tokens"""
         self.filename = filename
     
-        try:
-            input_file = open(self.filename)        
-        except IOError:
-            raise C2CHIPError("Cannot open file: "+self.filename)
-    
+        if input_file is None:
+            try:
+                input_file = open(self.filename)        
+            except IOError:
+                raise C2CHIPError("Cannot open file: "+self.filename)
     
         token = []
         tokens = []
