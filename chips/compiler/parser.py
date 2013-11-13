@@ -87,7 +87,7 @@ class Parser:
         function.signed = signed
         function.return_address = self.allocator.new(2, function.name+" return address")
         if type_ != "void":
-            function.return_value = self.allocator.new(2, function.name+" return value")
+            function.return_value = self.allocator.new(function.size, function.name+" return value")
         function.arguments = []
         while self.tokens.peek() != ")":
             argument_type, argument_size, argument_signed = self.parse_type_specifier()
