@@ -519,6 +519,7 @@ class Ready:
     self.name = name
     self.type_ = "int"
     self.size = 2
+    self.signed = True
 
   def generate(self, result):
       return [{"op"   :"ready", "dest" :result, "input":self.name}]
