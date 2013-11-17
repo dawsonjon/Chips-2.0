@@ -60,16 +60,6 @@ def generate_CHIP(input_file,
       if "label" in instruction:
         instruction["label"]=labels[instruction["label"]]
 
-  has_divider = False
-  #substitue real values for labeled jump locations
-  for frame in frames:
-    for instruction in frame:
-      if instruction["op"] in ["/", "%"]:
-          has_divider = True
-          break
-    if has_divider:
-        break
-
   #list all inputs and outputs used in the program
   inputs = unique([i["input"] for frame in frames for i in frame if "input" in i])
   outputs = unique([i["output"] for frame in frames for i in frame if "output" in i])
@@ -94,42 +84,6 @@ def generate_CHIP(input_file,
     ("input_" + i + "_ack", 1) for i in inputs
   ]
 
-  #create signals and ports for divider
-  if has_divider:
-      division_signals = [
-        ("a", 16),
-        ("b", 16),
-        ("z", 16),
-        ("divisor", 16),
-        ("dividend", 16),
-        ("quotient", 16),
-        ("remainder", 16),
-        ("modulo", 16),
-        ("mod_sign", 1),
-        ("count", 5),
-        ("state", 2),
-        ("stb", 1),
-        ("ack", 1),
-        ("sign", 1),
-        ("is_signed", 1),
-      ]
-
-      division_wires = [
-        ("difference", 16),
-      ]
-
-      division_parameters = [
-        ("start", 2, 0),
-        ("calculate", 2, 1),
-        ("finish", 2, 2),
-        ("acknowledge", 2, 3),
-      ]
-  else:
-      division_signals = [ ]
-      division_wires = [ ]
-      division_parameters = [ ]
-
-
   #create list of signals
   signals = [
     ("timer", 16),
@@ -150,10 +104,7 @@ def generate_CHIP(input_file,
     ("s_output_" + i, 16) for i in outputs
   ] + [
     ("s_input_" + i + "_ack", 16) for i in inputs
-  ] + division_signals
-
-  parameters = division_parameters
-  wires = division_wires
+  ]
 
   if testbench:
     signals.append(("clk", 1))
@@ -228,12 +179,6 @@ def generate_CHIP(input_file,
 
   for name, size in signals:
       write_declaration("  reg       ", name, size)
-
-  for name, size in wires:
-      write_declaration("  wire      ", name, size)
-
-  for name, size, value in parameters:
-      write_declaration("  parameter ", name, size, value)
 
   memory_size_2 = int(memory_size_2)
   memory_size_4 = int(memory_size_4)
@@ -364,132 +309,6 @@ def generate_CHIP(input_file,
           "        register_%s <= ~register_%s;\n"%(
           instruction["dest"],
           instruction["src"]))
-
-      elif instruction["op"] in ["/"] and "left" in instruction:
-
-        if not instruction["signed"]:
-            output_file.write(
-              "        is_signed  <= 1'b0;\n")
-        else:
-            output_file.write(
-              "        is_signed  <= 1'b1;\n")
-
-        output_file.write(
-          "        divisor  <= $signed(16'd%i);\n"%(instruction["left"]&0xffff))
-        output_file.write(
-          "        dividend <= $signed(register_%s);\n"%instruction["srcb"])
-        output_file.write(
-          "        register_%s <= quotient;\n"%instruction["dest"])
-        output_file.write("        stb <= 1'b0;\n")
-        output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%to_gray(location))
-        output_file.write("          stb <= 1'b1;\n")
-        output_file.write("        end\n")
-
-      elif instruction["op"] in ["/"] and "right" in instruction:
-
-        if not instruction["signed"]:
-            output_file.write(
-              "        is_signed  <= 1'b0;\n")
-        else:
-            output_file.write(
-              "        is_signed  <= 1'b1;\n")
-
-        output_file.write(
-          "        divisor  <= $signed(register_%s);\n"%instruction["src"])
-        output_file.write(
-          "        dividend <= $signed(16'd%i);\n"%(instruction["right"]&0xffff))
-        output_file.write(
-          "        register_%s <= quotient;\n"%instruction["dest"])
-        output_file.write("        stb <= 1'b0;\n")
-        output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%to_gray(location))
-        output_file.write("          stb <= 1'b1;\n")
-        output_file.write("        end\n")
-
-      elif instruction["op"] in ["%"] and "left" in instruction:
-
-        if not instruction["signed"]:
-            output_file.write(
-              "        is_signed  <= 1'b0;\n")
-        else:
-            output_file.write(
-              "        is_signed  <= 1'b1;\n")
-
-        output_file.write(
-          "        divisor  <= $signed(16'd%i);\n"%(instruction["left"]&0xffff))
-        output_file.write(
-          "        dividend <= $signed(register_%s);\n"%instruction["srcb"])
-        output_file.write(
-          "        register_%s <= modulo;\n"%instruction["dest"])
-        output_file.write("        stb <= 1'b0;\n")
-        output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%to_gray(location))
-        output_file.write("          stb <= 1'b1;\n")
-        output_file.write("        end\n")
-
-      elif instruction["op"] in ["%"] and "right" in instruction:
-
-        if not instruction["signed"]:
-            output_file.write(
-              "        is_signed  <= 1'b0;\n")
-        else:
-            output_file.write(
-              "        is_signed  <= 1'b1;\n")
-
-        output_file.write(
-          "        divisor  <= $signed(register_%s);\n"%instruction["src"])
-        output_file.write(
-          "        dividend <= $signed(16'd%i);\n"%(instruction["right"]&0xffff))
-        output_file.write(
-          "        register_%s <= modulo;\n"%instruction["dest"])
-        output_file.write("        stb <= 1'b0;\n")
-        output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%to_gray(location))
-        output_file.write("          stb <= 1'b1;\n")
-        output_file.write("        end\n")
-
-      elif instruction["op"] in ["%"]:
-
-        if not instruction["signed"]:
-            output_file.write(
-              "        is_signed  <= 1'b0;\n")
-        else:
-            output_file.write(
-              "        is_signed  <= 1'b1;\n")
-
-        output_file.write(
-          "        divisor  <= $signed(register_%s);\n"%instruction["src"])
-        output_file.write(
-          "        dividend <= $signed(register_%s);\n"%instruction["srcb"])
-        output_file.write(
-          "        register_%s <= modulo;\n"%instruction["dest"])
-        output_file.write("        stb <= 1'b0;\n")
-        output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%to_gray(location))
-        output_file.write("          stb <= 1'b1;\n")
-        output_file.write("        end\n")
-
-      elif instruction["op"] in ["/"]:
-
-        if not instruction["signed"]:
-            output_file.write(
-              "        is_signed  <= 1'b0;\n")
-        else:
-            output_file.write(
-              "        is_signed  <= 1'b1;\n")
-
-        output_file.write(
-          "        divisor  <= $signed(register_%s);\n"%instruction["src"])
-        output_file.write(
-          "        dividend <= $signed(register_%s);\n"%instruction["srcb"])
-        output_file.write(
-          "        register_%s <= quotient;\n"%instruction["dest"])
-        output_file.write("        stb <= 1'b0;\n")
-        output_file.write("        if (ack != 1'b1) begin\n")
-        output_file.write("          program_counter <= %s;\n"%to_gray(location))
-        output_file.write("          stb <= 1'b1;\n")
-        output_file.write("        end\n")
 
       elif instruction["op"] in binary_operators and "left" in instruction:
         if not instruction["signed"]:
@@ -699,8 +518,6 @@ def generate_CHIP(input_file,
   #Reset program counter and control signals
   output_file.write("    if (rst == 1'b1) begin\n")
   output_file.write("      program_counter <= 0;\n")
-  if has_divider:
-      output_file.write("      stb <= 1'b0;\n")
   for i in inputs:
       output_file.write("      s_input_%s_ack <= 0;\n"%(i))
   for i in outputs:
@@ -712,77 +529,6 @@ def generate_CHIP(input_file,
   for i in outputs:
     output_file.write("  assign output_%s_stb = s_output_%s_stb;\n"%(i, i))
     output_file.write("  assign output_%s = s_output_%s;\n"%(i, i))
-  
-  if has_divider:
-      output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
-      output_file.write("  // SERIAL DIVIDER                                                             \n")
-      output_file.write("  //                                                                            \n")
-      output_file.write("  // The C input file uses division.                                            \n") 
-      output_file.write("  // Division is not directly synthesisable in target hardware.                 \n")
-      output_file.write("  // This section of the file implements a serial divider.                      \n")
-      output_file.write("  // At present, there is no support for concurrent division at instruction     \n")
-      output_file.write("  // level. The division operation takes 18 clock cycles. You should consider   \n")
-      output_file.write("  // re-writing the C source file to avoid division if performance is not       \n")
-      output_file.write("  // accepteable.                                                               \n\n")
-
-      output_file.write("  always @(posedge clk)\n")
-      output_file.write("  begin\n\n")
-      output_file.write("    ack <= 1'b0;\n\n")
-      output_file.write("    case (state)\n\n")
-      output_file.write("      start: begin\n\n")
-      output_file.write("        if(is_signed == 1'b1) begin\n")
-      output_file.write("          a <= divisor[15]?-divisor:divisor;\n")
-      output_file.write("          b <= dividend[15]?-dividend:dividend;\n")
-      output_file.write("        end else begin\n")
-      output_file.write("          a <= divisor;\n")
-      output_file.write("          b <= dividend;\n")
-      output_file.write("        end\n")
-      output_file.write("        remainder <= 15'd0;\n")
-      output_file.write("        z <= 15'd0;\n")
-      output_file.write("        sign  <= divisor[15] ^ dividend[15];\n")
-      output_file.write("        mod_sign  <= divisor[15];\n")
-      output_file.write("        count <= 5'd16;\n\n")
-      output_file.write("        if( stb == 1'b1 ) begin\n")
-      output_file.write("          state <= calculate;\n")
-      output_file.write("        end\n\n")
-      output_file.write("      end //start\n\n")
-      output_file.write("      calculate: begin\n\n")
-      output_file.write("        if( difference[15] == 0 ) begin //if remainder > b\n")
-      output_file.write("          z <= z * 2 + 1;\n")
-      output_file.write("          remainder <= {difference[14:0], a[15]};\n")
-      output_file.write("        end else begin\n")
-      output_file.write("          z <= z * 2;\n")
-      output_file.write("          remainder <= {remainder[14:0], a[15]};\n")
-      output_file.write("        end\n\n")
-      output_file.write("        a <= a * 2;\n")
-      output_file.write("        if( count == 5'd0 ) begin\n")
-      output_file.write("          state <= finish;\n")
-      output_file.write("        end else begin\n")
-      output_file.write("          count <= count - 1;\n")
-      output_file.write("        end\n\n")
-      output_file.write("      end //calculate\n\n")
-      output_file.write("      finish: begin\n\n")
-      output_file.write("        if(is_signed == 1'b1) begin\n")
-      output_file.write("          quotient <= sign?-z:z;\n")
-      output_file.write("          modulo <= mod_sign?-(remainder/2):(remainder/2);\n")
-      output_file.write("        end else begin\n")
-      output_file.write("          quotient <= z;\n")
-      output_file.write("          modulo <= remainder/2;\n")
-      output_file.write("        end\n")
-      output_file.write("        ack      <= 1'b1;\n")
-      output_file.write("        state    <= acknowledge;\n\n")
-      output_file.write("      end //finish\n\n")
-      output_file.write("      acknowledge: begin\n\n")
-      output_file.write("        ack      <= 1'b0;\n")
-      output_file.write("        state    <= start;\n\n")
-      output_file.write("      end //wait\n\n")
-      output_file.write("    endcase\n\n")
-      output_file.write("    if( rst == 1'b1 ) begin\n")
-      output_file.write("      ack   <= 1'b0;\n")
-      output_file.write("      state <= start;\n")
-      output_file.write("    end //if\n")
-      output_file.write("  end\n\n")
-      output_file.write("  assign difference = remainder - b;\n\n")
   output_file.write("\nendmodule\n")
 
   return inputs, outputs
