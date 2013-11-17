@@ -102,6 +102,9 @@ class Tokens:
                         tokens.append((self.filename, self.lineno, token))
                         token = ""
                     else:
+                        #remove dummy space from the end of a line
+                        if newline:
+                            token = token[:-1]
                         token += char
 
                 #character literal
