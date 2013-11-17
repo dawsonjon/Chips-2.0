@@ -94,7 +94,7 @@ class Tokens:
 
                 #string literal
                 elif token.startswith('"'):
-                    if char == '"':
+                    if char == '"' and previous_char != "\\":
                         token += char
                         tokens.append((self.filename, self.lineno, token))
                         token = ""
@@ -102,6 +102,7 @@ class Tokens:
                         #remove dummy space from the end of a line
                         if newline:
                             token = token[:-1]
+                        previous_char = char
                         token += char
 
                 #character literal
