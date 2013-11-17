@@ -501,6 +501,7 @@ class Input:
     self.name = name
     self.type_ = "int"
     self.size = 2
+    self.signed = True
 
   def generate(self, result):
       return [{"op"   :"read", "dest" :result, "input":self.name}]
@@ -510,6 +511,7 @@ class FileRead:
     self.name = name
     self.type_ = "int"
     self.size = 2
+    self.signed = True
 
   def generate(self, result):
       return [{"op"   :"file_read", "dest" :result, "file_name":self.name}]
