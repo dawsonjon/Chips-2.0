@@ -410,7 +410,7 @@ class Binary:
       instructions.append({"op"  :self.operator,
                            "dest":result,
                            "left":value(self.left),
-                           "srcb":new_register,
+                           "src":new_register,
                            "signed":self.signed})
     except NotConstant:
       try:

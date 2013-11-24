@@ -11,36 +11,70 @@ import os
 from chips.compiler.parser import Parser
 from chips.compiler.exceptions import C2CHIPError
 from chips.compiler.optimizer import parallelise
+from chips.compiler.optimizer import cleanup_functions
+from chips.compiler.optimizer import cleanup_registers
 from chips.compiler.tokens import Tokens
-from chips.compiler.verilog import generate_CHIP
+from chips.compiler.verilog_speed import generate_CHIP as generate_CHIP_speed
+from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 
-def comp(C_file, options=[]):
+def comp(input_file, options=[]):
 
   reuse = "no_reuse" not in options
   initialize_memory = "no_initialize_memory" not in options
 
   try:
-      #compile into CHIP
-      parser = Parser(C_file, reuse, initialize_memory)
-      process = parser.parse_process()
-      name = process.main.name
-      instructions = process.generate()
-      if "no_concurrent" in options:
-        frames = [[i] for i in instructions]
+      if "speed" not in options:
+
+          #Optimize for area
+          parser = Parser(input_file, reuse, initialize_memory)
+          process = parser.parse_process()
+          name = process.main.name
+          instructions = process.generate()
+          instructions = cleanup_functions(instructions)
+          instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
+          output_file = name + ".v"
+          output_file = open(output_file, "w")
+          inputs, outputs = generate_CHIP_area(
+                  input_file, 
+                  name, 
+                  instructions, 
+                  output_file, 
+                  registers,
+                  parser.allocator.memory_size_2, 
+                  parser.allocator.memory_size_4, 
+                  initialize_memory, 
+                  parser.allocator.memory_content_2,
+                  parser.allocator.memory_content_4)
+          output_file.close()
+
       else:
-        frames = parallelise(instructions)
-      output_file = name + ".v"
-      output_file = open(output_file, "w")
-      inputs, outputs = generate_CHIP(
-              C_file, 
-              name, 
-              frames, 
-              output_file, 
-              parser.allocator.all_registers,
-              parser.allocator.memory_size, 
-              initialize_memory, 
-              parser.allocator.memory_content)
-      output_file.close()
+
+          #Optimize for speed
+          parser = Parser(input_file, reuse, initialize_memory)
+          process = parser.parse_process()
+          name = process.main.name
+          instructions = process.generate()
+          instructions = cleanup_functions(instructions)
+          instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
+          if "no_concurrent" in sys.argv:
+            frames = [[i] for i in instructions]
+          else:
+            frames = parallelise(instructions)
+          output_file = name + ".v"
+          output_file = open(output_file, "w")
+          inputs, outputs = generate_CHIP_speed(
+                  input_file, 
+                  name, 
+                  frames, 
+                  output_file, 
+                  registers,
+                  parser.allocator.memory_size_2, 
+                  parser.allocator.memory_size_4, 
+                  initialize_memory, 
+                  parser.allocator.memory_content_2,
+                  parser.allocator.memory_content_4)
+          output_file.close()
+
   except C2CHIPError as err:
       print "Error in file:", err.filename, "at line:", err.lineno
       print err.message

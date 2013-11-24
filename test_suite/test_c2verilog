@@ -12,6 +12,29 @@ def test(test, code, no_init=False):
       result = os.system("python-coverage run -p ../c2verilog iverilog run no_initialize_memory test.c")
   else:
       result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
+  if(os.path.exists("main")):
+      os.remove("main")
+  if(os.path.exists("arbiter")):
+      os.remove("arbiter")
+  if(os.path.exists("real_main")):
+      os.remove("real_main")
+
+  if result == 0:
+    print test, "...pass"
+  else:
+    print test, "...fail"
+    sys.exit(0)
+
+  if no_init:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
+  else:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
+  if(os.path.exists("main")):
+      os.remove("main")
+  if(os.path.exists("arbiter")):
+      os.remove("arbiter")
+  if(os.path.exists("real_main")):
+      os.remove("real_main")
 
   if result == 0:
     print test, "...pass"
@@ -913,7 +936,7 @@ unsigned int main(){
 
 """)
 
-test("modulo 1",
+test("long modulo 1",
 """
 long int main(){
   long int a = 3;
@@ -924,7 +947,7 @@ long int main(){
 
 """)
 
-test("modulo 2",
+test("long modulo 2",
 """
 long int main(){
   long int a = -3;
@@ -935,7 +958,7 @@ long int main(){
 
 """)
 
-test("modulo 3",
+test("long modulo 3",
 """
 long int main(){
   long int a = 7;
@@ -946,7 +969,7 @@ long int main(){
 
 """)
 
-test("modulo 4",
+test("long modulo 4",
 """
 long int main(){
   long int a = 15;
@@ -957,7 +980,7 @@ long int main(){
 
 """)
 
-test("modulo 5",
+test("long modulo 5",
 """
 long int main(){
   long int a = -7;
@@ -968,7 +991,7 @@ long int main(){
 
 """)
 
-test("modulo 6",
+test("long modulo 6",
 """
 long int main(){
   long int a = -15;
@@ -979,7 +1002,7 @@ long int main(){
 
 """)
 
-test("modulo 7",
+test("long modulo 7",
 """
 long int main(){
   long int a = 7;
@@ -990,7 +1013,7 @@ long int main(){
 
 """)
 
-test("modulo 8",
+test("long modulo 8",
 """
 long int main(){
   long int a = 15;
@@ -1001,7 +1024,7 @@ long int main(){
 
 """)
 
-test("modulo 9",
+test("long modulo 9",
 """
 long int main(){
   long int a = 32766;
@@ -1012,7 +1035,7 @@ long int main(){
 
 """)
 
-test("division 1",
+test("long division 1",
 """
 long int main(){
   long int a = 15;
@@ -1024,7 +1047,7 @@ long int main(){
 """)
 
 
-test("division 2",
+test("long division 2",
 """
 long int main(){
   long int a = 12;
@@ -1035,7 +1058,7 @@ long int main(){
 
 """)
 
-test("division 3",
+test("long division 3",
 """
 long int main(){
   long int a = 1;
@@ -1046,7 +1069,7 @@ long int main(){
 
 """)
 
-test("division 4",
+test("long division 4",
 """
 long int main(){
   long int a = 1;
@@ -1057,7 +1080,7 @@ long int main(){
 
 """)
 
-test("division 5",
+test("long division 5",
 """
 long int main(){
   long int a = -1;
@@ -1068,7 +1091,7 @@ long int main(){
 
 """)
 
-test("division 6",
+test("long division 6",
 """
 long int main(){
   long int a = 0;
@@ -1079,7 +1102,7 @@ long int main(){
 
 """)
 
-test("division 7",
+test("long division 7",
 """
 long int main(){
   long int a = 5;
@@ -1090,7 +1113,7 @@ long int main(){
 
 """)
 
-test("division 8",
+test("long division 8",
 """
 long int main(){
   long int a = -5;
@@ -1101,7 +1124,7 @@ long int main(){
 
 """)
 
-test("division 9",
+test("long division 9",
 """
 long int main(){
   long int a = 0;
@@ -1112,7 +1135,7 @@ long int main(){
 
 """)
 
-test("division 10",
+test("long division 10",
 """
 long int main(){
   long int a = 32767;
@@ -1123,7 +1146,7 @@ long int main(){
 
 """)
 
-test("division 11",
+test("long division 11",
 """
 long int main(){
   long int a = 32767;
@@ -1134,7 +1157,7 @@ long int main(){
 
 """)
 
-test("division 12",
+test("long division 12",
 """
 long int main(){
   long int a = 32767;
@@ -1145,7 +1168,7 @@ long int main(){
 
 """)
 
-test("division 13",
+test("long division 13",
 """
 long int main(){
   long int a = -32767-1;
@@ -1156,7 +1179,7 @@ long int main(){
 
 """)
 
-test("division 14",
+test("long division 14",
 """
 long int main(){
   long int a = -32767;

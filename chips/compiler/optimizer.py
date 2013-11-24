@@ -35,6 +35,26 @@ def cleanup_functions(instructions):
           return kept_instructions
       instructions = kept_instructions
 
+def reallocate_registers(instructions, registers):
+
+    register_map = {}
+    new_registers = {}
+    n = 0
+    for register, definition in registers.iteritems():
+      register_map[register] = n
+      new_registers[n] = definition
+      n+=1
+
+    for instruction in instructions:
+        if "dest" in instruction:
+            instruction["dest"] = register_map[instruction["dest"]]
+        if "src" in instruction:
+            instruction["src"] = register_map[instruction["src"]]
+        if "srcb" in instruction:
+            instruction["srcb"] = register_map[instruction["srcb"]]
+
+    return instructions, new_registers
+
 def cleanup_registers(instructions, registers):
 
     #find all the registers that are read from.
@@ -60,7 +80,7 @@ def cleanup_registers(instructions, registers):
         else:
             kept_instructions.append(instruction)
 
-    return kept_instructions, kept_registers
+    return reallocate_registers(kept_instructions, kept_registers)
 
 def parallelise(instructions):
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""A C to Verilog compiler"""
+"""A C to Verilog compiler - Command line interface"""
 
 __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
@@ -8,70 +8,29 @@ __version__ = "0.1"
 import sys
 import os
 
-from chips.compiler.parser import Parser
-from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.optimizer import parallelise
-from chips.compiler.optimizer import cleanup_functions
-from chips.compiler.optimizer import cleanup_registers
-from chips.compiler.tokens import Tokens
-from chips.compiler.verilog import generate_CHIP
+from chips.compiler.compiler import comp
 
-#Command Line Application
-####################################################################################################
-if __name__ == "__main__":
-
-  if len(sys.argv) < 2:
+if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     print "Usage: c2verilog.py [options] <input_file>"
     print
     print "compile options:"
     print "  no_reuse      : prevent register resuse"
     print "  no_concurrent : prevent concurrency"
     print "  no_initialize_memory : don't initialize memory"
+    print "  speed : optimize for speed (defaults to area)"
     print
     print "tool options:"
     print "  iverilog      : compiles using the icarus verilog compiler"
     print "  run           : runs compiled code, used with ghdl or modelsimoptions"
     sys.exit(-1)
 
-  #parse command line
-  input_file = sys.argv[-1]
-  #reuse = "no_reuse" not in sys.argv
-  reuse=False
-  initialize_memory = "no_initialize_memory" not in sys.argv
+input_file = sys.argv[-1]
+options = sys.argv[1:-1]
+name, inputs, outputs, documentation = comp(input_file, options)
 
-  try:
-      #compile into CHIP
-      parser = Parser(input_file, reuse, initialize_memory)
-      process = parser.parse_process()
-      name = process.main.name
-      instructions = process.generate()
-      instructions = cleanup_functions(instructions)
-      instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
-      if "no_concurrent" in sys.argv:
-        frames = [[i] for i in instructions]
-      else:
-        frames = parallelise(instructions)
-      output_file = name + ".v"
-      output_file = open(output_file, "w")
-      generate_CHIP(
-              input_file, 
-              name, 
-              frames, 
-              output_file, 
-              registers,
-              parser.allocator.memory_size_2, 
-              parser.allocator.memory_size_4, 
-              initialize_memory, 
-              parser.allocator.memory_content_2,
-              parser.allocator.memory_content_4)
-      output_file.close()
-  except C2CHIPError as err:
-      print "Error in file:", err.filename, "at line:", err.lineno
-      print err.message
-      sys.exit(-1)
 
-  #run the compiled design using the simulator of your choice.
-  if "iverilog" in sys.argv:
+#run the compiled design using the simulator of your choice.
+if "iverilog" in sys.argv:
     import os
     import tempfile
     import shutil
@@ -87,4 +46,4 @@ if __name__ == "__main__":
         sys.exit(0)
     #shutil.rmtree(tempdir)
 
-  #Add more tools here ...
+#Add more tools here ...
