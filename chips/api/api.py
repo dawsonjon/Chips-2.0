@@ -1,5 +1,7 @@
 from chips.compiler.exceptions import C2CHIPError
 import chips.compiler.compiler
+import os
+import sys
 
 class Chip:
 
@@ -24,6 +26,7 @@ class Chip:
         self.wires = []
         self.inputs = []
         self.outputs = []
+        self.components = []
 
     def generate_verilog(self):
 
@@ -43,26 +46,37 @@ class Chip:
             if i.source is None:
                 raise C2CHIPError("output %s has no source"%i.name)
 
+        ports = ["clk", "rst"]
+        ports += ["%s"%i.name for i in self.inputs]
+        ports += ["%s_stb"%i.name for i in self.inputs]
+        ports += ["%s_ack"%i.name for i in self.inputs]
+        ports += ["%s"%i.name for i in self.outputs]
+        ports += ["%s_stb"%i.name for i in self.outputs]
+        ports += ["%s_ack"%i.name for i in self.outputs]
+        ports = ", ".join(ports)
+
         output_file = open(self.name + ".v", "w")
-        output_file.write("module %s;\n"%self.name)
+        output_file.write("module %s(%s);\n"%(self.name, ports))
         output_file.write("  input  clk;\n")
         output_file.write("  input  rst;\n")
         for i in self.inputs:
             output_file.write("  input  [15:0] %s;\n"%i.name)
-            output_file.write("  input  [15:0] %s_stb;\n"%i.name)
-            output_file.write("  output [15:0] %s_ack;\n"%i.name)
+            output_file.write("  input  %s_stb;\n"%i.name)
+            output_file.write("  output %s_ack;\n"%i.name)
         for i in self.outputs:
             output_file.write("  output [15:0] %s;\n"%i.name)
-            output_file.write("  output [15:0] %s_stb;\n"%i.name)
-            output_file.write("  input  [15:0] %s_ack;\n"%i.name)
+            output_file.write("  output %s_stb;\n"%i.name)
+            output_file.write("  input  %s_ack;\n"%i.name)
         for i in self.wires:
             output_file.write("  wire   [15:0] %s;\n"%i.name)
-            output_file.write("  wire   [15:0] %s_stb;\n"%i.name)
-            output_file.write("  wire   [15:0] %s_ack;\n"%i.name)
+            output_file.write("  wire   %s_stb;\n"%i.name)
+            output_file.write("  wire   %s_ack;\n"%i.name)
         for instance in self.instances:
             component = instance.component.name
-            output_file.write("  module %s_%s %s(\n    "%(id(instance), component, component))
+            output_file.write("  %s %s_%s(\n    "%(component, component, id(instance)))
             ports = []
+            ports.append(".clk(clk)")
+            ports.append(".rst(rst)")
             for name, i in instance.inputs.iteritems():
                 ports.append(".input_%s(%s)"%(name, i.name))
                 ports.append(".input_%s_stb(%s_stb)"%(name, i.name))
@@ -76,12 +90,12 @@ class Chip:
         output_file.write("endmodule\n")
         output_file.close()
 
-    def generate_testbench(self):
+    def generate_testbench(self, stop_clocks=None):
 
         """Generate verilog for the test bench"""
 
         output_file = open(self.name + "_tb.v", "w")
-        output_file.write("module %s;\n"%self.name)
+        output_file.write("module %s_tb;\n"%self.name)
         output_file.write("  reg  clk;\n")
         output_file.write("  reg  rst;\n")
         for i in self.inputs:
@@ -99,6 +113,12 @@ class Chip:
         output_file.write("    #50 rst <= 1'b0;\n")
         output_file.write("  end\n\n")
 
+        if stop_clocks:
+            output_file.write("  \n  initial\n")
+            output_file.write("  begin\n")
+            output_file.write("    #%s $finish;\n"%(10*stop_clocks))
+            output_file.write("  end\n\n")
+
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
         output_file.write("    clk <= 1'b0;\n")
@@ -107,7 +127,7 @@ class Chip:
         output_file.write("    end\n")
         output_file.write("  end\n\n")
 
-        output_file.write("  module uut %s(\n    "%(self.name))
+        output_file.write("  %s uut(\n    "%(self.name))
         ports = []
         ports.append(".clk(clk)")
         ports.append(".rst(rst)")
@@ -123,6 +143,20 @@ class Chip:
         output_file.write(");\n")
         output_file.write("endmodule\n")
         output_file.close()
+
+    def compile_iverilog(self, run=False):
+
+        """Compile using the Iverilog simulator"""
+
+        files = ["%s.v"%i.name for i in self.components]
+        files.append(self.name + ".v")
+        files.append(self.name + "_tb.v")
+        files = " ".join(files)
+
+        os.system("iverilog -o %s %s"%(self.name + "_tb", files))
+        if run:
+          return os.system("vvp %s"%(self.name + "_tb"))
+
 
 
 class Component:
@@ -169,6 +203,8 @@ class _Instance:
         self.outputs = outputs
         self.component = component
         self.chip.instances.append(self)
+        if component not in chip.components:
+            chip.components.append(component)
 
         if len(self.component.inputs) != len(self.inputs):
             raise C2CHIPError("Instance %s does not have the right number or inputs"%self.name)
