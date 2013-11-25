@@ -74,7 +74,7 @@ class Parser:
         stored_scope = self.scope
         type_, size, signed = self.parse_type_specifier()
         name = self.tokens.get()
-        
+
         #check if it is a global declaration
         if self.tokens.peek() != "(":
             return self.parse_global_declaration(type_, size, signed, name)
@@ -108,10 +108,10 @@ class Parser:
                 argument_signed = False
 
             function.arguments.append(Argument(
-                argument, 
-                argument_type, 
-                argument_size, 
-                argument_signed, 
+                argument,
+                argument_type,
+                argument_size,
+                argument_signed,
                 self,
                 element_type,
                 element_size,
@@ -232,7 +232,7 @@ class Parser:
 
     def parse_assignment(self):
         assignment_operators = [
-            "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>=" 
+            "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>="
         ]
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
@@ -245,9 +245,9 @@ class Parser:
                 expression = self.parse_ternary_expression()
             else:
                 expression = Binary(
-                    operator[:-1], 
-                    lvalue, 
-                    self.parse_ternary_expression(), 
+                    operator[:-1],
+                    lvalue,
+                    self.parse_ternary_expression(),
                     self.allocator
                 )
             if not compatible(lvalue.type_, expression.type_):
@@ -464,7 +464,7 @@ class Parser:
         if type_ in self.structs:
             declaration = self.scope[type_]
         elif type_ in ["int"]:
-            #array declaration 
+            #array declaration
             if self.tokens.peek() == "[":
                 array_size = None
                 self.tokens.expect("[")
@@ -481,16 +481,16 @@ class Parser:
                     self.tokens.error("array size must be specified if not initialized")
                 array_type=type_+"[]"
                 initialize_memory = self.initialize_memory
-                declaration = ArrayDeclaration(self.allocator, 
-                                               array_size, 
-                                               array_type, 
+                declaration = ArrayDeclaration(self.allocator,
+                                               array_size,
+                                               array_type,
                                                type_,
                                                size,
                                                signed,
-                                               initializer, 
+                                               initializer,
                                                self.initialize_memory)
 
-            #simple variable declaration 
+            #simple variable declaration
             else:
                 if self.tokens.peek() == "=":
                     self.tokens.expect("=")
@@ -498,8 +498,8 @@ class Parser:
                 else:
                     initializer = Constant(0)
                 declaration = VariableDeclaration(
-                    self.allocator, 
-                    initializer, 
+                    self.allocator,
+                    initializer,
                     name,
                     type_,
                     size,
@@ -569,9 +569,9 @@ class Parser:
             return function_call
         else:
             return Binary(
-                operator, 
-                left, 
-                right, 
+                operator,
+                left,
+                right,
                 self.allocator
             )
 
@@ -597,9 +597,9 @@ class Parser:
             expression = self.parse_binary_expression(next_operators)
             while self.tokens.peek() in operators:
                 expression = Binary(
-                    self.tokens.get(), 
-                    expression, 
-                    self.parse_binary_expression(next_operators), 
+                    self.tokens.get(),
+                    expression,
+                    self.parse_binary_expression(next_operators),
                     self.allocator
                 )
             return expression
@@ -630,7 +630,7 @@ class Parser:
             operator = self.tokens.get()
             expression = PostIncrement(
                 operator[:-1],
-                expression, 
+                expression,
                 self.allocator
             )
         return expression
@@ -754,13 +754,13 @@ class Parser:
                 size = len(initializer)
                 initialize_memory = self.initialize_memory
                 declaration = ArrayDeclaration(
-                    self.allocator, 
-                    size, 
-                    "int[]", 
-                    "int", 
-                    2, 
-                    False, 
-                    initializer, 
+                    self.allocator,
+                    size,
+                    "int[]",
+                    "int",
+                    2,
+                    False,
+                    initializer,
                     self.initialize_memory)
                 return declaration.instance()
             except SyntaxError:
@@ -794,7 +794,7 @@ class Parser:
             self.tokens.error("Unknown variable: %s"%name)
         instance = self.scope[name]
         return self.parse_variable_array_struct(instance)
- 
+
     def parse_variable_array_struct(self, instance):
         if instance.type_ in ["unsigned", "int", "short", "long", "char"]:
             return Variable(instance, self.allocator)

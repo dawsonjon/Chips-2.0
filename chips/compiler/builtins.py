@@ -101,7 +101,7 @@ long int long_divide_xxxx(long int dividend, long int divisor){
 
 long unsigned long_unsigned_modulo_xxxx(long unsigned dividend, long unsigned divisor){
     long_unsigned_divide_xxxx(dividend, divisor);
-    return long_unsigned_modulo_yyyy; 
+    return long_unsigned_modulo_yyyy;
 }
 
 long int long_modulo_xxxx(long int dividend, long int divisor){

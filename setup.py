@@ -6,7 +6,7 @@ setup(name="Chips",
       version="0.1.2",
       description="Design hardware with Python",
       long_description="""\
-    
+
 Chips
 -----
 
@@ -21,7 +21,7 @@ Features
 - Automatic generation of synthesisable Verilog.
 
 """,
-        
+
       author="Jon Dawson",
       author_email="chips@jondawson.org.uk",
       url="http://github.com/dawsonjon/Chips-2.0",
@@ -38,12 +38,11 @@ Features
           "Topic :: Software Development :: Code Generators",
       ],
       packages=[
-          "chips", 
-          "chips.compiler", 
-          "chips.api" 
+          "chips",
+          "chips.compiler",
+          "chips.api"
       ],
       scripts=[
           "c2verilog"
       ]
 )
-

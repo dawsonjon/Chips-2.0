@@ -7,7 +7,7 @@ class Chip:
 
     """A Chip represents a collection of components connected together by
     wires. As you create wires and component instances, you will need to tell
-    them which chip they belong to. Once you have a completed chip you can: 
+    them which chip they belong to. Once you have a completed chip you can:
 
       + Implement it in verilog - using the generate_verilog method
       + Automatically generate documentation - using the generate_document method
@@ -155,7 +155,7 @@ class Chip:
 
         os.system("iverilog -o %s %s"%(self.name + "_tb", files))
         if run:
-          return os.system("vvp %s"%(self.name + "_tb"))
+            return os.system("vvp %s"%(self.name + "_tb"))
 
 
 
@@ -166,7 +166,7 @@ class Component:
     component when you create it. The Chips API will automatically compile the
     C code, and extract the name, inputs, outputs and the documentation from the
     code.
-    
+
     If you want to keep the C file seperate you can read it in from a file like
     this::
 
@@ -174,7 +174,7 @@ class Component:
 
     Once you have defined a component you can use the __call__ method to create
     an instance of the component.
-    
+
     """
 
     def __init__(self, C_file):
@@ -196,7 +196,7 @@ class _Instance:
 
     """This class represents a component instance. You don't normaly need to
     create them directly, use the Component.__call__ method."""
-    
+
     def __init__(self, component, chip, inputs, outputs):
         self.chip = chip
         self.inputs = inputs
