@@ -1,17 +1,17 @@
-=================================
-Chips - Hardware Design in Python
-=================================
+===================================
+*Chips* - Hardware Design in Python
+===================================
 
-What is Chips?
-==============
+What is *Chips*?
+================
 
-Chips makes FPGA design quicker and easier. Chips isn't an HDL like VHDL or
-Verilog, its a different way of doing things. In Chips, you design components
-using a simple subset of the C programming language. Theres a Python API to
+*Chips* makes FPGA design quicker and easier. *Chips* isn't an HDL like VHDL or
+Verilog, its a different way of doing things. In *Chips*, you design components
+using a simple subset of the C programming language. There's a Python API to
 connect C components together using fast data streams to form complex, parallel
 systems all in a single chip. You don't need to worry about clocks, resets,
 or timing. You don't need to follow special templates to make your code
-synthesisable. All thats done for you!
+synthesisable. All that's done for you!
 
 Features
 ======== 
@@ -22,12 +22,17 @@ Some of the key features include:
 
         - A free open source solution (MIT license)
 
-        - Automatic generation of synthesizable Verilog
+        - Automatic generation of synthesisable Verilog
 
-        - Optimize for speed or area
+        - Optimise for speed or area
 
         - Use C and Python software tools to design hardware.
 
+
+You can get the *Chips* from the `Git Hub <http://github.com/dawsonjon/Chips-2.0>`_
+homepage. If you want to give it a try in some real hardware, take a look at
+the `demo <http://github.com/dawsonjon/Chips-Demo>`_ for the Digilent Atlys
+Demo card.
 
 A Quick Taster
 ==============
@@ -57,6 +62,8 @@ A Quick Taster
              }
         }
 
+::
+
         console:
 
         $ c2verilog iverilog run lfsr.c
@@ -68,31 +75,13 @@ A Quick Taster
         3
         1
 
-Download
-========
-You can download the `source <https://github.com/dawsonjon/Chips-2.0/archive/master.zip>`_ from the `GitHub <http://github.com/dawsonjon/Chips-2.0>`_ homepage. Alternatively clone the project using git::
-
-    $ git clone https://github.com/dawsonjon/Chips-2.0.git
-
-If you want to give Chips a go in some real hardware, why not try the Digilent Atlys `Demo <https://github.com/dawsonjon/Chips-Demo>`_.
- 
-
 Documentation
 =============
 .. toctree::
    :maxdepth: 2
 
-   introduction/index
-   tutorial/index
    language_reference/index
-   automatic_code_generation/index
-   ip_library/index
-   extending_chips/index
-
-News
-====
-
-..
+   tutorial/index
 
 Links
 =====

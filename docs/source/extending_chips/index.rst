@@ -1,3 +1,0 @@
-Extending the Chips Library
-===========================
-
