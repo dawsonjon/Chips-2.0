@@ -7,6 +7,7 @@ import StringIO
 
 from chips.compiler.exceptions import C2CHIPError
 from chips.compiler.builtins import builtins
+from chips.compiler.library import libs
 
 operators = [
   "!", "~", "+", "-", "*", "/", "//", "%", "=", "==", "<", ">", "<=", ">=",
@@ -51,9 +52,14 @@ class Tokens:
                 self.tokens.extend(tokens)
                 directory = os.path.abspath(self.filename)
                 directory = os.path.dirname(directory)
-                self.filename = line.strip().replace("#include", "").strip(' ><"')
-                self.filename = os.path.join(directory, self.filename)
-                self.scan(self.filename)
+                if line.strip().endswith(">"):
+                    self.filename = "library"
+                    library = line.strip().split("<")[1].strip(' ><"')
+                    self.scan(self.filename, StringIO.StringIO(libs[library]))
+                else:
+                    self.filename = line.strip().replace("#include", "").strip(' ><"')
+                    self.filename = os.path.join(directory, self.filename)
+                    self.scan(self.filename)
                 self.lineno = lineno
                 self.filename = filename
                 tokens = []

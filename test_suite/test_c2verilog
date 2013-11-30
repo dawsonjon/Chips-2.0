@@ -57,6 +57,102 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("print 1",
+"""
+unsigned test[] = "Hello World!";
+unsigned i=0;
+void stdout_put_char(unsigned value){
+    assert(test[i] == value);
+    i++;
+}
+#include <print.h>
+
+void main(){
+    print_string("Hello World!");
+}
+"""
+)
+
+test("print 2",
+"""
+unsigned test[] = "12345";
+unsigned i=0;
+void stdout_put_char(unsigned value){
+    assert(test[i] == value);
+    i++;
+}
+#include <print.h>
+
+void main(){
+    print_decimal(12345);
+}
+"""
+)
+
+test("print 3",
+"""
+unsigned test[] = "-1234";
+unsigned i=0;
+void stdout_put_char(unsigned value){
+    assert(test[i] == value);
+    i++;
+}
+#include <print.h>
+
+void main(){
+    print_decimal(-1234);
+}
+"""
+)
+
+test("print 4",
+"""
+unsigned test[] = "-1";
+unsigned i=0;
+void stdout_put_char(unsigned value){
+    assert(test[i] == value);
+    i++;
+}
+#include <print.h>
+
+void main(){
+    print_decimal(-1);
+}
+"""
+)
+
+test("print 5",
+"""
+unsigned test[] = "7fff";
+unsigned i=0;
+void stdout_put_char(unsigned value){
+    assert(test[i] == value);
+    i++;
+}
+#include <print.h>
+
+void main(){
+    print_hex(0x7fff);
+}
+"""
+)
+
+test("print 6",
+"""
+unsigned test[] = "ffff";
+unsigned i=0;
+void stdout_put_char(unsigned value){
+    assert(test[i] == value);
+    i++;
+}
+#include <print.h>
+
+void main(){
+    print_uhex(0xffffu);
+}
+"""
+)
+
 test("unsigned divide 1",
 """
 void main(){
