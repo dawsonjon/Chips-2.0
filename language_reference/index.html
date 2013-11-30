@@ -149,18 +149,20 @@ data through streams.</p>
 <p>Stream I/O is achieved by calling built-in functions with special names.
 Functions that start with the name <cite>input</cite> or <cite>output</cite> are interpreted as &#8220;read
 from input&#8221;, or &#8220;write to output&#8221;.</p>
-<div class="highlight-python"><pre>int temp;
-temp = input_spam(); //reads from an input called spam
-temp = input_eggs(); //reads from an input called eggs
-output_fish(temp);   //writes to an output called fish</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">input_spam</span><span class="p">();</span> <span class="c1">//reads from an input called spam</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">input_eggs</span><span class="p">();</span> <span class="c1">//reads from an input called eggs</span>
+<span class="n">output_fish</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>   <span class="c1">//writes to an output called fish</span>
+</pre></div>
 </div>
 <p>Reading or writing from inputs and outputs causes program execution to block
 until data is available. If you don&#8217;t want to commit yourself to reading and
 input and blocking execution, you can check if data is ready.</p>
-<div class="highlight-python"><pre>int temp;
-if(ready_spam()){
-   temp = input_spam();
-}</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">ready_spam</span><span class="p">()){</span>
+   <span class="n">temp</span> <span class="o">=</span> <span class="n">input_spam</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <p>There is no equivalent function to check if an output is ready to receive data,
 this could cause deadlocks if both the sending and receiving end were waiting
@@ -171,24 +173,27 @@ for one another.</p>
 <p>Timed waits can be achieved using the built-in <cite>wait-clocks</cite> function. The
 wait_clocks function accepts a single argument, the numbers of clock cycles to
 wait.</p>
-<div class="highlight-python"><pre>wait_clocks(100); //wait for 1 us with 100MHz clock</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">wait_clocks</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span> <span class="c1">//wait for 1 us with 100MHz clock</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="debug-and-test">
 <h3>Debug and Test<a class="headerlink" href="#debug-and-test" title="Permalink to this headline">¶</a></h3>
 <p>The built in <cite>report</cite> function displays the value of an expression in the
 simulation console. This will have no effect in a synthesised design.</p>
-<div class="highlight-python"><pre>int temp = 4;
-report(temp); //prints 4 to console
-report(10); //prints 10 to the console</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="n">report</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//prints 4 to console</span>
+<span class="n">report</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span> <span class="c1">//prints 10 to the console</span>
+</pre></div>
 </div>
 <p>The built in function assert causes a simulation error if it is passed a zero
 value. The assert function has no effect in a synthesised design.</p>
-<div class="highlight-python"><pre>int temp = 5;
-assert(temp); //does not cause an error
-int temp = 0;
-assert(temp); //will cause a simulation error
-assert(2+2==5); //will cause a simulation error</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//does not cause an error</span>
+<span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//will cause a simulation error</span>
+<span class="n">assert</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="o">==</span><span class="mi">5</span><span class="p">);</span> <span class="c1">//will cause a simulation error</span>
+</pre></div>
 </div>
 <p>In simulation, you can write values to a file using the built-in <cite>file_write</cite>
 function. The first argument is the value to write, and the second argument is
@@ -196,7 +201,7 @@ the file to write to. The file will be overwritten when the simulation starts,
 and subsequent calls will append a new vale to the end of the file. Each value
 will appear in decimal format on a separate line. A file write has no effect in
 a synthesised design.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">file_write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">file_write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
 <span class="n">file_write</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
 <span class="n">file_write</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
 <span class="n">file_write</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
@@ -204,10 +209,10 @@ a synthesised design.</p>
 </div>
 <p>You can also read values from a file during simulation. A simulation error will
 occur if there are no more value in the file.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">assert</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
-<span class="k">assert</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
-<span class="k">assert</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
-<span class="k">assert</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -225,27 +230,31 @@ library with some basic utilities appropriate for FPGA design. At present
 <div class="section" id="print-h">
 <h3>print.h<a class="headerlink" href="#print-h" title="Permalink to this headline">¶</a></h3>
 <p>The <cite>print_string</cite> function prints a null terminated string to standard output.</p>
-<div class="highlight-python"><pre>void print_string(char string[])</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">print_string</span><span class="p">(</span><span class="kt">char</span> <span class="n">string</span><span class="p">[])</span>
+</pre></div>
 </div>
 <p>The <cite>print_decimal</cite> function prints a number in decimal to standard output.</p>
-<div class="highlight-python"><pre>void print_decimal(int value)</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">print_decimal</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>The <cite>print_hex</cite> function prints a number in hexadecimal format to standard output.</p>
-<div class="highlight-python"><pre>void print_hex(int value)</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">print_hex</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
 </div>
 <p>To provide most flexibility, the definition of standard_output is left to the
 user, it could be a serial port, an LCD display, or perhaps a telnet session.
 To define standard output, a function <cite>stdout_put_char</cite> function must be
 defined before including print.h.</p>
-<div class="highlight-python"><pre>void stdout_put_char(char value){
-    output_rs232_tx(value);
-}
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">stdout_put_char</span><span class="p">(</span><span class="kt">char</span> <span class="n">value</span><span class="p">){</span>
+    <span class="n">output_rs232_tx</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="p">}</span>
 
-#include &lt;print.h&gt;
+<span class="cp">#include &lt;print.h&gt;</span>
 
-print_string("Hello World!\n"); //Hello World
-print_decimal(12345); //12345
-print_hex(127); //0x7f</pre>
+<span class="n">print_string</span><span class="p">(</span><span class="s">&quot;Hello World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span> <span class="c1">//Hello World</span>
+<span class="n">print_decimal</span><span class="p">(</span><span class="mi">12345</span><span class="p">);</span> <span class="c1">//12345</span>
+<span class="n">print_hex</span><span class="p">(</span><span class="mi">127</span><span class="p">);</span> <span class="c1">//0x7f</span>
+</pre></div>
 </div>
 </div>
 <div class="section" id="c2verilog">
@@ -312,13 +321,14 @@ to, and the name it will be given.</p>
 <p>From Python, you can import a C component by specifying the file where it is
 defined. When you import a C component it will be compiled.</p>
 <p>The C file adder.c defines a two input adder.</p>
-<div class="highlight-python"><pre>//adder.c
+<div class="highlight-python"><div class="highlight"><pre><span class="o">//</span><span class="n">adder</span><span class="o">.</span><span class="n">c</span>
 
-void adder(){
-    while(1){
-        output_z(input_a() + input_b());
-    }
-}</pre>
+<span class="n">void</span> <span class="n">adder</span><span class="p">(){</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">output_z</span><span class="p">(</span><span class="n">input_a</span><span class="p">()</span> <span class="o">+</span> <span class="n">input_b</span><span class="p">());</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">adder</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="s">&quot;source/adder.c&quot;</span><span class="p">)</span>
 </pre></div>
@@ -365,7 +375,8 @@ using the <cite>generate_verilog</cite> method.</p>
 </div>
 <p>You can also generate a matching testbench using the <cite>generate_testbench</cite>
 method. You can also specify the simulation run time in clock cycles.</p>
-<div class="highlight-python"><pre>mychip.generate_testbench(1000) //1000 clocks</pre>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">generate_testbench</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="c">#1000 clocks</span>
+</pre></div>
 </div>
 <p>To compile the design in Icarus Verilog, use the <cite>compile_iverilog</cite> method. You
 can also run the code directly if you pass <cite>True</cite> to the <cite>compile_iverilog</cite>
@@ -390,11 +401,11 @@ clk &gt;-+-o-------------------------+ |
       | +---&gt;           |         | +-----&gt;              |
       +-----&gt;           |         +-------&gt;              |
             |           |                 |              |
-            |           | &lt;BUS_NAME&gt;      |              |
+            |           | &lt;bus_name&gt;      |              |
             |       out &gt;=================&gt; in           |
-            |           | &lt;BUS_NAME&gt;_stb  |              |
+            |           | &lt;bus_name&gt;_stb  |              |
             |       out &gt;-----------------&gt; in           |
-            |           | &lt;BUS_NAME&gt;_ack  |              |
+            |           | &lt;bus_name&gt;_ack  |              |
             |       in  &lt;-----------------&lt; out          |
             |           |                 |              |
             +-----------+                 +--------------+</pre>
@@ -442,17 +453,17 @@ clk &gt;-+-o-------------------------+ |
 <td>Type</td>
 <td>Description</td>
 </tr>
-<tr class="row-even"><td>&lt;BUS_NAME&gt;</td>
+<tr class="row-even"><td>&lt;bus_name&gt;</td>
 <td>TX to RX</td>
 <td>bus</td>
 <td>Payload Data</td>
 </tr>
-<tr class="row-odd"><td>&lt;BUS_NAME&gt;_STB</td>
+<tr class="row-odd"><td>&lt;bus_name&gt;_stb</td>
 <td>TX to RX</td>
 <td>bit</td>
 <td>&#8216;1&#8217; indicates that payload data is valid and TX is ready.</td>
 </tr>
-<tr class="row-even"><td>&lt;BUS_NAME&gt;_ACK</td>
+<tr class="row-even"><td>&lt;bus_name&gt;_ack</td>
 <td>TX to RX</td>
 <td>bit</td>
 <td>&#8216;1&#8217; indicates that RX is ready.</td>
@@ -464,18 +475,18 @@ clk &gt;-+-o-------------------------+ |
 <h3>Interconnect Bus Transaction<a class="headerlink" href="#interconnect-bus-transaction" title="Permalink to this headline">¶</a></h3>
 <ol class="arabic simple">
 <li>Both transmitter and receiver <strong>shall</strong> be synchronised to the 0 to 1 transition of <cite>clk</cite>.</li>
-<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the transmitter <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;BUS_NAME&gt;_stb</cite> to 0.</li>
-<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the receiver <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;BUS_NAME&gt;_ack</cite> to 0.</li>
+<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the transmitter <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;bus_name&gt;_stb</cite> to 0.</li>
+<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the receiver <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;bus_name&gt;_ack</cite> to 0.</li>
 <li>If <cite>rst</cite> is set to 0, normal operation <strong>shall</strong> commence.</li>
-<li>The transmitter <strong>may</strong> insert wait states on the bus by setting <cite>&lt;BUS_NAME&gt;_stb</cite> to 0.</li>
-<li>The transmitter <strong>shall</strong> set <cite>&lt;BUS_NAME&gt;_stb</cite> to 1 to signify that data is valid.</li>
-<li>Once <cite>&lt;BUS_NAME&gt;_stb</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
-<li>The transmitter <strong>shall</strong> ensure that <cite>&lt;BUS_NAME&gt;</cite> contains valid data for the entire period that <cite>&lt;BUS_NAME&gt;_stb</cite> is 1.</li>
-<li>The transmitter <strong>may</strong> set <cite>&lt;BUS_NAME&gt;</cite> to any value when <cite>&lt;BUS_NAME&gt;_stb</cite> is 0.</li>
-<li>The receiver <strong>may</strong> insert wait states on the bus by setting <cite>&lt;BUS_NAME&gt;_ack</cite> to 0.</li>
-<li>The receiver <strong>shall</strong> set <cite>&lt;BUS_NAME&gt;_ack</cite> to 1 to signify that it is ready to receive data.</li>
-<li>Once <cite>&lt;BUS_NAME&gt;_ack</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
-<li>Whenever <cite>&lt;BUS_NAME&gt;_stb</cite> is 1 and <cite>&lt;BUS_NAME&gt;_ack</cite> are 1, a bus transaction <strong>shall</strong> complete on the following 0 to 1 transition of <cite>clk</cite>.</li>
+<li>The transmitter <strong>may</strong> insert wait states on the bus by setting <cite>&lt;bus_name&gt;_stb</cite> to 0.</li>
+<li>The transmitter <strong>shall</strong> set <cite>&lt;bus_name&gt;_stb</cite> to 1 to signify that data is valid.</li>
+<li>Once <cite>&lt;bus_name&gt;_stb</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
+<li>The transmitter <strong>shall</strong> ensure that <cite>&lt;bus_name&gt;</cite> contains valid data for the entire period that <cite>&lt;bus_name&gt;_stb</cite> is 1.</li>
+<li>The transmitter <strong>may</strong> set <cite>&lt;bus_name&gt;</cite> to any value when <cite>&lt;bus_name&gt;_stb</cite> is 0.</li>
+<li>The receiver <strong>may</strong> insert wait states on the bus by setting <cite>&lt;bus_name&gt;_ack</cite> to 0.</li>
+<li>The receiver <strong>shall</strong> set <cite>&lt;bus_name&gt;_ack</cite> to 1 to signify that it is ready to receive data.</li>
+<li>Once <cite>&lt;bus_name&gt;_ack</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
+<li>Whenever <cite>&lt;bus_name&gt;_stb</cite> is 1 and <cite>&lt;bus_name&gt;_ack</cite> are 1, a bus transaction <strong>shall</strong> complete on the following 0 to 1 transition of <cite>clk</cite>.</li>
 <li>Both the transmitter and receiver <strong>may</strong> commence a new transaction without inserting any wait states.</li>
 <li>The receiver <strong>may</strong> delay a transaction by inserting wait states until the transmitter indicates that data is available.</li>
 <li>The transmitter <strong>shall</strong> not delay a transaction by inserting wait states until the receiver is ready to accept data. Deadlock would occur if both the transmitter and receiver delayed a transaction until the other was ready.</li>
@@ -484,11 +495,11 @@ clk &gt;-+-o-------------------------+ |
                    _   _   _   _   _   _   _   _   _   _   _   _   _   _   _
  clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
                  _____ _______ ________________________________________________
-&lt;BUS_NAME&gt;       _____X_VALID_X________________________________________________
+&lt;bus_name&gt;       _____X_VALID_X________________________________________________
                        _______
-&lt;BUS_NAME&gt;_stb   _____|       |________________________________________________
+&lt;bus_name&gt;_stb   _____|       |________________________________________________
                            ___
-&lt;BUS_NAME&gt;_ack   _________|   |________________________________________________
+&lt;bus_name&gt;_ack   _________|   |________________________________________________
 
                        ^^^^ RX adds wait states
 
@@ -498,11 +509,11 @@ clk &gt;-+-o-------------------------+ |
                    _   _   _   _   _   _   _   _   _   _   _   _   _   _   _
  clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
                  _____ _______ ________________________________________________
-&lt;BUS_NAME&gt;       _____X_VALID_X________________________________________________
+&lt;bus_name&gt;       _____X_VALID_X________________________________________________
                            ___
-&lt;BUS_NAME&gt;_stb   _________|   |________________________________________________
+&lt;bus_name&gt;_stb   _________|   |________________________________________________
                        _______
-&lt;BUS_NAME&gt;_ack   _____|       |________________________________________________
+&lt;bus_name&gt;_ack   _____|       |________________________________________________
 
 
                        ^^^^ TX adds wait states
@@ -511,21 +522,21 @@ clk &gt;-+-o-------------------------+ |
 
 
  rst             ______________________________________________________________
-                   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _
- clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
+                   __    __    __    __    __    __    __    __    __    __   _
+ clk             _|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |_|
 
-                 _____ _______ ____ ____ ______________________________________
-&lt;BUS_NAME&gt;       _____X_D0   _X_D1_X_D2_X______________________________________
-                           _____________
-&lt;BUS_NAME&gt;_STB   _________|             |______________________________________
-                       _________________
-&lt;BUS_NAME&gt;_ACK   _____|                 |______________________________________
+                 _______ ___________ _____ _____ ______________________________
+&lt;bus_name&gt;       _______X_D0________X_D1__X_D2__X______________________________
+                               _________________
+&lt;bus_name&gt;_stb   _____________|                 |______________________________
+                         _______________________
+&lt;bus_name&gt;_ack   _______|                       |______________________________
 
                         ^^^^ TX adds wait states
 
-                             ^^^^  Data transfers
+                               ^^^^  Data transfers
 
-                                 ^^^^ STB and ACK needn't return to 0 between data words</pre>
+                                    ^^^^ stb and ack needn't return to 0 between data words</pre>
 </div>
 </div>
 </div>

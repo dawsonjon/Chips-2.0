@@ -79,28 +79,29 @@ Demo card.</p>
 </div>
 <div class="section" id="a-quick-taster">
 <h2>A Quick Taster<a class="headerlink" href="#a-quick-taster" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-python"><pre>lfsr.c:
+<div class="highlight-c"><div class="highlight"><pre><span class="n">lfsr</span><span class="p">.</span><span class="n">c</span><span class="o">:</span>
 
-//4 bit linear feedback shift register
+<span class="c1">//4 bit linear feedback shift register</span>
 
-void lfsr(){
-    int new_bit = 0;
-    int shift_register = 1;
-    while(1){
+<span class="kt">void</span> <span class="n">lfsr</span><span class="p">(){</span>
+    <span class="kt">int</span> <span class="n">new_bit</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">shift_register</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
 
-         //tap off bit 2 and 3
-         new_bit=((shift_register &gt;&gt; 0) ^ (shift_register &gt;&gt; 1) ^ new_bit);
+         <span class="c1">//tap off bit 2 and 3</span>
+         <span class="n">new_bit</span><span class="o">=</span><span class="p">((</span><span class="n">shift_register</span> <span class="o">&gt;&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">shift_register</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">^</span> <span class="n">new_bit</span><span class="p">);</span>
 
-         //implement shift register
-         shift_register=((new_bit &amp; 1) &lt;&lt; 3) | (shift_register &gt;&gt; 1);
+         <span class="c1">//implement shift register</span>
+         <span class="n">shift_register</span><span class="o">=</span><span class="p">((</span><span class="n">new_bit</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">shift_register</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">);</span>
 
-         //4 bit mask
-         shift_register &amp;= 0xf
+         <span class="c1">//4 bit mask</span>
+         <span class="n">shift_register</span> <span class="o">&amp;=</span> <span class="mh">0xf</span><span class="p">;</span>
 
-         //write to stream
-         output_code(shift_register);
-     }
-}</pre>
+         <span class="c1">//write to stream</span>
+         <span class="n">report</span><span class="p">(</span><span class="n">shift_register</span><span class="p">);</span>
+     <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
 </div>
 <div class="highlight-python"><pre>console:
 
