@@ -4,14 +4,13 @@ Chips
 Introduction
 ------------
 
-Chips is a fast and simple way to design Logic Devices. You can think of
-a Chips design as a network on a chip. Many C Programs are all executing in
-parallel, streaming data between each other using fast on-chip connections.
-
-The interface is simple, design components using C, and connect them together
-to form a chip using a simple python API. Behind the scenes, chips will comvert
-C programs into efficient verilog implementation based on interconnected Finite
-State Machines, or custom CPUs.
+*Chips* makes FPGA design quicker and easier. *Chips* isn't an HDL like VHDL or
+Verilog, its a different way of doing things. In *Chips*, you design components
+using a simple subset of the C programming language. There's a Python API to
+connect C components together using fast data streams to form complex, parallel
+systems all in a single chip. You don't need to worry about clocks, resets,
+or timing. You don't need to follow special templates to make your code
+synthesisable. All that's done for you!
 
 Test
 ----
@@ -21,6 +20,12 @@ $ test_c2verilog
 Install
 -------
 $ sudo python setup install
+
+Documentation
+-------------
+$ cd docs
+$ make html
+
 
 To Prepare a Source Distribution
 --------------------------------
