@@ -110,7 +110,7 @@ Stream I/O is achieved by calling built-in functions with special names.
 Functions that start with the name `input` or `output` are interpreted as "read
 from input", or "write to output".
 
-:: 
+.. code-block:: c
 
     int temp;
     temp = input_spam(); //reads from an input called spam
@@ -121,7 +121,7 @@ Reading or writing from inputs and outputs causes program execution to block
 until data is available. If you don't want to commit yourself to reading and
 input and blocking execution, you can check if data is ready.
 
-::
+.. code-block:: c
 
     int temp;
     if(ready_spam()){
@@ -139,7 +139,7 @@ Timed waits can be achieved using the built-in `wait-clocks` function. The
 wait_clocks function accepts a single argument, the numbers of clock cycles to
 wait.
 
-::
+.. code-block:: c
     
     wait_clocks(100); //wait for 1 us with 100MHz clock
 
@@ -150,7 +150,7 @@ Debug and Test
 The built in `report` function displays the value of an expression in the
 simulation console. This will have no effect in a synthesised design.
 
-::
+.. code-block:: c
 
     int temp = 4;
     report(temp); //prints 4 to console
@@ -160,7 +160,7 @@ simulation console. This will have no effect in a synthesised design.
 The built in function assert causes a simulation error if it is passed a zero
 value. The assert function has no effect in a synthesised design.
 
-::
+.. code-block:: c
 
     int temp = 5;
     assert(temp); //does not cause an error
@@ -175,7 +175,7 @@ and subsequent calls will append a new vale to the end of the file. Each value
 will appear in decimal format on a separate line. A file write has no effect in
 a synthesised design.
 
-::
+.. code-block:: c
 
     file_write(1, "simulation_log.txt");
     file_write(2, "simulation_log.txt");
@@ -185,12 +185,12 @@ a synthesised design.
 You can also read values from a file during simulation. A simulation error will
 occur if there are no more value in the file.
 
-::
+.. code-block:: c
 
-    assert("simulation_log.txt" == 1);
-    assert("simulation_log.txt" == 2);
-    assert("simulation_log.txt" == 3);
-    assert("simulation_log.txt" == 4);
+    assert(file_read("simulation_log.txt") == 1);
+    assert(file_read("simulation_log.txt") == 2);
+    assert(file_read("simulation_log.txt") == 3);
+    assert(file_read("simulation_log.txt") == 4);
 
 
 C Preprocessor
@@ -211,19 +211,19 @@ print.h
 
 The `print_string` function prints a null terminated string to standard output.
 
-::
+.. code-block:: c
 
     void print_string(char string[])
 
 The `print_decimal` function prints a number in decimal to standard output.
 
-::
+.. code-block:: c
 
     void print_decimal(int value)
 
 The `print_hex` function prints a number in hexadecimal format to standard output.
 
-::
+.. code-block:: c
 
     void print_hex(int value)
 
@@ -232,7 +232,7 @@ user, it could be a serial port, an LCD display, or perhaps a telnet session.
 To define standard output, a function `stdout_put_char` function must be
 defined before including print.h.
 
-::
+.. code-block:: c
 
     void stdout_put_char(char value){
         output_rs232_tx(value);
@@ -274,7 +274,7 @@ provides the ability to build systems from C components.
 
 To use the Python API, you must import it.
 
-::
+.. code-block:: python
 
     from chips.api.api import *
 
@@ -285,7 +285,7 @@ Once you have imported the Python API, you can define a chip. A chip is a
 canvas to which you can add inputs outputs, components and wires. When you
 create a chips all you need to give it is a name.
 
-::
+.. code-block:: python
 
     mychip = Chip("mychip")
 
@@ -294,7 +294,7 @@ Wire
 
 You can create `Input`, `Output` and `Wires` objects. A `Wire` is a point to point connection, a stream, that connects an output from one component to the input of another. A `Wire` can only have one source of data, and one data sink. When you create a `Wire`, you must tell it which `Chip` it belongs to:
 
-::
+.. code-block:: python
 
     wire_a = Wire(mychip)
     wire_b = Wire(mychip)
@@ -306,7 +306,7 @@ An `Input` takes data from outside the `Chip`, and feeds it into the input of a
 `Component`. When you create an `Input`, you need to specify the `Chip` it
 belongs to, and the name it will be given.
 
-::
+.. code-block:: python
 
     input_a = Input(mychip, "A")
     input_b = Input(mychip, "B")
@@ -328,7 +328,7 @@ defined. When you import a C component it will be compiled.
 
 The C file adder.c defines a two input adder.
 
-::
+.. code-block:: python
 
     //adder.c
 
@@ -338,7 +338,7 @@ The C file adder.c defines a two input adder.
         }
     }
 
-::
+.. code-block:: python
 
     adder = Component("source/adder.c")
 
@@ -349,14 +349,14 @@ You can make many instances of a component by "calling" the component. Each
 time you make an instance, you must specify the `Chip` it belongs to, and
 connect up the inputs and outputs of the `Component`.
 
-::
+.. code-block:: python
   
     adder(mychip,
-        inputs = {"a" : input_a, "b" : output_b},
+        inputs = {"a" : input_a, "b" : input_b},
         outputs = {"z" : wire_a})
 
     adder(mychip,
-        inputs = {"a" : input_c, "b" : output_d},
+        inputs = {"a" : input_c, "b" : input_d},
         outputs = {"z" : wire_b})
 
     adder(mychip,
@@ -385,22 +385,22 @@ Code Generation
 You can generate synthesisable Verilog code for your chip
 using the `generate_verilog` method.
 
-::
+.. code-block:: python
 
     mychip.generate_verilog()
 
 You can also generate a matching testbench using the `generate_testbench`
 method. You can also specify the simulation run time in clock cycles.
 
-::
+.. code-block:: python
  
-    mychip.generate_testbench(1000) //1000 clocks
+    mychip.generate_testbench(1000) #1000 clocks
 
 To compile the design in Icarus Verilog, use the `compile_iverilog` method. You
 can also run the code directly if you pass `True` to the `compile_iverilog`
 function.
   
-::
+.. code-block:: python
 
     mychip.compile_iverilog(True)
 
@@ -424,11 +424,11 @@ here. This section will be of most use to developers who want to integrate a
         | +--->           |         | +----->              |
         +----->           |         +------->              |
               |           |                 |              |
-              |           | <BUS_NAME>      |              |
+              |           | <bus_name>      |              |
               |       out >=================> in           |
-              |           | <BUS_NAME>_stb  |              |
+              |           | <bus_name>_stb  |              |
               |       out >-----------------> in           |
-              |           | <BUS_NAME>_ack  |              |
+              |           | <bus_name>_ack  |              |
               |       in  <-----------------< out          |
               |           |                 |              |
               +-----------+                 +--------------+
@@ -451,11 +451,11 @@ Interconnect Signals
 +----------------+-----------+------+-----------------------------------------------------------+
 |      Name      | Direction | Type |                        Description                        |
 +----------------+-----------+------+-----------------------------------------------------------+
-|   <BUS_NAME>   |  TX to RX | bus  |                        Payload Data                       |
+|   <bus_name>   |  TX to RX | bus  |                        Payload Data                       |
 +----------------+-----------+------+-----------------------------------------------------------+
-| <BUS_NAME>_STB |  TX to RX | bit  | '1' indicates that payload data is valid and TX is ready. |
+| <bus_name>_stb |  TX to RX | bit  | '1' indicates that payload data is valid and TX is ready. |
 +----------------+-----------+------+-----------------------------------------------------------+
-| <BUS_NAME>_ACK |  TX to RX | bit  |              '1' indicates that RX is ready.              |
+| <bus_name>_ack |  TX to RX | bit  |              '1' indicates that RX is ready.              |
 +----------------+-----------+------+-----------------------------------------------------------+
 
  
@@ -463,18 +463,18 @@ Interconnect Bus Transaction
 ----------------------------
  
 1. Both transmitter and receiver **shall** be synchronised to the 0 to 1 transition of `clk`.
-#. If `rst` is set to 1, upon the 0 to 1 transition of `clk` the transmitter **shall** terminate any active bus transaction and set `<BUS_NAME>_stb` to 0.
-#. If `rst` is set to 1, upon the 0 to 1 transition of `clk` the receiver **shall** terminate any active bus transaction and set `<BUS_NAME>_ack` to 0.
+#. If `rst` is set to 1, upon the 0 to 1 transition of `clk` the transmitter **shall** terminate any active bus transaction and set `<bus_name>_stb` to 0.
+#. If `rst` is set to 1, upon the 0 to 1 transition of `clk` the receiver **shall** terminate any active bus transaction and set `<bus_name>_ack` to 0.
 #. If `rst` is set to 0, normal operation **shall** commence.
-#. The transmitter **may** insert wait states on the bus by setting `<BUS_NAME>_stb` to 0.
-#. The transmitter **shall** set `<BUS_NAME>_stb` to 1 to signify that data is valid.
-#. Once `<BUS_NAME>_stb` has been set to 1, it **shall** remain at 1 until the transaction completes.
-#. The transmitter **shall** ensure that `<BUS_NAME>` contains valid data for the entire period that `<BUS_NAME>_stb` is 1.
-#. The transmitter **may** set `<BUS_NAME>` to any value when `<BUS_NAME>_stb` is 0.
-#. The receiver **may** insert wait states on the bus by setting `<BUS_NAME>_ack` to 0.
-#. The receiver **shall** set `<BUS_NAME>_ack` to 1 to signify that it is ready to receive data.
-#. Once `<BUS_NAME>_ack` has been set to 1, it **shall** remain at 1 until the transaction completes.
-#. Whenever `<BUS_NAME>_stb` is 1 and `<BUS_NAME>_ack` are 1, a bus transaction **shall** complete on the following 0 to 1 transition of `clk`.
+#. The transmitter **may** insert wait states on the bus by setting `<bus_name>_stb` to 0.
+#. The transmitter **shall** set `<bus_name>_stb` to 1 to signify that data is valid.
+#. Once `<bus_name>_stb` has been set to 1, it **shall** remain at 1 until the transaction completes.
+#. The transmitter **shall** ensure that `<bus_name>` contains valid data for the entire period that `<bus_name>_stb` is 1.
+#. The transmitter **may** set `<bus_name>` to any value when `<bus_name>_stb` is 0.
+#. The receiver **may** insert wait states on the bus by setting `<bus_name>_ack` to 0.
+#. The receiver **shall** set `<bus_name>_ack` to 1 to signify that it is ready to receive data.
+#. Once `<bus_name>_ack` has been set to 1, it **shall** remain at 1 until the transaction completes.
+#. Whenever `<bus_name>_stb` is 1 and `<bus_name>_ack` are 1, a bus transaction **shall** complete on the following 0 to 1 transition of `clk`.
 #. Both the transmitter and receiver **may** commence a new transaction without inserting any wait states.
 #. The receiver **may** delay a transaction by inserting wait states until the transmitter indicates that data is available.
 #. The transmitter **shall** not delay a transaction by inserting wait states until the receiver is ready to accept data. Deadlock would occur if both the transmitter and receiver delayed a transaction until the other was ready.
@@ -485,11 +485,11 @@ Interconnect Bus Transaction
                            _   _   _   _   _   _   _   _   _   _   _   _   _   _   _  
          clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
                          _____ _______ ________________________________________________
-        <BUS_NAME>       _____X_VALID_X________________________________________________
+        <bus_name>       _____X_VALID_X________________________________________________
                                _______
-        <BUS_NAME>_stb   _____|       |________________________________________________
+        <bus_name>_stb   _____|       |________________________________________________
                                    ___
-        <BUS_NAME>_ack   _________|   |________________________________________________
+        <bus_name>_ack   _________|   |________________________________________________
          
                                ^^^^ RX adds wait states
          
@@ -499,11 +499,11 @@ Interconnect Bus Transaction
                            _   _   _   _   _   _   _   _   _   _   _   _   _   _   _  
          clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
                          _____ _______ ________________________________________________
-        <BUS_NAME>       _____X_VALID_X________________________________________________
+        <bus_name>       _____X_VALID_X________________________________________________
                                    ___
-        <BUS_NAME>_stb   _________|   |________________________________________________
+        <bus_name>_stb   _________|   |________________________________________________
                                _______
-        <BUS_NAME>_ack   _____|       |________________________________________________
+        <bus_name>_ack   _____|       |________________________________________________
          
          
                                ^^^^ TX adds wait states
@@ -512,21 +512,21 @@ Interconnect Bus Transaction
 
 
          rst             ______________________________________________________________
-                           _   _   _   _   _   _   _   _   _   _   _   _   _   _   _  
-         clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
+                           __    __    __    __    __    __    __    __    __    __   _
+         clk             _|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |_| 
          
-                         _____ _______ ____ ____ ______________________________________
-        <BUS_NAME>       _____X_D0   _X_D1_X_D2_X______________________________________
-                                   _____________
-        <BUS_NAME>_STB   _________|             |______________________________________
-                               _________________
-        <BUS_NAME>_ACK   _____|                 |______________________________________
+                         _______ ___________ _____ _____ ______________________________
+        <bus_name>       _______X_D0________X_D1__X_D2__X______________________________
+                                       _________________
+        <bus_name>_stb   _____________|                 |______________________________
+                                 _______________________
+        <bus_name>_ack   _______|                       |______________________________
          
                                 ^^^^ TX adds wait states
          
-                                     ^^^^  Data transfers
+                                       ^^^^  Data transfers
          
-                                         ^^^^ STB and ACK needn't return to 0 between data words
+                                            ^^^^ stb and ack needn't return to 0 between data words
 
 ..
  

@@ -37,7 +37,7 @@ Demo card.
 A Quick Taster
 ==============
 
-::
+.. code-block:: c
 
         lfsr.c:
 
@@ -55,10 +55,10 @@ A Quick Taster
                  shift_register=((new_bit & 1) << 3) | (shift_register >> 1);
          
                  //4 bit mask
-                 shift_register &= 0xf
+                 shift_register &= 0xf;
          
                  //write to stream
-                 output_code(shift_register);
+                 report(shift_register);
              }
         }
 
