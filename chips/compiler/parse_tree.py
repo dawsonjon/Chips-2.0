@@ -5,6 +5,7 @@ __version__ = "0.1"
 class NotConstant(Exception):
     pass
 
+
 def constant_fold(expression):
 
     """Replace an expression with a constant if possible"""
@@ -80,9 +81,14 @@ class Return:
 
     def generate(self):
         if hasattr(self, "expression"):
-            instructions = self.expression.generate(
-                self.function.return_value, 
-                self.allocator)
+
+            result = self.allocator.new(self.function.size)
+            instructions=self.function.return_value.copy(
+                self.expression, 
+                result, 
+                allocator)
+            self.allocator.free(result)
+
         else:
             instructions = []
 
@@ -123,7 +129,9 @@ class WaitClocks:
 class If:
 
     def generate(self):
+
         try:
+
             if self.expression.value():
                 return self.true_statement.generate()
             else:
@@ -131,7 +139,9 @@ class If:
                     return self.false_statement.generate()
                 else:
                     return []
+
         except NotConstant:
+
             result = self.allocator.new(self.expression.size())
             instructions = []
             instructions.extend(self.expression.generate(result, self.allocator))
@@ -262,31 +272,40 @@ class VariableDeclaration:
     def __init__(self, allocator, initializer, name, type_, size, signed):
         self.initializer = initializer
         self.allocator = allocator
-        self.type_ = type_
-        self.size = size
-        self.signed = signed
+        self._type = type_
+        self._size = size
+        self._signed = signed
         self.name = name
 
     def instance(self):
-        register = self.allocator.new(self.size, "variable "+self.name)
+        register = self.allocator.new(self.size(), "variable "+self.name)
 
         return VariableInstance(
             register, 
             self.initializer, 
-            self.type_, 
-            self.size, 
-            self.signed, 
+            self.type_(), 
+            self.size(), 
+            self.signed(), 
             self.allocator)
+
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
 
 
 class VariableInstance:
 
     def __init__(self, register, initializer, type_, size, signed, allocator):
         self.register = register
-        self.type_ = type_
+        self._type = type_
         self.initializer = initializer
-        self.size = size
-        self.signed = signed
+        self._size = size
+        self._signed = signed
         self.allocator = allocator
 
     def generate(self):
@@ -294,6 +313,15 @@ class VariableInstance:
 
     def reference(self):
         return Variable(self)
+
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
 
 
 class ArrayDeclaration:
@@ -309,9 +337,9 @@ class ArrayDeclaration:
                  initialize_memory = False):
 
         self.allocator = allocator
-        self.type_ = type_
-        self.size = size
-        self.signed = False
+        self._type = type_
+        self._size = size
+        self._signed = False
         self.element_type = element_type
         self.element_size = element_size
         self.element_signed = element_signed
@@ -321,7 +349,7 @@ class ArrayDeclaration:
     def instance(self):
 
         location = self.allocator.new_array(
-            self.size, 
+            self.size(), 
             self.initializer, 
             self.element_size)
 
@@ -330,14 +358,22 @@ class ArrayDeclaration:
         return ArrayInstance(
             location,
             register,
-            self.size,
-            self.type_,
+            self.size(),
+            self.type_(),
             self.initializer,
             self.initialize_memory,
             self.element_type,
             self.element_size,
             self.element_signed)
 
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
 
 class ArrayInstance:
 
@@ -354,9 +390,9 @@ class ArrayInstance:
 
         self.register = register
         self.location = location
-        self.type_ = type_
-        self.size = size * element_size
-        self.signed = False
+        self._type = type_
+        self._size = size * element_size
+        self._signed = False
         self.element_type = element_type
         self.element_size = element_size
         self.element_signed = element_signed
@@ -389,11 +425,24 @@ class ArrayInstance:
     def reference(self):
         return Array(self)
 
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
+
 
 class StructDeclaration:
 
     def __init__(self, members):
         self.members = members
+        self._type = "struct {%s}"%"; ".join(
+            [i.type_() for i in members.values()])
+        self._size = sum([i.size() for i in members.values()])
+        self._signed = False
 
     def instance(self):
         instances = {}
@@ -401,14 +450,24 @@ class StructDeclaration:
             instances[name] = declaration.instance()
         return StructInstance(instances)
 
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
+
 
 class StructInstance:
 
     def __init__(self, members):
         self.members = members
-        self.type_ = "struct"
-        self.size = sum([i.size for i in members.values()])
-        self.signed = False
+        self._type = "struct {%s}"%"; ".join(
+            [i.type_() for i in members.values()])
+        self._size = sum([i.size() for i in members.values()])
+        self._signed = False
 
     def generate(self):
         instructions = []
@@ -416,9 +475,17 @@ class StructInstance:
             instructions.extend(member.generate())
         return instructions
 
-
     def reference(self):
         return Struct(self)
+
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
 
 
 class DiscardExpression:
@@ -460,7 +527,7 @@ class Expression:
 class Object(Expression):
 
     def __init__(self, instance):
-        Expression.__init__(self, instance.type_, instance.size, instance.signed)
+        Expression.__init__(self, instance.type_(), instance.size(), instance.signed())
         self.instance = instance
 
     def value(self):
@@ -627,10 +694,9 @@ class FunctionCall(Expression):
 
         if hasattr(self.function, "return_value"):
 
-            instructions.append(
-                {"op"   :"move",
-                 "dest" :result,
-                 "src"  :self.function.return_value})
+            instructions.append(self.function.return_value.generate(
+                result, 
+                allocator)
 
         return instructions
 
