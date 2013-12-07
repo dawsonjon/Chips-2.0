@@ -95,8 +95,8 @@ def generate_instruction_set(instructions):
         if "element_size" in instruction:
             opcode["element_size"] = instruction["element_size"]
 
-        if "file" in instruction:
-            opcode["file"] = instruction["file"]
+        if "file_name" in instruction:
+            opcode["file_name"] = instruction["file_name"]
 
         if "line" in instruction:
             opcode["line"] = instruction["line"]
@@ -618,7 +618,7 @@ def generate_CHIP(input_file,
             output_file.write("        16'd%s:\n"%(opcode))
             output_file.write("        begin\n")
             output_file.write("          file_count = $fscanf(%s, \"%%d\\n\", result_2);\n"%(
-              input_files[instruction["file_"]]))
+              input_files[instruction["file_name"]]))
             output_file.write("          write_enable_2 <= 1;\n")
             output_file.write("        end\n\n")
 
@@ -692,7 +692,7 @@ def generate_CHIP(input_file,
             output_file.write("          if (register_1 == 0) begin\n")
             output_file.write("            $display(\"Assertion failed at line: %s in file: %s\");\n"%(
               instruction["line"],
-              instruction["file_"]))
+              instruction["file"]))
             output_file.write("            $finish_and_return(1);\n")
             output_file.write("          end\n")
             output_file.write("        end\n\n")
@@ -713,11 +713,11 @@ def generate_CHIP(input_file,
             if instruction["unsigned"]:
                 output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register_1));\n'%(
                   instruction["line"],
-                  instruction["file_"]))
+                  instruction["file"]))
             else:
                 output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed(register_1));\n'%(
                   instruction["line"],
-                  instruction["file_"],))
+                  instruction["file"],))
             output_file.write("        end\n\n")
 
         elif instruction["op"] == "stop":
