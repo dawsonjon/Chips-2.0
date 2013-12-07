@@ -158,7 +158,6 @@ class Chip:
             return os.system("vvp %s"%(self.name + "_tb"))
 
 
-
 class Component:
 
     """You can use the component class to add new components to your chip.
@@ -190,6 +189,28 @@ class Component:
             + inputs, a list of *Wires* (or *Inputs*) to connect to the component inputs
             + outputs, a list of *Wires* (or *Outputs*) to connect to the component outputs"""
         return _Instance(self, chip, inputs, outputs)
+
+
+class VerilogComponent(Component):
+
+    """You can use the component class to add new components to your chip.
+    This version of Component allows components to be written directly in verilog.
+
+        my_component = Adder("adder", inputs = ["a", "b"], outputs = ["z"])
+
+    Once you have defined a component you can use the __call__ method to create
+    an instance of the component.
+
+    """
+
+    def __init__(self, name, inputs, outputs, docs):
+
+        """Takes a single string argument, the C code to compile"""
+
+        self.name = name
+        self.inputs = inputs
+        self.outputs = outputs
+        self.docs = docs
 
 
 class _Instance:

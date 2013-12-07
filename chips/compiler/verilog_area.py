@@ -96,7 +96,7 @@ def generate_instruction_set(instructions):
             opcode["element_size"] = instruction["element_size"]
 
         if "file" in instruction:
-            opcode["file_"] = instruction["file"]
+            opcode["file"] = instruction["file"]
 
         if "line" in instruction:
             opcode["line"] = instruction["line"]
