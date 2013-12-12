@@ -2,9 +2,13 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
+import struct
+
 from parse_tree import *
 from tokens import Tokens
 from allocator import Allocator
+
+types = ["float", "signed", "unsigned", "short", "long", "char", "int", "void"]
 
 class Parser:
 
@@ -38,7 +42,7 @@ class Parser:
     def parse_type_specifier(self):
         type_specifiers = []
 
-        while self.tokens.peek() in ["signed", "unsigned", "short", "long", "char", "int", "void"] + self.structs:
+        while self.tokens.peek() in types + self.structs:
             type_specifiers.append(self.tokens.get())
 
         signed = True
@@ -59,6 +63,17 @@ class Parser:
                 type_ = i
                 size = 2
                 signed = False
+
+        if "float" in type_specifiers:
+            if "short" in type_specifiers:
+                self.tokens.error("Float cannot be short")
+            if "long" in type_specifiers:
+                self.tokens.error("Float cannot be long (but double can)")
+            if "unsigned" in type_specifiers:
+                self.tokens.error("Float cannot be unsigned")
+            type_ = "float"
+            size = 4
+            signed = True
 
         if "void" in type_specifiers:
             type_ = "void"
@@ -192,7 +207,7 @@ class Parser:
         return wait_clocks
 
     def parse_statement(self):
-        if self.tokens.peek() in ["unsigned", "int", "short", "long", "char"] + self.structs:
+        if self.tokens.peek() in ["float", "unsigned", "int", "short", "long", "char"] + self.structs:
             return self.parse_compound_declaration()
         elif self.tokens.peek() == "struct":
             return self.parse_struct_declaration()
@@ -243,6 +258,7 @@ class Parser:
             operator = self.tokens.get()
             if operator == "=":
                 expression = self.parse_ternary_expression()
+                print "expression", expression
             else:
                 expression = Binary(
                     operator[:-1],
@@ -252,7 +268,9 @@ class Parser:
                 )
             if not compatible(lvalue.type_, expression.type_):
                 self.tokens.error(
-                    "type mismatch in assignment"
+                        "type mismatch in assignment expected:%s actual:%s"%(
+                            lvalue.type_,
+                            expression.type_)
                 )
             return Assignment(lvalue, expression, self.allocator)
         else:
@@ -308,7 +326,7 @@ class Parser:
         try:
             expression = value(expression)
             case = Case()
-            self.loop.cases[expression] =    case
+            self.loop.cases[expression] = case
         except NotConstant:
             self.tokens.error("case expression must be constant")
         except AttributeError:
@@ -463,7 +481,7 @@ class Parser:
         #struct declaration
         if type_ in self.structs:
             declaration = self.scope[type_]
-        elif type_ in ["int"]:
+        elif type_ in ["int", "float"]:
             #array declaration
             if self.tokens.peek() == "[":
                 array_size = None
@@ -735,13 +753,14 @@ class Parser:
                     actual.type_
                 ))
 
-
         return function_call
 
     def parse_number(self):
         token = self.tokens.get()
+        type_ = "int"
         size = 2
         signed = True
+        print token
         if token.startswith("'"):
             try:
                 token = eval(token)
@@ -765,7 +784,29 @@ class Parser:
                 return declaration.instance()
             except SyntaxError:
                 self.tokens.error("%s is not a character literal"%token)
+        elif "." in token:
+            #float literal
+            try:
+                type_ = "float"
+                signed = True
+                size = 4
+                token = token.upper().replace("F", "")
+                token = token.upper().replace("L", "")
+                value = float(eval(token))
+
+                try:
+                    byte_value = struct.pack(">f", value)
+                    value  = ord(byte_value[0]) << 24
+                    value |= ord(byte_value[1]) << 16
+                    value |= ord(byte_value[2]) << 8
+                    value |= ord(byte_value[3])
+                except OverflowError:
+                    self.tokens.error("value too large")
+
+            except SyntaxError:
+                self.tokens.error("%s is not a floating point literal"%token)
         else:
+            #integer literal
             try:
                 if "U" in token.upper():
                     signed = False
@@ -787,7 +828,9 @@ class Parser:
 
             except SyntaxError:
                 self.tokens.error("%s is not an integer literal"%token)
-        return Constant(value, size, signed)
+
+        print type_
+        return Constant(value, type_, size, signed)
 
     def parse_variable(self, name):
         if name not in self.scope:
@@ -796,7 +839,7 @@ class Parser:
         return self.parse_variable_array_struct(instance)
 
     def parse_variable_array_struct(self, instance):
-        if instance.type_ in ["unsigned", "int", "short", "long", "char"]:
+        if instance.type_ in ["float", "unsigned", "int", "short", "long", "char"]:
             return Variable(instance, self.allocator)
         elif instance.type_.endswith("[]"):
             if self.tokens.peek() == "[":

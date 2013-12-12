@@ -19,7 +19,8 @@ def constant_fold(expression):
     """Replace an expression with a constant if possible"""
 
     try:
-        return Constant(value(expression))
+        print expression
+        return Constant(value(expression), expression.type_(), expression.size(), expression.signed())
     except NotConstant:
         return expression
 
@@ -658,9 +659,9 @@ class Assignment:
         return instructions
 
 class Constant:
-    def __init__(self, value, size=2, signed=True):
+    def __init__(self, value, type_="int", size=2, signed=True):
         self._value = value
-        self.type_ = "int"
+        self.type_ = type_
         self.size = size
         self.signed = signed
 

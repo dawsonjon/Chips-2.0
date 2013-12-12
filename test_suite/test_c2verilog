@@ -57,6 +57,62 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("float 1",
+"""
+void main(){
+    float test = 0.0;
+    assert(test == 0.0);
+}
+"""
+)
+test("float 2",
+"""
+void main(){
+    float test = 1.0;
+    assert(test > 0.0);
+}
+"""
+)
+test("float 3",
+"""
+void main(){
+    float test = 0.0;
+    assert(test < 1.0);
+}
+"""
+)
+test("float 4",
+"""
+void main(){
+    float test = 0.0;
+    assert(test > (1.0*-1));
+}
+"""
+)
+test("float 5",
+"""
+void main(){
+    float test = 0.0;
+    assert(test == 0.0);
+}
+"""
+)
+test("float 6",
+"""
+void main(){
+    float blah[10];
+    blah[0] = 0.0;
+    blah[1] = 1.0;
+    blah[2] = 2.0;
+    blah[3] = 3.0;
+    assert(blah[0] == 0.0);
+    assert(blah[1] == 1.0);
+    assert(blah[2] == 2.0);
+    assert(blah[3] == 3.0);
+}
+"""
+)
+
 test("print 1",
 """
 unsigned test[] = "Hello World!";
