@@ -637,7 +637,7 @@ class Parser:
         if signature in functions:
             function = self.scope[functions[signature]]
             function_call = FunctionCall(function)
-            function_call.arguments = [left, right]
+            function_call.arguments = [binary_expression.left, binary_expression.right]
             return function_call
         else:
             return binary_expression

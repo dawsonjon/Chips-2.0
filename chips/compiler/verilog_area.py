@@ -240,15 +240,6 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
       ("data_out_4", 32),
       ("data_in_4", 32),
       ("memory_enable_4", 1),
-      ("divider_go", 1),
-      ("divider_done", 1),
-      ("div_state", 2),
-      ("multiplier_go", 1),
-      ("multiplier_done", 1),
-      ("mul_state", 2),
-      ("adder_go", 1),
-      ("adder_done", 1),
-      ("add_state", 2),
     ] + [
       ("s_output_" + i + "_stb", 16) for i in outputs
     ] + [
@@ -265,6 +256,21 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
         inports.append(("rst", 1))
 
     return inputs, outputs, input_files, output_files, testbench, inports, outports, signals
+
+def floating_point_enables(instruction_set):
+    enable_adder = False
+    enable_multiplier = False
+    enable_divider = False
+    for i in instruction_set:
+        if i["op"] == "+" and i["float"]:
+            enable_adder = True
+        if i["op"] == "-" and i["float"]:
+            enable_adder = True
+        if i["op"] == "*" and i["float"]:
+            enable_multiplier = True
+        if i["op"] == "/" and i["float"]:
+            enable_divider = True
+    return enable_adder, enable_multiplier, enable_divider
 
 def generate_CHIP(input_file,
                   name,
@@ -288,6 +294,7 @@ def generate_CHIP(input_file,
     instruction_bits = 32 + register_bits*2 + opcode_bits
     declarations = generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits)
     inputs, outputs, input_files, output_files, testbench, inports, outports, signals = declarations
+    enable_adder, enable_multiplier, enable_divider = floating_point_enables(instruction_set)
 
     #output the code in verilog
     output_file.write("//////////////////////////////////////////////////////////////////////////////\n")
@@ -301,9 +308,12 @@ def generate_CHIP(input_file,
     output_file.write("///\n")
     output_file.write("///Created by C2CHIP\n\n")
 
-    output_file.write(fpu.divider)
-    output_file.write(fpu.multiplier)
-    output_file.write(fpu.adder)
+    if enable_adder:
+        output_file.write(fpu.adder)
+    if enable_divider:
+        output_file.write(fpu.divider)
+    if enable_multiplier:
+        output_file.write(fpu.multiplier)
 
 
     output_file.write("//////////////////////////////////////////////////////////////////////////////\n")
@@ -327,38 +337,20 @@ def generate_CHIP(input_file,
 
     output_file.write("  integer file_count;\n")
 
+
+    if enable_adder:
+        generate_adder_signals(output_file)
+    if enable_multiplier:
+        generate_multiplier_signals(output_file)
+    if enable_divider:
+        generate_divider_signals(output_file)
     output_file.write("  real fp_value;\n")
-    output_file.write("  reg [31:0] divider_a;\n")
-    output_file.write("  reg divider_a_stb;\n")
-    output_file.write("  wire divider_a_ack;\n")
-    output_file.write("  reg [31:0] divider_b;\n")
-    output_file.write("  reg divider_b_stb;\n")
-    output_file.write("  wire divider_b_ack;\n")
-    output_file.write("  wire [31:0] divider_z;\n")
-    output_file.write("  wire divider_z_stb;\n")
-    output_file.write("  reg divider_z_ack;\n")
-    output_file.write("  reg [31:0] multiplier_a;\n")
-    output_file.write("  reg multiplier_a_stb;\n")
-    output_file.write("  wire multiplier_a_ack;\n")
-    output_file.write("  reg [31:0] multiplier_b;\n")
-    output_file.write("  reg multiplier_b_stb;\n")
-    output_file.write("  wire multiplier_b_ack;\n")
-    output_file.write("  wire [31:0] multiplier_z;\n")
-    output_file.write("  wire multiplier_z_stb;\n")
-    output_file.write("  reg multiplier_z_ack;\n")
-    output_file.write("  reg [31:0] adder_a;\n")
-    output_file.write("  reg adder_a_stb;\n")
-    output_file.write("  wire adder_a_ack;\n")
-    output_file.write("  reg [31:0] adder_b;\n")
-    output_file.write("  reg adder_b_stb;\n")
-    output_file.write("  wire adder_b_ack;\n")
-    output_file.write("  wire [31:0] adder_z;\n")
-    output_file.write("  wire adder_z_stb;\n")
-    output_file.write("  reg adder_z_ack;\n")
-    output_file.write("  parameter wait_go = 2'd0,\n")
-    output_file.write("            write_a = 2'd1,\n")
-    output_file.write("            write_b = 2'd2,\n")
-    output_file.write("            read_z  = 2'd3;\n")
+    if enable_adder or enable_multiplier or enable_divider:
+        output_file.write("  parameter wait_go = 2'd0,\n")
+        output_file.write("            write_a = 2'd1,\n")
+        output_file.write("            write_b = 2'd2,\n")
+        output_file.write("            read_z  = 2'd3;\n")
+    
 
     input_files = dict(zip(input_files, ["input_file_%s"%i for i, j in enumerate(input_files)]))
     for i in input_files.values():
@@ -386,13 +378,13 @@ def generate_CHIP(input_file,
             output_file.write(";\n")
 
     for name, size in inports:
-        write_declaration("  input     ", name, size)
+        write_declaration("  input ", name, size)
 
     for name, size in outports:
-        write_declaration("  output    ", name, size)
+        write_declaration("  output ", name, size)
 
     for name, size in signals:
-        write_declaration("  reg       ", name, size)
+        write_declaration("  reg ", name, size)
 
     memory_size_2 = int(memory_size_2)
     memory_size_4 = int(memory_size_4)
@@ -433,7 +425,7 @@ def generate_CHIP(input_file,
         output_file.write("  end\n\n")
 
     #Instance Floating Point Arithmetic
-    if True:
+    if enable_adder or enable_multiplier or enable_divider:
 
         output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
         output_file.write("  // Floating Point Arithmetic                                                  \n")
@@ -441,9 +433,12 @@ def generate_CHIP(input_file,
         output_file.write("  // Generate IEEE 754 single precision divider, adder and multiplier           \n")
         output_file.write("  //                                                                            \n")
 
-        connect_divider(output_file)
-        connect_multiplier(output_file)
-        connect_adder(output_file)
+        if enable_divider:
+            connect_divider(output_file)
+        if enable_multiplier:
+            connect_multiplier(output_file)
+        if enable_adder:
+            connect_adder(output_file)
 
 
 
@@ -536,9 +531,13 @@ def generate_CHIP(input_file,
         output_file.write("    memory_enable_4 <= 1'b0;\n\n")
 
     output_file.write("    write_enable_2 <= 0;\n")
-    output_file.write("    divider_go <= 0;\n")
-    output_file.write("    multiplier_go <= 0;\n")
-    output_file.write("    adder_go <= 0;\n")
+
+    if enable_divider:
+        output_file.write("    divider_go <= 0;\n")
+    if enable_multiplier:
+        output_file.write("    multiplier_go <= 0;\n")
+    if enable_adder:
+        output_file.write("    adder_go <= 0;\n")
 
     output_file.write("    //stage 0 instruction fetch\n")
     output_file.write("    if (stage_0_enable) begin\n")
@@ -926,12 +925,31 @@ def generate_CHIP(input_file,
     output_file.write("    end else begin\n")
     output_file.write("      timer <= timer - 1;\n")
     output_file.write("    end\n\n")
-    output_file.write("    if (adder_done || multiplier_done || divider_done) begin\n")
-    output_file.write("      write_enable_2 <= 1;\n")
-    output_file.write("      stage_0_enable <= 1;\n")
-    output_file.write("      stage_1_enable <= 1;\n")
-    output_file.write("      stage_2_enable <= 1;\n")
-    output_file.write("    end\n\n")
+
+
+    if enable_adder:
+        output_file.write("    if (adder_done) begin\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_multiplier:
+        output_file.write("    if (multiplier_done) begin\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_divider:
+        output_file.write("    if (divider_done) begin\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
 
     #Reset program counter and control signals
     output_file.write("    if (rst == 1'b1) begin\n")
@@ -1135,3 +1153,45 @@ def connect_adder(output_file):
     output_file.write("      adder_z_ack <= 0;\n")
     output_file.write("    end\n")
     output_file.write("  end\n\n")
+
+def generate_divider_signals(output_file):
+    output_file.write("  reg [31:0] divider_a;\n")
+    output_file.write("  reg divider_a_stb;\n")
+    output_file.write("  wire divider_a_ack;\n")
+    output_file.write("  reg [31:0] divider_b;\n")
+    output_file.write("  reg divider_b_stb;\n")
+    output_file.write("  wire divider_b_ack;\n")
+    output_file.write("  wire [31:0] divider_z;\n")
+    output_file.write("  wire divider_z_stb;\n")
+    output_file.write("  reg divider_z_ack;\n")
+    output_file.write("  reg [1:0] div_state;\n")
+    output_file.write("  reg divider_go;\n")
+    output_file.write("  reg divider_done;\n")
+
+def generate_multiplier_signals(output_file):
+    output_file.write("  reg [31:0] multiplier_a;\n")
+    output_file.write("  reg multiplier_a_stb;\n")
+    output_file.write("  wire multiplier_a_ack;\n")
+    output_file.write("  reg [31:0] multiplier_b;\n")
+    output_file.write("  reg multiplier_b_stb;\n")
+    output_file.write("  wire multiplier_b_ack;\n")
+    output_file.write("  wire [31:0] multiplier_z;\n")
+    output_file.write("  wire multiplier_z_stb;\n")
+    output_file.write("  reg multiplier_z_ack;\n")
+    output_file.write("  reg [1:0] mul_state;\n")
+    output_file.write("  reg multiplier_go;\n")
+    output_file.write("  reg multiplier_done;\n")
+
+def generate_adder_signals(output_file):
+    output_file.write("  reg [31:0] adder_a;\n")
+    output_file.write("  reg adder_a_stb;\n")
+    output_file.write("  wire adder_a_ack;\n")
+    output_file.write("  reg [31:0] adder_b;\n")
+    output_file.write("  reg adder_b_stb;\n")
+    output_file.write("  wire adder_b_ack;\n")
+    output_file.write("  wire [31:0] adder_z;\n")
+    output_file.write("  wire adder_z_stb;\n")
+    output_file.write("  reg adder_z_ack;\n")
+    output_file.write("  reg [1:0] add_state;\n")
+    output_file.write("  reg adder_go;\n")
+    output_file.write("  reg adder_done;\n")
