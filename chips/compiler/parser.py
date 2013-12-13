@@ -9,6 +9,7 @@ from tokens import Tokens
 from allocator import Allocator
 
 types = ["float", "signed", "unsigned", "short", "long", "char", "int", "void"]
+numeric_types = ["float", "signed", "unsigned", "short", "long", "char", "int"]
 
 class Parser:
 
@@ -83,6 +84,40 @@ class Parser:
 
         return type_, size, signed
 
+    def parse_argument(self):
+        type_, size, signed = self.parse_type_specifier()
+
+        if type_ in ["void"]:
+            self.tokens.error("argument cannot be void")
+        else:
+            argument = self.tokens.get()
+            if type_ in self.structs:
+                declaration = self.scope[type_]
+            else:
+                if self.tokens.peek() == "[":
+                    self.tokens.expect("[")
+                    self.tokens.expect("]")
+                    declaration = ArrayDeclaration(
+                        self.allocator,
+                        2,
+                        type_+"[]",
+                        type_,
+                        size,
+                        signed, 
+                        None,
+                        self.initialize_memory)
+                else:
+                    declaration = VariableDeclaration(
+                        self.allocator,
+                        None,
+                        argument,
+                        type_,
+                        size,
+                        signed)
+        instance = declaration.instance()
+        self.scope[argument] = instance
+        return instance.reference()
+
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
@@ -100,41 +135,37 @@ class Parser:
         function.type_ = type_
         function.size = size
         function.signed = signed
-        function.return_address = self.allocator.new(2, function.name+" return address")
+
+        function.return_address = self.allocator.new(2, 
+            function.name+" return address")
+
         if type_ != "void":
-            function.return_value = self.allocator.new(function.size, function.name+" return value")
+
+            if type_ in self.structs:
+                declaration = self.scope[type_]
+            else:
+                if self.tokens.peek() == "[":
+                    self.tokens.error(
+                        "Functions cannot return arrays")
+                else:
+                    declaration = VariableDeclaration(
+                        self.allocator,
+                        None,
+                        function.name+" return value",
+                        type_,
+                        size,
+                        signed)
+
+            function.return_value = declaration.instance().reference()
+
         function.arguments = []
         while self.tokens.peek() != ")":
-            argument_type, argument_size, argument_signed = self.parse_type_specifier()
-            if argument_type in ["void"]:
-                self.tokens.error("argument cannot be void")
-            argument = self.tokens.get()
-            element_type = None
-            element_size = None
-            element_signed = None
-            if self.tokens.peek() == "[":
-                self.tokens.expect("[")
-                self.tokens.expect("]")
-                element_type = argument_type
-                element_size = argument_size
-                element_signed = argument_signed
-                argument_type+="[]"
-                argument_size = 2
-                argument_signed = False
-
-            function.arguments.append(Argument(
-                argument,
-                argument_type,
-                argument_size,
-                argument_signed,
-                self,
-                element_type,
-                element_size,
-                element_signed))
+            function.arguments.append(self.parse_argument())
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
             else:
                 break
+
         self.tokens.expect(")")
         self.function = function
         function.statement = self.parse_statement()
@@ -164,6 +195,7 @@ class Parser:
     def parse_return(self):
         return_ = Return()
         return_.function = self.function
+        return_.allocator = self.allocator
         self.function.return_statement = return_
         self.tokens.expect("return")
         if hasattr(self.function, "return_value"):
@@ -207,7 +239,7 @@ class Parser:
         return wait_clocks
 
     def parse_statement(self):
-        if self.tokens.peek() in ["float", "unsigned", "int", "short", "long", "char"] + self.structs:
+        if self.tokens.peek() in numeric_types + self.structs:
             return self.parse_compound_declaration()
         elif self.tokens.peek() == "struct":
             return self.parse_struct_declaration()
@@ -251,27 +283,28 @@ class Parser:
         ]
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
-            if not hasattr(lvalue, "declaration"):
+            if lvalue.read_only():
+
                 self.tokens.error(
-                    "left hand operand of assignment is not modifiable"
-                )
+                    "left hand operand of assignment is not modifiable")
+
             operator = self.tokens.get()
             if operator == "=":
                 expression = self.parse_ternary_expression()
-                print "expression", expression
             else:
+
                 expression = Binary(
                     operator[:-1],
                     lvalue,
-                    self.parse_ternary_expression(),
-                    self.allocator
-                )
-            if not compatible(lvalue.type_, expression.type_):
+                    self.parse_ternary_expression())
+
+            if not compatible(lvalue, expression):
+
                 self.tokens.error(
-                        "type mismatch in assignment expected:%s actual:%s"%(
-                            lvalue.type_,
-                            expression.type_)
-                )
+                    "type mismatch in assignment expected: %s actual: %s"%(
+                        lvalue.type_(),
+                        expression.type_()))
+
             return Assignment(lvalue, expression, self.allocator)
         else:
             return lvalue
@@ -282,7 +315,7 @@ class Parser:
         self.tokens.expect("if")
         self.tokens.expect("(")
         if_.expression = self.parse_expression()
-        if if_.expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
+        if if_.expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
                 "if statement conditional must be an integer like expression"
             )
@@ -301,7 +334,7 @@ class Parser:
         self.tokens.expect("switch")
         self.tokens.expect("(")
         expression = self.parse_expression()
-        if expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
+        if expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
                 "switch statement expression must be an integer like expression"
             )
@@ -318,13 +351,13 @@ class Parser:
     def parse_case(self):
         self.tokens.expect("case")
         expression = self.parse_expression()
-        if expression.type_ not in ["int"]:
+        if expression.type_() not in ["int"]:
             self.tokens.error(
                 "case expression must be an integer like expression"
             )
         self.tokens.expect(":")
         try:
-            expression = value(expression)
+            expression = expression.value()
             case = Case()
             self.loop.cases[expression] = case
         except NotConstant:
@@ -366,10 +399,9 @@ class Parser:
         break_ = Break()
         break_.loop = loop
         if_.allocator = self.allocator
-        if expression.type_ not in ["int"]:
+        if expression.type_() not in ["int"]:
             self.tokens.error(
-                "if statement conditional must be an integer like expression"
-            )
+                "while statement conditional must be an integer like expression")
         if_.expression = expression
         if_.false_statement = break_
         if_.true_statement = statement
@@ -386,10 +418,16 @@ class Parser:
         self.tokens.expect(";")
         if self.tokens.peek() != ";":
             for_.expression = self.parse_expression()
-            if for_.expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
+            if for_.expression.type_() not in [
+                "unsigned", 
+                "int", 
+                "short", 
+                "long", 
+                "char"]:
+
                 self.tokens.error(
-                    "for statement conditional must be an integer like expression"
-                )
+            "For statement conditional must be an integer like expression")
+
         self.tokens.expect(";")
         if self.tokens.peek() != ")":
             for_.statement2 = self.parse_discard()
@@ -417,7 +455,13 @@ class Parser:
         while self.tokens.peek() != "}":
             type_, size, signed = self.parse_type_specifier()
             name = self.tokens.get()
-            members[name] = self.parse_declaration(type_, size, signed, name)
+
+            members[name] = self.parse_declaration(
+                type_, 
+                size, 
+                signed, 
+                name)
+
             self.tokens.expect(";")
         self.tokens.expect("}")
         return members
@@ -450,7 +494,13 @@ class Parser:
     def parse_global_declaration(self, type_, size, signed, name):
         instances = []
         while True:
-            instance = self.parse_declaration(type_, size, signed, name).instance()
+
+            instance = self.parse_declaration(
+                type_, 
+                size, 
+                signed, 
+                name).instance()
+
             self.scope[name] = instance
             instances.append(instance)
             if self.tokens.peek() == ",":
@@ -466,7 +516,13 @@ class Parser:
         instances = []
         while True:
             name = self.tokens.get()
-            instance = self.parse_declaration(type_, size, signed, name).instance()
+
+            instance = self.parse_declaration(
+                type_, 
+                size, 
+                signed, 
+                name).instance()
+
             self.scope[name] = instance
             instances.append(instance)
             if self.tokens.peek() == ",":
@@ -496,17 +552,21 @@ class Parser:
                     initializer = [ord(i) for i in initializer.strip('"').decode("string_escape")] + [0]
                     array_size = len(initializer)
                 if array_size is None:
-                    self.tokens.error("array size must be specified if not initialized")
+
+                    self.tokens.error(
+                        "array size must be specified if not initialized")
+
                 array_type=type_+"[]"
                 initialize_memory = self.initialize_memory
-                declaration = ArrayDeclaration(self.allocator,
-                                               array_size,
-                                               array_type,
-                                               type_,
-                                               size,
-                                               signed,
-                                               initializer,
-                                               self.initialize_memory)
+                declaration = ArrayDeclaration(
+                    self.allocator,
+                    array_size,
+                    array_type,
+                    type_,
+                    size,
+                    signed,
+                    initializer,
+                    self.initialize_memory)
 
             #simple variable declaration
             else:
@@ -554,44 +614,33 @@ class Parser:
             expression = AND(expression, self.parse_binary_expression(["|"]))
         return expression
 
-    def substitute_function(self, operator, left, right):
+    def substitute_function(self, binary_expression):
+
+        functions = {
+           "True,int,4,/" : "long_unsigned_divide_xxxx",
+           "False,int,4,/" : "long_divide_xxxx",
+           "True,int,2,/" : "divide_xxxx",
+           "False,int,2,/" : "unsigned_divide_xxxx",
+           "True,int,4,%" : "long_unsigned_divide_xxxx",
+           "False,int,4,%" : "long_divide_xxxx",
+           "True,int,2,%" : "divide_xxxx",
+           "False,int,2,%" : "unsigned_divide_xxxx",
+        }
+
+        signature = ",".join([
+            str(binary_expression.signed()), 
+            binary_expression.type_(), 
+            str(binary_expression.size()), 
+            binary_expression.operator])
+
         #Some things can't be implemented in verilog, substitute them with a function
-        if operator in ["/", "%"]:
-            function_call = FunctionCall()
+        if signature in functions:
+            function = self.scope[functions[signature]]
+            function_call = FunctionCall(function)
             function_call.arguments = [left, right]
-            if operator == "/":
-                if left.signed and right.signed:
-                    if max(left.size, right.size) == 4:
-                        function_call.function = self.scope["long_divide_xxxx"]
-                    else:
-                        function_call.function = self.scope["divide_xxxx"]
-                else:
-                    if max(left.size, right.size) == 4:
-                        function_call.function = self.scope["long_unsigned_divide_xxxx"]
-                    else:
-                        function_call.function = self.scope["unsigned_divide_xxxx"]
-            elif operator == "%":
-                if left.signed and right.signed:
-                    if max(left.size, right.size) == 4:
-                        function_call.function = self.scope["long_modulo_xxxx"]
-                    else:
-                        function_call.function = self.scope["modulo_xxxx"]
-                else:
-                    if max(left.size, right.size) == 4:
-                        function_call.function = self.scope["long_unsigned_modulo_xxxx"]
-                    else:
-                        function_call.function = self.scope["unsigned_modulo_xxxx"]
-            function_call.type_ = function_call.function.type_
-            function_call.size = function_call.function.size
-            function_call.signed = function_call.function.signed
             return function_call
         else:
-            return Binary(
-                operator,
-                left,
-                right,
-                self.allocator
-            )
+            return binary_expression
 
     def parse_binary_expression(self, operators):
         operator_precedence = {
@@ -608,7 +657,8 @@ class Parser:
             while self.tokens.peek() in operators:
                 operator = self.tokens.get()
                 right = self.parse_unary_expression()
-                expression = self.substitute_function(operator, expression, right)
+                expression = Binary(operator, expression, right)
+                expression = self.substitute_function(expression)
             return expression
         else:
             next_operators = operator_precedence[operators[0]]
@@ -618,7 +668,6 @@ class Parser:
                     self.tokens.get(),
                     expression,
                     self.parse_binary_expression(next_operators),
-                    self.allocator
                 )
             return expression
 
@@ -626,15 +675,19 @@ class Parser:
         if self.tokens.peek() == "!":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
-            return Binary("==", expression, Constant(0), self.allocator)
+            return Binary("==", expression, Constant(0))
         elif self.tokens.peek() == "-":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
-            return Binary("-", Constant(0), expression, self.allocator)
+            return Binary("-", Constant(0, 
+                expression.type_(), 
+                expression.size(), 
+                expression.signed()), 
+                expression)
         elif self.tokens.peek() == "~":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
-            return Unary("~", expression, self.allocator)
+            return Unary("~", expression)
         elif self.tokens.peek() == "sizeof":
             operator = self.tokens.get()
             expression = self.parse_unary_expression()
@@ -718,7 +771,10 @@ class Parser:
             return self.parse_file_read()
         if name == "file_write":
             return self.parse_file_write()
-        function_call = FunctionCall()
+        if name not in self.scope:
+            self.tokens.error("Unknown function: %s"%name)
+        function = self.scope[name]
+        function_call = FunctionCall(function)
         function_call.arguments = []
         self.tokens.expect("(")
         while self.tokens.peek() != ")":
@@ -729,29 +785,21 @@ class Parser:
                 break
         self.tokens.expect(")")
 
-        if name not in self.scope:
-            self.tokens.error("Unknown function: %s"%name)
 
-        function_call.function = self.scope[name]
-        function_call.type_ = function_call.function.type_
-        function_call.size = function_call.function.size
-        function_call.signed = function_call.function.signed
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
             self.tokens.error("Function %s takes %s arguments %s given."%(
                 name,
                 len(function_call.function.arguments),
-                len(function_call.arguments)
-            ))
+                len(function_call.arguments)))
         required_arguments = function_call.function.arguments
         actual_arguments = function_call.arguments
         for required, actual in zip(required_arguments, actual_arguments):
-            if not compatible(required.type_, actual.type_):
+            if not compatible(required, actual):
                 self.tokens.error("Type mismatch expected type : %s got: %s."%(
-                    required.type_,
-                    actual.type_
-                ))
+                    required.type_(),
+                    actual.type_()))
 
         return function_call
 
@@ -760,7 +808,6 @@ class Parser:
         type_ = "int"
         size = 2
         signed = True
-        print token
         if token.startswith("'"):
             try:
                 token = eval(token)
@@ -781,7 +828,7 @@ class Parser:
                     False,
                     initializer,
                     self.initialize_memory)
-                return declaration.instance()
+                return ConstArray(declaration.instance())
             except SyntaxError:
                 self.tokens.error("%s is not a character literal"%token)
         elif "." in token:
@@ -796,10 +843,6 @@ class Parser:
 
                 try:
                     byte_value = struct.pack(">f", value)
-                    value  = ord(byte_value[0]) << 24
-                    value |= ord(byte_value[1]) << 16
-                    value |= ord(byte_value[2]) << 8
-                    value |= ord(byte_value[3])
                 except OverflowError:
                     self.tokens.error("value too large")
 
@@ -829,7 +872,6 @@ class Parser:
             except SyntaxError:
                 self.tokens.error("%s is not an integer literal"%token)
 
-        print type_
         return Constant(value, type_, size, signed)
 
     def parse_variable(self, name):
@@ -839,25 +881,35 @@ class Parser:
         return self.parse_variable_array_struct(instance)
 
     def parse_variable_array_struct(self, instance):
-        if instance.type_ in ["float", "unsigned", "int", "short", "long", "char"]:
-            return Variable(instance, self.allocator)
-        elif instance.type_.endswith("[]"):
+        if instance.type_() in numeric_types:
+
+            if not hasattr(instance, "reference"):
+
+                self.tokens.error(
+                    "Not an expression")
+
+            return Variable(instance)
+        elif instance.type_().endswith("[]"):
             if self.tokens.peek() == "[":
                 self.tokens.expect("[")
                 index_expression = self.parse_expression()
                 self.tokens.expect("]")
-                if index_expression.type_ not in ["unsigned", "int", "short", "long", "char"]:
+                if index_expression.type_() not in ["int"]:
+
                     self.tokens.error(
-                        "array indices must be an integer like expression"
-                    )
-                return ArrayIndex(instance, index_expression, self.allocator)
+                        "Array indices must be an integer like expression")
+
+                return ArrayIndex(instance, index_expression)
             else:
-                return Array(instance, self.allocator)
-        elif instance.type_ == "struct":
-            self.tokens.expect(".")
-            member = self.tokens.get()
-            instance = instance.members[member]
-            return self.parse_variable_array_struct(instance)
+                return Array(instance)
+        elif instance.type_().startswith("struct"):
+            if self.tokens.peek() == ".":
+                self.tokens.expect(".")
+                member = self.tokens.get()
+                instance = instance.members[member]
+                return self.parse_variable_array_struct(instance)
+            else:
+                return Struct(instance)
 
 def compatible(left, right):
-    return left == right
+    return left.type_() == right.type_()

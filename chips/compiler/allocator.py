@@ -31,8 +31,6 @@ class Allocator:
                     self.memory_content_4[location] = value
             return reg
 
-
-
     def new(self, size, name="temporary_register"):
         assert type(size) == int
         reg = 0

@@ -28,6 +28,15 @@ def to_gray(i):
 
     return (i >> 1) ^ i
 
+def sign_extend(value, bytes_):
+    bits = bytes_*8
+    mask = (1<<bits)-1
+    mask = ~mask
+    if value & 1<<(bits-1):
+        return value | mask
+    else:
+        return value
+
 def generate_CHIP(input_file,
                   name,
                   frames,
@@ -145,6 +154,7 @@ def generate_CHIP(input_file,
         output_file.write(";\n")
 
     output_file.write("  integer file_count;\n")
+    output_file.write("  real fp_value;\n")
 
     input_files = dict(zip(input_files, ["input_file_%s"%i for i, j in enumerate(input_files)]))
     for i in input_files.values():
@@ -325,7 +335,7 @@ def generate_CHIP(input_file,
                     output_file.write(
                       "        register_%s <= %s %s $signed(register_%s);\n"%(
                       instruction["dest"],
-                      instruction["left"],
+                      sign_extend(instruction["left"], instruction["size"]),
                       instruction["op"],
                       instruction["src"]))
 
@@ -346,7 +356,7 @@ def generate_CHIP(input_file,
                       instruction["dest"],
                       instruction["src"],
                       instruction["op"],
-                      instruction["right"]))
+                      sign_extend(instruction["right"], instruction["size"])))
 
             elif instruction["op"] in binary_operators:
                 if not instruction["signed"]:
@@ -431,8 +441,7 @@ def generate_CHIP(input_file,
                 output_file.write(
                   "        address_%s <= register_%s;\n"%(
                       instruction["element_size"],
-                      instruction["src"])
-                )
+                      instruction["src"]))
 
             elif instruction["op"] == "memory_read_wait":
                 pass
@@ -441,41 +450,33 @@ def generate_CHIP(input_file,
                 output_file.write(
                   "        register_%s <= data_out_%s;\n"%(
                       instruction["dest"],
-                      instruction["element_size"])
-                )
+                      instruction["element_size"]))
 
             elif instruction["op"] == "memory_write":
                 output_file.write("        address_%s <= register_%s;\n"%(
                     instruction["element_size"],
-                    instruction["src"])
-                )
+                    instruction["src"]))
                 output_file.write("        data_in_%s <= register_%s;\n"%(
                     instruction["element_size"],
-                    instruction["srcb"])
-                )
+                    instruction["srcb"]))
                 output_file.write("        write_enable_%s <= 1'b1;\n"%(
-                    instruction["element_size"])
-                )
+                    instruction["element_size"]))
 
             elif instruction["op"] == "memory_write_literal":
                 output_file.write("        address_%s <= 16'd%s;\n"%(
                     instruction["element_size"],
-                    instruction["address"])
-                )
+                    instruction["address"]))
                 output_file.write("        data_in_%s <= %s;\n"%(
                     instruction["element_size"],
-                    instruction["value"])
-                )
+                    instruction["value"]))
                 output_file.write("        write_enable_%s <= 1'b1;\n"%(
-                    instruction["element_size"])
-                )
+                    instruction["element_size"]))
 
             elif instruction["op"] == "assert":
                 output_file.write( "        if (register_%s == 0) begin\n"%instruction["src"])
                 output_file.write( "          $display(\"Assertion failed at line: %s in file: %s\");\n"%(
                   instruction["line"],
-                  instruction["file"]
-                ))
+                  instruction["file"]))
                 output_file.write( "          $finish_and_return(1);\n")
                 output_file.write( "        end\n")
 
@@ -486,20 +487,26 @@ def generate_CHIP(input_file,
                 output_file.write("        end\n")
 
             elif instruction["op"] == "report":
-                if not instruction["signed"]:
+                if instruction["type"] == "float":
+                    output_file.write('          fp_value = register_%s[31]?-1.0:1.0 *\n'%instruction["src"])
+                    output_file.write('              (2.0 ** (register_%s[30:23]-127.0)) *\n'%instruction["src"])
+                    output_file.write('              ({1\'d1, register_%s[22:0]} / (2.0**23));\n'%instruction["src"])
+
+                    output_file.write('          $display ("%%f (report at line: %s in file: %s)", fp_value);\n'%(
+                      instruction["line"],
+                      instruction["file"]))
+                elif not instruction["signed"]:
                     output_file.write(
                       '        $display ("%%d (report at line: %s in file: %s)", $unsigned(register_%s));\n'%(
                       instruction["line"],
                       instruction["file"],
-                      instruction["src"],
-                    ))
+                      instruction["src"]))
                 else:
                     output_file.write(
                       '        $display ("%%d (report at line: %s in file: %s)", $signed(register_%s));\n'%(
                       instruction["line"],
                       instruction["file"],
-                      instruction["src"],
-                    ))
+                      instruction["src"]))
 
             elif instruction["op"] == "stop":
                 #If we are in testbench mode stop the simulation
