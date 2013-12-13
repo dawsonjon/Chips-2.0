@@ -14,24 +14,39 @@ synthesisable. All that's done for you!
 
 Test
 ----
-$ cd test_suite
-$ test_c2verilog
+
+::
+
+        $ cd test_suite
+        $ test_c2verilog
 
 Install
 -------
-$ sudo python setup install
+
+::
+
+        $ sudo python setup install
 
 Documentation
 -------------
-$ cd docs
-$ make html
 
+::
+
+        $ cd docs
+        $ make html
 
 To Prepare a Source Distribution
 --------------------------------
-$ python setup sdist
+
+::
+
+        $ python setup sdist
+
 Distribution is contained in ./dist
 
 To Create a Windows Distribution
 --------------------------------
-$ python setup bdist_wininst
+
+::
+
+        $ python setup bdist_wininst
