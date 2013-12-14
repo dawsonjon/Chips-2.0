@@ -353,8 +353,7 @@ class Parser:
         expression = self.parse_expression()
         if expression.type_() not in ["int"]:
             self.tokens.error(
-                "case expression must be an integer like expression"
-            )
+                "case expression must be an integer like expression")
         self.tokens.expect(":")
         try:
             expression = expression.value()
@@ -364,8 +363,7 @@ class Parser:
             self.tokens.error("case expression must be constant")
         except AttributeError:
             self.tokens.error(
-                "case statements may only be use inside a switch statment"
-            )
+                "case statements may only be use inside a switch statment")
         return case
 
     def parse_default(self):
@@ -374,12 +372,10 @@ class Parser:
         default = Default()
         if not hasattr(self.loop, "cases"):
             self.tokens.error(
-                "default statements may only be used inside a switch statment"
-            )
+                "default statements may only be used inside a switch statment")
         if hasattr(self.loop, "default"):
             self.tokens.error(
-                "A switch statement may only have one default statement"
-            )
+                "A switch statement may only have one default statement")
         self.loop.default=default
         return default
 
@@ -616,17 +612,23 @@ class Parser:
 
     def substitute_function(self, binary_expression):
 
+        """
+        For some operations are more easily implemented in sofftware.
+        This function substitutes a call to the builtin library function.
+        """
+
         functions = {
-           "True,int,4,/" : "long_unsigned_divide_xxxx",
-           "False,int,4,/" : "long_divide_xxxx",
-           "True,int,2,/" : "divide_xxxx",
+           "False,int,4,/" : "long_unsigned_divide_xxxx",
+           "True,int,4,/" : "long_divide_xxxx",
            "False,int,2,/" : "unsigned_divide_xxxx",
-           "True,int,4,%" : "long_unsigned_divide_xxxx",
-           "False,int,4,%" : "long_divide_xxxx",
-           "True,int,2,%" : "divide_xxxx",
-           "False,int,2,%" : "unsigned_divide_xxxx",
+           "True,int,2,/" : "divide_xxxx",
+           "False,int,4,%" : "long_unsigned_modulo_xxxx",
+           "True,int,4,%" : "long_modulo_xxxx",
+           "False,int,2,%" : "unsigned_modulo_xxxx",
+           "True,int,2,%" : "modulo_xxxx",
         }
 
+        #select a function that matches the template.
         signature = ",".join([
             str(binary_expression.signed()), 
             binary_expression.type_(), 

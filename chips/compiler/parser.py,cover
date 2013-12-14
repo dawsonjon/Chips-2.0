@@ -353,8 +353,7 @@
 >         expression = self.parse_expression()
 >         if expression.type_() not in ["int"]:
 >             self.tokens.error(
->                 "case expression must be an integer like expression"
->             )
+>                 "case expression must be an integer like expression")
 >         self.tokens.expect(":")
 >         try:
 >             expression = expression.value()
@@ -364,8 +363,7 @@
 >             self.tokens.error("case expression must be constant")
 >         except AttributeError:
 >             self.tokens.error(
->                 "case statements may only be use inside a switch statment"
->             )
+>                 "case statements may only be use inside a switch statment")
 >         return case
   
 >     def parse_default(self):
@@ -374,12 +372,10 @@
 >         default = Default()
 >         if not hasattr(self.loop, "cases"):
 >             self.tokens.error(
->                 "default statements may only be used inside a switch statment"
->             )
+>                 "default statements may only be used inside a switch statment")
 >         if hasattr(self.loop, "default"):
 >             self.tokens.error(
->                 "A switch statement may only have one default statement"
->             )
+>                 "A switch statement may only have one default statement")
 >         self.loop.default=default
 >         return default
   
@@ -614,40 +610,39 @@
 >             expression = AND(expression, self.parse_binary_expression(["|"]))
 >         return expression
   
->     def substitute_function(self, operator, left, right):
+>     def substitute_function(self, binary_expression):
+  
+>         """
+>         For some operations are more easily implemented in sofftware.
+>         This function substitutes a call to the builtin library function.
+>         """
+  
+>         functions = {
+>            "False,int,4,/" : "long_unsigned_divide_xxxx",
+>            "True,int,4,/" : "long_divide_xxxx",
+>            "False,int,2,/" : "unsigned_divide_xxxx",
+>            "True,int,2,/" : "divide_xxxx",
+>            "False,int,4,%" : "long_unsigned_modulo_xxxx",
+>            "True,int,4,%" : "long_modulo_xxxx",
+>            "False,int,2,%" : "unsigned_modulo_xxxx",
+>            "True,int,2,%" : "modulo_xxxx",
+>         }
+  
+          #select a function that matches the template.
+>         signature = ",".join([
+>             str(binary_expression.signed()), 
+>             binary_expression.type_(), 
+>             str(binary_expression.size()), 
+>             binary_expression.operator])
+  
           #Some things can't be implemented in verilog, substitute them with a function
->         if operator in ["/", "%"]:
->             if operator == "/":
->                 if left.signed() and right.signed():
->                     if max(left.size(), right.size()) == 4:
->                         function = self.scope["long_divide_xxxx"]
->                     else:
->                         function = self.scope["divide_xxxx"]
->                 else:
->                     if max(left.size(), right.size()) == 4:
->                         function = self.scope["long_unsigned_divide_xxxx"]
->                     else:
->                         function = self.scope["unsigned_divide_xxxx"]
->             elif operator == "%":
->                 if left.signed() and right.signed():
->                     if max(left.size(), right.size()) == 4:
->                         function = self.scope["long_modulo_xxxx"]
->                     else:
->                         function = self.scope["modulo_xxxx"]
->                 else:
->                     if max(left.size(), right.size()) == 4:
->                         function = self.scope["long_unsigned_modulo_xxxx"]
->                     else:
->                         function = self.scope["unsigned_modulo_xxxx"]
+>         if signature in functions:
+>             function = self.scope[functions[signature]]
 >             function_call = FunctionCall(function)
->             function_call.arguments = [left, right]
+>             function_call.arguments = [binary_expression.left, binary_expression.right]
 >             return function_call
 >         else:
->             return Binary(
->                 operator,
->                 left,
->                 right,
->             )
+>             return binary_expression
   
 >     def parse_binary_expression(self, operators):
 >         operator_precedence = {
@@ -664,7 +659,8 @@
 >             while self.tokens.peek() in operators:
 >                 operator = self.tokens.get()
 >                 right = self.parse_unary_expression()
->                 expression = self.substitute_function(operator, expression, right)
+>                 expression = Binary(operator, expression, right)
+>                 expression = self.substitute_function(expression)
 >             return expression
 >         else:
 >             next_operators = operator_precedence[operators[0]]
@@ -685,7 +681,11 @@
 >         elif self.tokens.peek() == "-":
 >             operator = self.tokens.get()
 >             expression = self.parse_postfix_expression()
->             return Binary("-", Constant(0), expression)
+>             return Binary("-", Constant(0, 
+>                 expression.type_(), 
+>                 expression.size(), 
+>                 expression.signed()), 
+>                 expression)
 >         elif self.tokens.peek() == "~":
 >             operator = self.tokens.get()
 >             expression = self.parse_postfix_expression()
@@ -728,20 +728,20 @@
 >             return self.parse_number()
   
 >     def parse_file_read(self):
-!         self.tokens.expect("(")
-!         file_name = self.tokens.get()
-!         file_name = file_name.strip('"').decode("string_escape")
-!         self.tokens.expect(")")
-!         return FileRead(file_name)
+>         self.tokens.expect("(")
+>         file_name = self.tokens.get()
+>         file_name = file_name.strip('"').decode("string_escape")
+>         self.tokens.expect(")")
+>         return FileRead(file_name)
   
 >     def parse_file_write(self):
 !         self.tokens.expect("(")
 !         expression = self.parse_expression()
-!         self.tokens.expect(",")
-!         file_name = self.tokens.get()
+>         self.tokens.expect(",")
+>         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
-!         return FileWrite(file_name, expression)
+>         return FileWrite(file_name, expression)
   
 >     def parse_input(self, name):
 >         input_name = name.replace("input_", "")
@@ -770,9 +770,9 @@
 >         if name.startswith("output_"):
 >             return self.parse_output(name)
 >         if name == "file_read":
-!             return self.parse_file_read()
+>             return self.parse_file_read()
 >         if name == "file_write":
-!             return self.parse_file_write()
+>             return self.parse_file_write()
 >         if name not in self.scope:
 >             self.tokens.error("Unknown function: %s"%name)
 >         function = self.scope[name]
@@ -814,8 +814,8 @@
 >             try:
 >                 token = eval(token)
 >                 value = ord(token)
-!             except SyntaxError:
-!                 self.tokens.error("%s is not a character literal"%token)
+>             except SyntaxError:
+>                 self.tokens.error("%s is not a character literal"%token)
 >         elif token.startswith('"'):
 >             try:
 >                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
@@ -831,8 +831,8 @@
 >                     initializer,
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
-!             except SyntaxError:
-!                 self.tokens.error("%s is not a character literal"%token)
+>             except SyntaxError:
+>                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -869,7 +869,7 @@
 >                     if value > 2**(size * 8) - 1:
 >                         self.tokens.error("value too large")
 >                     if value < 0:
-!                         self.tokens.error("value too small")
+>                         self.tokens.error("value too small")
   
 >             except SyntaxError:
 >                 self.tokens.error("%s is not an integer literal"%token)
