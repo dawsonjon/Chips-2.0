@@ -644,6 +644,26 @@ class Parser:
         else:
             return binary_expression
 
+    def coerce_types(self, left, right):
+
+        """
+        Convert numeric types in expressions.
+        """
+
+        if left.type_() != right.type_():
+            if left.type_() == "float" and right.type_() == "int":
+                print "coercing", right
+                return left, IntToFloat(right)
+            elif left.type_() == "int" and right.type_() == "float":
+                print "coercing", left
+                return IntToFloat(right), left
+            else:
+                self.tokens.error("Incompatible types : %s %s"%(
+                    left.type_(),
+                    right.type_()))
+
+        return left, right
+
     def parse_binary_expression(self, operators):
         operator_precedence = {
                 "|": ["^"],
@@ -655,23 +675,25 @@ class Parser:
                 "+": ["*", "/", "%"],
         }
         if operators[0] not in operator_precedence:
-            expression = self.parse_unary_expression()
+            left = self.parse_unary_expression()
             while self.tokens.peek() in operators:
                 operator = self.tokens.get()
                 right = self.parse_unary_expression()
-                expression = Binary(operator, expression, right)
-                expression = self.substitute_function(expression)
-            return expression
+                left, right = self.coerce_types(left, right)
+                left = Binary(operator, left, right)
+                left = self.substitute_function(left)
+            return left
         else:
             next_operators = operator_precedence[operators[0]]
-            expression = self.parse_binary_expression(next_operators)
+            left = self.parse_binary_expression(next_operators)
             while self.tokens.peek() in operators:
-                expression = Binary(
+
+                left = Binary(
                     self.tokens.get(),
-                    expression,
-                    self.parse_binary_expression(next_operators),
-                )
-            return expression
+                    left,
+                    self.parse_binary_expression(next_operators))
+
+            return left
 
     def parse_unary_expression(self):
         if self.tokens.peek() == "!":

@@ -616,7 +616,6 @@ def get_binary_type(left, right, operator):
 
     return type_, size, signed
 
-
 class Binary(Expression):
 
     def __init__(self, operator, left, right):

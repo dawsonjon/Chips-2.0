@@ -222,6 +222,16 @@ void main(){
 """
 )
 
+test("float 18",
+"""
+void main(){
+    int a = 2;
+    float b = 2.0;
+    assert(a+b == 4.0);
+}
+"""
+)
+
 test("struct_size 1",
 """
 
