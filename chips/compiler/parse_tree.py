@@ -694,6 +694,28 @@ class Binary(Expression):
 def SizeOf(expression):
     return Constant(expression.size())
 
+class IntToFloat(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__( self, "float", 4, True)
+
+    def generate(self, result, allocator):
+        new_register = allocator.new(self.size())
+        instructions = self.expression.generate(new_register, allocator)
+
+        instructions.extend([
+            {"op"   : "int_to_float", 
+             "dest" : result, 
+             "src"  : new_register}])
+
+        allocator.free(new_register)
+        return instructions
+
+    def value(self):
+        return float(self.expression.value())
+
 
 class Unary(Expression):
 

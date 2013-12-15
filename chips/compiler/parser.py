@@ -652,11 +652,9 @@ class Parser:
 
         if left.type_() != right.type_():
             if left.type_() == "float" and right.type_() == "int":
-                print "coercing", right
                 return left, IntToFloat(right)
             elif left.type_() == "int" and right.type_() == "float":
-                print "coercing", left
-                return IntToFloat(right), left
+                return IntToFloat(left), right
             else:
                 self.tokens.error("Incompatible types : %s %s"%(
                     left.type_(),
@@ -687,12 +685,11 @@ class Parser:
             next_operators = operator_precedence[operators[0]]
             left = self.parse_binary_expression(next_operators)
             while self.tokens.peek() in operators:
-
-                left = Binary(
-                    self.tokens.get(),
-                    left,
-                    self.parse_binary_expression(next_operators))
-
+                operator = self.tokens.get()
+                right = self.parse_binary_expression(next_operators)
+                left, right = self.coerce_types(left, right)
+                left = Binary(operator, left, right)
+                left = self.substitute_function(left)
             return left
 
     def parse_unary_expression(self):

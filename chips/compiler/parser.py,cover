@@ -644,6 +644,24 @@
 >         else:
 >             return binary_expression
   
+>     def coerce_types(self, left, right):
+  
+>         """
+>         Convert numeric types in expressions.
+>         """
+  
+>         if left.type_() != right.type_():
+>             if left.type_() == "float" and right.type_() == "int":
+>                 return left, IntToFloat(right)
+>             elif left.type_() == "int" and right.type_() == "float":
+>                 return IntToFloat(left), right
+!             else:
+!                 self.tokens.error("Incompatible types : %s %s"%(
+!                     left.type_(),
+!                     right.type_()))
+  
+>         return left, right
+  
 >     def parse_binary_expression(self, operators):
 >         operator_precedence = {
 >                 "|": ["^"],
@@ -655,23 +673,24 @@
 >                 "+": ["*", "/", "%"],
 >         }
 >         if operators[0] not in operator_precedence:
->             expression = self.parse_unary_expression()
+>             left = self.parse_unary_expression()
 >             while self.tokens.peek() in operators:
 >                 operator = self.tokens.get()
 >                 right = self.parse_unary_expression()
->                 expression = Binary(operator, expression, right)
->                 expression = self.substitute_function(expression)
->             return expression
+>                 left, right = self.coerce_types(left, right)
+>                 left = Binary(operator, left, right)
+>                 left = self.substitute_function(left)
+>             return left
 >         else:
 >             next_operators = operator_precedence[operators[0]]
->             expression = self.parse_binary_expression(next_operators)
+>             left = self.parse_binary_expression(next_operators)
 >             while self.tokens.peek() in operators:
->                 expression = Binary(
->                     self.tokens.get(),
->                     expression,
->                     self.parse_binary_expression(next_operators),
->                 )
->             return expression
+>                 operator = self.tokens.get()
+>                 right = self.parse_binary_expression(next_operators)
+>                 left, right = self.coerce_types(left, right)
+>                 left = Binary(operator, left, right)
+>                 left = self.substitute_function(left)
+>             return left
   
 >     def parse_unary_expression(self):
 >         if self.tokens.peek() == "!":
@@ -729,19 +748,19 @@
   
 >     def parse_file_read(self):
 >         self.tokens.expect("(")
->         file_name = self.tokens.get()
+!         file_name = self.tokens.get()
 >         file_name = file_name.strip('"').decode("string_escape")
->         self.tokens.expect(")")
->         return FileRead(file_name)
+!         self.tokens.expect(")")
+!         return FileRead(file_name)
   
 >     def parse_file_write(self):
 !         self.tokens.expect("(")
 !         expression = self.parse_expression()
 >         self.tokens.expect(",")
->         file_name = self.tokens.get()
+!         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
->         return FileWrite(file_name, expression)
+!         return FileWrite(file_name, expression)
   
 >     def parse_input(self, name):
 >         input_name = name.replace("input_", "")
@@ -814,8 +833,8 @@
 >             try:
 >                 token = eval(token)
 >                 value = ord(token)
->             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!             except SyntaxError:
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif token.startswith('"'):
 >             try:
 >                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
@@ -831,8 +850,8 @@
 >                     initializer,
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
->             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!             except SyntaxError:
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -845,10 +864,10 @@
   
 >                 try:
 >                     byte_value = struct.pack(">f", value)
->                 except OverflowError:
+!                 except OverflowError:
 >                     self.tokens.error("value too large")
   
->             except SyntaxError:
+!             except SyntaxError:
 !                 self.tokens.error("%s is not a floating point literal"%token)
 >         else:
               #integer literal
@@ -862,12 +881,12 @@
   
 >                 if signed:
 >                     if value > 2**((size * 8)-1) - 1:
->                         self.tokens.error("value too large")
+!                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
 >                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
->                         self.tokens.error("value too large")
+!                         self.tokens.error("value too large")
 >                     if value < 0:
 >                         self.tokens.error("value too small")
   

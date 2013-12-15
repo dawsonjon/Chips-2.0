@@ -1,3 +1,3 @@
 [submodule "fpu"]
 	path = fpu
-	url = git@github.com:dawsonjon/fpu.git
+	url = https://github.com/dawsonjon/fpu.git
