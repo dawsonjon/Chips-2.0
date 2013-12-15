@@ -41,10 +41,19 @@ Types
 
 The following types are available in chips:
 
-`char`, `int`, `long`, `unsigned char`, `unsigned int`, `unsigned long`.
+        + `char`
+        + `int`
+        + `long`
+        + `unsigned char`
+        + `unsigned int`
+        + `unsigned long`
+        + `float`
 
 A `char` is at least 8 bits wide.  An `int` is at least 16 bits wide.  A `long`
 is at least 32 bits wide.
+
+The `float` type is implemented as an IEEE 754 single precision floating point
+number.
 
 At present, `long long`, `float` and `double` have not been implemented, but I
 plan to add support for these types in a later release.

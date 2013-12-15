@@ -717,6 +717,29 @@ class IntToFloat(Expression):
         return float(self.expression.value())
 
 
+class FloatToInt(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__( self, "int", 4, True)
+
+    def generate(self, result, allocator):
+        new_register = allocator.new(self.size())
+        instructions = self.expression.generate(new_register, allocator)
+
+        instructions.extend([
+            {"op"   : "float_to_int", 
+             "dest" : result, 
+             "src"  : new_register}])
+
+        allocator.free(new_register)
+        return instructions
+
+    def value(self):
+        return int(self.expression.value())
+
+
 class Unary(Expression):
 
     def __init__(self, operator, expression):

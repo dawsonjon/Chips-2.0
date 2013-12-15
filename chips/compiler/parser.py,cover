@@ -298,12 +298,16 @@
 >                     lvalue,
 >                     self.parse_ternary_expression())
   
->             if not compatible(lvalue, expression):
-  
->                 self.tokens.error(
->                     "type mismatch in assignment expected: %s actual: %s"%(
->                         lvalue.type_(),
->                         expression.type_()))
+>             if expression.type_() != lvalue.type_():
+>                 if expression.type_() == "int" and lvalue.type_() == "float":
+>                     expression = IntToFloat(expression)
+>                 elif expression.type_() == "float" and lvalue.type_() == "int":
+>                     expression = FloatToInt(expression)
+>                 else:
+>                     self.tokens.error(
+>                         "type mismatch in assignment expected: %s actual: %s"%(
+>                             lvalue.type_(),
+>                             expression.type_()))
   
 >             return Assignment(lvalue, expression, self.allocator)
 >         else:
@@ -571,6 +575,17 @@
 >                     initializer = self.parse_ternary_expression()
 >                 else:
 >                     initializer = Constant(0)
+  
+>                 if type_ != initializer.type_():
+>                     if type_ == "int" and initializer.type_() == "float":
+>                         initializer = FloatToInt(initializer)
+>                     elif type_ == "float" and initializer.type_() == "int":
+>                         initializer = IntToFloat(initializer)
+>                     else:
+>                         self.tokens.error(
+>                             "type mismatch in intializer expected: %s actual: %s"%(
+>                                 type_,
+>                                 intitializer.type_()))
 >                 declaration = VariableDeclaration(
 >                     self.allocator,
 >                     initializer,
@@ -655,10 +670,10 @@
 >                 return left, IntToFloat(right)
 >             elif left.type_() == "int" and right.type_() == "float":
 >                 return IntToFloat(left), right
-!             else:
-!                 self.tokens.error("Incompatible types : %s %s"%(
-!                     left.type_(),
-!                     right.type_()))
+>             else:
+>                 self.tokens.error("Incompatible types : %s %s"%(
+>                     left.type_(),
+>                     right.type_()))
   
 >         return left, right
   
@@ -749,17 +764,17 @@
 >     def parse_file_read(self):
 >         self.tokens.expect("(")
 !         file_name = self.tokens.get()
->         file_name = file_name.strip('"').decode("string_escape")
+!         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
-!         return FileRead(file_name)
+>         return FileRead(file_name)
   
 >     def parse_file_write(self):
 !         self.tokens.expect("(")
 !         expression = self.parse_expression()
->         self.tokens.expect(",")
-!         file_name = self.tokens.get()
-!         file_name = file_name.strip('"').decode("string_escape")
-!         self.tokens.expect(")")
+!         self.tokens.expect(",")
+>         file_name = self.tokens.get()
+>         file_name = file_name.strip('"').decode("string_escape")
+>         self.tokens.expect(")")
 !         return FileWrite(file_name, expression)
   
 >     def parse_input(self, name):
@@ -816,11 +831,20 @@
 >                 len(function_call.arguments)))
 >         required_arguments = function_call.function.arguments
 >         actual_arguments = function_call.arguments
+>         corrected_arguments = []
 >         for required, actual in zip(required_arguments, actual_arguments):
 >             if not compatible(required, actual):
->                 self.tokens.error("Type mismatch expected type : %s got: %s."%(
->                     required.type_(),
->                     actual.type_()))
+>                 if actual.type_() == "int" and required.type_() == "float":
+>                     actual = IntToFloat(actual)
+>                 elif actual.type_() == "float" and required.type_() == "int":
+>                     actual = FloatToInt(actual)
+>                 else:
+>                     self.tokens.error(
+>                         "type mismatch in assignment expected: %s actual: %s"%(
+>                             required.type_(),
+>                             actual.type_()))
+>             corrected_arguments.append(actual)
+>         function_call.arguments = corrected_arguments
   
 >         return function_call
   
@@ -833,8 +857,8 @@
 >             try:
 >                 token = eval(token)
 >                 value = ord(token)
-!             except SyntaxError:
-!                 self.tokens.error("%s is not a character literal"%token)
+>             except SyntaxError:
+>                 self.tokens.error("%s is not a character literal"%token)
 >         elif token.startswith('"'):
 >             try:
 >                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
@@ -850,8 +874,8 @@
 >                     initializer,
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
-!             except SyntaxError:
-!                 self.tokens.error("%s is not a character literal"%token)
+>             except SyntaxError:
+>                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -864,11 +888,11 @@
   
 >                 try:
 >                     byte_value = struct.pack(">f", value)
-!                 except OverflowError:
+>                 except OverflowError:
 >                     self.tokens.error("value too large")
   
-!             except SyntaxError:
-!                 self.tokens.error("%s is not a floating point literal"%token)
+>             except SyntaxError:
+>                 self.tokens.error("%s is not a floating point literal"%token)
 >         else:
               #integer literal
 >             try:
@@ -881,12 +905,12 @@
   
 >                 if signed:
 >                     if value > 2**((size * 8)-1) - 1:
-!                         self.tokens.error("value too large")
+>                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
 >                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
-!                         self.tokens.error("value too large")
+>                         self.tokens.error("value too large")
 >                     if value < 0:
 >                         self.tokens.error("value too small")
   

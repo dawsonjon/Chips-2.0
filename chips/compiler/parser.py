@@ -298,12 +298,16 @@ class Parser:
                     lvalue,
                     self.parse_ternary_expression())
 
-            if not compatible(lvalue, expression):
-
-                self.tokens.error(
-                    "type mismatch in assignment expected: %s actual: %s"%(
-                        lvalue.type_(),
-                        expression.type_()))
+            if expression.type_() != lvalue.type_():
+                if expression.type_() == "int" and lvalue.type_() == "float":
+                    expression = IntToFloat(expression)
+                elif expression.type_() == "float" and lvalue.type_() == "int":
+                    expression = FloatToInt(expression)
+                else:
+                    self.tokens.error(
+                        "type mismatch in assignment expected: %s actual: %s"%(
+                            lvalue.type_(),
+                            expression.type_()))
 
             return Assignment(lvalue, expression, self.allocator)
         else:
@@ -571,6 +575,17 @@ class Parser:
                     initializer = self.parse_ternary_expression()
                 else:
                     initializer = Constant(0)
+
+                if type_ != initializer.type_():
+                    if type_ == "int" and initializer.type_() == "float":
+                        initializer = FloatToInt(initializer)
+                    elif type_ == "float" and initializer.type_() == "int":
+                        initializer = IntToFloat(initializer)
+                    else:
+                        self.tokens.error(
+                            "type mismatch in intializer expected: %s actual: %s"%(
+                                type_,
+                                intitializer.type_()))
                 declaration = VariableDeclaration(
                     self.allocator,
                     initializer,
@@ -816,11 +831,20 @@ class Parser:
                 len(function_call.arguments)))
         required_arguments = function_call.function.arguments
         actual_arguments = function_call.arguments
+        corrected_arguments = []
         for required, actual in zip(required_arguments, actual_arguments):
             if not compatible(required, actual):
-                self.tokens.error("Type mismatch expected type : %s got: %s."%(
-                    required.type_(),
-                    actual.type_()))
+                if actual.type_() == "int" and required.type_() == "float":
+                    actual = IntToFloat(actual)
+                elif actual.type_() == "float" and required.type_() == "int":
+                    actual = FloatToInt(actual)
+                else:
+                    self.tokens.error(
+                        "type mismatch in assignment expected: %s actual: %s"%(
+                            required.type_(),
+                            actual.type_()))
+            corrected_arguments.append(actual)
+        function_call.arguments = corrected_arguments
 
         return function_call
 

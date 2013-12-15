@@ -232,6 +232,145 @@ void main(){
 """
 )
 
+test("float 19",
+"""
+void main(){
+    int a;
+    float b = 2.0;
+    a = b + 1.0;
+    assert(a == 3);
+}
+"""
+)
+
+test("float 20",
+"""
+void main(){
+    int a = 2;
+    float b;
+    b = a + 1.0;
+    assert(b == 3.0);
+}
+"""
+)
+
+test("float 21",
+"""
+typedef struct {float a; float b;} mystruct;
+void main(){
+    mystruct a;
+    a.a = 2.0;
+    a.b = 3.0;
+    assert(a.a == 2.0);
+    assert(a.b == 3.0);
+    assert(a.a + a.b == 5.0);
+}
+"""
+)
+test("float 22",
+"""
+typedef struct {float a; float b;} mystruct;
+
+void test(mystruct a){
+    assert(a.a == 2.0);
+    assert(a.b == 3.0);
+    assert(a.a + a.b == 5.0);
+}
+
+void main(){
+    mystruct a;
+    a.a = 2.0;
+    a.b = 3.0;
+    test(a);
+}
+"""
+)
+
+test("float 23",
+"""
+void test(float b){
+    assert(b/6.0 == 2.0);
+}
+
+void main(){
+    int a = 12.0;
+    test(a);
+}
+"""
+)
+
+test("float 24",
+"""
+float test(){
+    return 6.0;
+}
+
+void main(){
+    int a = 12.0;
+    assert(a/test() == 2.0);
+}
+"""
+)
+
+test("float 25",
+"""
+int main(){
+  float a = 1.0;
+  float b = 2.0;
+  float c = 3.0;
+  assert(a + b + c == 6.0);
+  return 0;
+}
+
+""")
+
+test("float 26",
+"""
+int main(){
+  float a = 1.0;
+  float b = 2.0;
+  float c = 3.0;
+  assert(a - b - c == -4.0);
+  return 0;
+}
+
+""")
+
+test("float 27",
+"""
+int main(){
+  float a = 1.0;
+  float b = 2.0;
+  float c = 3.0;
+  assert(a - (b - c) == 2.0);
+  return 0;
+}
+
+""")
+
+test("float 28",
+"""
+int main(){
+  float a = 1.0;
+  float b = 2.0;
+  float c = 3.0;
+  assert(a * b * c == 6.0);
+  return 0;
+}
+
+""")
+test("float 29",
+"""
+int main(){
+  float a = 1.0;
+  float b = 2.0;
+  float c = 4.0;
+  assert(a/b/c == 0.125);
+  return 0;
+}
+
+""")
+
 test("struct_size 1",
 """
 
