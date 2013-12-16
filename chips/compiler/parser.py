@@ -321,8 +321,7 @@ class Parser:
         if_.expression = self.parse_expression()
         if if_.expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
-                "if statement conditional must be an integer like expression"
-            )
+                "if statement conditional must be an integer like expression")
         self.tokens.expect(")")
         if_.true_statement = self.parse_statement()
         if self.tokens.peek() == "else":
@@ -340,8 +339,7 @@ class Parser:
         expression = self.parse_expression()
         if expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
             self.tokens.error(
-                "switch statement expression must be an integer like expression"
-            )
+                "switch statement expression must be an integer like expression")
         self.tokens.expect(")")
         stored_loop = self.loop
         self.loop = switch
@@ -633,20 +631,27 @@ class Parser:
         """
 
         functions = {
-           "False,int,4,/" : "long_unsigned_divide_xxxx",
-           "True,int,4,/" : "long_divide_xxxx",
-           "False,int,2,/" : "unsigned_divide_xxxx",
-           "True,int,2,/" : "divide_xxxx",
-           "False,int,4,%" : "long_unsigned_modulo_xxxx",
-           "True,int,4,%" : "long_modulo_xxxx",
-           "False,int,2,%" : "unsigned_modulo_xxxx",
-           "True,int,2,%" : "modulo_xxxx",
+           "False,int,int,4,/" : "long_unsigned_divide_xxxx",
+           "True,int,int,4,/" : "long_divide_xxxx",
+           "False,int,int,2,/" : "unsigned_divide_xxxx",
+           "True,int,int,2,/" : "divide_xxxx",
+           "False,int,int,4,%" : "long_unsigned_modulo_xxxx",
+           "True,int,int,4,%" : "long_modulo_xxxx",
+           "False,int,int,2,%" : "unsigned_modulo_xxxx",
+           "True,int,int,2,%" : "modulo_xxxx",
+           "True,float,float,4,==" : "float_equal_xxxx",
+           "True,float,float,4,!=" : "float_ne_xxxx",
+           "True,float,float,4,<" : "float_lt_xxxx",
+           "True,float,float,4,>" : "float_gt_xxxx",
+           "True,float,float,4,<=" : "float_le_xxxx",
+           "True,float,float,4,>=" : "float_ge_xxxx",
         }
 
         #select a function that matches the template.
         signature = ",".join([
             str(binary_expression.signed()), 
-            binary_expression.type_(), 
+            binary_expression.left.type_(), 
+            binary_expression.right.type_(), 
             str(binary_expression.size()), 
             binary_expression.operator])
 

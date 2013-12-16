@@ -25,22 +25,22 @@ def test(test, code, no_init=False):
     print test, "...fail"
     sys.exit(0)
 
-  #if no_init:
-      #result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
-  #else:
-      #result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
-  #if(os.path.exists("main")):
-      #os.remove("main")
-  #if(os.path.exists("arbiter")):
-      #os.remove("arbiter")
-  #if(os.path.exists("real_main")):
-      #os.remove("real_main")
+#  if no_init:
+#      result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
+#  else:
+#      result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
+#  if(os.path.exists("main")):
+#      os.remove("main")
+#  if(os.path.exists("arbiter")):
+#      os.remove("arbiter")
+#  if(os.path.exists("real_main")):
+#      os.remove("real_main")
 #
-  #if result == 0:
-    #print test, "...pass"
-  #else:
-    #print test, "...fail"
-    #sys.exit(0)
+#  if result == 0:
+#    print test, "...pass"
+#  else:
+#    print test, "...fail"
+#    sys.exit(0)
 
 def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
@@ -85,7 +85,15 @@ test("float 4",
 """
 void main(){
     float test = 0.0;
-    assert(test > (1.0*-1));
+    float a = -1.0;
+    float b = -2.0;
+    float c = 2.0;
+    float d = 2.0;
+    assert(test > -1.0);
+    assert(a > b);
+    assert(b < a);
+    assert(c >= d);
+    assert(c <= d);
 }
 """
 )

@@ -300,7 +300,7 @@
   
 >             if expression.type_() != lvalue.type_():
 >                 if expression.type_() == "int" and lvalue.type_() == "float":
->                     expression = IntToFloat(expression)
+!                     expression = IntToFloat(expression)
 >                 elif expression.type_() == "float" and lvalue.type_() == "int":
 >                     expression = FloatToInt(expression)
 >                 else:
@@ -321,8 +321,7 @@
 >         if_.expression = self.parse_expression()
 >         if if_.expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
 >             self.tokens.error(
->                 "if statement conditional must be an integer like expression"
->             )
+>                 "if statement conditional must be an integer like expression")
 >         self.tokens.expect(")")
 >         if_.true_statement = self.parse_statement()
 >         if self.tokens.peek() == "else":
@@ -340,8 +339,7 @@
 >         expression = self.parse_expression()
 >         if expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
 >             self.tokens.error(
->                 "switch statement expression must be an integer like expression"
->             )
+>                 "switch statement expression must be an integer like expression")
 >         self.tokens.expect(")")
 >         stored_loop = self.loop
 >         self.loop = switch
@@ -633,20 +631,27 @@
 >         """
   
 >         functions = {
->            "False,int,4,/" : "long_unsigned_divide_xxxx",
->            "True,int,4,/" : "long_divide_xxxx",
->            "False,int,2,/" : "unsigned_divide_xxxx",
->            "True,int,2,/" : "divide_xxxx",
->            "False,int,4,%" : "long_unsigned_modulo_xxxx",
->            "True,int,4,%" : "long_modulo_xxxx",
->            "False,int,2,%" : "unsigned_modulo_xxxx",
->            "True,int,2,%" : "modulo_xxxx",
+>            "False,int,int,4,/" : "long_unsigned_divide_xxxx",
+>            "True,int,int,4,/" : "long_divide_xxxx",
+>            "False,int,int,2,/" : "unsigned_divide_xxxx",
+>            "True,int,int,2,/" : "divide_xxxx",
+>            "False,int,int,4,%" : "long_unsigned_modulo_xxxx",
+>            "True,int,int,4,%" : "long_modulo_xxxx",
+>            "False,int,int,2,%" : "unsigned_modulo_xxxx",
+>            "True,int,int,2,%" : "modulo_xxxx",
+>            "True,float,float,4,==" : "float_equal_xxxx",
+>            "True,float,float,4,!=" : "float_ne_xxxx",
+>            "True,float,float,4,<" : "float_lt_xxxx",
+>            "True,float,float,4,>" : "float_gt_xxxx",
+>            "True,float,float,4,<=" : "float_le_xxxx",
+>            "True,float,float,4,>=" : "float_ge_xxxx",
 >         }
   
           #select a function that matches the template.
 >         signature = ",".join([
 >             str(binary_expression.signed()), 
->             binary_expression.type_(), 
+>             binary_expression.left.type_(), 
+>             binary_expression.right.type_(), 
 >             str(binary_expression.size()), 
 >             binary_expression.operator])
   
@@ -762,19 +767,19 @@
 >             return self.parse_number()
   
 >     def parse_file_read(self):
->         self.tokens.expect("(")
-!         file_name = self.tokens.get()
+!         self.tokens.expect("(")
+>         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
->         return FileRead(file_name)
+!         return FileRead(file_name)
   
 >     def parse_file_write(self):
 !         self.tokens.expect("(")
-!         expression = self.parse_expression()
+>         expression = self.parse_expression()
 !         self.tokens.expect(",")
 >         file_name = self.tokens.get()
->         file_name = file_name.strip('"').decode("string_escape")
->         self.tokens.expect(")")
+!         file_name = file_name.strip('"').decode("string_escape")
+!         self.tokens.expect(")")
 !         return FileWrite(file_name, expression)
   
 >     def parse_input(self, name):
@@ -837,7 +842,7 @@
 >                 if actual.type_() == "int" and required.type_() == "float":
 >                     actual = IntToFloat(actual)
 >                 elif actual.type_() == "float" and required.type_() == "int":
->                     actual = FloatToInt(actual)
+!                     actual = FloatToInt(actual)
 >                 else:
 >                     self.tokens.error(
 >                         "type mismatch in assignment expected: %s actual: %s"%(
@@ -857,8 +862,8 @@
 >             try:
 >                 token = eval(token)
 >                 value = ord(token)
->             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!             except SyntaxError:
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif token.startswith('"'):
 >             try:
 >                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
@@ -910,7 +915,7 @@
 >                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
->                         self.tokens.error("value too large")
+!                         self.tokens.error("value too large")
 >                     if value < 0:
 >                         self.tokens.error("value too small")
   
