@@ -367,6 +367,7 @@ int main(){
 }
 
 """)
+
 test("float 29",
 """
 int main(){
@@ -374,6 +375,17 @@ int main(){
   float b = 2.0;
   float c = 4.0;
   assert(a/b/c == 0.125);
+  return 0;
+}
+
+""")
+
+test("float 30",
+"""
+int main(){
+  float a = 1.0;
+  float b = 2.0;
+  assert(a - - b == 3.0);
   return 0;
 }
 
