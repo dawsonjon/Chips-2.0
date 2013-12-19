@@ -691,8 +691,11 @@ class Binary(Expression):
                 self.operator, 
                 self.right.value())))
 
+
+
 def SizeOf(expression):
     return Constant(expression.size())
+
 
 class IntToFloat(Expression):
 

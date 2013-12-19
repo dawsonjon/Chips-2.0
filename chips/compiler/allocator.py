@@ -31,10 +31,13 @@ class Allocator:
                     self.memory_content_4[location] = value
             return reg
 
+    def regsize(self, reg):
+        return self.all_registers[reg][1]
+
     def new(self, size, name="temporary_register"):
         assert type(size) == int
         reg = 0
-        while reg in self.registers:
+        while reg in self.registers or (reg in self.all_registers and self.regsize(reg) != size):
             reg += 1
         self.registers.append(reg)
         self.all_registers[reg] = (name, size)

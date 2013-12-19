@@ -572,7 +572,7 @@ class Parser:
                     self.tokens.expect("=")
                     initializer = self.parse_ternary_expression()
                 else:
-                    initializer = Constant(0)
+                    initializer = Constant(0, type_, size, signed)
 
                 if type_ != initializer.type_():
                     if type_ == "int" and initializer.type_() == "float":

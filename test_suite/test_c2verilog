@@ -25,22 +25,22 @@ def test(test, code, no_init=False):
     print test, "...fail"
     sys.exit(0)
 
-#  if no_init:
-#      result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
-#  else:
-#      result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
-#  if(os.path.exists("main")):
-#      os.remove("main")
-#  if(os.path.exists("arbiter")):
-#      os.remove("arbiter")
-#  if(os.path.exists("real_main")):
-#      os.remove("real_main")
-#
-#  if result == 0:
-#    print test, "...pass"
-#  else:
-#    print test, "...fail"
-#    sys.exit(0)
+  if no_init:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
+  else:
+      result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
+  if(os.path.exists("main")):
+      os.remove("main")
+  if(os.path.exists("arbiter")):
+      os.remove("arbiter")
+  if(os.path.exists("real_main")):
+      os.remove("real_main")
+
+  if result == 0:
+    print test, "...pass"
+  else:
+    print test, "...fail"
+    sys.exit(0)
 
 def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')

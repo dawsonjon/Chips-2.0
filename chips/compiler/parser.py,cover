@@ -572,18 +572,18 @@
 >                     self.tokens.expect("=")
 >                     initializer = self.parse_ternary_expression()
 >                 else:
->                     initializer = Constant(0)
+>                     initializer = Constant(0, type_, size, signed)
   
 >                 if type_ != initializer.type_():
 >                     if type_ == "int" and initializer.type_() == "float":
 >                         initializer = FloatToInt(initializer)
 >                     elif type_ == "float" and initializer.type_() == "int":
 >                         initializer = IntToFloat(initializer)
->                     else:
->                         self.tokens.error(
->                             "type mismatch in intializer expected: %s actual: %s"%(
->                                 type_,
->                                 intitializer.type_()))
+!                     else:
+!                         self.tokens.error(
+!                             "type mismatch in intializer expected: %s actual: %s"%(
+!                                 type_,
+!                                 intitializer.type_()))
 >                 declaration = VariableDeclaration(
 >                     self.allocator,
 >                     initializer,
@@ -672,13 +672,13 @@
   
 >         if left.type_() != right.type_():
 >             if left.type_() == "float" and right.type_() == "int":
->                 return left, IntToFloat(right)
+!                 return left, IntToFloat(right)
 >             elif left.type_() == "int" and right.type_() == "float":
 >                 return IntToFloat(left), right
->             else:
->                 self.tokens.error("Incompatible types : %s %s"%(
->                     left.type_(),
->                     right.type_()))
+!             else:
+!                 self.tokens.error("Incompatible types : %s %s"%(
+!                     left.type_(),
+!                     right.type_()))
   
 >         return left, right
   
@@ -768,16 +768,16 @@
   
 >     def parse_file_read(self):
 !         self.tokens.expect("(")
->         file_name = self.tokens.get()
+!         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
 !         return FileRead(file_name)
   
 >     def parse_file_write(self):
 !         self.tokens.expect("(")
->         expression = self.parse_expression()
+!         expression = self.parse_expression()
 !         self.tokens.expect(",")
->         file_name = self.tokens.get()
+!         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
 !         return FileWrite(file_name, expression)
@@ -809,9 +809,9 @@
 >         if name.startswith("output_"):
 >             return self.parse_output(name)
 >         if name == "file_read":
->             return self.parse_file_read()
+!             return self.parse_file_read()
 >         if name == "file_write":
->             return self.parse_file_write()
+!             return self.parse_file_write()
 >         if name not in self.scope:
 >             self.tokens.error("Unknown function: %s"%name)
 >         function = self.scope[name]
@@ -879,8 +879,8 @@
 >                     initializer,
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
->             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!             except SyntaxError:
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -893,11 +893,11 @@
   
 >                 try:
 >                     byte_value = struct.pack(">f", value)
->                 except OverflowError:
->                     self.tokens.error("value too large")
+!                 except OverflowError:
+!                     self.tokens.error("value too large")
   
->             except SyntaxError:
->                 self.tokens.error("%s is not a floating point literal"%token)
+!             except SyntaxError:
+!                 self.tokens.error("%s is not a floating point literal"%token)
 >         else:
               #integer literal
 >             try:
@@ -910,14 +910,14 @@
   
 >                 if signed:
 >                     if value > 2**((size * 8)-1) - 1:
->                         self.tokens.error("value too large")
+!                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
->                         self.tokens.error("value too small")
+!                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
 !                         self.tokens.error("value too large")
 >                     if value < 0:
->                         self.tokens.error("value too small")
+!                         self.tokens.error("value too small")
   
 >             except SyntaxError:
 >                 self.tokens.error("%s is not an integer literal"%token)
