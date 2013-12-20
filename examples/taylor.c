@@ -16,7 +16,7 @@ float sinf(float angle){
 	    power*=angle;
 
 	    //calculate x!
-	    fact = fact*count;
+	    fact*=count;
 	    count++;
 	}
 
@@ -34,7 +34,9 @@ void main(){
     float pi=3.14159265359;
     float step=pi/100;
 
-    for(x=0.0; x <= pi; x += step){
-        file_write(x, "sin_x");
-    }
+    report(sinf(0.0));
+
+    //for(x=0.0; x <= pi; x += step){
+        //file_write(sinf(x), "sin_x");
+    //}
 }
