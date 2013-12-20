@@ -57,6 +57,118 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("inplace float 1",
+"""
+void main(){
+    float test = 1.0;
+    test *= 2.0;
+    assert(test == 2.0);
+    test *= 2.0;
+    assert(test == 4.0);
+    test *= 2.0;
+    assert(test == 8.0);
+}
+"""
+)
+
+test("inplace float 2",
+"""
+void main(){
+    float test = 1.0;
+    test += 2.0;
+    assert(test == 3.0);
+    test += 2.0;
+    assert(test == 5.0);
+    test += 2.0;
+    assert(test == 7.0);
+}
+"""
+)
+
+test("inplace float 3",
+"""
+void main(){
+    float test = 1.0;
+    test -= 2.0;
+    assert(test == -1.0);
+    test -= 2.0;
+    assert(test == -3.0);
+    test -= 2.0;
+    assert(test == -5.0);
+}
+"""
+)
+
+test("inplace float 4",
+"""
+void main(){
+    float test = 1.0;
+    test /= 2.0;
+    assert(test == 0.5);
+    test /= 2.0;
+    assert(test == 0.25);
+    test /= 2.0;
+    assert(test == 0.125);
+}
+"""
+)
+
+test("inplace float 5",
+"""
+void main(){
+    float test = 1.0;
+    test *= 2;
+    assert(test == 2.0);
+    test *= 2;
+    assert(test == 4.0);
+    test *= 2;
+    assert(test == 8.0);
+}
+"""
+)
+
+test("inplace float 6",
+"""
+void main(){
+    float test = 1.0;
+    test += 2;
+    assert(test == 3.0);
+    test += 2;
+    assert(test == 5.0);
+    test += 2;
+    assert(test == 7.0);
+}
+"""
+)
+
+test("inplace float 7",
+"""
+void main(){
+    float test = 1.0;
+    test -= 2;
+    assert(test == -1.0);
+    test -= 2;
+    assert(test == -3.0);
+    test -= 2;
+    assert(test == -5.0);
+}
+"""
+)
+
+test("inplace float 8",
+"""
+void main(){
+    float test = 1.0;
+    test /= 2;
+    assert(test == 0.5);
+    test /= 2;
+    assert(test == 0.25);
+    test /= 2;
+    assert(test == 0.125);
+}
+"""
+)
+
 test("float file",
 """
 void main(){

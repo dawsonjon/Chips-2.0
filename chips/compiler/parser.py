@@ -293,10 +293,10 @@ class Parser:
                 expression = self.parse_ternary_expression()
             else:
 
-                expression = Binary(
-                    operator[:-1],
-                    lvalue,
-                    self.parse_ternary_expression())
+                expression = self.parse_ternary_expression()
+                left = lvalue
+                left, expression = self.coerce_types(left, expression)
+                expression = Binary(operator[:-1], left, expression)
 
             if expression.type_() != lvalue.type_():
                 if expression.type_() == "int" and lvalue.type_() == "float":

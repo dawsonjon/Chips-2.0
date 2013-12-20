@@ -679,8 +679,8 @@ def generate_CHIP(input_file,
                         output_file.write("          adder_go <= 1;\n")
                     elif instruction["op"] == "-":
                         if instruction["right"]:
-                            output_file.write("          adder_a <= {~register_1[31], register_1[30:0]};\n")
-                            output_file.write("          adder_b <= literal_1;\n")
+                            output_file.write("          adder_a <= register_1;\n")
+                            output_file.write("          adder_b <= {~literal_1[31], literal_1[30:0]};\n")
                         else:
                             output_file.write("          adder_a <= literal_1;\n")
                             output_file.write("          adder_b <= {~register_1[31], register_1[30:0]};\n")

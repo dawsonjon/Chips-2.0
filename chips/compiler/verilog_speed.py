@@ -501,9 +501,9 @@ def generate_CHIP(input_file,
                         output_file.write("          program_counter <= 16'd%s;\n"%to_gray(location+1))
                         output_file.write("        end\n")
                     if instruction["op"] == "-":
-                        output_file.write("        adder_b <= %s;\n"%(instruction["right"]))
-                        output_file.write("        adder_a <= {~register_%s[31], register_%s[30:0]};\n"%(
-                            instruction["src"],
+                        output_file.write("        adder_b <= %s;\n"%(
+                            instruction["right"] ^ 0x80000000))
+                        output_file.write("        adder_a <= register_%s;\n"%(
                             instruction["src"]))
                         output_file.write("        register_%s <= adder_z;\n"%(instruction["dest"]))
                         output_file.write("        program_counter <= %s;\n"%to_gray(location))
