@@ -11,6 +11,7 @@
   
 > types = ["float", "signed", "unsigned", "short", "long", "char", "int", "void"]
 > numeric_types = ["float", "signed", "unsigned", "short", "long", "char", "int"]
+> storage_specifiers = ["const"]
   
 > class Parser:
   
@@ -44,7 +45,7 @@
 >     def parse_type_specifier(self):
 >         type_specifiers = []
   
->         while self.tokens.peek() in types + self.structs:
+>         while self.tokens.peek() in types + self.structs + storage_specifiers:
 >             type_specifiers.append(self.tokens.get())
   
 >         signed = True
@@ -68,14 +69,18 @@
   
 >         if "float" in type_specifiers:
 >             if "short" in type_specifiers:
-!                 self.tokens.error("Float cannot be short")
+>                 self.tokens.error("Float cannot be short")
 >             if "long" in type_specifiers:
-!                 self.tokens.error("Float cannot be long (but double can)")
+>                 self.tokens.error("Float cannot be long (but double can)")
 >             if "unsigned" in type_specifiers:
-!                 self.tokens.error("Float cannot be unsigned")
+>                 self.tokens.error("Float cannot be unsigned")
 >             type_ = "float"
 >             size = 4
 >             signed = True
+  
+>         const = False 
+>         if "const" in type_specifiers:
+>             const = True
   
 >         if "void" in type_specifiers:
 >             type_ = "void"
@@ -83,10 +88,10 @@
 >             signed = False
   
   
->         return type_, size, signed
+>         return type_, size, signed, const
   
 >     def parse_argument(self):
->         type_, size, signed = self.parse_type_specifier()
+>         type_, size, signed, const = self.parse_type_specifier()
   
 >         if type_ in ["void"]:
 !             self.tokens.error("argument cannot be void")
@@ -114,7 +119,8 @@
 >                         argument,
 >                         type_,
 >                         size,
->                         signed)
+>                         signed,
+>                         const)
 >         instance = declaration.instance()
 >         self.scope[argument] = instance
 >         return instance.reference()
@@ -123,12 +129,12 @@
 >         function = Function()
 >         function.allocator = self.allocator
 >         stored_scope = copy(self.scope)
->         type_, size, signed = self.parse_type_specifier()
+>         type_, size, signed, const = self.parse_type_specifier()
 >         name = self.tokens.get()
   
           #check if it is a global declaration
 >         if self.tokens.peek() != "(":
->             return self.parse_global_declaration(type_, size, signed, name)
+>             return self.parse_global_declaration(type_, size, signed, const, name)
   
           #otherwise continue parsing a function
 >         self.tokens.expect("(")
@@ -143,11 +149,11 @@
 >         if type_ != "void":
   
 >             if type_ in self.structs:
-!                 declaration = self.scope[type_]
+>                 declaration = self.scope[type_]
 >             else:
 >                 if self.tokens.peek() == "[":
-!                     self.tokens.error(
-!                         "Functions cannot return arrays")
+>                     self.tokens.error(
+>                         "Functions cannot return arrays")
 >                 else:
 >                     declaration = VariableDeclaration(
 >                         self.allocator,
@@ -155,7 +161,8 @@
 >                         function.name+" return value",
 >                         type_,
 >                         size,
->                         signed)
+>                         signed,
+>                         const)
   
 >             function.return_value = declaration.instance().reference()
   
@@ -240,7 +247,7 @@
 >         return wait_clocks
   
 >     def parse_statement(self):
->         if self.tokens.peek() in numeric_types + self.structs:
+>         if self.tokens.peek() in numeric_types + self.structs + storage_specifiers:
 >             return self.parse_compound_declaration()
 >         elif self.tokens.peek() == "struct":
 >             return self.parse_struct_declaration()
@@ -284,7 +291,7 @@
 >         ]
 >         lvalue = self.parse_ternary_expression()
 >         if self.tokens.peek() in assignment_operators:
->             if lvalue.read_only():
+>             if lvalue.const():
   
 >                 self.tokens.error(
 >                     "left hand operand of assignment is not modifiable")
@@ -452,13 +459,14 @@
 >         self.tokens.expect("{")
 >         members = {}
 >         while self.tokens.peek() != "}":
->             type_, size, signed = self.parse_type_specifier()
+>             type_, size, signed, const = self.parse_type_specifier()
 >             name = self.tokens.get()
   
 >             members[name] = self.parse_declaration(
 >                 type_, 
 >                 size, 
 >                 signed, 
+>                 const,
 >                 name)
   
 >             self.tokens.expect(";")
@@ -490,7 +498,7 @@
 >         self.scope[name] = instance
 >         return instance
   
->     def parse_global_declaration(self, type_, size, signed, name):
+>     def parse_global_declaration(self, type_, size, signed, const, name):
 >         instances = []
 >         while True:
   
@@ -498,6 +506,7 @@
 >                 type_, 
 >                 size, 
 >                 signed, 
+>                 const,
 >                 name).instance()
   
 >             self.scope[name] = instance
@@ -511,7 +520,7 @@
 >         return CompoundDeclaration(instances)
   
 >     def parse_compound_declaration(self):
->         type_, size, signed = self.parse_type_specifier()
+>         type_, size, signed, const = self.parse_type_specifier()
 >         instances = []
 >         while True:
 >             name = self.tokens.get()
@@ -520,6 +529,7 @@
 >                 type_, 
 >                 size, 
 >                 signed, 
+>                 const,
 >                 name).instance()
   
 >             self.scope[name] = instance
@@ -532,7 +542,7 @@
 >         self.tokens.expect(";")
 >         return CompoundDeclaration(instances)
   
->     def parse_declaration(self, type_, size, signed, name):
+>     def parse_declaration(self, type_, size, signed, const, name):
           #struct declaration
 >         if type_ in self.structs:
 >             declaration = self.scope[type_]
@@ -578,8 +588,8 @@
 >                 if type_ != initializer.type_():
 >                     if type_ == "int" and initializer.type_() == "float":
 >                         initializer = FloatToInt(initializer)
-!                     elif type_ == "float" and initializer.type_() == "int":
-!                         initializer = IntToFloat(initializer)
+>                     elif type_ == "float" and initializer.type_() == "int":
+>                         initializer = IntToFloat(initializer)
 >                     else:
 >                         self.tokens.error(
 >                             "type mismatch in intializer expected: %s actual: %s"%(
@@ -591,7 +601,8 @@
 >                     name,
 >                     type_,
 >                     size,
->                     signed
+>                     signed,
+>                     const
 >                 )
   
 >         return declaration
@@ -676,10 +687,10 @@
 >                 return left, IntToFloat(right)
 >             elif left.type_() == "int" and right.type_() == "float":
 >                 return IntToFloat(left), right
-!             else:
-!                 self.tokens.error("Incompatible types : %s %s"%(
-!                     left.type_(),
-!                     right.type_()))
+>             else:
+>                 self.tokens.error("Incompatible types : %s %s"%(
+>                     left.type_(),
+>                     right.type_()))
   
 >         return left, right
   
@@ -771,8 +782,8 @@
 !         self.tokens.expect("(")
 !         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
-!         self.tokens.expect(")")
-!         return FileRead(file_name)
+>         self.tokens.expect(")")
+>         return FileRead(file_name)
   
 >     def parse_file_write(self):
 >         self.tokens.expect("(")
@@ -843,7 +854,7 @@
 >                 if actual.type_() == "int" and required.type_() == "float":
 >                     actual = IntToFloat(actual)
 >                 elif actual.type_() == "float" and required.type_() == "int":
-!                     actual = FloatToInt(actual)
+>                     actual = FloatToInt(actual)
 >                 else:
 >                     self.tokens.error(
 >                         "type mismatch in assignment expected: %s actual: %s"%(
@@ -894,11 +905,11 @@
   
 >                 try:
 >                     byte_value = struct.pack(">f", value)
-!                 except OverflowError:
-!                     self.tokens.error("value too large")
+>                 except OverflowError:
+>                     self.tokens.error("value too large")
   
 !             except SyntaxError:
-!                 self.tokens.error("%s is not a floating point literal"%token)
+>                 self.tokens.error("%s is not a floating point literal"%token)
 >         else:
               #integer literal
 >             try:
@@ -918,7 +929,7 @@
 >                     if value > 2**(size * 8) - 1:
 >                         self.tokens.error("value too large")
 >                     if value < 0:
-!                         self.tokens.error("value too small")
+>                         self.tokens.error("value too small")
   
 >             except SyntaxError:
 >                 self.tokens.error("%s is not an integer literal"%token)
