@@ -3,6 +3,7 @@ __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
 import struct
+from copy import copy
 
 from parse_tree import *
 from tokens import Tokens
@@ -121,7 +122,7 @@ class Parser:
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
-        stored_scope = self.scope
+        stored_scope = copy(self.scope)
         type_, size, signed = self.parse_type_specifier()
         name = self.tokens.get()
 
@@ -438,7 +439,7 @@ class Parser:
 
     def parse_block(self):
         block = Block()
-        stored_scope = self.scope
+        stored_scope = copy(self.scope)
         self.tokens.expect("{")
         block.statements = []
         while self.tokens.peek() != "}":

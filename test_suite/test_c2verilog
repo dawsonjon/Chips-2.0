@@ -57,6 +57,18 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test_fails("scope 1",
+"""
+void test(){
+    int test_var = 1;
+}
+
+void main(){
+    int blah = test_var;
+}
+"""
+)
+
 test("inplace float 1",
 """
 void main(){
