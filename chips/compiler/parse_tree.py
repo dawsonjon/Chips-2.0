@@ -831,7 +831,11 @@ class FileWrite(Expression):
     def __init__(self, name, expression):
         self.name = name
         self.expression = expression
-        Expression.__init__(self, "int", 2, True)
+        Expression.__init__(
+            self, 
+            expression.type_(), 
+            expression.size(), 
+            expression.signed())
 
     def generate(self, result, allocator):
         instructions = self.expression.generate(result, allocator)
@@ -839,6 +843,7 @@ class FileWrite(Expression):
         instructions.append(
             {"op"   :"file_write", 
              "src"  :result, 
+             "type":self.expression.type_(),
              "file_name":self.name})
 
         return instructions

@@ -642,8 +642,16 @@ def generate_CHIP(input_file,
                   input_files[instruction["file_name"]], instruction["dest"]))
 
             elif instruction["op"] == "file_write":
-                output_file.write("        $fdisplay(%s, \"%%d\", register_%s);\n"%(
-                  output_files[instruction["file_name"]], instruction["src"]))
+                if instruction["type"] == "float":
+                    output_file.write('        fp_value = (register_%s[31]?-1.0:1.0) *\n'%instruction["src"])
+                    output_file.write('            (2.0 ** (register_%s[30:23]-127.0)) *\n'%instruction["src"])
+                    output_file.write('            ({1\'d1, register_%s[22:0]} / (2.0**23));\n'%instruction["src"])
+
+                    output_file.write('        $fdisplay(%s, fp_value);\n'%(
+                      output_files[instruction["file_name"]]))
+                else:
+                    output_file.write("        $fdisplay(%s, \"%%d\", register_%s);\n"%(
+                      output_files[instruction["file_name"]], instruction["src"]))
 
             elif instruction["op"] == "read":
                 output_file.write("        register_%s <= input_%s;\n"%(
