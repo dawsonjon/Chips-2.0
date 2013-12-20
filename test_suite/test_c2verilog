@@ -57,6 +57,54 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test_fails("scope 1",
+"""
+void main(){
+    const int blah = 10;
+    blah = 12;
+}
+"""
+)
+
+test("scope 2",
+"""
+void main(){
+    const int blah = 10;
+    assert(blah == 10);
+}
+"""
+)
+
+test_fails("scope 3",
+"""
+void main(){
+    const float blah = 10;
+    blah = 12;
+}
+"""
+)
+
+test("scope 4",
+"""
+void main(){
+    const float blah = 10;
+    assert(blah == 10.0);
+}
+"""
+)
+
+test_fails("scope 1",
+"""
+void test(){
+    int test_var = 1;
+}
+
+void main(){
+    int blah = test_var;
+}
+"""
+)
+
 test("inplace float 1",
 """
 void main(){

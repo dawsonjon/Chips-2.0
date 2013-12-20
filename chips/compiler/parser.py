@@ -3,6 +3,7 @@ __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
 import struct
+from copy import copy
 
 from parse_tree import *
 from tokens import Tokens
@@ -10,6 +11,7 @@ from allocator import Allocator
 
 types = ["float", "signed", "unsigned", "short", "long", "char", "int", "void"]
 numeric_types = ["float", "signed", "unsigned", "short", "long", "char", "int"]
+storage_specifiers = ["const"]
 
 class Parser:
 
@@ -43,7 +45,7 @@ class Parser:
     def parse_type_specifier(self):
         type_specifiers = []
 
-        while self.tokens.peek() in types + self.structs:
+        while self.tokens.peek() in types + self.structs + storage_specifiers:
             type_specifiers.append(self.tokens.get())
 
         signed = True
@@ -76,16 +78,20 @@ class Parser:
             size = 4
             signed = True
 
+        const = False 
+        if "const" in type_specifiers:
+            const = True
+
         if "void" in type_specifiers:
             type_ = "void"
             size = 2
             signed = False
 
 
-        return type_, size, signed
+        return type_, size, signed, const
 
     def parse_argument(self):
-        type_, size, signed = self.parse_type_specifier()
+        type_, size, signed, const = self.parse_type_specifier()
 
         if type_ in ["void"]:
             self.tokens.error("argument cannot be void")
@@ -113,7 +119,8 @@ class Parser:
                         argument,
                         type_,
                         size,
-                        signed)
+                        signed,
+                        const)
         instance = declaration.instance()
         self.scope[argument] = instance
         return instance.reference()
@@ -121,13 +128,13 @@ class Parser:
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
-        stored_scope = self.scope
-        type_, size, signed = self.parse_type_specifier()
+        stored_scope = copy(self.scope)
+        type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
         #check if it is a global declaration
         if self.tokens.peek() != "(":
-            return self.parse_global_declaration(type_, size, signed, name)
+            return self.parse_global_declaration(type_, size, signed, const, name)
 
         #otherwise continue parsing a function
         self.tokens.expect("(")
@@ -154,7 +161,8 @@ class Parser:
                         function.name+" return value",
                         type_,
                         size,
-                        signed)
+                        signed,
+                        const)
 
             function.return_value = declaration.instance().reference()
 
@@ -239,7 +247,7 @@ class Parser:
         return wait_clocks
 
     def parse_statement(self):
-        if self.tokens.peek() in numeric_types + self.structs:
+        if self.tokens.peek() in numeric_types + self.structs + storage_specifiers:
             return self.parse_compound_declaration()
         elif self.tokens.peek() == "struct":
             return self.parse_struct_declaration()
@@ -283,7 +291,7 @@ class Parser:
         ]
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
-            if lvalue.read_only():
+            if lvalue.const():
 
                 self.tokens.error(
                     "left hand operand of assignment is not modifiable")
@@ -438,7 +446,7 @@ class Parser:
 
     def parse_block(self):
         block = Block()
-        stored_scope = self.scope
+        stored_scope = copy(self.scope)
         self.tokens.expect("{")
         block.statements = []
         while self.tokens.peek() != "}":
@@ -451,13 +459,14 @@ class Parser:
         self.tokens.expect("{")
         members = {}
         while self.tokens.peek() != "}":
-            type_, size, signed = self.parse_type_specifier()
+            type_, size, signed, const = self.parse_type_specifier()
             name = self.tokens.get()
 
             members[name] = self.parse_declaration(
                 type_, 
                 size, 
                 signed, 
+                const,
                 name)
 
             self.tokens.expect(";")
@@ -489,7 +498,7 @@ class Parser:
         self.scope[name] = instance
         return instance
 
-    def parse_global_declaration(self, type_, size, signed, name):
+    def parse_global_declaration(self, type_, size, signed, const, name):
         instances = []
         while True:
 
@@ -497,6 +506,7 @@ class Parser:
                 type_, 
                 size, 
                 signed, 
+                const,
                 name).instance()
 
             self.scope[name] = instance
@@ -510,7 +520,7 @@ class Parser:
         return CompoundDeclaration(instances)
 
     def parse_compound_declaration(self):
-        type_, size, signed = self.parse_type_specifier()
+        type_, size, signed, const = self.parse_type_specifier()
         instances = []
         while True:
             name = self.tokens.get()
@@ -519,6 +529,7 @@ class Parser:
                 type_, 
                 size, 
                 signed, 
+                const,
                 name).instance()
 
             self.scope[name] = instance
@@ -531,7 +542,7 @@ class Parser:
         self.tokens.expect(";")
         return CompoundDeclaration(instances)
 
-    def parse_declaration(self, type_, size, signed, name):
+    def parse_declaration(self, type_, size, signed, const, name):
         #struct declaration
         if type_ in self.structs:
             declaration = self.scope[type_]
@@ -590,7 +601,8 @@ class Parser:
                     name,
                     type_,
                     size,
-                    signed
+                    signed,
+                    const
                 )
 
         return declaration

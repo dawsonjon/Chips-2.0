@@ -273,12 +273,13 @@ class CompoundDeclaration:
 
 class VariableDeclaration:
 
-    def __init__(self, allocator, initializer, name, type_, size, signed):
+    def __init__(self, allocator, initializer, name, type_, size, signed, const):
         self.initializer = initializer
         self.allocator = allocator
         self._type = type_
         self._size = size
         self._signed = signed
+        self._const = const
         self.name = name
 
     def instance(self):
@@ -290,6 +291,7 @@ class VariableDeclaration:
             self.type_(), 
             self.size(), 
             self.signed(), 
+            self.const(),
             self.allocator)
 
     def type_(self):
@@ -301,15 +303,19 @@ class VariableDeclaration:
     def signed(self):
         return self._signed
 
+    def const(self):
+        return self._const
+
 
 class VariableInstance:
 
-    def __init__(self, register, initializer, type_, size, signed, allocator):
+    def __init__(self, register, initializer, type_, size, signed, const, allocator):
         self.register = register
         self._type = type_
         self.initializer = initializer
         self._size = size
         self._signed = signed
+        self._const = const
         self.allocator = allocator
 
     def generate(self):
@@ -326,6 +332,9 @@ class VariableInstance:
 
     def signed(self):
         return self._signed
+
+    def const(self):
+        return self._const
 
 
 class ArrayDeclaration:
@@ -524,7 +533,7 @@ class Expression:
     def value(self):
         raise NotConstant
 
-    def read_only(self):
+    def const(self):
         return True
 
     def int_value(self):
@@ -539,7 +548,6 @@ class Expression:
             return self.value()
 
 
-
 class Object(Expression):
 
     def __init__(self, instance):
@@ -549,7 +557,7 @@ class Object(Expression):
     def value(self):
         raise NotConstant
 
-    def read_only(self):
+    def const(self):
         return False
 
 
@@ -1077,6 +1085,9 @@ class Variable(Object):
                  "src"  : result})
 
         return instructions
+
+    def const(self):
+        return self.instance.const()
 
 
 class PostIncrement(Expression):
