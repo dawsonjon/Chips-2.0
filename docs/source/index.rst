@@ -82,6 +82,7 @@ Documentation
    :maxdepth: 2
 
    language_reference/index
+   examples/index
    tutorial/index
 
 Links

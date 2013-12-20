@@ -1,41 +1,4 @@
-#define a fft component
-################################################################################
-def fft(input_stream, n):
-
-    rex=VariableArray(n)
-    imx=VariableArray(n)
-    nm1=n-1
-    nd2=n>>1
-    m=int(log(n,2))
-
-    #set up initial values for trig recurrence
-    thetas = []
-    for l in range(1, m+1):
-        le=1<<l
-        le2=le>>1
-        thetas.append(pi/le2)
-
-    sr_lut = Sequence(*[to_fixed(cos(i)) for i in thetas])
-    si_lut = Sequence(*[to_fixed(-sin(i)) for i in thetas])
-
-    i = Variable(0)
-    ip = Variable(0)
-    j = Variable(0)
-    jm1 = Variable(0)
-    l = Variable(0)
-    k = Variable(0)
-    le = Variable(0)
-    le2 = Variable(0)
-    tr = Variable(0)
-    ti = Variable(0)
-    xr = Variable(0)
-    xi = Variable(0)
-    ur = Variable(0)
-    ui = Variable(0)
-    sr = Variable(0)
-    si = Variable(0)
-    real = Output()
-    imaginary = Output()
+#include "math.h"
 
 unsigned bit_reverse(unsigned forward, unsigned bits){
     unsigned reversed = 0;
@@ -48,17 +11,39 @@ unsigned bit_reverse(unsigned forward, unsigned bits){
     return reversed;
 }
 
+unsigned stages(unsigned n){
+    unsigned guess = 0;
+    while((1 << guess) < n){
+	    guess++;
+    }
+    return guess;
+}
+
 void main(){
-    float[n] imaginaries;
-    float[n] reals;
+    int n = 1024;
+    int m = stages(n);
+    int stage, subdft_size, span, i, ip, j;
+    float imaginaries[1024];
+    float reals[1024];
+    float twiddle_step_real[10];
+    float twiddle_step_imaginary[10];
+    float sr, si, temp_real, temp_imaginary, imaginary_twiddle, real_twiddle;
+
+
+
+    for(stage=1; i<=m; stage++){
+	subdft_size = 1 << i;
+	span = subdft_size >> 1;
+	twiddle_step_real[stage] = cos(pi/span);
+	twiddle_step_imaginary[stage] = -sin(pi/span);
+    }
 
     while(1){
 
 	//read data into array
 	for(i=0; i<n; i++){
-            i_reversed
-	    reals[reversed(i, m)] = input_time();
-	    imaginaries[reversed(i, m)] = input_time();
+	    reals[bit_reverse(i, m)] = input_time();
+	    imaginaries[bit_reverse(i, m)] = input_time();
 	}
 
 	//butterfly multiplies
@@ -71,8 +56,8 @@ void main(){
 	    real_twiddle=1.0;
 	    imaginary_twiddle=0.0;
 
-	    sr = input_sr();
-	    si = input_si();
+	    sr = twiddle_step_real[stage];
+	    si = twiddle_step_imaginary[stage];
 
 	    for(j=0; j<span; j++){
 		for(i=j; i<n; i+=subdft_size){
@@ -88,9 +73,9 @@ void main(){
 		    imaginaries[i] = imaginaries[i]+temp_imaginary;
 		}
 		//trigonometric recreal_twiddlerence
-		tr=real_twiddle;
-		real_twiddle      = tr*sr - imaginary_twiddle*si;
-		imaginary_twiddle = tr*si + imaginary_twiddle*sr;
+		temp_real=real_twiddle;
+		real_twiddle      = temp_real*sr - imaginary_twiddle*si;
+		imaginary_twiddle = temp_real*si + imaginary_twiddle*sr;
 	    }
 	}
 

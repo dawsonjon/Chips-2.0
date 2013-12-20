@@ -41,18 +41,7 @@ float cos(float angle){
 
 }
 
-/*Redefine sine in terms of cosine*/
+/*Redefine sin in terms of cos*/
 float sin(float angle){
     return cos(angle-(pi/2));
-}
-
-void main(){
-    float x;
-    float step=pi/50;
-
-    for(x=-pi; x <= pi; x += step){
-       file_write(x, "x");
-       file_write(cos(x), "cos_x");
-       file_write(sin(x), "sin_x");
-    }
 }
