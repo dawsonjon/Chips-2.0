@@ -15,12 +15,14 @@ __copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
 __version__ = "0.1"
 
 import fpu
+from optimizer import reschedule
 
 def unique(l):
 
     """In the absence of set in older python implementations, make list values unique"""
 
     return dict(zip(l, l)).keys()
+
 
 def log2(instructions):
 
@@ -33,6 +35,7 @@ def log2(instructions):
         power *= 2
     return bits
 
+
 def print_verilog_literal(size, value):
 
     """Print a verilog literal with expicilt size"""
@@ -42,36 +45,6 @@ def print_verilog_literal(size, value):
     else:
         return "-%s'd%s"%(size, abs(value))
 
-def remove_register_hazards(instructions):
-
-    """search through instructions, and remove register hazards"""
-
-    wait_2_for = None
-    wait_1_for = None
-    new_instructions = []
-    for instruction in instructions:
-        wait = 0
-        if "src" in instruction:
-            if instruction["src"] == wait_1_for:
-                wait = max(wait, 1)
-            if instruction["src"] == wait_2_for:
-                wait = max(wait, 2)
-        if "srcb" in instruction:
-            if instruction["srcb"] == wait_1_for:
-                wait = max(wait, 1)
-            if instruction["srcb"] == wait_2_for:
-                wait = max(wait, 2)
-        for i in range(wait):
-            new_instructions.append({"op":"nop"})
-        new_instructions.append(instruction)
-
-        if instruction["op"] != "label":
-            wait_1_for = wait_2_for
-            if "dest" in instruction:
-                wait_2_for = instruction["dest"]
-            else:
-                wait_2_for = None
-    return new_instructions
 
 def generate_instruction_set(instructions):
 
@@ -157,6 +130,7 @@ def generate_instruction_set(instructions):
 
     return instruction_set, instruction_memory
 
+
 def calculate_jumps(instructions):
 
     """change symbolic labels into numeric addresses"""
@@ -179,6 +153,7 @@ def calculate_jumps(instructions):
             instruction["label"]=labels[instruction["label"]]
 
     return instructions
+
 
 def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
 
@@ -257,6 +232,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
 
     return inputs, outputs, input_files, output_files, testbench, inports, outports, signals
 
+
 def floating_point_enables(instruction_set):
     enable_adder = False
     enable_multiplier = False
@@ -283,6 +259,7 @@ def floating_point_enables(instruction_set):
         enable_int_to_float, 
         enable_float_to_int)
 
+
 def generate_CHIP(input_file,
                   name,
                   instructions,
@@ -297,7 +274,7 @@ def generate_CHIP(input_file,
 
     """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
 
-    instructions = remove_register_hazards(instructions)
+    instructions = reschedule(instructions, 2)
     instructions = calculate_jumps(instructions)
     instruction_set, instruction_memory = generate_instruction_set(instructions)
     register_bits = log2(len(registers));

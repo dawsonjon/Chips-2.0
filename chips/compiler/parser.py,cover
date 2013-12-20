@@ -577,8 +577,8 @@
 >                 if type_ != initializer.type_():
 >                     if type_ == "int" and initializer.type_() == "float":
 >                         initializer = FloatToInt(initializer)
->                     elif type_ == "float" and initializer.type_() == "int":
->                         initializer = IntToFloat(initializer)
+!                     elif type_ == "float" and initializer.type_() == "int":
+!                         initializer = IntToFloat(initializer)
 !                     else:
 !                         self.tokens.error(
 !                             "type mismatch in intializer expected: %s actual: %s"%(

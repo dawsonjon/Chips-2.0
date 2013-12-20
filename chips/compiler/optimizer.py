@@ -35,6 +35,7 @@ def cleanup_functions(instructions):
             return kept_instructions
         instructions = kept_instructions
 
+
 def reallocate_registers(instructions, registers):
 
     register_map = {}
@@ -54,6 +55,7 @@ def reallocate_registers(instructions, registers):
             instruction["srcb"] = register_map[instruction["srcb"]]
 
     return instructions, new_registers
+
 
 def cleanup_registers(instructions, registers):
 
@@ -82,66 +84,74 @@ def cleanup_registers(instructions, registers):
 
     return reallocate_registers(kept_instructions, kept_registers)
 
+
+def modifies_register(instruction):
+
+    """Return the register modified by this instruction if any"""
+
+    if "dest" in instruction:
+        return instruction["dest"]
+    return None
+
+
+def uses_registers(instruction):
+
+    """Return the registers used by this instruction if any"""
+
+    registers = []
+    for field in ["src", "srcb"]:
+        if field in instruction:
+            registers.append(instruction[field])
+    return registers
+
+
+def memory_clash(a, b):
+
+    """do instructions result in a memory clash"""
+
+    if a["op"] in ["memory_write", "memory_write_literal"]:
+        return b["op"] in ["memory_write", "memory_write_literal", "memory_read", "memory_read_wait", "memory_read_request"]
+
+    if b["op"] in ["memory_write", "memory_write_literal"]:
+        return a["op"] in ["memory_write", "memory_write_literal", "memory_read", "memory_read_wait", "memory_read_request"]
+
+    if a["op"] in ["memory_read", "memory_read_wait", "memory_read_request", "memory_write", "memory_write_literal"]:
+        return b["op"] == a["op"]
+
+    if b["op"] in ["memory_read", "memory_read_wait", "memory_read_request", "memory_write", "memory_write_literal"]:
+        return b["op"] == a["op"]
+
+
+def is_part_of_read(a, b):
+
+    """requests, waits and reads with the same sequence number must not be concurrent"""
+
+    read_instructions = ["memory_read_request", "memory_read_wait", "memory_read"]
+    if (a["op"] in read_instructions) and (b["op"] in read_instructions):
+        return a["sequence"] == b["sequence"]
+    return False
+
+
+def is_solitary(instruction):
+
+    """Return True if an instruction cannot be executed in parallel with other instructions"""
+
+    if "type" in instruction and instruction["type"] == "float":
+        if instruction["op"] in ["+", "-", "/", "*"]:
+            return True
+    return instruction["op"] in ["read", "write", "ready", "label", "/", "%", "int_to_float", "float_to_int"]
+
+
+def is_jump(instruction):
+
+    """Return True if an instruction contains a branch or jump"""
+
+    return instruction["op"] in ["goto", "jmp_if_true", "jmp_if_false", "jmp_and_link",
+                                 "jmp_to_reg"]
+
+
 def parallelise(instructions):
 
-    def modifies_register(instruction):
-
-        """Return the register modified by this instruction if any"""
-
-        if "dest" in instruction:
-            return instruction["dest"]
-        return None
-
-    def uses_registers(instruction):
-
-        """Return the registers used by this instruction if any"""
-
-        registers = []
-        for field in ["src", "srcb"]:
-            if field in instruction:
-                registers.append(instruction[field])
-        return registers
-
-    def memory_clash(a, b):
-
-        """do instructions result in a memory clash"""
-
-        if a["op"] in ["memory_write", "memory_write_literal"]:
-            return b["op"] in ["memory_write", "memory_write_literal", "memory_read", "memory_read_wait", "memory_read_request"]
-
-        if b["op"] in ["memory_write", "memory_write_literal"]:
-            return a["op"] in ["memory_write", "memory_write_literal", "memory_read", "memory_read_wait", "memory_read_request"]
-
-        if a["op"] in ["memory_read", "memory_read_wait", "memory_read_request", "memory_write", "memory_write_literal"]:
-            return b["op"] == a["op"]
-
-        if b["op"] in ["memory_read", "memory_read_wait", "memory_read_request", "memory_write", "memory_write_literal"]:
-            return b["op"] == a["op"]
-
-    def is_part_of_read(a, b):
-
-        """requests, waits and reads with the same sequence number must not be concurrent"""
-
-        read_instructions = ["memory_read_request", "memory_read_wait", "memory_read"]
-        if (a["op"] in read_instructions) and (b["op"] in read_instructions):
-            return a["sequence"] == b["sequence"]
-        return False
-
-    def is_solitary(instruction):
-
-        """Return True if an instruction cannot be executed in parallel with other instructions"""
-
-        if "type" in instruction and instruction["type"] == "float":
-            if instruction["op"] in ["+", "-", "/", "*"]:
-                return True
-        return instruction["op"] in ["read", "write", "ready", "label", "/", "%", "int_to_float", "float_to_int"]
-
-    def is_jump(instruction):
-
-        """Return True if an instruction contains a branch or jump"""
-
-        return instruction["op"] in ["goto", "jmp_if_true", "jmp_if_false", "jmp_and_link",
-                                     "jmp_to_reg"]
 
     def is_dependent(instruction, frame, preceding):
 
@@ -200,3 +210,79 @@ def parallelise(instructions):
         frames.append(frame)
 
     return frames
+
+def reschedule(instructions, register_write_delay):
+
+    
+    """
+    In a pipelined CPU, a register may not be accessible for a number of cycles, after it is written to .
+    To avoid a data hazard, no-operation instructions can be added.
+    Alternatively, another instruction that does not read the register can be executed early,
+    """
+
+    def is_dependent(instruction, preceding):
+
+        """
+        Determine whether an instruction is dependent on the outcome of preceding instructions
+        """
+
+        for i in preceding:
+            if modifies_register(i) is not None:
+                if modifies_register(i) in uses_registers(instruction):
+                    return True
+                if modifies_register(i) == modifies_register(instruction):
+                    return True
+            if modifies_register(instruction) is not None:
+                if modifies_register(instruction) in uses_registers(i):
+                    return True
+                if modifies_register(i) == modifies_register(instruction):
+                    return True
+            if memory_clash(i, instruction):
+                return True
+            if is_part_of_read(i, instruction):
+                return True
+            if is_jump(i):
+                return True
+            if i["op"] == "label":
+                return True
+        if is_jump(instruction) and preceding:
+            return True
+        return False
+
+    def register_hazard(instruction, registers):
+        for register in registers:
+            if register in uses_registers(instruction):
+                return True
+        return False
+
+    def fill_slot(instructions, registers):
+
+        """
+        Search for an instruction that can be executed early to fill the slot
+        """
+       
+        for index, instruction in enumerate(instructions):
+            if register_hazard(instruction, registers):
+                continue
+            if is_dependent(instruction, instructions[:index]):
+                continue
+            return instructions.pop(index)
+        return {"op":"nop"}
+   
+    new_instructions = [instructions.pop(0)]
+    while instructions: 
+
+        i = -1
+        j = 2
+        registers = []
+        while j and abs(i) <= len(new_instructions):
+            register = modifies_register(new_instructions[i])
+            if register is not None:
+                registers.append(register)
+            if new_instructions[i]["op"] != "label": 
+                j -= 1
+            i-=1
+
+        new_instructions.append(fill_slot(instructions, registers))
+
+    return new_instructions
