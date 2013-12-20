@@ -134,7 +134,7 @@ def parallelise(instructions):
         if "type" in instruction and instruction["type"] == "float":
             if instruction["op"] in ["+", "-", "/", "*"]:
                 return True
-        return instruction["op"] in ["read", "write", "ready", "label", "/", "%", "int_to_float", "float_to_int"]
+        return instruction["op"] in ["read", "write", "ready", "label", "/", "%", "int_to_float", "float_to_int", "file_write", "file_read"]
 
     def is_jump(instruction):
 
