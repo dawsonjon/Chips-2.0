@@ -1089,6 +1089,12 @@ class Variable(Object):
     def const(self):
         return self.instance.const()
 
+    def value(self):
+        if self.const():
+            return self.instance.initializer.value()
+        else:
+            raise NotConstant
+
 
 class PostIncrement(Expression):
 

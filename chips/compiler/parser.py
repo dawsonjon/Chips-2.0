@@ -552,7 +552,14 @@ class Parser:
                 array_size = None
                 self.tokens.expect("[")
                 if self.tokens.peek() != "]":
-                    array_size = int(self.tokens.get())
+                    size_expression = self.parse_ternary_expression()
+                    if size_expression.type_() != "int":
+                        self.tokens.error("Array size must be an integer like expression")
+                    try:
+                        array_size = size_expression.value()
+                    except NotConstant:
+                        self.tokens.error("Array size must be constant")
+
                 self.tokens.expect("]")
                 initializer = None
                 if self.tokens.peek() == "=":
@@ -586,6 +593,7 @@ class Parser:
                     initializer = Constant(0, type_, size, signed)
 
                 if type_ != initializer.type_():
+
                     if type_ == "int" and initializer.type_() == "float":
                         initializer = FloatToInt(initializer)
                     elif type_ == "float" and initializer.type_() == "int":
