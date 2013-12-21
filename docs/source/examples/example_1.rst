@@ -35,16 +35,16 @@ functions could be synthesised using trig identities.
         fact = 1.0;
     
         for(i=2; approximation!=old; i+=2){
-    	old = approximation;
+            old = approximation;
     
-    	while(count<=i){
-    	    power*=angle;
-    	    fact*=count;
+            while(count<=i){
+                power*=angle;
+                fact*=count;
                 count++;
-    	}
+            }
     
-    	approximation += sign*(power/fact);
-    	sign = -sign;
+            approximation += sign*(power/fact);
+            sign = -sign;
     
         }
         return approximation;
