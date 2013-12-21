@@ -57,7 +57,27 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
-test_fails("scope 1",
+test_fails("array size1",
+"""
+int size(){
+    return 10;
+}
+void main(){
+    int blah[size()];
+}
+"""
+)
+
+test("array size2",
+"""
+void main(){
+    const int b = 10;
+    int a[b];
+}
+"""
+)
+
+test_fails("const 1",
 """
 void main(){
     const int blah = 10;
@@ -66,7 +86,7 @@ void main(){
 """
 )
 
-test("scope 2",
+test("const 2",
 """
 void main(){
     const int blah = 10;
@@ -75,7 +95,7 @@ void main(){
 """
 )
 
-test_fails("scope 3",
+test_fails("const 3",
 """
 void main(){
     const float blah = 10;
@@ -84,7 +104,7 @@ void main(){
 """
 )
 
-test("scope 4",
+test("const 4",
 """
 void main(){
     const float blah = 10;

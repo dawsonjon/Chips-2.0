@@ -57,7 +57,7 @@
 >         size = 2
 >         if "long" in type_specifiers:
 >             if "short" in type_specifiers:
->                 self.tokens.error("Cannot be long and short")
+!                 self.tokens.error("Cannot be long and short")
 >             size = 4
   
 >         type_ = "int"
@@ -69,11 +69,11 @@
   
 >         if "float" in type_specifiers:
 >             if "short" in type_specifiers:
->                 self.tokens.error("Float cannot be short")
+!                 self.tokens.error("Float cannot be short")
 >             if "long" in type_specifiers:
->                 self.tokens.error("Float cannot be long (but double can)")
+!                 self.tokens.error("Float cannot be long (but double can)")
 >             if "unsigned" in type_specifiers:
->                 self.tokens.error("Float cannot be unsigned")
+!                 self.tokens.error("Float cannot be unsigned")
 >             type_ = "float"
 >             size = 4
 >             signed = True
@@ -149,11 +149,11 @@
 >         if type_ != "void":
   
 >             if type_ in self.structs:
->                 declaration = self.scope[type_]
+!                 declaration = self.scope[type_]
 >             else:
 >                 if self.tokens.peek() == "[":
->                     self.tokens.error(
->                         "Functions cannot return arrays")
+!                     self.tokens.error(
+!                         "Functions cannot return arrays")
 >                 else:
 >                     declaration = VariableDeclaration(
 >                         self.allocator,
@@ -552,7 +552,14 @@
 >                 array_size = None
 >                 self.tokens.expect("[")
 >                 if self.tokens.peek() != "]":
->                     array_size = int(self.tokens.get())
+>                     size_expression = self.parse_ternary_expression()
+>                     if size_expression.type_() != "int":
+!                         self.tokens.error("Array size must be an integer like expression")
+>                     try:
+>                         array_size = size_expression.value()
+>                     except NotConstant:
+>                         self.tokens.error("Array size must be constant")
+  
 >                 self.tokens.expect("]")
 >                 initializer = None
 >                 if self.tokens.peek() == "=":
@@ -586,6 +593,7 @@
 >                     initializer = Constant(0, type_, size, signed)
   
 >                 if type_ != initializer.type_():
+  
 >                     if type_ == "int" and initializer.type_() == "float":
 >                         initializer = FloatToInt(initializer)
 >                     elif type_ == "float" and initializer.type_() == "int":
@@ -781,9 +789,9 @@
 >     def parse_file_read(self):
 !         self.tokens.expect("(")
 !         file_name = self.tokens.get()
-!         file_name = file_name.strip('"').decode("string_escape")
+>         file_name = file_name.strip('"').decode("string_escape")
 >         self.tokens.expect(")")
->         return FileRead(file_name)
+!         return FileRead(file_name)
   
 >     def parse_file_write(self):
 >         self.tokens.expect("(")
@@ -854,7 +862,7 @@
 >                 if actual.type_() == "int" and required.type_() == "float":
 >                     actual = IntToFloat(actual)
 >                 elif actual.type_() == "float" and required.type_() == "int":
->                     actual = FloatToInt(actual)
+!                     actual = FloatToInt(actual)
 >                 else:
 >                     self.tokens.error(
 >                         "type mismatch in assignment expected: %s actual: %s"%(
@@ -875,7 +883,7 @@
 >                 token = eval(token)
 >                 value = ord(token)
 !             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif token.startswith('"'):
 >             try:
 >                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
@@ -892,7 +900,7 @@
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
 !             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -908,7 +916,7 @@
 >                 except OverflowError:
 >                     self.tokens.error("value too large")
   
-!             except SyntaxError:
+>             except SyntaxError:
 >                 self.tokens.error("%s is not a floating point literal"%token)
 >         else:
               #integer literal
@@ -924,10 +932,10 @@
 >                     if value > 2**((size * 8)-1) - 1:
 >                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
-!                         self.tokens.error("value too small")
+>                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
->                         self.tokens.error("value too large")
+!                         self.tokens.error("value too large")
 >                     if value < 0:
 >                         self.tokens.error("value too small")
   
