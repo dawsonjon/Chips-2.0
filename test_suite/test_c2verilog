@@ -57,6 +57,28 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("float file 1",
+"""
+void main(){
+    file_write(1.0, "test_file");
+    file_write(-1.0, "test_file");
+    file_write(2.0, "test_file");
+    file_write(-2.0, "test_file");
+}
+"""
+)
+
+test("float file 2",
+"""
+void main(){
+    assert(file_read("test_file") == 1.0);
+    assert(file_read("test_file") == -1.0);
+    assert(file_read("test_file") == 2.0);
+    assert(file_read("test_file") == -2.0);
+}
+"""
+)
+
 test_fails("array size1",
 """
 int size(){
@@ -237,16 +259,6 @@ void main(){
 """
 )
 
-test("float file",
-"""
-void main(){
-    file_write(1.0, "test_file");
-    file_write(-1.0, "test_file");
-    file_write(2.0, "test_file");
-    file_write(-2.0, "test_file");
-}
-"""
-)
 test("float 1",
 """
 void main(){

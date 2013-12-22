@@ -7,6 +7,7 @@ __version__ = "0.1"
 
 import sys
 import os
+import subprocess
 
 from chips.compiler.compiler import comp
 
@@ -31,19 +32,17 @@ name, inputs, outputs, documentation = comp(input_file, options)
 
 #run the compiled design using the simulator of your choice.
 if "iverilog" in sys.argv:
-    import os
-    import tempfile
-    import shutil
     verilog_file = os.path.abspath("%s.v"%name)
-    #tempdir = tempfile.mkdtemp()
-    #os.chdir(tempdir)
-    os.system("iverilog -o %s %s"%(name, verilog_file))
+    process = subprocess.Popen(["iverilog", "-o", str(name), str(verilog_file)])
+    result = process.wait()
+
+    if result:
+      print "Verilog output failed to compile correctly"
+      sys.exit(result)
+
     if "run" in sys.argv:
-      result = os.system("vvp %s"%name)
-      if result:
-        sys.exit(1)
-      else:
-        sys.exit(0)
-    #shutil.rmtree(tempdir)
+      process = subprocess.Popen(["vvp", str(name)])
+      result = process.wait()
+      sys.exit(result)
 
 #Add more tools here ...
