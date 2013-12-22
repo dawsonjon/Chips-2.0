@@ -20,12 +20,12 @@ void calculate_twiddles(){
 
 /*bit reverse*/
 unsigned bit_reverse(unsigned forward){
-    unsigned i;
     unsigned reversed=0;
+    unsigned i;
     for(i=0; i<m; i++){
         reversed <<= 1;
         reversed |= forward & 1;
-        forward >>= 1;
+        reversed >>= 1;
     }
     return reversed;
 }
@@ -88,13 +88,11 @@ void main(){
     float reals[n];
     float imaginaries[n];
     unsigned i;
-    float step = (5 * 2 * pi)/n;
     for(i=0; i<n; i++){
-        reals[i] = sin(i*2*pi);
+        reals[i] = 0.0;
         imaginaries[i] = 0.0;
-        file_write(reals[i], "x_re");
-        file_write(imaginaries[i], "x_im");
     }
+    reals[0] = 1.0;
     calculate_twiddles();
     fft(reals, imaginaries);
     for(i=0; i<n; i++){
