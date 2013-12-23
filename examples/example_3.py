@@ -4,12 +4,6 @@ import subprocess
 import atexit
 from math import pi
 
-try:
-    from matplotlib import pyplot
-except ImportError:
-    print "You need matplotlib to run this script!"
-    exit(0)
-
 children = []
 def cleanup():
     for child in children:
@@ -24,17 +18,7 @@ def run_c(file_name):
     children.remove(process)
 
 def test():
-#    run_c("log.c")
-    x = [float(i) for i in open("x")]
-    e_x = [float(i) for i in open("e_x")]
-    log_x = [float(i) for i in open("log_x")]
-    pyplot.plot(x, e_x, label="exp(x)")
-#    pyplot.plot(x, log_x, label="log(x)")
-    pyplot.xlim(0, 10.1)
-    pyplot.xlabel("x")
-    pyplot.ylabel("f(x)")
-    pyplot.savefig("../docs/source/examples/images/example_3.png")
-    pyplot.show()
+    run_c("sort.c")
 
 def indent(lines):
     return "\n    ".join(lines.splitlines())
@@ -43,29 +27,56 @@ def generate_docs():
 
     documentation = """
 
-Example 3 - Calculate Sqrt using Newton's Method
-------------------------------------------------
+Implement Quicksort
+-------------------
 
-In this example, we calculate the sqrt of a number using `Newton's method
-<http://en.wikipedia.org/wiki/Newton's_method#Square_root_of_a_number>`_:
+This example sorts an array of data using the 
+`Quick Sort algorithm <http://en.wikipedia.org/wiki/Quicksort>`_
 
-Starting with an initial estimate of the sqrt, successively better approximations can be found thus:
-
-.. math::
-
-    f(x_1) = x_0 - \\frac{{x_0}^2 - n}{2x_0}
-
-The function terminates when further iterations do not change the approximation.
+The quick-sort algorithm is a recurrsive algorithm, but *Chips* does not
+support recursive functions. Since the level of recursion is bounded, it is
+possible to implement the function using an explicitly created stack.
 
 .. code-block:: c
 
     %s
 
-A simple test calulates sqrt(x) where -10 < x < 10.
+The algorithm is tested using an array containing out of order values. The program correctly sorts the array::
 
-.. image:: images/example_3.png
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         0 (report at line: 122 in file: sort.c)
+         1 (report at line: 122 in file: sort.c)
+         2 (report at line: 122 in file: sort.c)
+         3 (report at line: 122 in file: sort.c)
+         4 (report at line: 122 in file: sort.c)
+         5 (report at line: 122 in file: sort.c)
+         6 (report at line: 122 in file: sort.c)
+         7 (report at line: 122 in file: sort.c)
+         8 (report at line: 122 in file: sort.c)
+         9 (report at line: 122 in file: sort.c)
+        10 (report at line: 122 in file: sort.c)
+        11 (report at line: 122 in file: sort.c)
+        12 (report at line: 122 in file: sort.c)
+        13 (report at line: 122 in file: sort.c)
+        14 (report at line: 122 in file: sort.c)
+        15 (report at line: 122 in file: sort.c)
+        16 (report at line: 122 in file: sort.c)
 
-"""%indent(open("sqrt.c").read())
+"""%indent(open("sort.c").read())
 
     document = open("../docs/source/examples/example_3.rst", "w").write(documentation)
 

@@ -79,14 +79,14 @@ This example builds on the Taylor series example. We assume that the sin and
 cos routines have been placed into a library of math functions math.h, along
 with the definitions of :math:`\\pi`, M_PI.
 
-The `Fast Fourier Transform (FFT)<http://en.wikipedia.org/wiki/Fast_Fourier_transform>`_ 
+The `Fast Fourier Transform (FFT) <http://en.wikipedia.org/wiki/Fast_Fourier_transform>`_ 
 is an efficient method of decomposing discretely sampled signals into a frequency spectrum, it
 is one of the most important algorithms in Digital Signal Processing (DSP).
-`The Scientist and Engineer's Guide to Digital Signal Processing<http://www.dspguide.com/>`_ 
+`The Scientist and Engineer's Guide to Digital Signal Processing <http://www.dspguide.com/>`_ 
 gives a straight forward introduction, and can be viewed on-line for free. 
 
 The example shows a practical method of calculating the FFT using the
-`Cooley-Tukey algorithm<http://en.wikipedia.org/wiki/Fast_Fourier_transform#Cooley.E2.80.93Tukey_algorithm>`_.
+`Cooley-Tukey algorithm <http://en.wikipedia.org/wiki/Fast_Fourier_transform#Cooley.E2.80.93Tukey_algorithm>`_.
 
 
 .. code-block:: c

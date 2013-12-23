@@ -287,7 +287,7 @@ class Parser:
 
     def parse_assignment(self):
         assignment_operators = [
-            "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>="
+            "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="
         ]
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
