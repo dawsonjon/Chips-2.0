@@ -1,0 +1,150 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Calculate Square Root using Newton’s Method &mdash; Chips v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips v0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="calculate-square-root-using-newton-s-method">
+<h1>Calculate Square Root using Newton&#8217;s Method<a class="headerlink" href="#calculate-square-root-using-newton-s-method" title="Permalink to this headline">¶</a></h1>
+<p>In this example, we calculate the sqrt of a number using <a class="reference external" href="http://en.wikipedia.org/wiki/Newton's_method#Square_root_of_a_number">Newton&#8217;s method</a>.
+The problem of finding the square root can be expressed as:</p>
+<div class="math">
+<p><img src="../_images/math/67f4bb9959ca12dc1777975e7796f1a67813d619.png" alt="n = x^2" /></p>
+</div><p>Which can be rearranged as:</p>
+<div class="math">
+<p><img src="../_images/math/0a3644b800397fb575ab5fbfb5110d4c68b08d79.png" alt="f(x) = x^2 - n" /></p>
+</div><p>Using Newton&#8217;s method, we can find numerically the approximate point at which
+<img class="math" src="../_images/math/57ccf8d123ba4259e29fba55d9b008874e071492.png" alt="f(x) = 0"/>. Repeated applications of the following expression yield
+increasingly accurate approximations of the Square root:</p>
+<div class="math">
+<p><img src="../_images/math/d934a3427ae5ac0f6a80d00f5a7fe05510b9d8fa.png" alt="f(x_k) = x_{k-1} - \frac{{x_{k-1}}^2 - n}{2x_{k-1}}" /></p>
+</div><p>Turning this into a practical solution, the following code calculates the square
+root of a floating point number. An initial approximation is refined using
+Newton&#8217;s method until further refinements agree to within a small degree.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* sqrt.c */</span>
+<span class="cm">/* Jonathan P Dawson */</span>
+<span class="cm">/* 2013-12-23 */</span>
+
+<span class="cm">/* find absolute value of a floating point number*/</span>
+
+<span class="kt">float</span> <span class="nf">fabs</span><span class="p">(</span><span class="kt">float</span> <span class="n">n</span><span class="p">){</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="o">-</span> <span class="n">n</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/* approximate sqrt using newton&#39;s method*/</span>
+
+<span class="kt">float</span> <span class="n">sqrt</span><span class="p">(</span><span class="kt">float</span> <span class="n">n</span><span class="p">){</span>
+    <span class="kt">float</span> <span class="n">square</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">old</span><span class="p">;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">;</span>
+    <span class="n">old</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">old</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.000001</span><span class="p">){</span>
+        <span class="n">old</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/* test sqrt function*/</span>
+
+<span class="kt">void</span> <span class="n">main</span><span class="p">(){</span>
+    <span class="kt">float</span> <span class="n">x</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">10.0</span><span class="p">;</span> <span class="n">x</span><span class="o">+=</span> <span class="mf">0.1</span><span class="p">){</span>
+        <span class="n">file_write</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&quot;x&quot;</span><span class="p">);</span>
+        <span class="n">file_write</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&quot;sqrt_x&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the code isn&#8217;t entirely robust, and cannot handle special cases such
+as Nans, infinities or negative numbers.  A simple test calculates
+<img class="math" src="../_images/math/4805dddb4e6911989af8be91da334b5ba2054757.png" alt="\sqrt{x}"/> where <img class="math" src="../_images/math/a02c764ec5d4ef20f417b9b76e19591f55f70ac4.png" alt="-10 &lt; x &lt; 10"/>.</p>
+<img alt="../_images/example_1.png" src="../_images/example_1.png" />
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/examples/example_1.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jonathan P Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

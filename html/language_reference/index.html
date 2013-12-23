@@ -1,0 +1,652 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Reference Manual &mdash; Chips v0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips v0.1 documentation" href="../index.html" />
+    <link rel="next" title="Examples" href="../examples/index.html" />
+    <link rel="prev" title="Chips - Hardware Design in Python" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../examples/index.html" title="Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Chips - Hardware Design in Python"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="reference-manual">
+<h1>Reference Manual<a class="headerlink" href="#reference-manual" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="download">
+<h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
+<p>You can download the
+<a class="reference external" href="https://github.com/dawsonjon/Chips-2.0/archive/master.zip">source</a>
+from the
+<a class="reference external" href="https://github.com/dawsonjon/Chips-2.0">Git Hub</a>
+homepage. Alternatively clone the project using git:</p>
+<div class="highlight-python"><pre>~$ git clone https://github.com/dawsonjon/Chips-2.0.git</pre>
+</div>
+</div>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">First <a class="reference external" href="http://python.org/download">install Python</a>. You need <em>Python</em> 2.6 or later, but not <em>Python</em> 3.</p>
+</li>
+<li><dl class="first docutils">
+<dt>In the Linux console, or the Windows command line (you will need</dt>
+<dd><p class="first">administrator privileges):</p>
+<div class="last highlight-python"><pre>~$ cd Chips-2.0
+~$ python setup.py install</pre>
+</div>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<div class="section" id="icarus-verilog">
+<h2>Icarus Verilog<a class="headerlink" href="#icarus-verilog" title="Permalink to this headline">¶</a></h2>
+<p>This example uses the <a class="reference external" href="http://iverilog.icarus.com/">Icarus Verilog</a>
+simulator, you will need this installed in your command path to follow this
+tutorial.</p>
+</div>
+<div class="section" id="c-components">
+<h2>C Components<a class="headerlink" href="#c-components" title="Permalink to this headline">¶</a></h2>
+<p>This section of the manual describes the subset of the C language that is available in <em>Chips</em>.</p>
+<div class="section" id="types">
+<h3>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<p>The following types are available in chips:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>char</cite></li>
+<li><cite>int</cite></li>
+<li><cite>long</cite></li>
+<li><cite>unsigned char</cite></li>
+<li><cite>unsigned int</cite></li>
+<li><cite>unsigned long</cite></li>
+<li><cite>float</cite></li>
+</ul>
+</div></blockquote>
+<p>A <cite>char</cite> is at least 8 bits wide.  An <cite>int</cite> is at least 16 bits wide.  A <cite>long</cite>
+is at least 32 bits wide.</p>
+<p>The <cite>float</cite> type is implemented as an IEEE 754 single precision floating point
+number.</p>
+<p>At present, <cite>long long</cite>, <cite>float</cite> and <cite>double</cite> have not been implemented, but I
+plan to add support for these types in a later release.</p>
+<p>single dimensional arrays, <cite>char[]</cite>, <cite>int[]</cite> and <cite>long[]</cite> are supported, but
+multidimensional arrays are not yet supported.</p>
+<p><cite>struct</cite> s are supported, you can define arrays of <cite>struct</cite> s, and <cite>struct</cite> s
+may contain arrays.</p>
+<p><cite>struct</cite> s cannot yet be passed to a function or returned from a function.</p>
+<p>Arrays may be passed (by reference) to functions.</p>
+<p>Pointers are not supported, and neither is dynamic memory allocation. This is a
+deliberate decision with low memory FPGAs in mind, and probably won&#8217;t be
+supported in future releases.</p>
+</div>
+<div class="section" id="functions">
+<h3>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
+<p>Functions are supported. They may be nested, but may not be recursive. Only a
+fixed number of arguments is supported, optional arguments are not permitted.</p>
+</div>
+<div class="section" id="control-structures">
+<h3>Control Structures<a class="headerlink" href="#control-structures" title="Permalink to this headline">¶</a></h3>
+<p>The following control structures are supported:</p>
+<ul class="simple">
+<li>if/else statements</li>
+<li>while loop</li>
+<li>for loop</li>
+<li>break/continue statements</li>
+<li>switch/case statements</li>
+</ul>
+</div>
+<div class="section" id="operators">
+<h3>Operators<a class="headerlink" href="#operators" title="Permalink to this headline">¶</a></h3>
+<p>The following operators are supported, in order of preference:</p>
+<ul class="simple">
+<li><cite>()</cite></li>
+<li><cite>~</cite> <cite>-</cite> <cite>!</cite> <cite>sizeof</cite> (unary operators)</li>
+<li><cite>*</cite> <cite>/</cite> <cite>%</cite></li>
+<li><cite>+</cite> <cite>-</cite></li>
+<li><cite>&lt;&lt;</cite> <cite>&gt;&gt;</cite></li>
+<li><cite>&lt;</cite> <cite>&gt;</cite> <cite>&lt;=</cite> <cite>&gt;=</cite></li>
+<li><cite>==</cite> <cite>!=</cite></li>
+<li><cite>&amp;</cite></li>
+<li>&#8216;^`</li>
+<li><cite>|</cite></li>
+<li><cite>&amp;&amp;</cite></li>
+<li><cite>||</cite></li>
+<li>`? : `</li>
+</ul>
+</div>
+<div class="section" id="stream-i-o">
+<h3>Stream I/O<a class="headerlink" href="#stream-i-o" title="Permalink to this headline">¶</a></h3>
+<p>The language has been extended to allow components to communicate by sending
+data through streams.</p>
+<p>Stream I/O is achieved by calling built-in functions with special names.
+Functions that start with the name <cite>input</cite> or <cite>output</cite> are interpreted as &#8220;read
+from input&#8221;, or &#8220;write to output&#8221;.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">input_spam</span><span class="p">();</span> <span class="c1">//reads from an input called spam</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">input_eggs</span><span class="p">();</span> <span class="c1">//reads from an input called eggs</span>
+<span class="n">output_fish</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>   <span class="c1">//writes to an output called fish</span>
+</pre></div>
+</div>
+<p>Reading or writing from inputs and outputs causes program execution to block
+until data is available. If you don&#8217;t want to commit yourself to reading and
+input and blocking execution, you can check if data is ready.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">ready_spam</span><span class="p">()){</span>
+   <span class="n">temp</span> <span class="o">=</span> <span class="n">input_spam</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>There is no equivalent function to check if an output is ready to receive data,
+this could cause deadlocks if both the sending and receiving end were waiting
+for one another.</p>
+</div>
+<div class="section" id="timed-waits">
+<h3>Timed Waits<a class="headerlink" href="#timed-waits" title="Permalink to this headline">¶</a></h3>
+<p>Timed waits can be achieved using the built-in <cite>wait-clocks</cite> function. The
+wait_clocks function accepts a single argument, the numbers of clock cycles to
+wait.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">wait_clocks</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span> <span class="c1">//wait for 1 us with 100MHz clock</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="debug-and-test">
+<h3>Debug and Test<a class="headerlink" href="#debug-and-test" title="Permalink to this headline">¶</a></h3>
+<p>The built in <cite>report</cite> function displays the value of an expression in the
+simulation console. This will have no effect in a synthesised design.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="n">report</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//prints 4 to console</span>
+<span class="n">report</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span> <span class="c1">//prints 10 to the console</span>
+</pre></div>
+</div>
+<p>The built in function assert causes a simulation error if it is passed a zero
+value. The assert function has no effect in a synthesised design.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//does not cause an error</span>
+<span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//will cause a simulation error</span>
+<span class="n">assert</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="o">==</span><span class="mi">5</span><span class="p">);</span> <span class="c1">//will cause a simulation error</span>
+</pre></div>
+</div>
+<p>In simulation, you can write values to a file using the built-in <cite>file_write</cite>
+function. The first argument is the value to write, and the second argument is
+the file to write to. The file will be overwritten when the simulation starts,
+and subsequent calls will append a new vale to the end of the file. Each value
+will appear in decimal format on a separate line. A file write has no effect in
+a synthesised design.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">file_write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<span class="n">file_write</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<span class="n">file_write</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<span class="n">file_write</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>You can also read values from a file during simulation. A simulation error will
+occur if there are no more value in the file.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="c-preprocessor">
+<h3>C Preprocessor<a class="headerlink" href="#c-preprocessor" title="Permalink to this headline">¶</a></h3>
+<p>The C preprocessor currently has only limited capabilities, and currently only
+the <cite>#include</cite> feature is supported.</p>
+</div>
+</div>
+<div class="section" id="built-in-libraries">
+<h2>Built in Libraries<a class="headerlink" href="#built-in-libraries" title="Permalink to this headline">¶</a></h2>
+<p>The C standard library is not supported. The intention is to provide a build-in
+library with some basic utilities appropriate for FPGA design. At present
+<cite>print.h</cite> is the only library provided.</p>
+<div class="section" id="print-h">
+<h3>print.h<a class="headerlink" href="#print-h" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>print_string</cite> function prints a null terminated string to standard output.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">print_string</span><span class="p">(</span><span class="kt">char</span> <span class="n">string</span><span class="p">[])</span>
+</pre></div>
+</div>
+<p>The <cite>print_decimal</cite> function prints a number in decimal to standard output.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">print_decimal</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <cite>print_hex</cite> function prints a number in hexadecimal format to standard output.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">print_hex</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To provide most flexibility, the definition of standard_output is left to the
+user, it could be a serial port, an LCD display, or perhaps a telnet session.
+To define standard output, a function <cite>stdout_put_char</cite> function must be
+defined before including print.h.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="n">stdout_put_char</span><span class="p">(</span><span class="kt">char</span> <span class="n">value</span><span class="p">){</span>
+    <span class="n">output_rs232_tx</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="cp">#include &lt;print.h&gt;</span>
+
+<span class="n">print_string</span><span class="p">(</span><span class="s">&quot;Hello World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span> <span class="c1">//Hello World</span>
+<span class="n">print_decimal</span><span class="p">(</span><span class="mi">12345</span><span class="p">);</span> <span class="c1">//12345</span>
+<span class="n">print_hex</span><span class="p">(</span><span class="mi">127</span><span class="p">);</span> <span class="c1">//0x7f</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="c2verilog">
+<h3>c2verilog<a class="headerlink" href="#c2verilog" title="Permalink to this headline">¶</a></h3>
+<p>For simple designs with only one C component, the simplest way to generate Verilog is by using the c2verilog utility.
+The utility accepts C files as input, and generates Verilog files as output.</p>
+<div class="highlight-python"><pre>~$ c2verilog input_file.c</pre>
+</div>
+<p>You may automatically compile the output using Icarus Verilog by adding the
+<cite>iverilog</cite> option. You may also run the Icarus Verilog simulation using the
+<cite>run</cite> option.</p>
+<div class="highlight-python"><pre>~$ c2verilog iverilog run input_file.c</pre>
+</div>
+<p>You can also influence the way the Verilog is generated. By default, a low area
+solution is implemented. If you can specify a design optimised for speed using
+the <cite>speed</cite> option.</p>
+</div>
+</div>
+<div class="section" id="python-api">
+<h2>Python API<a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h2>
+<p>The C language provides the ability to define components. The Python API
+provides the ability to build systems from C components.</p>
+<p>To use the Python API, you must import it.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+<div class="section" id="chip">
+<h3>Chip<a class="headerlink" href="#chip" title="Permalink to this headline">¶</a></h3>
+<p>Once you have imported the Python API, you can define a chip. A chip is a
+canvas to which you can add inputs outputs, components and wires. When you
+create a chips all you need to give it is a name.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;mychip&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="wire">
+<h3>Wire<a class="headerlink" href="#wire" title="Permalink to this headline">¶</a></h3>
+<p>You can create <cite>Input</cite>, <cite>Output</cite> and <cite>Wires</cite> objects. A <cite>Wire</cite> is a point to point connection, a stream, that connects an output from one component to the input of another. A <cite>Wire</cite> can only have one source of data, and one data sink. When you create a <cite>Wire</cite>, you must tell it which <cite>Chip</cite> it belongs to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">wire_a</span> <span class="o">=</span> <span class="n">Wire</span><span class="p">(</span><span class="n">mychip</span><span class="p">)</span>
+<span class="n">wire_b</span> <span class="o">=</span> <span class="n">Wire</span><span class="p">(</span><span class="n">mychip</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="input">
+<h3>Input<a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
+<p>An <cite>Input</cite> takes data from outside the <cite>Chip</cite>, and feeds it into the input of a
+<cite>Component</cite>. When you create an <cite>Input</cite>, you need to specify the <cite>Chip</cite> it
+belongs to, and the name it will be given.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">input_a</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="n">input_b</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="n">input_c</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="n">input_d</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;D&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="output">
+<h3>Output<a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
+<p>An <cite>Output</cite> takes data from a <cite>Component</cite> output, and sends it outside the
+<cite>Chip</cite>. When you create an <cite>Output</cite> you must tell it which <cite>Chip</cite> it belongs
+to, and the name it will be given.</p>
+</div>
+<div class="section" id="component">
+<h3>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h3>
+<p>From Python, you can import a C component by specifying the file where it is
+defined. When you import a C component it will be compiled.</p>
+<p>The C file adder.c defines a two input adder.</p>
+<div class="highlight-python"><pre>//adder.c
+
+void adder(){
+    while(1){
+        output_z(input_a() + input_b());
+    }
+}</pre>
+</div>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">adder</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="s">&quot;source/adder.c&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="instances">
+<h3>Instances<a class="headerlink" href="#instances" title="Permalink to this headline">¶</a></h3>
+<p>You can make many instances of a component by &#8220;calling&#8221; the component. Each
+time you make an instance, you must specify the <cite>Chip</cite> it belongs to, and
+connect up the inputs and outputs of the <cite>Component</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span> <span class="p">:</span> <span class="n">input_a</span><span class="p">,</span> <span class="s">&quot;b&quot;</span> <span class="p">:</span> <span class="n">input_b</span><span class="p">},</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;z&quot;</span> <span class="p">:</span> <span class="n">wire_a</span><span class="p">})</span>
+
+<span class="n">adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span> <span class="p">:</span> <span class="n">input_c</span><span class="p">,</span> <span class="s">&quot;b&quot;</span> <span class="p">:</span> <span class="n">input_d</span><span class="p">},</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;z&quot;</span> <span class="p">:</span> <span class="n">wire_b</span><span class="p">})</span>
+
+<span class="n">adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span> <span class="p">:</span> <span class="n">wire_a</span><span class="p">,</span> <span class="s">&quot;b&quot;</span> <span class="p">:</span> <span class="n">wire_b</span><span class="p">},</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;z&quot;</span> <span class="p">:</span> <span class="n">output_z</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>A diagrammatic representation of the <cite>Chip</cite> is shown below.</p>
+<div class="highlight-python"><pre>       +-------+       +-------+
+       | adder |       | adder |
+A =====&gt;       &gt;=======&gt;       &gt;=====&gt; Z
+B =====&gt;       |       |       |
+       +-------+       |       |
+                       |       |
+       +-------+       |       |
+       | adder |       |       |
+C =====&gt;       &gt;=======&gt;       |
+D =====&gt;       |       |       |
+       +-------+       +-------+</pre>
+</div>
+</div>
+<div class="section" id="code-generation">
+<h3>Code Generation<a class="headerlink" href="#code-generation" title="Permalink to this headline">¶</a></h3>
+<p>You can generate synthesisable Verilog code for your chip
+using the <cite>generate_verilog</cite> method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">generate_verilog</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also generate a matching testbench using the <cite>generate_testbench</cite>
+method. You can also specify the simulation run time in clock cycles.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">generate_testbench</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="c">#1000 clocks</span>
+</pre></div>
+</div>
+<p>To compile the design in Icarus Verilog, use the <cite>compile_iverilog</cite> method. You
+can also run the code directly if you pass <cite>True</cite> to the <cite>compile_iverilog</cite>
+function.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">compile_iverilog</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="physical-interface">
+<h2>Physical Interface<a class="headerlink" href="#physical-interface" title="Permalink to this headline">¶</a></h2>
+<p><cite>Input</cite>, <cite>Output</cite> and <cite>Wire</cite> objects within a chip are implemented using a
+synchronous interconnect bus. The details of the interconnect bus are described
+here. This section will be of most use to developers who want to integrate a
+<em>Chips</em> design into a larger design, or to generate an HDL wrapper to support a
+<em>Chips</em> design in new hardware.</p>
+<div class="highlight-python"><pre>rst &gt;-o-----------------------------+
+clk &gt;-+-o-------------------------+ |
+      | |                         | |
+      | |   +-----------+         | |     +--------------+
+      | |   | TX        |         | |     | RX           |
+      | +---&gt;           |         | +-----&gt;              |
+      +-----&gt;           |         +-------&gt;              |
+            |           |                 |              |
+            |           | &lt;bus_name&gt;      |              |
+            |       out &gt;=================&gt; in           |
+            |           | &lt;bus_name&gt;_stb  |              |
+            |       out &gt;-----------------&gt; in           |
+            |           | &lt;bus_name&gt;_ack  |              |
+            |       in  &lt;-----------------&lt; out          |
+            |           |                 |              |
+            +-----------+                 +--------------+</pre>
+</div>
+<div class="section" id="global-signals">
+<h3>Global Signals<a class="headerlink" href="#global-signals" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="31%" />
+<col width="17%" />
+<col width="36%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>Name</td>
+<td>Direction</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr><td>clk</td>
+<td>input</td>
+<td>bit</td>
+<td>Clock</td>
+</tr>
+<tr><td>rst</td>
+<td>input</td>
+<td>bit</td>
+<td>Reset</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="interconnect-signals">
+<h3>Interconnect Signals<a class="headerlink" href="#interconnect-signals" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="12%" />
+<col width="7%" />
+<col width="64%" />
+</colgroup>
+<tbody valign="top">
+<tr><td>Name</td>
+<td>Direction</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr><td>&lt;bus_name&gt;</td>
+<td>TX to RX</td>
+<td>bus</td>
+<td>Payload Data</td>
+</tr>
+<tr><td>&lt;bus_name&gt;_stb</td>
+<td>TX to RX</td>
+<td>bit</td>
+<td>&#8216;1&#8217; indicates that payload data is valid and TX is ready.</td>
+</tr>
+<tr><td>&lt;bus_name&gt;_ack</td>
+<td>TX to RX</td>
+<td>bit</td>
+<td>&#8216;1&#8217; indicates that RX is ready.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="interconnect-bus-transaction">
+<h3>Interconnect Bus Transaction<a class="headerlink" href="#interconnect-bus-transaction" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Both transmitter and receiver <strong>shall</strong> be synchronised to the 0 to 1 transition of <cite>clk</cite>.</li>
+<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the transmitter <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;bus_name&gt;_stb</cite> to 0.</li>
+<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the receiver <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;bus_name&gt;_ack</cite> to 0.</li>
+<li>If <cite>rst</cite> is set to 0, normal operation <strong>shall</strong> commence.</li>
+<li>The transmitter <strong>may</strong> insert wait states on the bus by setting <cite>&lt;bus_name&gt;_stb</cite> to 0.</li>
+<li>The transmitter <strong>shall</strong> set <cite>&lt;bus_name&gt;_stb</cite> to 1 to signify that data is valid.</li>
+<li>Once <cite>&lt;bus_name&gt;_stb</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
+<li>The transmitter <strong>shall</strong> ensure that <cite>&lt;bus_name&gt;</cite> contains valid data for the entire period that <cite>&lt;bus_name&gt;_stb</cite> is 1.</li>
+<li>The transmitter <strong>may</strong> set <cite>&lt;bus_name&gt;</cite> to any value when <cite>&lt;bus_name&gt;_stb</cite> is 0.</li>
+<li>The receiver <strong>may</strong> insert wait states on the bus by setting <cite>&lt;bus_name&gt;_ack</cite> to 0.</li>
+<li>The receiver <strong>shall</strong> set <cite>&lt;bus_name&gt;_ack</cite> to 1 to signify that it is ready to receive data.</li>
+<li>Once <cite>&lt;bus_name&gt;_ack</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
+<li>Whenever <cite>&lt;bus_name&gt;_stb</cite> is 1 and <cite>&lt;bus_name&gt;_ack</cite> are 1, a bus transaction <strong>shall</strong> complete on the following 0 to 1 transition of <cite>clk</cite>.</li>
+<li>Both the transmitter and receiver <strong>may</strong> commence a new transaction without inserting any wait states.</li>
+<li>The receiver <strong>may</strong> delay a transaction by inserting wait states until the transmitter indicates that data is available.</li>
+<li>The transmitter <strong>shall</strong> not delay a transaction by inserting wait states until the receiver is ready to accept data. Deadlock would occur if both the transmitter and receiver delayed a transaction until the other was ready.</li>
+</ol>
+<div class="highlight-python"><pre> rst             ______________________________________________________________
+                   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _
+ clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
+                 _____ _______ ________________________________________________
+&lt;bus_name&gt;       _____X_VALID_X________________________________________________
+                       _______
+&lt;bus_name&gt;_stb   _____|       |________________________________________________
+                           ___
+&lt;bus_name&gt;_ack   _________|   |________________________________________________
+
+                       ^^^^ RX adds wait states
+
+                           ^^^^  Data transfers
+
+ rst             ______________________________________________________________
+                   _   _   _   _   _   _   _   _   _   _   _   _   _   _   _
+ clk             _| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_| |_|
+                 _____ _______ ________________________________________________
+&lt;bus_name&gt;       _____X_VALID_X________________________________________________
+                           ___
+&lt;bus_name&gt;_stb   _________|   |________________________________________________
+                       _______
+&lt;bus_name&gt;_ack   _____|       |________________________________________________
+
+
+                       ^^^^ TX adds wait states
+
+                           ^^^^  Data transfers
+
+
+ rst             ______________________________________________________________
+                   __    __    __    __    __    __    __    __    __    __   _
+ clk             _|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|  |_|
+
+                 _______ ___________ _____ _____ ______________________________
+&lt;bus_name&gt;       _______X_D0________X_D1__X_D2__X______________________________
+                               _________________
+&lt;bus_name&gt;_stb   _____________|                 |______________________________
+                         _______________________
+&lt;bus_name&gt;_ack   _______|                       |______________________________
+
+                        ^^^^ TX adds wait states
+
+                               ^^^^  Data transfers
+
+                                    ^^^^ stb and ack needn't return to 0 between data words</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Reference Manual</a><ul>
+<li><a class="reference internal" href="#download">Download</a></li>
+<li><a class="reference internal" href="#install">Install</a></li>
+<li><a class="reference internal" href="#icarus-verilog">Icarus Verilog</a></li>
+<li><a class="reference internal" href="#c-components">C Components</a><ul>
+<li><a class="reference internal" href="#types">Types</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#control-structures">Control Structures</a></li>
+<li><a class="reference internal" href="#operators">Operators</a></li>
+<li><a class="reference internal" href="#stream-i-o">Stream I/O</a></li>
+<li><a class="reference internal" href="#timed-waits">Timed Waits</a></li>
+<li><a class="reference internal" href="#debug-and-test">Debug and Test</a></li>
+<li><a class="reference internal" href="#c-preprocessor">C Preprocessor</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#built-in-libraries">Built in Libraries</a><ul>
+<li><a class="reference internal" href="#print-h">print.h</a></li>
+<li><a class="reference internal" href="#c2verilog">c2verilog</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#python-api">Python API</a><ul>
+<li><a class="reference internal" href="#chip">Chip</a></li>
+<li><a class="reference internal" href="#wire">Wire</a></li>
+<li><a class="reference internal" href="#input">Input</a></li>
+<li><a class="reference internal" href="#output">Output</a></li>
+<li><a class="reference internal" href="#component">Component</a></li>
+<li><a class="reference internal" href="#instances">Instances</a></li>
+<li><a class="reference internal" href="#code-generation">Code Generation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#physical-interface">Physical Interface</a><ul>
+<li><a class="reference internal" href="#global-signals">Global Signals</a></li>
+<li><a class="reference internal" href="#interconnect-signals">Interconnect Signals</a></li>
+<li><a class="reference internal" href="#interconnect-bus-transaction">Interconnect Bus Transaction</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../index.html"
+                        title="previous chapter"><em>Chips</em> - Hardware Design in Python</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../examples/index.html"
+                        title="next chapter">Examples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/language_reference/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../examples/index.html" title="Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../index.html" title="Chips - Hardware Design in Python"
+             >previous</a> |</li>
+        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Jonathan P Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
