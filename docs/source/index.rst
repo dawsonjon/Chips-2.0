@@ -98,7 +98,7 @@ Links
 - `MyHDL`_ A Hardware description language based on Python.
 
 .. _`SciPy`: http://scipy.org
-.. _`matplotlib`: http://matplotlib.sourceforge.net
+.. _`matplotlib`: http://matplotlib.org
 .. _`MyHDL`: http://www.myhdl.org
 .. _`Python Imaging Library (PIL)`: http://www.pythonware.com/products/pil/
 
