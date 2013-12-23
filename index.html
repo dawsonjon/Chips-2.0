@@ -3,16 +3,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Chips - Hardware Design in Python &mdash; Chips 0.1 documentation</title>
-    
+    <title>Chips - Hardware Design in Python &mdash; Chips v0.1 documentation</title>
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -26,7 +23,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/chips.ico"/>
-    <link rel="top" title="Chips 0.1 documentation" href="#" />
+    <link rel="top" title="Chips v0.1 documentation" href="#" />
     <link rel="next" title="Reference Manual" href="language_reference/index.html" /> 
   </head>
   <body>
@@ -39,7 +36,7 @@
         <li class="right" >
           <a href="language_reference/index.html" title="Reference Manual"
              accesskey="N">next</a> |</li>
-        <li><a href="#">Chips 0.1 documentation</a> &raquo;</li> 
+        <li><a href="#">Chips v0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -52,13 +49,14 @@
 <h1><em>Chips</em> - Hardware Design in Python<a class="headerlink" href="#chips-hardware-design-in-python" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="what-is-chips">
 <h2>What is <em>Chips</em>?<a class="headerlink" href="#what-is-chips" title="Permalink to this headline">¶</a></h2>
-<p><em>Chips</em> makes FPGA design quicker and easier. <em>Chips</em> isn&#8217;t an HDL like VHDL or
-Verilog, its a different way of doing things. In <em>Chips</em>, you design components
-using a simple subset of the C programming language. There&#8217;s a Python API to
-connect C components together using fast data streams to form complex, parallel
-systems all in a single chip. You don&#8217;t need to worry about clocks, resets,
-or timing. You don&#8217;t need to follow special templates to make your code
-synthesisable. All that&#8217;s done for you!</p>
+<p><em>Chips</em> makes FPGA design quicker and easier. <em>Chips</em> isn&#8217;t a Hardware
+Description Language (HDL) like VHDL or Verilog, its a different way of doing
+things. In <em>Chips</em>, you design components using a simple subset of the C
+programming language. There&#8217;s a Python API to connect C components together
+using fast data streams to form complex, parallel systems all in a single chip.
+You don&#8217;t need to worry about clocks, resets, or timing. You don&#8217;t need to
+follow special templates to make your code synthesisable. All that&#8217;s done for
+you!</p>
 </div>
 <div class="section" id="features">
 <h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
@@ -129,6 +127,14 @@ $ c2verilog iverilog run lfsr.c
 <li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#physical-interface">Physical Interface</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#calculate-square-root-using-newton-s-method">Calculate Square Root using Newton&#8217;s Method</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#approximating-sine-and-cosine-functions-using-taylor-series">Approximating Sine and Cosine functions using Taylor Series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#implement-quicksort">Implement Quicksort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#pseudo-random-number-generator">Pseudo Random Number Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#fast-fourier-transform">Fast Fourier Transform</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="tutorial/index.html#create-and-test-a-c-component">Create and Test a C component</a></li>
 </ul>
@@ -140,7 +146,7 @@ $ c2verilog iverilog run lfsr.c
 <h2>Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference external" href="http://scipy.org">SciPy</a> Scientific Tools for Python.</li>
-<li><a class="reference external" href="http://matplotlib.sourceforge.net">matplotlib</a> 2D plotting library for Python.</li>
+<li><a class="reference external" href="http://matplotlib.org">matplotlib</a> 2D plotting library for Python.</li>
 <li><a class="reference external" href="http://www.pythonware.com/products/pil/">Python Imaging Library (PIL)</a> Python Imaging Library adds image processing
 capabilities to Python.</li>
 <li><a class="reference external" href="http://www.myhdl.org">MyHDL</a> A Hardware description language based on Python.</li>
@@ -191,7 +197,7 @@ capabilities to Python.</li>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
+      <input type="text" name="q" size="18" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -214,12 +220,12 @@ capabilities to Python.</li>
         <li class="right" >
           <a href="language_reference/index.html" title="Reference Manual"
              >next</a> |</li>
-        <li><a href="#">Chips 0.1 documentation</a> &raquo;</li> 
+        <li><a href="#">Chips v0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Jonathan P Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
     </div>
   </body>
 </html>
