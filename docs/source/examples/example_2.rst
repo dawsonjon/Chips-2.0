@@ -1,7 +1,7 @@
 
 
-Example 2 - Fast Fourier Transform
-----------------------------------
+Approximating Sine and Cosine functions using Taylor Series
+-----------------------------------------------------------
 
 In this example, we calculate an approximation of the cosine functions using
 the `Taylor series <http://en.wikipedia.org/wiki/Taylor_series>`_:
@@ -10,18 +10,23 @@ the `Taylor series <http://en.wikipedia.org/wiki/Taylor_series>`_:
 
     \cos (x) = \sum_{n=0}^{\infty} \frac{(-1)^n}{(2n)!} x^{2n}
 
-A more versatile Cosine function exploit the symetry of the cosine function to
-handle negative angles. Angles outside the calculable range are handled by
-moving the function in to the range 0 to 2*pi. A Sine function is synthesised
-from the cosine function by subtracting pi/2 from the angle. Other trig
-functions could be synthesised using trig identities.
+
+The following example uses the Taylor Series approximation to generate the Sine
+and Cosine functions. Successive terms of the taylor series are calculated
+until successive approximations agree to within a small degree. A Sine
+function is also synthesised using the identity :math:`sin(x) \equiv cos(x-\pi/2)`
 
 .. code-block:: c
 
+    /* taylor.c */
+    /* Jonathan P Dawson */
+    /* 2013-12-23 */
+    
     /* globals */
     float pi=3.14159265359;
     
-    /*Taylor series approximation of Cosine function*/
+    /* approximate the cosine function using Taylor series */
+    
     float taylor(float angle){
     
         float old, approximation, sign, power, fact;
@@ -50,34 +55,33 @@ functions could be synthesised using trig identities.
         return approximation;
     }
     
-    /*Reduce angle into correct quadrant*/
+    /* return the cosine of angle in radians */
+    
     float cos(float angle){
-        int turns;
-    
-        if (angle < 0) angle = -angle;
-        turns = angle/(2.0*pi);
-        angle = angle-(turns*(2.0*pi));
         return taylor(angle);
-    
     }
     
-    /*Redefine sine in terms of cosine*/
+    /* return the sine of angle in radians */
+    
     float sin(float angle){
         return cos(angle-(pi/2));
     }
     
+    
+    /* test routine */
+    
     void main(){
         float x;
-        float step=pi/50;
+        float step=pi/25;
     
-        for(x=-pi; x <= pi; x += step){
+        for(x=-2*pi; x <= 2*pi; x += step){
            file_write(x, "x");
            file_write(cos(x), "cos_x");
            file_write(sin(x), "sin_x");
         }
     }
 
-A simple test calulates Sine and Cosine for the range -2*pi to 2*pi.
+A simple test calculates Sine and Cosine for the range :math:`-2\pi <= x <= 2\pi`.
 
 .. image:: images/example_2.png
 

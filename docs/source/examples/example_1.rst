@@ -1,83 +1,76 @@
 
 
-Example 1 - Approximating trig functions using the Taylor Series
-----------------------------------------------------------------
+Calculate Square Root using Newton's Method
+-------------------------------------------
 
-In this example, we calculate an approximation of the cosine functions using
-the `Taylor series <http://en.wikipedia.org/wiki/Taylor_series>`_:
+In this example, we calculate the sqrt of a number using `Newton's method
+<http://en.wikipedia.org/wiki/Newton's_method#Square_root_of_a_number>`_.
+The problem of finding the square root can be expressed as:
 
 .. math::
 
-    \cos (x) = \sum_{n=0}^{\infty} \frac{(-1)^n}{(2n)!} x^{2n}
+     n = x^2
 
-A more versatile Cosine function exploit the symetry of the cosine function to
-handle negative angles. Angles outside the calculable range are handled by
-moving the function in to the range 0 to 2*pi. A Sine function is synthesised
-from the cosine function by subtracting pi/2 from the angle. Other trig
-functions could be synthesised using trig identities.
+Which can be rearranged as:
+
+.. math::
+
+     f(x) = x^2 - n
+
+Using Newton's method, we can find numerically the approximate point at which
+:math:`f(x) = 0`. Repeated applications of the following expression yield
+increasingly accurate approximations of the Square root:
+
+.. math::
+
+    f(x_k) = x_{k-1} - \frac{{x_{k-1}}^2 - n}{2x_{k-1}}
+
+Turning this into a practical solution, the following code calculates the square
+root of a floating point number. An initial approximation is refined using
+Newton's method until further refinements agree to within a small degree.
 
 .. code-block:: c
 
-    /* globals */
-    float pi=3.14159265359;
+    /* sqrt.c */
+    /* Jonathan P Dawson */
+    /* 2013-12-23 */
     
-    /*Taylor series approximation of Cosine function*/
-    float taylor(float angle){
+    /* find absolute value of a floating point number*/
     
-        float old, approximation, sign, power, fact;
-        unsigned count, i;
-    
-        approximation = 1.0;
-        old = 0.0;
-        sign = -1.0;
-        count = 1;
-        power = 1.0;
-        fact = 1.0;
-    
-        for(i=2; approximation!=old; i+=2){
-            old = approximation;
-    
-            while(count<=i){
-                power*=angle;
-                fact*=count;
-                count++;
-            }
-    
-            approximation += sign*(power/fact);
-            sign = -sign;
-    
+    float fabs(float n){
+        if (n < 0.0) {
+            return - n;
+        } else {
+            return n;
         }
-        return approximation;
     }
     
-    /*Reduce angle into correct quadrant*/
-    float cos(float angle){
-        int turns;
+    /* approximate sqrt using newton's method*/
     
-        if (angle < 0) angle = -angle;
-        turns = angle/(2.0*pi);
-        angle = angle-(turns*(2.0*pi));
-        return taylor(angle);
-    
+    float sqrt(float n){
+        float square, x, old;
+        x = 10.0;
+        old = 0.0;
+        while(fabs(old - x) > 0.000001){
+            old = x;
+            x -= (x*x-n)/(2*x);
+        }
+        return x;
     }
     
-    /*Redefine sine in terms of cosine*/
-    float sin(float angle){
-        return cos(angle-(pi/2));
-    }
+    /* test sqrt function*/
     
     void main(){
         float x;
-        float step=pi/50;
-    
-        for(x=-pi; x <= pi; x += step){
-           file_write(x, "x");
-           file_write(cos(x), "cos_x");
-           file_write(sin(x), "sin_x");
+        for(x=0.0; x <= 10.0; x+= 0.1){
+            file_write(x, "x");
+            file_write(sqrt(x), "sqrt_x");
         }
     }
 
-A simple test calulates Sine and Cosine for the range -2*pi to 2*pi.
+Note that the code isn't entirely robust, and cannot handle special cases such
+as Nans, infinities or negative numbers.  A simple test calculates
+:math:`\sqrt{x}` where :math:`-10 < x < 10`.
 
 .. image:: images/example_1.png
 
