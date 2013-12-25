@@ -100,12 +100,12 @@ class Chip:
         output_file.write("  reg  rst;\n")
         for i in self.inputs:
             output_file.write("  wire  [15:0] %s;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_stb;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_ack;\n"%i.name)
+            output_file.write("  wire  %s_stb;\n"%i.name)
+            output_file.write("  wire  %s_ack;\n"%i.name)
         for i in self.outputs:
             output_file.write("  wire  [15:0] %s;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_stb;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_ack;\n"%i.name)
+            output_file.write("  wire  %s_stb;\n"%i.name)
+            output_file.write("  wire  %s_ack;\n"%i.name)
 
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
