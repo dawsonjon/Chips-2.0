@@ -97,5 +97,199 @@ void print_decimal(int decimal){
         }
 }
 
+void print_float(float f){
+    unsigned digit;
+    unsigned print = 0;
+    float significance = 100000000.0;
 
-"""}
+    if( f < 0) {
+        stdout_put_char('-');
+        f = -f;
+    }
+
+    while(significance >= 1.0){
+        digit = f / significance; 
+        print |= digit;
+        if(print){
+            stdout_put_char(digit + '0');
+        }
+        f = f - (digit * significance);
+        significance /= 10.0;
+    }
+
+    stdout_put_char('.');
+
+    while(significance > 0.00000001){
+        digit = f / significance; 
+        stdout_put_char(digit + '0');
+        f = f - (digit * significance);
+        significance /= 10.0;
+        if(f == 0.0) break;
+    }
+}
+
+""",
+
+"ctypes.h" : """
+unsigned isalnum(char c){
+	return (c >= 'A' && c <= 'Z') || (c >='a' && c <= 'z') || (c >= '0' && c <= '9');
+}
+
+unsigned isalpha(char c){
+	return (c >= 'A' && c <= 'Z') || (c >='a' && c <= 'z');
+}
+
+unsigned islower(char c){
+	return (c >='a' && c <= 'z');
+}
+
+unsigned isupper(char c){
+	return (c >='A' && c <= 'Z');
+}
+
+unsigned isdigit(char c){
+	return (c >='0' && c <= '9');
+}
+
+unsigned isxdigit(char c){
+	return (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f') || (c >= '0' && c <= '9');
+}
+
+unsigned isgraph(char c){
+	return (c >= 0x21  && c <= 0x7e);
+}
+
+unsigned isspace(char c){
+	return (c == ' ' || c == '\\t' || c == '\\v' || c == '\\n' || c == '\\r' || c == '\\f');
+}
+
+unsigned isprint(char c){
+	return (c >= 0x20  && c <= 0x7e);
+}
+
+unsigned ispunct(char c){
+	return isgraph(c) && !isalnum(c);
+}
+
+unsigned toupper(char c){
+	if(islower(c)){
+	      return c - 'a' + 'A';	
+	} else {
+	      return c;
+	}
+}
+
+unsigned tolower(char c){
+	if(isupper(c)){
+	      return c - 'A' + 'a';	
+	} else {
+	      return c;
+	}
+}""",
+
+"scan.h":"""
+unsigned scan_uhex(){
+    unsigned value;
+    value = 0;
+    while(1){
+        c = stdin_get_char();
+        if(!isxdigit(c)) break;
+        value <<= 4;
+        value += _hex2nibble(c);
+    }
+    return sign * value;
+}
+
+unsigned scan_udecimal(){
+    unsigned value;
+    value = 0;
+    while(1){
+        c = stdin_get_char();
+        if(!isdigit(c)) break;
+        value *= 10;
+        value += c - '0';
+    }
+    return value;
+}
+
+int scan_hex(){
+    unsigned value;
+    int sign;
+    value = 0;
+    if(c == '-'){
+        sign = -1;
+    } else if (c == '+'){
+        sign = 1;
+    } else {
+        sign = 1;
+        value = hextonibble(c);
+    }
+    while(1){
+        c = stdin_getchar();
+        if(!isxdigit(c)) break;
+        value <<= 4;
+        value += _hex2nibble(c);
+    }
+    return sign * value;
+}
+
+int scan_decimal(){
+    unsigned value;
+    int sign;
+    value = 0;
+    if(c == '-'){
+        sign = -1;
+    } else if (c == '+'){
+        sign = 1;
+    } else {
+        sign = 1;
+        value = c - 10;
+    }
+    while(1){
+        c = stdin_get_char();
+        if(!isdigit(c)) break;
+        value *= 10;
+        value += c - '0';
+    }
+    return sign * value;
+}
+
+float scan_float(){
+
+    float value, significance, sign;
+
+    value = 0;
+    significance = 0.1
+
+    /*evaluate sign*/
+    if(c == '-'){
+        sign = -1;
+    } else if (c == '+'){
+        sign = 1;
+    } else {
+        sign = 1;
+        value = c - '0';
+    }
+
+    /*evaluate integer part*/
+    while(1){
+        c = stdin_get_char();
+        if(!isdigit(c)) break;
+        value *= 10;
+        value += c - '0';
+    }
+
+    /*evaluate fractional part*/
+    if(c == '.'){
+        while(1){
+            c = stdin_get_char();
+            if(!isdigit(c)) break;
+            value += significance * (c-'0');
+            significance /= 10.0;
+        }
+    }
+
+    return sign * value;
+
+}"""
+}
