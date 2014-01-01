@@ -3,3 +3,4 @@ real_main
 test
 arbiter
 test_file
+chips_lib.v
