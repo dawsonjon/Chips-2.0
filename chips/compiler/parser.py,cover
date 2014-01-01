@@ -287,7 +287,7 @@
   
 >     def parse_assignment(self):
 >         assignment_operators = [
->             "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "<<=", ">>="
+>             "=", "+=", "-=", "*=", "/=", "%=", "&=", "|=", "^=", "<<=", ">>="
 >         ]
 >         lvalue = self.parse_ternary_expression()
 >         if self.tokens.peek() in assignment_operators:
@@ -598,11 +598,11 @@
 >                         initializer = FloatToInt(initializer)
 >                     elif type_ == "float" and initializer.type_() == "int":
 >                         initializer = IntToFloat(initializer)
->                     else:
->                         self.tokens.error(
->                             "type mismatch in intializer expected: %s actual: %s"%(
->                                 type_,
->                                 intitializer.type_()))
+!                     else:
+!                         self.tokens.error(
+!                             "type mismatch in intializer expected: %s actual: %s"%(
+!                                 type_,
+!                                 intitializer.type_()))
 >                 declaration = VariableDeclaration(
 >                     self.allocator,
 >                     initializer,
@@ -695,10 +695,10 @@
 >                 return left, IntToFloat(right)
 >             elif left.type_() == "int" and right.type_() == "float":
 >                 return IntToFloat(left), right
->             else:
->                 self.tokens.error("Incompatible types : %s %s"%(
->                     left.type_(),
->                     right.type_()))
+!             else:
+!                 self.tokens.error("Incompatible types : %s %s"%(
+!                     left.type_(),
+!                     right.type_()))
   
 >         return left, right
   
@@ -789,8 +789,8 @@
 >     def parse_file_read(self):
 !         self.tokens.expect("(")
 !         file_name = self.tokens.get()
->         file_name = file_name.strip('"').decode("string_escape")
->         self.tokens.expect(")")
+!         file_name = file_name.strip('"').decode("string_escape")
+!         self.tokens.expect(")")
 !         return FileRead(file_name)
   
 >     def parse_file_write(self):
@@ -805,8 +805,14 @@
 >     def parse_input(self, name):
 >         input_name = name.replace("input_", "")
 >         self.tokens.expect("(")
+>         type_ = "int"
+>         if self.tokens.peek() != ")":
+!             type_ = self.tokens.get()
+>             type_ = type_.strip('"').decode("string_escape")
+>         if type_ not in numeric_types:
+!             self.tokens.error("%s is not a numeric type"%type_)
 >         self.tokens.expect(")")
->         return Input(input_name)
+>         return Input(input_name, type_)
   
 >     def parse_ready(self, name):
 >         input_name = name.replace("ready_", "")
@@ -862,7 +868,7 @@
 >                 if actual.type_() == "int" and required.type_() == "float":
 >                     actual = IntToFloat(actual)
 >                 elif actual.type_() == "float" and required.type_() == "int":
-!                     actual = FloatToInt(actual)
+>                     actual = FloatToInt(actual)
 >                 else:
 >                     self.tokens.error(
 >                         "type mismatch in assignment expected: %s actual: %s"%(
@@ -899,8 +905,8 @@
 >                     initializer,
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
-!             except SyntaxError:
-!                 self.tokens.error("%s is not a character literal"%token)
+>             except SyntaxError:
+>                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -913,7 +919,7 @@
   
 >                 try:
 >                     byte_value = struct.pack(">f", value)
->                 except OverflowError:
+!                 except OverflowError:
 >                     self.tokens.error("value too large")
   
 >             except SyntaxError:
@@ -932,12 +938,12 @@
 >                     if value > 2**((size * 8)-1) - 1:
 >                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
->                         self.tokens.error("value too small")
+!                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
 !                         self.tokens.error("value too large")
 >                     if value < 0:
->                         self.tokens.error("value too small")
+!                         self.tokens.error("value too small")
   
 >             except SyntaxError:
 >                 self.tokens.error("%s is not an integer literal"%token)

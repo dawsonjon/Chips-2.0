@@ -805,8 +805,14 @@ class Parser:
     def parse_input(self, name):
         input_name = name.replace("input_", "")
         self.tokens.expect("(")
+        type_ = "int"
+        if self.tokens.peek() != ")":
+            type_ = self.tokens.get()
+            type_ = type_.strip('"').decode("string_escape")
+        if type_ not in numeric_types:
+            self.tokens.error("%s is not a numeric type"%type_)
         self.tokens.expect(")")
-        return Input(input_name)
+        return Input(input_name, type_)
 
     def parse_ready(self, name):
         input_name = name.replace("ready_", "")

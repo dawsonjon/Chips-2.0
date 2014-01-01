@@ -68,16 +68,16 @@ void main(){
 """
 )
 
-test("float file 2",
-"""
-void main(){
-    assert(file_read("test_file") == 1.0);
-    assert(file_read("test_file") == -1.0);
-    assert(file_read("test_file") == 2.0);
-    assert(file_read("test_file") == -2.0);
-}
-"""
-)
+#test("float file 2",
+#"""
+#void main(){
+    #assert(file_read("test_file") == 1.0);
+    #assert(file_read("test_file") == -1.0);
+    #assert(file_read("test_file") == 2.0);
+    #assert(file_read("test_file") == -2.0);
+#}
+#"""
+#)
 
 test_fails("array size1",
 """

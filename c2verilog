@@ -41,7 +41,7 @@ name, inputs, outputs, documentation = comp(input_file, options)
 #run the compiled design using the simulator of your choice.
 if "iverilog" in sys.argv:
     verilog_file = os.path.abspath("%s.v"%name)
-    process = subprocess.Popen(["iverilog", "-o", str(name), str(verilog_file)])
+    process = subprocess.Popen(["iverilog", "-o", str(name), str(verilog_file), "chips_lib.v"])
     children.append(process)
     result = process.wait()
     children.remove(process)

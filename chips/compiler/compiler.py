@@ -16,6 +16,16 @@ from chips.compiler.optimizer import cleanup_registers
 from chips.compiler.tokens import Tokens
 from chips.compiler.verilog_speed import generate_CHIP as generate_CHIP_speed
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
+import fpu
+
+def generate_library():
+    output_file = open("chips_lib.v", "w")
+    output_file.write(fpu.adder)
+    output_file.write(fpu.divider)
+    output_file.write(fpu.multiplier)
+    output_file.write(fpu.int_to_float)
+    output_file.write(fpu.float_to_int)
+    output_file.close()
 
 def comp(input_file, options=[]):
 
@@ -74,6 +84,8 @@ def comp(input_file, options=[]):
                     parser.allocator.memory_content_2,
                     parser.allocator.memory_content_4)
             output_file.close()
+
+        generate_library()
 
     except C2CHIPError as err:
         print "Error in file:", err.filename, "at line:", err.lineno
