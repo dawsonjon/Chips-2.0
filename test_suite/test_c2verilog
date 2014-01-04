@@ -57,6 +57,38 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
+test("float_function 1",
+"""
+float a(){
+    return 2.0;
+}
+
+float b(){
+    return 4.0;
+}
+
+void main(){
+    assert(a() - b() == -2.0);
+}
+"""
+)
+
+test("float_function 2",
+"""
+float a(){
+    return 2;
+}
+
+float b(){
+    return 4;
+}
+
+void main(){
+    assert(a() - b() == -2.0);
+}
+"""
+)
+
 test("float file 1",
 """
 void main(){

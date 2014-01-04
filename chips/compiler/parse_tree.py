@@ -48,6 +48,7 @@ class Function:
         instructions.extend(self.statement.generate())
         if not hasattr(self, "return_value"):
             instructions.append({"op":"jmp_to_reg", "src":self.return_address})
+        self.allocator.freeze()
         return instructions
 
 
@@ -794,8 +795,8 @@ class FunctionCall(Expression):
         instructions = []
 
         for expression, argument in zip(
-            self.arguments, 
-            self.function.arguments):
+                self.arguments, 
+                self.function.arguments):
 
             temp_register = allocator.new(expression.size())
             instructions.extend(

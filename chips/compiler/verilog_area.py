@@ -975,6 +975,7 @@ def generate_CHIP(input_file,
 
     if enable_adder:
         output_file.write("    if (adder_done) begin\n")
+        output_file.write("      result_2 <= adder_z;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -983,6 +984,7 @@ def generate_CHIP(input_file,
 
     if enable_multiplier:
         output_file.write("    if (multiplier_done) begin\n")
+        output_file.write("      result_2 <= multiplier_z;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -991,6 +993,7 @@ def generate_CHIP(input_file,
 
     if enable_divider:
         output_file.write("    if (divider_done) begin\n")
+        output_file.write("      result_2 <= divider_z;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -999,6 +1002,7 @@ def generate_CHIP(input_file,
 
     if enable_int_to_float:
         output_file.write("    if (int_to_float_done) begin\n")
+        output_file.write("      result_2 <= to_float;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1007,6 +1011,7 @@ def generate_CHIP(input_file,
 
     if enable_float_to_int:
         output_file.write("    if (float_to_int_done) begin\n")
+        output_file.write("      result_2 <= to_int;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1070,7 +1075,6 @@ def connect_float_to_int(output_file):
     output_file.write("        to_int_ack <= 1;\n")
     output_file.write("        if (to_int_stb && to_int_ack) begin\n")
     output_file.write("          to_int_ack <= 0;\n")
-    output_file.write("          result_2 <= to_int;\n")
     output_file.write("          float_to_int_state <= wait_go;\n")
     output_file.write("          float_to_int_done <= 1;\n")
     output_file.write("        end\n")
@@ -1117,7 +1121,6 @@ def connect_int_to_float(output_file):
     output_file.write("        to_float_ack <= 1;\n")
     output_file.write("        if (to_float_stb && to_float_ack) begin\n")
     output_file.write("          to_float_ack <= 0;\n")
-    output_file.write("          result_2 <= to_float;\n")
     output_file.write("          int_to_float_state <= wait_go;\n")
     output_file.write("          int_to_float_done <= 1;\n")
     output_file.write("        end\n")
@@ -1175,7 +1178,6 @@ def connect_divider(output_file):
     output_file.write("        divider_z_ack <= 1;\n")
     output_file.write("        if (divider_z_stb && divider_z_ack) begin\n")
     output_file.write("          divider_z_ack <= 0;\n")
-    output_file.write("          result_2 <= divider_z;\n")
     output_file.write("          div_state <= wait_go;\n")
     output_file.write("          divider_done <= 1;\n")
     output_file.write("        end\n")
@@ -1234,7 +1236,6 @@ def connect_multiplier(output_file):
     output_file.write("        multiplier_z_ack <= 1;\n")
     output_file.write("        if (multiplier_z_stb && multiplier_z_ack) begin\n")
     output_file.write("          multiplier_z_ack <= 0;\n")
-    output_file.write("          result_2 <= multiplier_z;\n")
     output_file.write("          mul_state <= wait_go;\n")
     output_file.write("          multiplier_done <= 1;\n")
     output_file.write("        end\n")
@@ -1293,7 +1294,6 @@ def connect_adder(output_file):
     output_file.write("        adder_z_ack <= 1;\n")
     output_file.write("        if (adder_z_stb && adder_z_ack) begin\n")
     output_file.write("          adder_z_ack <= 0;\n")
-    output_file.write("          result_2 <= adder_z;\n")
     output_file.write("          add_state <= wait_go;\n")
     output_file.write("          adder_done <= 1;\n")
     output_file.write("        end\n")

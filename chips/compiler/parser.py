@@ -206,8 +206,20 @@ class Parser:
         return_.allocator = self.allocator
         self.function.return_statement = return_
         self.tokens.expect("return")
+
         if hasattr(self.function, "return_value"):
-            return_.expression = self.parse_expression()
+            expression = self.parse_expression()
+            if self.function.type_ == "int" and expression.type_() == "float":
+                expression = FloatToInt(expression)
+            elif self.function.type_ == "float" and expression.type_() == "int":
+                expression = IntToFloat(expression)
+            elif self.function.type_ != expression.type_():
+                self.tokens.error(
+                    "type mismatch in return statement expected: %s actual: %s"%(
+                        self.function.type_,
+                        expression.type_()))
+            return_.expression = expression
+
         self.tokens.expect(";")
         return return_
 
@@ -646,7 +658,7 @@ class Parser:
     def substitute_function(self, binary_expression):
 
         """
-        For some operations are more easily implemented in sofftware.
+        For some operations are more easily implemented in software.
         This function substitutes a call to the builtin library function.
         """
 
@@ -733,10 +745,17 @@ class Parser:
             return left
 
     def parse_unary_expression(self):
+
         if self.tokens.peek() == "!":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
+
+            if expression.type_() not in ["int"]:
+                self.tokens.error(
+                    "! is only valid for integer like expressions")
+
             return Binary("==", expression, Constant(0))
+
         elif self.tokens.peek() == "-":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
@@ -745,14 +764,22 @@ class Parser:
                 expression.size(), 
                 expression.signed()), 
                 expression)
+
         elif self.tokens.peek() == "~":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
+
+            if expression.type_() not in ["int"]:
+                self.tokens.error(
+                    "~ is only valid for integer like expressions")
+
             return Unary("~", expression)
+
         elif self.tokens.peek() == "sizeof":
             operator = self.tokens.get()
             expression = self.parse_unary_expression()
             return SizeOf(expression)
+
         else:
             return self.parse_postfix_expression()
 

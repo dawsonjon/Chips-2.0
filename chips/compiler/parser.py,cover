@@ -206,8 +206,20 @@
 >         return_.allocator = self.allocator
 >         self.function.return_statement = return_
 >         self.tokens.expect("return")
+  
 >         if hasattr(self.function, "return_value"):
->             return_.expression = self.parse_expression()
+>             expression = self.parse_expression()
+>             if self.function.type_ == "int" and expression.type_() == "float":
+!                 expression = FloatToInt(expression)
+>             elif self.function.type_ == "float" and expression.type_() == "int":
+>                 expression = IntToFloat(expression)
+>             elif self.function.type_ != expression.type_():
+>                 self.tokens.error(
+>                     "type mismatch in return statement expected: %s actual: %s"%(
+>                         self.function.type_,
+>                         expression.type_()))
+>             return_.expression = expression
+  
 >         self.tokens.expect(";")
 >         return return_
   
@@ -598,11 +610,11 @@
 >                         initializer = FloatToInt(initializer)
 >                     elif type_ == "float" and initializer.type_() == "int":
 >                         initializer = IntToFloat(initializer)
-!                     else:
-!                         self.tokens.error(
-!                             "type mismatch in intializer expected: %s actual: %s"%(
-!                                 type_,
-!                                 intitializer.type_()))
+>                     else:
+>                         self.tokens.error(
+>                             "type mismatch in intializer expected: %s actual: %s"%(
+>                                 type_,
+>                                 intitializer.type_()))
 >                 declaration = VariableDeclaration(
 >                     self.allocator,
 >                     initializer,
@@ -646,7 +658,7 @@
 >     def substitute_function(self, binary_expression):
   
 >         """
->         For some operations are more easily implemented in sofftware.
+>         For some operations are more easily implemented in software.
 >         This function substitutes a call to the builtin library function.
 >         """
   
@@ -695,10 +707,10 @@
 >                 return left, IntToFloat(right)
 >             elif left.type_() == "int" and right.type_() == "float":
 >                 return IntToFloat(left), right
-!             else:
-!                 self.tokens.error("Incompatible types : %s %s"%(
-!                     left.type_(),
-!                     right.type_()))
+>             else:
+>                 self.tokens.error("Incompatible types : %s %s"%(
+>                     left.type_(),
+>                     right.type_()))
   
 >         return left, right
   
@@ -733,10 +745,17 @@
 >             return left
   
 >     def parse_unary_expression(self):
+  
 >         if self.tokens.peek() == "!":
 >             operator = self.tokens.get()
 >             expression = self.parse_postfix_expression()
+  
+>             if expression.type_() not in ["int"]:
+!                 self.tokens.error(
+!                     "! is only valid for integer like expressions")
+  
 >             return Binary("==", expression, Constant(0))
+  
 >         elif self.tokens.peek() == "-":
 >             operator = self.tokens.get()
 >             expression = self.parse_postfix_expression()
@@ -745,14 +764,22 @@
 >                 expression.size(), 
 >                 expression.signed()), 
 >                 expression)
+  
 >         elif self.tokens.peek() == "~":
 >             operator = self.tokens.get()
 >             expression = self.parse_postfix_expression()
+  
+>             if expression.type_() not in ["int"]:
+>                 self.tokens.error(
+>                     "~ is only valid for integer like expressions")
+  
 >             return Unary("~", expression)
+  
 >         elif self.tokens.peek() == "sizeof":
 >             operator = self.tokens.get()
 >             expression = self.parse_unary_expression()
 >             return SizeOf(expression)
+  
 >         else:
 >             return self.parse_postfix_expression()
   
@@ -787,7 +814,7 @@
 >             return self.parse_number()
   
 >     def parse_file_read(self):
-!         self.tokens.expect("(")
+>         self.tokens.expect("(")
 !         file_name = self.tokens.get()
 !         file_name = file_name.strip('"').decode("string_escape")
 !         self.tokens.expect(")")
@@ -807,8 +834,8 @@
 >         self.tokens.expect("(")
 >         type_ = "int"
 >         if self.tokens.peek() != ")":
-!             type_ = self.tokens.get()
->             type_ = type_.strip('"').decode("string_escape")
+>             type_ = self.tokens.get()
+!             type_ = type_.strip('"').decode("string_escape")
 >         if type_ not in numeric_types:
 !             self.tokens.error("%s is not a numeric type"%type_)
 >         self.tokens.expect(")")
@@ -868,7 +895,7 @@
 >                 if actual.type_() == "int" and required.type_() == "float":
 >                     actual = IntToFloat(actual)
 >                 elif actual.type_() == "float" and required.type_() == "int":
->                     actual = FloatToInt(actual)
+!                     actual = FloatToInt(actual)
 >                 else:
 >                     self.tokens.error(
 >                         "type mismatch in assignment expected: %s actual: %s"%(
@@ -888,7 +915,7 @@
 >             try:
 >                 token = eval(token)
 >                 value = ord(token)
-!             except SyntaxError:
+>             except SyntaxError:
 !                 self.tokens.error("%s is not a character literal"%token)
 >         elif token.startswith('"'):
 >             try:
@@ -906,7 +933,7 @@
 >                     self.initialize_memory)
 >                 return ConstArray(declaration.instance())
 >             except SyntaxError:
->                 self.tokens.error("%s is not a character literal"%token)
+!                 self.tokens.error("%s is not a character literal"%token)
 >         elif "." in token:
               #float literal
 >             try:
@@ -920,9 +947,9 @@
 >                 try:
 >                     byte_value = struct.pack(">f", value)
 !                 except OverflowError:
->                     self.tokens.error("value too large")
+!                     self.tokens.error("value too large")
   
->             except SyntaxError:
+!             except SyntaxError:
 >                 self.tokens.error("%s is not a floating point literal"%token)
 >         else:
               #integer literal
@@ -936,7 +963,7 @@
   
 >                 if signed:
 >                     if value > 2**((size * 8)-1) - 1:
->                         self.tokens.error("value too large")
+!                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
 !                         self.tokens.error("value too small")
 >                 else:
