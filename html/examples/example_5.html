@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Fast Fourier Transform &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="fast-fourier-transform">
+<h1>Fast Fourier Transform<a class="headerlink" href="#fast-fourier-transform" title="Permalink to this headline">¶</a></h1>
+<p>This example builds on the Taylor series example. We assume that the sin and
+cos routines have been placed into a library of math functions math.h, along
+with the definitions of <img class="math" src="../_images/math/f2ca003a7da0de4994b4733e203b74ff52d42553.png" alt="\pi"/>, M_PI.</p>
+<p>The <a class="reference external" href="http://en.wikipedia.org/wiki/Fast_Fourier_transform">Fast Fourier Transform (FFT)</a>
+is an efficient method of decomposing discretely sampled signals into a frequency spectrum, it
+is one of the most important algorithms in Digital Signal Processing (DSP).
+<a class="reference external" href="http://www.dspguide.com/">The Scientist and Engineer&#8217;s Guide to Digital Signal Processing</a>
+gives a straight forward introduction, and can be viewed on-line for free.</p>
+<p>The example shows a practical method of calculating the FFT using the
+<a class="reference external" href="http://en.wikipedia.org/wiki/Fast_Fourier_transform#Cooley.E2.80.93Tukey_algorithm">Cooley-Tukey algorithm</a>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* fft.c */</span>
+<span class="cm">/* Jonathan P Dawson */</span>
+<span class="cm">/* 2013-12-23 */</span>
+
+<span class="cp">#include &quot;math.h&quot;</span>
+
+<span class="cm">/*globals*/</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">;</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+<span class="kt">float</span> <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
+<span class="kt">float</span> <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
+
+
+<span class="cm">/*calculate twiddle factors and store them*/</span>
+<span class="kt">void</span> <span class="nf">calculate_twiddles</span><span class="p">(){</span>
+    <span class="kt">unsigned</span> <span class="n">stage</span><span class="p">,</span> <span class="n">subdft_size</span><span class="p">,</span> <span class="n">span</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;=</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">subdft_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="n">subdft_size</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">stage</span><span class="p">]</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">M_PI</span><span class="o">/</span><span class="n">span</span><span class="p">);</span>
+        <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">stage</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">M_PI</span><span class="o">/</span><span class="n">span</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*bit reverse*/</span>
+<span class="kt">unsigned</span> <span class="nf">bit_reverse</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">forward</span><span class="p">){</span>
+    <span class="kt">unsigned</span> <span class="n">reversed</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">reversed</span> <span class="o">&lt;&lt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">reversed</span> <span class="o">|=</span> <span class="n">forward</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">forward</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">reversed</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/*calculate fft*/</span>
+<span class="kt">void</span> <span class="nf">fft</span><span class="p">(</span><span class="kt">float</span> <span class="n">reals</span><span class="p">[],</span> <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[]){</span>
+
+    <span class="kt">int</span> <span class="n">stage</span><span class="p">,</span> <span class="n">subdft_size</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">j</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="n">sr</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">temp_real</span><span class="p">,</span> <span class="n">temp_imaginary</span><span class="p">,</span> <span class="n">imaginary_twiddle</span><span class="p">,</span> <span class="n">real_twiddle</span><span class="p">;</span>
+
+    <span class="c1">//read data into array</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="n">bit_reverse</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">ip</span><span class="p">){</span>
+            <span class="n">temp_real</span> <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="n">temp_imaginary</span> <span class="o">=</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">ip</span><span class="p">];</span>
+            <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">ip</span><span class="p">];</span>
+            <span class="n">reals</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_real</span><span class="p">;</span>
+            <span class="n">imaginaries</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_imaginary</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="c1">//butterfly multiplies</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;=</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">report</span><span class="p">(</span><span class="n">stage</span><span class="p">);</span>
+        <span class="n">subdft_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="n">subdft_size</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="c1">//initialize trigonometric recurrence</span>
+
+        <span class="n">real_twiddle</span><span class="o">=</span><span class="mf">1.0</span><span class="p">;</span>
+        <span class="n">imaginary_twiddle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span>
+
+        <span class="n">sr</span> <span class="o">=</span> <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">stage</span><span class="p">];</span>
+        <span class="n">si</span> <span class="o">=</span> <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">stage</span><span class="p">];</span>
+
+        <span class="k">for</span><span class="p">(</span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">span</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">j</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">+=</span><span class="n">subdft_size</span><span class="p">){</span>
+                <span class="n">ip</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="n">span</span><span class="p">;</span>
+
+                <span class="n">temp_real</span>      <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">*</span><span class="n">real_twiddle</span>      <span class="o">-</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">*</span><span class="n">imaginary_twiddle</span><span class="p">;</span>
+                <span class="n">temp_imaginary</span> <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">*</span><span class="n">imaginary_twiddle</span> <span class="o">+</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span><span class="o">*</span><span class="n">real_twiddle</span><span class="p">;</span>
+
+                <span class="n">reals</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span>       <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">temp_real</span><span class="p">;</span>
+                <span class="n">imaginaries</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">temp_imaginary</span><span class="p">;</span>
+
+                <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>       <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">temp_real</span><span class="p">;</span>
+                <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">temp_imaginary</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="c1">//trigonometric recreal_twiddlerence</span>
+            <span class="n">temp_real</span><span class="o">=</span><span class="n">real_twiddle</span><span class="p">;</span>
+            <span class="n">real_twiddle</span>      <span class="o">=</span> <span class="n">temp_real</span><span class="o">*</span><span class="n">sr</span> <span class="o">-</span> <span class="n">imaginary_twiddle</span><span class="o">*</span><span class="n">si</span><span class="p">;</span>
+            <span class="n">imaginary_twiddle</span> <span class="o">=</span> <span class="n">temp_real</span><span class="o">*</span><span class="n">si</span> <span class="o">+</span> <span class="n">imaginary_twiddle</span><span class="o">*</span><span class="n">sr</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+    <span class="kt">float</span> <span class="n">reals</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+    <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
+
+    <span class="cm">/* pre-calculate sine and cosine*/</span>
+    <span class="n">calculate_twiddles</span><span class="p">();</span>
+
+    <span class="cm">/* generate a 64 sample cos wave */</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+        <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;=</span><span class="mi">64</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">/</span><span class="mf">64.0</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* output time domain signal to a file */</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">file_write</span><span class="p">(</span><span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;x_re&quot;</span><span class="p">);</span>
+        <span class="n">file_write</span><span class="p">(</span><span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;x_im&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* transform into frequency domain */</span>
+    <span class="n">fft</span><span class="p">(</span><span class="n">reals</span><span class="p">,</span> <span class="n">imaginaries</span><span class="p">);</span>
+
+    <span class="cm">/* output frequency domain signal to a file */</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">file_write</span><span class="p">(</span><span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;fft_x_re&quot;</span><span class="p">);</span>
+        <span class="n">file_write</span><span class="p">(</span><span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;fft_x_im&quot;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The C code includes a simple test routine that calculates the frequency spectrum of a 64 point sine wave.</p>
+<img alt="../_images/example_5.png" src="../_images/example_5.png" />
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/examples/example_5.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

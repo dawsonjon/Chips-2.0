@@ -1,0 +1,261 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Implement Quicksort &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="implement-quicksort">
+<h1>Implement Quicksort<a class="headerlink" href="#implement-quicksort" title="Permalink to this headline">¶</a></h1>
+<p>This example sorts an array of data using the
+<a class="reference external" href="http://en.wikipedia.org/wiki/Quicksort">Quick Sort algorithm</a></p>
+<p>The quick-sort algorithm is a recurrsive algorithm, but <em>Chips</em> does not
+support recursive functions. Since the level of recursion is bounded, it is
+possible to implement the function using an explicitly created stack.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* fft.c */</span>
+<span class="cm">/* Jonathan P Dawson */</span>
+<span class="cm">/* 2013-12-23 */</span>
+
+<span class="cm">/* Based on the in-place algorithm on the Wikipedia page */</span>
+<span class="cm">/* http://en.wikipedia.org/wiki/Quicksort#In-place_version */</span>
+
+<span class="cm">/*globals*/</span>
+<span class="k">const</span> <span class="kt">unsigned</span> <span class="n">length</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+
+<span class="cm">/* partition subarray */</span>
+<span class="kt">unsigned</span> <span class="nf">partition</span><span class="p">(</span>
+        <span class="kt">int</span> <span class="n">array</span><span class="p">[],</span>
+        <span class="kt">unsigned</span> <span class="n">left</span><span class="p">,</span>
+        <span class="kt">unsigned</span> <span class="n">right</span><span class="p">,</span>
+        <span class="kt">unsigned</span> <span class="n">pivot_index</span><span class="p">)</span>
+<span class="p">{</span>
+
+    <span class="kt">int</span> <span class="n">temp</span><span class="p">,</span> <span class="n">pivot_value</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span> <span class="n">store_index</span><span class="p">;</span>
+
+    <span class="n">store_index</span> <span class="o">=</span> <span class="n">left</span><span class="p">;</span>
+    <span class="n">pivot_value</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">pivot_index</span><span class="p">];</span>
+
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">pivot_index</span><span class="p">];</span>
+    <span class="n">array</span><span class="p">[</span><span class="n">pivot_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">right</span><span class="p">];</span>
+    <span class="n">array</span><span class="p">[</span><span class="n">right</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">left</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">right</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">pivot_value</span><span class="p">){</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">store_index</span><span class="p">];</span>
+            <span class="n">array</span><span class="p">[</span><span class="n">store_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
+            <span class="n">store_index</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">store_index</span><span class="p">];</span>
+    <span class="n">array</span><span class="p">[</span><span class="n">store_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">array</span><span class="p">[</span><span class="n">right</span><span class="p">];</span>
+    <span class="n">array</span><span class="p">[</span><span class="n">right</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="n">store_index</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="cm">/* recursive sort */</span>
+<span class="kt">void</span> <span class="nf">quick_sort</span><span class="p">(</span><span class="kt">int</span> <span class="n">array</span><span class="p">[]){</span>
+
+    <span class="cm">/* reccursive functions are not supported */</span>
+    <span class="cm">/* implement a stack explicitly */</span>
+    <span class="kt">unsigned</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">pivot</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">lefts</span><span class="p">[</span><span class="n">length</span><span class="p">];</span>
+    <span class="kt">unsigned</span> <span class="n">rights</span><span class="p">[</span><span class="n">length</span><span class="p">];</span>
+    <span class="kt">unsigned</span> <span class="n">stack_pointer</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="cm">/* initialy push whole array onto stack */</span>
+    <span class="n">lefts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">rights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="n">stack_pointer</span><span class="p">){</span>
+
+
+        <span class="cm">/* pop a sub-array from stack */</span>
+        <span class="n">stack_pointer</span><span class="o">--</span><span class="p">;</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">lefts</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">];</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="n">rights</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">];</span>
+
+
+        <span class="cm">/* if the subarray has two or more elements */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">){</span>
+
+            <span class="cm">/* partition sub array into two further sub arrays */</span>
+            <span class="n">pivot</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="n">pivot</span> <span class="o">=</span> <span class="n">partition</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">pivot</span><span class="p">);</span>
+
+            <span class="cm">/* push both subarrays onto stack */</span>
+            <span class="n">lefts</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">left</span><span class="p">;</span>
+            <span class="n">rights</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">pivot</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="n">stack_pointer</span><span class="o">++</span><span class="p">;</span>
+            <span class="n">lefts</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">pivot</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="n">rights</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">right</span><span class="p">;</span>
+            <span class="n">stack_pointer</span><span class="o">++</span><span class="p">;</span>
+        <span class="p">}</span>
+
+    <span class="p">}</span>
+
+<span class="p">}</span>
+
+
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+    <span class="kt">int</span> <span class="n">array</span><span class="p">[</span><span class="n">length</span><span class="p">];</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
+
+    <span class="cm">/* Fill array with zeros */</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* Add unsorted data to the array */</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">13</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="mi">9</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">12</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">14</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">array</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="cm">/* Sort the array */</span>
+    <span class="n">quick_sort</span><span class="p">(</span><span class="n">array</span><span class="p">);</span>
+
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">report</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The algorithm is tested using an array containing out of order values. The program correctly sorts the array:</p>
+<div class="highlight-python"><pre> 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 0 (report at line: 122 in file: sort.c)
+ 1 (report at line: 122 in file: sort.c)
+ 2 (report at line: 122 in file: sort.c)
+ 3 (report at line: 122 in file: sort.c)
+ 4 (report at line: 122 in file: sort.c)
+ 5 (report at line: 122 in file: sort.c)
+ 6 (report at line: 122 in file: sort.c)
+ 7 (report at line: 122 in file: sort.c)
+ 8 (report at line: 122 in file: sort.c)
+ 9 (report at line: 122 in file: sort.c)
+10 (report at line: 122 in file: sort.c)
+11 (report at line: 122 in file: sort.c)
+12 (report at line: 122 in file: sort.c)
+13 (report at line: 122 in file: sort.c)
+14 (report at line: 122 in file: sort.c)
+15 (report at line: 122 in file: sort.c)
+16 (report at line: 122 in file: sort.c)</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/examples/example_3.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
