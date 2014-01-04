@@ -3,17 +3,20 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Fast Fourier Transform &mdash; Chips v0.1 documentation</title>
+    <title>Fast Fourier Transform &mdash; Chips 2.0.1 documentation</title>
+    
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +26,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/chips.ico"/>
-    <link rel="top" title="Chips v0.1 documentation" href="../index.html" /> 
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -32,7 +35,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -53,9 +56,9 @@ is one of the most important algorithms in Digital Signal Processing (DSP).
 gives a straight forward introduction, and can be viewed on-line for free.</p>
 <p>The example shows a practical method of calculating the FFT using the
 <a class="reference external" href="http://en.wikipedia.org/wiki/Fast_Fourier_transform#Cooley.E2.80.93Tukey_algorithm">Cooley-Tukey algorithm</a>.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="cp">/* fft.c */</span>
-<span class="cp">/* Jonathan P Dawson */</span>
-<span class="cp">/* 2013-12-23 */</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* fft.c */</span>
+<span class="cm">/* Jonathan P Dawson */</span>
+<span class="cm">/* 2013-12-23 */</span>
 
 <span class="cp">#include &quot;math.h&quot;</span>
 
@@ -67,7 +70,7 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 
 
 <span class="cm">/*calculate twiddle factors and store them*/</span>
-<span class="kt">void</span> <span class="n">calculate_twiddles</span><span class="p">(){</span>
+<span class="kt">void</span> <span class="nf">calculate_twiddles</span><span class="p">(){</span>
     <span class="kt">unsigned</span> <span class="n">stage</span><span class="p">,</span> <span class="n">subdft_size</span><span class="p">,</span> <span class="n">span</span><span class="p">;</span>
     <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;=</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
         <span class="n">subdft_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
@@ -78,7 +81,7 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 <span class="p">}</span>
 
 <span class="cm">/*bit reverse*/</span>
-<span class="kt">unsigned</span> <span class="n">bit_reverse</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">forward</span><span class="p">){</span>
+<span class="kt">unsigned</span> <span class="nf">bit_reverse</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">forward</span><span class="p">){</span>
     <span class="kt">unsigned</span> <span class="n">reversed</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
     <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
     <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -90,7 +93,7 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 <span class="p">}</span>
 
 <span class="cm">/*calculate fft*/</span>
-<span class="kt">void</span> <span class="n">fft</span><span class="p">(</span><span class="kt">float</span> <span class="n">reals</span><span class="p">[],</span> <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[]){</span>
+<span class="kt">void</span> <span class="nf">fft</span><span class="p">(</span><span class="kt">float</span> <span class="n">reals</span><span class="p">[],</span> <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[]){</span>
 
     <span class="kt">int</span> <span class="n">stage</span><span class="p">,</span> <span class="n">subdft_size</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">j</span><span class="p">;</span>
     <span class="kt">float</span> <span class="n">sr</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">temp_real</span><span class="p">,</span> <span class="n">temp_imaginary</span><span class="p">,</span> <span class="n">imaginary_twiddle</span><span class="p">,</span> <span class="n">real_twiddle</span><span class="p">;</span>
@@ -143,7 +146,7 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
     <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="n">main</span><span class="p">(){</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
     <span class="kt">float</span> <span class="n">reals</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
     <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
     <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
@@ -198,7 +201,7 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -218,12 +221,12 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
-        &copy; Copyright 2011, Jonathan P Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>
