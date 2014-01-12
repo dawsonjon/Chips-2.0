@@ -15,6 +15,27 @@ class Allocator:
         self.memory_content_2 = {}
         self.memory_content_4 = {}
         self.start = 0
+        self.handle = 0
+        self.input_names = {}
+        self.output_names = {}
+
+    def new_input(self, name):
+        handle = self.handle
+        self.handle += 1
+        self.input_names[handle] = name
+        return handle
+
+    def new_output(self, name):
+        handle = self.handle
+        self.handle += 1
+        self.output_names[handle] = name
+        return handle
+
+    def input_name(self, handle):
+        return self.input_names[handle]
+
+    def output_name(self, handle):
+        return self.output_names[handle]
 
     def freeze(self):
         self.start = max(self.all_registers.keys())

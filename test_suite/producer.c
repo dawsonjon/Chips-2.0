@@ -1,12 +1,13 @@
 void producer(){
-	output_z(1);
-	output_z(2);
-	output_z(3);
-	output_z(4);
-	output_z(5);
-	output_z(6);
-	output_z(7);
-	output_z(8);
-	output_z(9);
-	output_z(10);
+    unsigned z = output("z");
+	fputc(1, z);
+	fputc(2, z);
+	fputc(3, z);
+	fputc(4, z);
+	fputc(5, z);
+	fputc(6, z);
+	fputc(7, z);
+	fputc(8, z);
+	fputc(9, z);
+	fputc(10, z);
 }

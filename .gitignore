@@ -7,5 +7,6 @@ test_suite/arbiter.v
 test_suite/real_main.v
 test_suite/test.c
 build
+chips_lib.v
 *.bak
 *,cover

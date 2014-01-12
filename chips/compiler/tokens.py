@@ -42,11 +42,19 @@ class Tokens:
         token = []
         tokens = []
         self.lineno = 1
+        jump = False
         for line in input_file:
 
             #include files
             line = line+" "
-            if line.strip().startswith("#include"):
+            if jump:
+                if line.strip().startswith("#endif"):
+                    jump = False
+                if line.strip().startswith("#else"):
+                    jump = False
+                continue
+                
+            elif line.strip().startswith("#include"):
                 filename = self.filename
                 lineno = self.lineno
                 self.tokens.extend(tokens)
@@ -63,6 +71,32 @@ class Tokens:
                 self.lineno = lineno
                 self.filename = filename
                 tokens = []
+                continue
+
+            elif line.strip().startswith("#define"):
+                definition = line.strip.split(" ")[1]
+                self.definitions.append(self.definition)
+                continue
+
+            elif line.strip().startswith("#undef"):
+                definition = line.strip.split(" ")[1]
+                self.definitions.remove(definition)
+                continue
+
+            elif line.strip().startswith("#ifdef"):
+                definition = line.strip.split(" ")[1]
+                if definition not in self.definitions:
+                    jump = True
+                continue
+
+            elif line.strip().startswith("#ifndef"):
+                definition = line.strip.split(" ")[1]
+                if definition in self.definitions:
+                    jump = True
+                continue
+
+            elif line.strip().startswith("#else"):
+                jump = True
                 continue
 
             newline = True

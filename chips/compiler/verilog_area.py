@@ -178,13 +178,13 @@ def calculate_jumps(instructions):
 
     return instructions
 
-def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
+def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, allocator):
 
     """Generate verilog declarations"""
 
     #list all inputs and outputs used in the program
-    inputs = unique([i["input"] for i in instructions if "input" in i])
-    outputs = unique([i["output"] for i in instructions if "output" in i])
+    inputs = allocator.input_names.values()
+    outputs = allocator.output_names.values()
     input_files = unique([i["file_name"] for i in instructions if "file_read" == i["op"]])
     output_files = unique([i["file_name"] for i in instructions if "file_write" == i["op"]])
     testbench = not inputs and not outputs and not no_tb_mode
@@ -286,11 +286,8 @@ def generate_CHIP(input_file,
                   instructions,
                   output_file,
                   registers,
-                  memory_size_2,
-                  memory_size_4,
+                  allocator,
                   initialize_memory,
-                  memory_content_2,
-                  memory_content_4,
                   no_tb_mode=False):
 
     """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
@@ -301,7 +298,7 @@ def generate_CHIP(input_file,
     register_bits = log2(len(registers));
     opcode_bits = log2(len(instruction_set));
     instruction_bits = 32 + register_bits*2 + opcode_bits
-    declarations = generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits)
+    declarations = generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, allocator)
     inputs, outputs, input_files, output_files, testbench, inports, outports, signals = declarations
     enable_adder, enable_multiplier, enable_divider, enable_int_to_float, enable_float_to_int = floating_point_enables(instruction_set)
 
@@ -393,8 +390,8 @@ def generate_CHIP(input_file,
     for name, size in signals:
         write_declaration("  reg ", name, size)
 
-    memory_size_2 = int(memory_size_2)
-    memory_size_4 = int(memory_size_4)
+    memory_size_2 = int(allocator.memory_size_2)
+    memory_size_4 = int(allocator.memory_size_4)
     if memory_size_2:
         output_file.write("  reg [15:0] memory_2 [%i:0];\n"%(memory_size_2-1))
     if memory_size_4:
@@ -458,7 +455,7 @@ def generate_CHIP(input_file,
       "<=", "==", "!="]
 
 
-    if initialize_memory and (memory_content_2 or memory_content_4):
+    if initialize_memory and (allocator.memory_content_2 or allocator.memory_content_4):
 
         output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
         output_file.write("  // MEMORY INITIALIZATION                                                      \n")
@@ -471,9 +468,9 @@ def generate_CHIP(input_file,
 
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
-        for location, content in memory_content_2.iteritems():
+        for location, content in allocator.memory_content_2.iteritems():
             output_file.write("    memory_2[%s] = %s;\n"%(location, content))
-        for location, content in memory_content_4.iteritems():
+        for location, content in allocator.memory_content_4.iteritems():
             output_file.write("    memory_4[%s] = %s;\n"%(location, content))
         output_file.write("  end\n\n")
 
@@ -818,15 +815,26 @@ def generate_CHIP(input_file,
             output_file.write("          stage_0_enable <= 0;\n")
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
-            output_file.write("          s_input_%s_ack <= 1'b1;\n"%instruction["input"])
+            output_file.write("          case(register_1)\n\n")
+            for handle, input_name in allocator.input_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              s_input_%s_ack <= 1'b1;\n"%input_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
             output_file.write("        end\n\n")
 
         elif instruction["op"] == "ready":
             output_file.write("        16'd%s:\n"%(opcode))
             output_file.write("        begin\n")
             output_file.write("          result_2 <= 0;\n")
-            output_file.write("          result_2[0] <= input_%s_stb;\n"%(
-              instruction["input"]))
+            output_file.write("          case(register_1)\n\n")
+            for handle, input_name in allocator.input_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              result_2[0] <= s_input_%s_ack;\n"%input_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
             output_file.write("          write_enable_2 <= 1;\n")
             output_file.write("        end\n\n")
 
@@ -836,8 +844,13 @@ def generate_CHIP(input_file,
             output_file.write("          stage_0_enable <= 0;\n")
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
-            output_file.write("          s_output_%s_stb <= 1'b1;\n"%instruction["output"])
-            output_file.write("          s_output_%s <= register_1;\n"%instruction["output"])
+            output_file.write("          case(register_1)\n\n")
+            for handle, output_name in allocator.output_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              s_output_%s_stb <= 1'b1;\n"%output_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
             output_file.write("        end\n\n")
 
         elif instruction["op"] == "memory_read_request":
@@ -937,29 +950,29 @@ def generate_CHIP(input_file,
     output_file.write("       endcase\n")
     output_file.write("    end\n")
 
-    for instruction in instruction_set:
+    for input_ in allocator.input_names.values():
 
-        if instruction["op"] == "read":
-            output_file.write("    if (s_input_%s_ack == 1'b1 && input_%s_stb == 1'b1) begin\n"%(
-              instruction["input"],
-              instruction["input"]))
-            output_file.write("       result_2 <= input_%s;\n"%(instruction["input"]))
-            output_file.write("       write_enable_2 <= 1;\n")
-            output_file.write("       s_input_%s_ack <= 1'b0;\n"%instruction["input"])
-            output_file.write("       stage_0_enable <= 1;\n")
-            output_file.write("       stage_1_enable <= 1;\n")
-            output_file.write("       stage_2_enable <= 1;\n")
-            output_file.write("     end\n\n")
+        output_file.write("    if (s_input_%s_ack == 1'b1 && input_%s_stb == 1'b1) begin\n"%(
+          input_,
+          input_))
+        output_file.write("       result_2 <= input_%s;\n"%input_)
+        output_file.write("       write_enable_2 <= 1;\n")
+        output_file.write("       s_input_%s_ack <= 1'b0;\n"%input_)
+        output_file.write("       stage_0_enable <= 1;\n")
+        output_file.write("       stage_1_enable <= 1;\n")
+        output_file.write("       stage_2_enable <= 1;\n")
+        output_file.write("     end\n\n")
 
-        elif instruction["op"] == "write":
-            output_file.write("     if (s_output_%s_stb == 1'b1 && output_%s_ack == 1'b1) begin\n"%(
-              instruction["output"],
-              instruction["output"]))
-            output_file.write("       s_output_%s_stb <= 1'b0;\n"%instruction["output"])
-            output_file.write("       stage_0_enable <= 1;\n")
-            output_file.write("       stage_1_enable <= 1;\n")
-            output_file.write("       stage_2_enable <= 1;\n")
-            output_file.write("     end\n\n")
+    for output_ in allocator.output_names.values():
+
+        output_file.write("     if (s_output_%s_stb == 1'b1 && output_%s_ack == 1'b1) begin\n"%(
+          output_,
+          output_))
+        output_file.write("       s_output_%s_stb <= 1'b0;\n"%output_)
+        output_file.write("       stage_0_enable <= 1;\n")
+        output_file.write("       stage_1_enable <= 1;\n")
+        output_file.write("       stage_2_enable <= 1;\n")
+        output_file.write("     end\n\n")
 
     output_file.write("    if (timer == 0) begin\n")
     output_file.write("      if (timer_enable) begin\n")

@@ -50,11 +50,8 @@ def comp(input_file, options=[]):
                     instructions,
                     output_file,
                     registers,
-                    parser.allocator.memory_size_2,
-                    parser.allocator.memory_size_4,
-                    initialize_memory,
-                    parser.allocator.memory_content_2,
-                    parser.allocator.memory_content_4)
+                    parser.allocator,
+                    initialize_memory)
             output_file.close()
 
         else:
@@ -78,11 +75,8 @@ def comp(input_file, options=[]):
                     frames,
                     output_file,
                     registers,
-                    parser.allocator.memory_size_2,
-                    parser.allocator.memory_size_4,
-                    initialize_memory,
-                    parser.allocator.memory_content_2,
-                    parser.allocator.memory_content_4)
+                    parser.allocator,
+                    initialize_memory)
             output_file.close()
 
         generate_library()

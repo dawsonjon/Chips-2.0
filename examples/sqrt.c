@@ -16,9 +16,9 @@ float fabs(float n){
 
 float sqrt(float n){
     float square, x, old;
-    x = 10.0;
+    x = n/2;
     old = 0.0;
-    while(fabs(old - x) > 0.000001){
+    while(fabs(old-x) > 0.000001){
         old = x;
         x -= (x*x-n)/(2*x);
     }

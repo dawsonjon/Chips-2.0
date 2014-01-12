@@ -829,38 +829,49 @@ class Parser:
         self.tokens.expect(")")
         return FileWrite(file_name, expression)
 
-    def parse_input(self, name):
-        input_name = name.replace("input_", "")
+    def parse_input(self):
         self.tokens.expect("(")
-        type_ = "int"
-        if self.tokens.peek() != ")":
-            type_ = self.tokens.get()
-            type_ = type_.strip('"').decode("string_escape")
-        if type_ not in numeric_types:
-            self.tokens.error("%s is not a numeric type"%type_)
+        input_name = self.tokens.get().strip('"').decode("string_escape")
         self.tokens.expect(")")
-        return Input(input_name, type_)
+        return Constant(self.allocator.new_input(input_name))
 
-    def parse_ready(self, name):
-        input_name = name.replace("ready_", "")
+    def parse_fgetc(self):
         self.tokens.expect("(")
+        handle = self.parse_expression()
         self.tokens.expect(")")
-        return Ready(input_name)
+        return Input(handle)
 
-    def parse_output(self, name):
-        output_name = name.replace("output_", "")
+    def parse_ready(self):
+        self.tokens.expect("(")
+        handle = self.parse_expression()
+        self.tokens.expect(")")
+        return Ready(handle)
+
+    def parse_output(self):
+        self.tokens.expect("(")
+        output_name = self.tokens.get().strip('"').decode("string_escape")
+        self.tokens.expect(")")
+        return Constant(self.allocator.new_output(output_name))
+
+    def parse_fputc(self):
         self.tokens.expect("(")
         expression = self.parse_expression()
+        self.tokens.expect(",")
+        handle = self.parse_expression()
         self.tokens.expect(")")
-        return Output(output_name, expression)
+        return Output(handle, expression)
 
     def parse_function_call(self, name):
-        if name.startswith("input_"):
-            return self.parse_input(name)
-        if name.startswith("ready_"):
-            return self.parse_ready(name)
-        if name.startswith("output_"):
-            return self.parse_output(name)
+        if name == "input":
+            return self.parse_input()
+        if name == "output":
+            return self.parse_output()
+        if name == "fgetc":
+            return self.parse_fgetc()
+        if name == "fputc":
+            return self.parse_fputc()
+        if name == "ready":
+            return self.parse_ready()
         if name == "file_read":
             return self.parse_file_read()
         if name == "file_write":

@@ -1,22 +1,23 @@
 void producer(){
+    unsigned z = output("z");
 	wait_clocks(1000);
-	output_z(1);
+	fputc(1, z);
 	wait_clocks(1000);
-	output_z(2);
+	fputc(2, z);
 	wait_clocks(1000);
-	output_z(3);
+	fputc(3, z);
 	wait_clocks(1000);
-	output_z(4);
+	fputc(4, z);
 	wait_clocks(1000);
-	output_z(5);
+	fputc(5, z);
 	wait_clocks(1000);
-	output_z(6);
+	fputc(6, z);
 	wait_clocks(1000);
-	output_z(7);
+	fputc(7, z);
 	wait_clocks(1000);
-	output_z(8);
+	fputc(8, z);
 	wait_clocks(1000);
-	output_z(9);
+	fputc(9, z);
 	wait_clocks(1000);
-	output_z(10);
+	fputc(10, z);
 }

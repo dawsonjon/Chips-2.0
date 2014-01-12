@@ -177,11 +177,11 @@ class Component:
 
     """
 
-    def __init__(self, C_file):
+    def __init__(self, C_file, options=[]):
 
         """Takes a single string argument, the C code to compile"""
 
-        self.name, self.inputs, self.outputs, self.doc = chips.compiler.compiler.comp(C_file)
+        self.name, self.inputs, self.outputs, self.doc = chips.compiler.compiler.comp(C_file, options)
 
     def __call__(self, chip, inputs, outputs):
 

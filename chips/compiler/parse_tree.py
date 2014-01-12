@@ -819,19 +819,20 @@ class FunctionCall(Expression):
 
 class Output(Expression):
 
-    def __init__(self, name, expression):
-        self.name = name
+    def __init__(self, handle, expression):
+        self.handle = handle
         self.expression = expression
-        Expression.__init__(self, self.expression.type_(), 2, True)
+        Expression.__init__(self, "int", 4, False)
 
     def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
-
+        temp1 = allocator.new(2)
+        instructions = self.handle.generate(temp1, allocator)
+        instructions.extend(self.expression.generate(result, allocator))
         instructions.append(
-            {"op"   :"write", 
-             "src"  :result, 
-             "output":self.name})
-
+            {"op"   : "write", 
+             "src"  : temp1, 
+             "srcb" : result})
+        allocator.free(temp1)
         return instructions
 
 
@@ -860,12 +861,19 @@ class FileWrite(Expression):
 
 class Input(Expression):
 
-    def __init__(self, name, type_="int"):
-        self.name = name
-        Expression.__init__(self, type_, 2, True)
+    def __init__(self, handle):
+        self.handle = handle
+        Expression.__init__(self, "int", 4, False)
 
     def generate(self, result, allocator):
-        return [{"op"   :"read", "dest" :result, "input":self.name}]
+        temp1 = allocator.new(2)
+        instructions = self.handle.generate(temp1, allocator)
+        instructions.append(
+                {"op"   : "read",
+                 "src"  : temp1,
+                 "dest" : result})
+        allocator.free(temp1)
+        return instructions
 
 
 class FileRead(Expression):
@@ -880,12 +888,21 @@ class FileRead(Expression):
 
 class Ready(Expression):
 
-    def __init__(self, name):
-        self.name = name
-        Expression.__init__(self, "int", 2, True)
+    def __init__(self, handle):
+        self.handle = handle
+        Expression.__init__(self, "int", 2, False)
 
     def generate(self, result, allocator):
-        return [{"op"   :"ready", "dest" :result, "input":self.name}]
+        temp1 = allocator.new(2)
+        instructions = self.handle.generate(temp1, allocator)
+
+        instructions.append(
+            {"op"   :"ready", 
+             "src"  : temp1,
+             "dest" :result})
+
+        allocator.free(temp1)
+        return instructions
 
 
 class Struct(Object):

@@ -73,11 +73,8 @@ def generate_CHIP(input_file,
                   frames,
                   output_file,
                   registers,
-                  memory_size_2,
-                  memory_size_4,
+                  allocator,
                   initialize_memory,
-                  memory_content_2,
-                  memory_content_4,
                   no_tb_mode=False):
 
     """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
@@ -101,8 +98,8 @@ def generate_CHIP(input_file,
                 instruction["label"]=labels[instruction["label"]]
 
     #list all inputs and outputs used in the program
-    inputs = unique([i["input"] for frame in frames for i in frame if "input" in i])
-    outputs = unique([i["output"] for frame in frames for i in frame if "output" in i])
+    inputs = allocator.input_names.values()
+    outputs = allocator.output_names.values()
     input_files = unique([i["file_name"] for frame in frames for i in frame if "file_read" == i["op"]])
     output_files = unique([i["file_name"] for frame in frames for i in frame if "file_write" == i["op"]])
     testbench = not inputs and not outputs and not no_tb_mode
@@ -239,8 +236,8 @@ def generate_CHIP(input_file,
     for name, size in signals:
         write_declaration("  reg       ", name, size)
 
-    memory_size_2 = int(memory_size_2)
-    memory_size_4 = int(memory_size_4)
+    memory_size_2 = int(allocator.memory_size_2)
+    memory_size_4 = int(allocator.memory_size_4)
     if memory_size_2:
         output_file.write("  reg [15:0] memory_2 [%i:0];\n"%(memory_size_2-1))
     if memory_size_4:
@@ -298,7 +295,7 @@ def generate_CHIP(input_file,
       "<=", "==", "!="]
 
 
-    if initialize_memory and (memory_content_2 or memory_content_4):
+    if initialize_memory and (allocator.memory_content_2 or allocator.memory_content_4):
 
         output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
         output_file.write("  // MEMORY INITIALIZATION                                                      \n")
@@ -311,9 +308,9 @@ def generate_CHIP(input_file,
 
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
-        for location, content in memory_content_2.iteritems():
+        for location, content in allocator.memory_content_2.iteritems():
             output_file.write("    memory_2[%s] = %s;\n"%(location, content))
-        for location, content in memory_content_4.iteritems():
+        for location, content in allocator.memory_content_4.iteritems():
             output_file.write("    memory_4[%s] = %s;\n"%(location, content))
         output_file.write("  end\n\n")
 
@@ -643,36 +640,53 @@ def generate_CHIP(input_file,
                       output_files[instruction["file_name"]], instruction["src"]))
 
             elif instruction["op"] == "read":
-                output_file.write("        register_%s <= input_%s;\n"%(
-                  instruction["dest"], instruction["input"]))
                 output_file.write("        program_counter <= %s;\n"%to_gray(location))
-                output_file.write("        s_input_%s_ack <= 1'b1;\n"%instruction["input"])
-                output_file.write( "       if (s_input_%s_ack == 1'b1 && input_%s_stb == 1'b1) begin\n"%(
-                  instruction["input"],
-                  instruction["input"]
-                ))
-                output_file.write("          s_input_%s_ack <= 1'b0;\n"%instruction["input"])
-                output_file.write("          program_counter <= 16'd%s;\n"%to_gray(location+1))
-                output_file.write("        end\n")
+                output_file.write("        case(register_%s)\n\n"%instruction["src"])
+                for handle, input_name in allocator.input_names.iteritems():
+                    output_file.write("        %s:\n"%(handle))
+                    output_file.write("        begin\n")
+                    output_file.write("          register_%s <= input_%s;\n"%(
+                      instruction["dest"], input_name))
+                    output_file.write("          s_input_%s_ack <= 1'b1;\n"%input_name)
+                    output_file.write("          if (s_input_%s_ack == 1'b1 && input_%s_stb == 1'b1) begin\n"%(
+                      input_name,
+                      input_name
+                    ))
+                    output_file.write("            s_input_%s_ack <= 1'b0;\n"%input_name)
+                    output_file.write("            program_counter <= 16'd%s;\n"%to_gray(location+1))
+                    output_file.write("          end\n")
+                    output_file.write("        end\n")
+                output_file.write("        endcase\n")
 
             elif instruction["op"] == "ready":
-                output_file.write("        register_%s <= 0;\n"%instruction["dest"])
-                output_file.write("        register_%s[0] <= input_%s_stb;\n"%(
-                  instruction["dest"], instruction["input"]))
+                output_file.write("        case(register_%s)\n\n"%instruction["src"])
+                for handle, input_name in allocator.input_names.iteritems():
+                    output_file.write("        %s:\n"%(handle))
+                    output_file.write("        begin\n")
+                    output_file.write("          register_%s <= 0;\n"%instruction["dest"])
+                    output_file.write("          register_%s[0] <= input_%s_stb;\n"%(
+                      instruction["dest"], input_name))
+                    output_file.write("        end\n")
+                output_file.write("        endcase\n")
 
             elif instruction["op"] == "write":
-                output_file.write("        s_output_%s <= register_%s;\n"%(
-                  instruction["output"], instruction["src"]))
                 output_file.write("        program_counter <= %s;\n"%to_gray(location))
-                output_file.write("        s_output_%s_stb <= 1'b1;\n"%instruction["output"])
-                output_file.write(
-                  "        if (s_output_%s_stb == 1'b1 && output_%s_ack == 1'b1) begin\n"%(
-                  instruction["output"],
-                  instruction["output"]
-                ))
-                output_file.write("          s_output_%s_stb <= 1'b0;\n"%instruction["output"])
-                output_file.write("          program_counter <= %s;\n"%to_gray(location+1))
-                output_file.write("        end\n")
+                output_file.write("        case(register_%s)\n\n"%instruction["src"])
+                for handle, output_name in allocator.output_names.iteritems():
+                    output_file.write("        %s:\n"%(handle))
+                    output_file.write("        begin\n")
+                    output_file.write("          s_output_%s_stb <= 1'b1;\n"%output_name)
+                    output_file.write("          s_output_%s <= register_%s;\n"%(
+                      output_name, instruction["srcb"]))
+                    output_file.write("          if (s_output_%s_stb == 1'b1 && output_%s_ack == 1'b1) begin\n"%(
+                      output_name,
+                      output_name
+                    ))
+                    output_file.write("            s_output_%s_stb <= 1'b0;\n"%output_name)
+                    output_file.write("            program_counter <= 16'd%s;\n"%to_gray(location+1))
+                    output_file.write("          end\n")
+                    output_file.write("        end\n")
+                output_file.write("        endcase\n")
 
             elif instruction["op"] == "memory_read_request":
                 output_file.write(

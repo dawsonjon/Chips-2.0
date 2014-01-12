@@ -5,36 +5,79 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
 __version__ = "0.1"
 
-libs={"print.h":"""
+libs={
 
-//Print a string *string* to stdout
-void print_string(unsigned string[]){
+"stdio.h" :
+
+
+"""
+unsigned stdin = 0;
+unsigned stdout = 0;
+
+
+void fputs(unsigned string[], unsigned handle){
         unsigned i=0;
         while(string[i]){
-                       stdout_put_char(string[i]);
+                fputc(string[i], handle);
                 i++;
         }
 }
 
+void fgets(unsigned string[], unsigned maxlength, unsigned handle){
+        unsigned c;
+        unsigned i=0;
+        while(1){
+                c = fgetc(handle);
+                string[i] = c;
+                i++;
+                if(c == '\\n') break;
+                if(i == maxlength-1) break;
+        }
+        string[i] = 0;
+}
+
+void gets(unsigned string[], unsigned maxlength){
+        fgets(string, maxlength, stdin);
+}
+
+void puts(unsigned string[]){
+        fputs(string, stdout);
+}
+
+unsigned long getc(){
+        return fgetc(stdout);
+}
+
+void putc(unsigned c){
+        fputc(c, stdout);
+}
+
+""",
+
+
+"print.h":"""
+
+#include <stdio.h>
+
 //Print an unsigned int to stdout in hex format
-void print_uhex(unsigned uhex){
+void fprint_uhex(unsigned uhex, unsigned handle){
         unsigned digit_3 = (uhex >> 12) & 0xf;
         unsigned digit_2 = (uhex >> 8) & 0xf;
         unsigned digit_1 = (uhex >> 4) & 0xf;
         unsigned digit_0 = uhex & 0xf;
-        if(digit_3 < 9) stdout_put_char(digit_3 | 0x30);
-        else stdout_put_char(digit_3 + 87);
-        if(digit_2 < 9) stdout_put_char(digit_2 | 0x30);
-        else stdout_put_char(digit_2 + 87);
-        if(digit_1 < 9) stdout_put_char(digit_1 | 0x30);
-        else stdout_put_char(digit_1 + 87);
-        if(digit_0 < 9) stdout_put_char(digit_0 | 0x30);
-        else stdout_put_char(digit_0 + 87);
+        if(digit_3 < 9) fputc(digit_3 | 0x30, handle);
+        else fputc(digit_3 + 87, handle);
+        if(digit_2 < 9) fputc(digit_2 | 0x30, handle);
+        else fputc(digit_2 + 87, handle);
+        if(digit_1 < 9) fputc(digit_1 | 0x30, handle);
+        else fputc(digit_1 + 87, handle);
+        if(digit_0 < 9) fputc(digit_0 | 0x30, handle);
+        else fputc(digit_0 + 87, handle);
 }
 
 //Print an unsigned int to stdout in decimal format
 //leading 0s will be suppressed
-void print_udecimal(unsigned udecimal){
+void fprint_udecimal(unsigned udecimal, unsigned handle){
         unsigned digit;
         unsigned significant = 0;
         digit = 0;
@@ -43,7 +86,7 @@ void print_udecimal(unsigned udecimal){
                 digit += 1;
         }
         if(digit | significant){
-              stdout_put_char(digit | 0x30);
+              fputc(digit | 0x30, handle);
               significant = 1;
         }
         digit = 0;
@@ -52,7 +95,7 @@ void print_udecimal(unsigned udecimal){
                 digit += 1;
         }
         if(digit | significant){
-              stdout_put_char(digit | 0x30);
+              fputc(digit | 0x30, handle);
               significant = 1;
         }
         digit = 0;
@@ -61,7 +104,7 @@ void print_udecimal(unsigned udecimal){
                 digit += 1;
         }
         if(digit | significant){
-              stdout_put_char(digit | 0x30);
+              fputc(digit | 0x30, handle);
               significant = 1;
         }
         digit = 0;
@@ -70,40 +113,40 @@ void print_udecimal(unsigned udecimal){
                 digit += 1;
         }
         if(digit | significant){
-              stdout_put_char(digit | 0x30);
+              fputc(digit | 0x30, handle);
               significant = 1;
         }
-        stdout_put_char(udecimal | 0x30);
+        fputc(udecimal | 0x30, handle);
 }
 
 //Print a signed int to stdout in hex format
-void print_hex(int hex){
+void fprint_hex(int hex, unsigned handle){
         if(hex >= 0){
-                print_uhex(hex);
+                fprint_uhex(hex, handle);
         } else {
-                stdout_put_char('-');
-                print_uhex(-hex);
+                fputc('-', handle);
+                fprint_uhex(-hex, handle);
         }
 }
 
 //Print a signed int to stdout in decimal format
 //leading 0s will be suppressed
-void print_decimal(int decimal){
+void fprint_decimal(int decimal, unsigned handle){
         if(decimal >= 0){
-                print_udecimal(decimal);
+                fprint_udecimal(decimal, handle);
         } else {
-                stdout_put_char('-');
-                print_udecimal(-decimal);
+                fputc('-', handle);
+                fprint_udecimal(-decimal, handle);
         }
 }
 
-void print_float(float f){
+void fprint_float(float f, handle){
     unsigned digit;
     unsigned print = 0;
     float significance = 100000000.0;
 
     if( f < 0) {
-        stdout_put_char('-');
+        fputc('-', handle);
         f = -f;
     }
 
@@ -111,21 +154,33 @@ void print_float(float f){
         digit = f / significance; 
         print |= digit;
         if(print){
-            stdout_put_char(digit + '0');
+            fputc(digit + '0', handle);
         }
         f = f - (digit * significance);
         significance /= 10.0;
     }
 
-    stdout_put_char('.');
+    fputc('.', handle);
 
     while(significance > 0.00000001){
         digit = f / significance; 
-        stdout_put_char(digit + '0');
+        fputc(digit + '0', handle);
         f = f - (digit * significance);
         significance /= 10.0;
         if(f == 0.0) break;
     }
+}
+
+void print_hex(int hex){
+    fprint_hex(hex, stdout);
+}
+
+void print_decimal(int decimal){
+    fprint_decimal(decimal, stdout);
+}
+
+void fprint_float(float f, unsigned handle){
+    fprint_float(f, stdout);
 }
 
 """,

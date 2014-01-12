@@ -82,16 +82,21 @@ Stream I/O
 The language has been extended to allow components to communicate by sending
 data through streams.
 
-Stream I/O is achieved by calling built-in functions with special names.
-Functions that start with the name `input` or `output` are interpreted as "read
-from input", or "write to output".
+To open an input or an output stream use the built in `input` and `output`
+functions. These functions accept a string argument identifying the name of the
+input or output.  They return a file handle that can be passed to
+the `fgetc`, and `fputc` functions to send or receive data. You can also use
+the file I/O functions defined in `print.h`, `scan.h` and `stdio.h`.
 
 .. code-block:: c
 
+    unsigned spam = input("spam");
+    unsigned eggs = input("eggs");
+    unsigned fish = input("fish");
     int temp;
-    temp = input_spam(); //reads from an input called spam
-    temp = input_eggs(); //reads from an input called eggs
-    output_fish(temp);   //writes to an output called fish
+    temp = fgetc(spam); //reads from an input called spam
+    temp = fgetc(eggs); //reads from an input called eggs
+    fputc(temp, fish);   //writes to an output called fish
 
 Reading or writing from inputs and outputs causes program execution to block
 until data is available. If you don't want to commit yourself to reading and
@@ -99,9 +104,10 @@ input and blocking execution, you can check if data is ready.
 
 .. code-block:: c
 
+    unsigned spam = input("spam");
     int temp;
-    if(ready_spam()){
-       temp = input_spam();
+    if(ready(spam)){
+       temp = fgetc(spam);
     }
 
 There is no equivalent function to check if an output is ready to receive data,
