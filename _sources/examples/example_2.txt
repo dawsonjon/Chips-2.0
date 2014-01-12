@@ -81,7 +81,7 @@ function is also synthesised using the identity :math:`sin(x) \equiv cos(x-\pi/2
         }
     }
 
-A simple test calculates Sine and Cosine for the range :math:`-2\pi \le x \le 2\pi`.
+A simple test calculates Sine and Cosine for the range :math:`-2\pi <= x <= 2\pi`.
 
 .. image:: images/example_2.png
 

@@ -58,10 +58,52 @@
 <h1>C Libraries<a class="headerlink" href="#c-libraries" title="Permalink to this headline">¶</a></h1>
 <p>Not all of the libC is supported. The library is under development, and the intention is to make the library as complete as possible.
 There will be occasions, where the libc functions can&#8217;t be implemented, or have to differ from the standard.</p>
+<div class="section" id="stdio-h">
+<h2>stdio.h<a class="headerlink" href="#stdio-h" title="Permalink to this headline">¶</a></h2>
+<p>In contrast to the C standard, <cite>fputc</cite> and <cite>fgetc</cite> are built-in functions, you
+do not need to include <cite>stdio.h</cite> to use them.</p>
+<p>The globals <cite>stdin</cite> and <cite>stdout</cite> should be set to an input or output by the user.</p>
+<p>The <cite>fputs</cite> function prints <cite>string</cite> to the output <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fputs</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>fgets</cite> function reads a line, up to <cite>maxlength</cite> characters, or a line end
+from the input <cite>handle</cite>. The string will be null terminated. <cite>maxlength</cite>
+includes the null character.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fgets</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">maxlength</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>puts</cite> function prints <cite>string</cite> to stdout.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">puts</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[]);</span>
+</pre></div>
+</div>
+<p>The <cite>gets</cite> function reads a line, up to <cite>maxlength</cite> characters, or a line end
+from stdin. The string will be null terminated. <cite>maxlength</cite>
+includes the null character.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">gets</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">maxlength</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>getc</cite> returns a single character from stdin.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">getc</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The <cite>putc</cite> writes a single character to stdout.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">putc</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="print-h">
 <h2>print.h<a class="headerlink" href="#print-h" title="Permalink to this headline">¶</a></h2>
-<p>The <cite>print_string</cite> function prints a null terminated string to standard output.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">print_string</span><span class="p">(</span><span class="kt">char</span> <span class="n">string</span><span class="p">[]);</span>
+<p>The <cite>fprint_decimal</cite> function prints a number in decimal to the output <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fprint_decimal</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>fprint_hex</cite> function prints a number in hexadecimal format to the output <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fprint_hex</span><span class="p">(</span><span class="kt">int</span> <span class="n">value</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>fprint_float</cite> function prints a floatin point number to the output <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fprint_float</span><span class="p">(</span><span class="kt">float</span> <span class="n">value</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>The <cite>print_decimal</cite> function prints a number in decimal to standard output.</p>
@@ -78,13 +120,10 @@ There will be occasions, where the libc functions can&#8217;t be implemented, or
 </div>
 <p>To provide flexibility, the definition of standard output is left to the
 user, it could be a serial port, an LCD display, or perhaps a telnet session.
-To define standard output, a function <cite>stdout_put_char</cite> function must be
-defined before including print.h.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">stdout_put_char</span><span class="p">(</span><span class="kt">char</span> <span class="n">value</span><span class="p">){</span>
-    <span class="n">output_rs232_tx</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="p">}</span>
+To define standard output assign it to an output.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;print.h&gt;</span>
 
-<span class="cp">#include &lt;print.h&gt;</span>
+<span class="n">stdout</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;uart_tx&quot;</span><span class="p">);</span>
 
 <span class="n">print_string</span><span class="p">(</span><span class="s">&quot;Hello World!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span> <span class="c1">//Hello World!</span>
 <span class="n">print_decimal</span><span class="p">(</span><span class="mi">12345</span><span class="p">);</span> <span class="c1">//12345</span>
@@ -95,6 +134,18 @@ defined before including print.h.</p>
 </div>
 <div class="section" id="scan-h">
 <h2>scan.h<a class="headerlink" href="#scan-h" title="Permalink to this headline">¶</a></h2>
+<p>The <cite>fscan_hex</cite> function reads a hex value from the input <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">fscan_hex</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">stdin</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>fscan_decimal</cite> function reads an integer from the input <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">fscan_decimal</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">stdin</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>fscan_decimal</cite> function reads an float from the input <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">float</span> <span class="nf">fscan_float</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">stdin</span><span class="p">);</span>
+</pre></div>
+</div>
 <p>The <cite>scan_hex</cite> function reads a hex value from standard input.</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="nf">scan_hex</span><span class="p">();</span>
 </pre></div>
@@ -108,8 +159,7 @@ defined before including print.h.</p>
 </pre></div>
 </div>
 <p>To provide flexibility, the definition of standard input is left to the user.
-To define standard output, a function <cite>stdin_get_char</cite> function must be defined
-before including print.h.</p>
+To define standard input, assign an input to the global stdin.</p>
 </div>
 <div class="section" id="ctypes-h">
 <h2>ctypes.h<a class="headerlink" href="#ctypes-h" title="Permalink to this headline">¶</a></h2>
@@ -299,6 +349,7 @@ before including print.h.</p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">C Libraries</a><ul>
+<li><a class="reference internal" href="#stdio-h">stdio.h</a></li>
 <li><a class="reference internal" href="#print-h">print.h</a></li>
 <li><a class="reference internal" href="#scan-h">scan.h</a></li>
 <li><a class="reference internal" href="#ctypes-h">ctypes.h</a></li>

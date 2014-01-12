@@ -4,14 +4,74 @@ C Libraries
 Not all of the libC is supported. The library is under development, and the intention is to make the library as complete as possible.
 There will be occasions, where the libc functions can't be implemented, or have to differ from the standard.
 
-print.h
+stdio.h
 -------
 
-The `print_string` function prints a null terminated string to standard output.
+In contrast to the C standard, `fputc` and `fgetc` are built-in functions, you
+do not need to include `stdio.h` to use them.
+
+The globals `stdin` and `stdout` should be set to an input or output by the user.
+
+The `fputs` function prints `string` to the output `handle`.
 
 .. code-block:: c
 
-    void print_string(char string[]);
+        void fputs(unsigned string[], unsigned handle);
+
+The `fgets` function reads a line, up to `maxlength` characters, or a line end
+from the input `handle`. The string will be null terminated. `maxlength`
+includes the null character.
+
+.. code-block:: c
+
+        void fgets(unsigned string[], unsigned maxlength, unsigned handle);
+
+The `puts` function prints `string` to stdout.
+
+.. code-block:: c
+
+        void puts(unsigned string[]);
+
+The `gets` function reads a line, up to `maxlength` characters, or a line end
+from stdin. The string will be null terminated. `maxlength`
+includes the null character.
+
+.. code-block:: c
+
+        void gets(unsigned string[], unsigned maxlength);
+
+The `getc` returns a single character from stdin.
+
+.. code-block:: c
+
+        unsigned long getc();
+
+The `putc` writes a single character to stdout.
+
+.. code-block:: c
+
+        void putc(unsigned c);
+
+print.h
+-------
+
+The `fprint_decimal` function prints a number in decimal to the output `handle`.
+
+.. code-block:: c
+
+    void fprint_decimal(int value, unsigned handle);
+
+The `fprint_hex` function prints a number in hexadecimal format to the output `handle`.
+
+.. code-block:: c
+
+    void fprint_hex(int value, unsigned handle);
+
+The `fprint_float` function prints a floatin point number to the output `handle`.
+
+.. code-block:: c
+
+    void fprint_float(float value, unsigned handle);
 
 The `print_decimal` function prints a number in decimal to standard output.
 
@@ -33,16 +93,13 @@ The `print_float` function prints a floatin point number to standard output.
 
 To provide flexibility, the definition of standard output is left to the
 user, it could be a serial port, an LCD display, or perhaps a telnet session.
-To define standard output, a function `stdout_put_char` function must be
-defined before including print.h.
+To define standard output assign it to an output.
 
 .. code-block:: c
 
-    void stdout_put_char(char value){
-        output_rs232_tx(value);
-    }
-
     #include <print.h>
+
+    stdout = output("uart_tx");
 
     print_string("Hello World!\n"); //Hello World!
     print_decimal(12345); //12345
@@ -51,6 +108,24 @@ defined before including print.h.
 
 scan.h
 ------
+
+The `fscan_hex` function reads a hex value from the input `handle`.
+
+.. code-block:: c
+
+    int fscan_hex(unsigned stdin);
+
+The `fscan_decimal` function reads an integer from the input `handle`.
+
+.. code-block:: c
+
+    int fscan_decimal(unsigned stdin);
+
+The `fscan_decimal` function reads an float from the input `handle`.
+
+.. code-block:: c
+
+    float fscan_float(unsigned stdin);
 
 The `scan_hex` function reads a hex value from standard input.
 
@@ -71,8 +146,7 @@ The `scan_decimal` function reads an float from standard input.
     float scan_float();
 
 To provide flexibility, the definition of standard input is left to the user.
-To define standard output, a function `stdin_get_char` function must be defined
-before including print.h.
+To define standard input, assign an input to the global stdin.
 
 ctypes.h
 --------

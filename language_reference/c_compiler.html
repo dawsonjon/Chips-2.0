@@ -126,21 +126,27 @@ fixed number of arguments is supported, optional arguments are not permitted.</p
 <h2>Stream I/O<a class="headerlink" href="#stream-i-o" title="Permalink to this headline">¶</a></h2>
 <p>The language has been extended to allow components to communicate by sending
 data through streams.</p>
-<p>Stream I/O is achieved by calling built-in functions with special names.
-Functions that start with the name <cite>input</cite> or <cite>output</cite> are interpreted as &#8220;read
-from input&#8221;, or &#8220;write to output&#8221;.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
-<span class="n">temp</span> <span class="o">=</span> <span class="n">input_spam</span><span class="p">();</span> <span class="c1">//reads from an input called spam</span>
-<span class="n">temp</span> <span class="o">=</span> <span class="n">input_eggs</span><span class="p">();</span> <span class="c1">//reads from an input called eggs</span>
-<span class="n">output_fish</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>   <span class="c1">//writes to an output called fish</span>
+<p>To open an input or an output stream use the built in <cite>input</cite> and <cite>output</cite>
+functions. These functions accept a string argument identifying the name of the
+input or output.  They return a file handle that can be passed to
+the <cite>fgetc</cite>, and <cite>fputc</cite> functions to send or receive data. You can also use
+the file I/O functions defined in <cite>print.h</cite>, <cite>scan.h</cite> and <cite>stdio.h</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">unsigned</span> <span class="n">spam</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;spam&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">eggs</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;eggs&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">fish</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;fish&quot;</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">spam</span><span class="p">);</span> <span class="c1">//reads from an input called spam</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">eggs</span><span class="p">);</span> <span class="c1">//reads from an input called eggs</span>
+<span class="n">fputc</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">fish</span><span class="p">);</span>   <span class="c1">//writes to an output called fish</span>
 </pre></div>
 </div>
 <p>Reading or writing from inputs and outputs causes program execution to block
 until data is available. If you don&#8217;t want to commit yourself to reading and
 input and blocking execution, you can check if data is ready.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
-<span class="k">if</span><span class="p">(</span><span class="n">ready_spam</span><span class="p">()){</span>
-   <span class="n">temp</span> <span class="o">=</span> <span class="n">input_spam</span><span class="p">();</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">unsigned</span> <span class="n">spam</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;spam&quot;</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">ready</span><span class="p">(</span><span class="n">spam</span><span class="p">)){</span>
+   <span class="n">temp</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">spam</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>

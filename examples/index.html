@@ -89,9 +89,9 @@ Newton&#8217;s method until further refinements agree to within a small degree.<
 
 <span class="kt">float</span> <span class="nf">sqrt</span><span class="p">(</span><span class="kt">float</span> <span class="n">n</span><span class="p">){</span>
     <span class="kt">float</span> <span class="n">square</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">old</span><span class="p">;</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="mf">10.0</span><span class="p">;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
     <span class="n">old</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-    <span class="k">while</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">old</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.000001</span><span class="p">){</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">old</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.000001</span><span class="p">){</span>
         <span class="n">old</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
         <span class="n">x</span> <span class="o">-=</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">);</span>
     <span class="p">}</span>
@@ -188,7 +188,7 @@ function is also synthesised using the identity <img class="math" src="../_image
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>A simple test calculates Sine and Cosine for the range <img class="math" src="../_images/math/1974afaf8be793d6e9ceab8536030236b975114b.png" alt="-2\pi \le x \le 2\pi"/>.</p>
+<p>A simple test calculates Sine and Cosine for the range <img class="math" src="../_images/math/e6cb12527a2ee17923e2d7e2d21bca89784845bb.png" alt="-2\pi &lt;= x &lt;= 2\pi"/>.</p>
 <img alt="../_images/example_2.png" src="../_images/example_2.png" />
 </div>
 <div class="section" id="implement-quicksort">
