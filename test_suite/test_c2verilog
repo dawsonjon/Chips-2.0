@@ -631,7 +631,7 @@ test("struct_size 1",
 typedef struct {int a; int b;} mystruct;
 
 void main(){
-    assert(sizeof mystruct == 4);
+    assert(sizeof mystruct == 8);
 }
 """
 )
@@ -642,7 +642,7 @@ test("struct_size 2",
 typedef struct {long int a; int b;} mystruct;
 
 void main(){
-    assert(sizeof mystruct == 6);
+    assert(sizeof mystruct == 12);
 }
 """
 )
@@ -654,7 +654,7 @@ typedef struct {long int a; int b;} struct_1;
 typedef struct {long int a; struct_1 b;} mystruct;
 
 void main(){
-    assert(sizeof mystruct == 10);
+    assert(sizeof mystruct == 20);
 }
 """
 )
@@ -665,7 +665,7 @@ test("struct_size 4",
 typedef struct {long int a; int b[2];} mystruct;
 
 void main(){
-    assert(sizeof mystruct == 6);
+    assert(sizeof mystruct == 16);
 }
 """
 )

@@ -126,14 +126,10 @@ def generate_CHIP(input_file,
     signals = [
       ("timer", 16),
       ("program_counter", log2(len(frames))),
-      ("address_2", 16),
-      ("data_out_2", 16),
-      ("data_in_2", 16),
-      ("write_enable_2", 1),
-      ("address_4", 16),
-      ("data_out_4", 32),
-      ("data_in_4", 32),
-      ("write_enable_4", 1),
+      ("address", 16),
+      ("data_out", 32),
+      ("data_in", 32),
+      ("write_enable", 1),
     ] + [
       ("register_%s"%(register), definition[1]*8) for register, definition in registers.iteritems()
     ] + [
@@ -236,12 +232,9 @@ def generate_CHIP(input_file,
     for name, size in signals:
         write_declaration("  reg       ", name, size)
 
-    memory_size_2 = int(allocator.memory_size_2)
-    memory_size_4 = int(allocator.memory_size_4)
-    if memory_size_2:
-        output_file.write("  reg [15:0] memory_2 [%i:0];\n"%(memory_size_2-1))
-    if memory_size_4:
-        output_file.write("  reg [31:0] memory_4 [%i:0];\n"%(memory_size_4-1))
+    memory_size = int(allocator.memory_size)
+    if memory_size:
+        output_file.write("  reg [31:0] memory [%i:0];\n"%(memory_size-1))
 
     #generate clock and reset in testbench mode
     if testbench:
@@ -295,7 +288,7 @@ def generate_CHIP(input_file,
       "<=", "==", "!="]
 
 
-    if initialize_memory and (allocator.memory_content_2 or allocator.memory_content_4):
+    if initialize_memory and allocator.memory_content:
 
         output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
         output_file.write("  // MEMORY INITIALIZATION                                                      \n")
@@ -308,10 +301,8 @@ def generate_CHIP(input_file,
 
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
-        for location, content in allocator.memory_content_2.iteritems():
-            output_file.write("    memory_2[%s] = %s;\n"%(location, content))
-        for location, content in allocator.memory_content_4.iteritems():
-            output_file.write("    memory_4[%s] = %s;\n"%(location, content))
+        for location, content in allocator.memory_content.iteritems():
+            output_file.write("    memory[%s] = %s;\n"%(location, content))
         output_file.write("  end\n\n")
 
     if input_files or output_files:
@@ -341,21 +332,13 @@ def generate_CHIP(input_file,
     output_file.write("  \n  always @(posedge clk)\n")
     output_file.write("  begin\n\n")
 
-    if memory_size_2:
-        output_file.write("    //implement memory for 2 byte x n arrays\n")
-        output_file.write("    if (write_enable_2 == 1'b1) begin\n")
-        output_file.write("      memory_2[address_2] <= data_in_2;\n")
-        output_file.write("    end\n")
-        output_file.write("    data_out_2 <= memory_2[address_2];\n")
-        output_file.write("    write_enable_2 <= 1'b0;\n\n")
-
-    if memory_size_4:
+    if memory_size:
         output_file.write("    //implement memory for 4 byte x n arrays\n")
-        output_file.write("    if (write_enable_4 == 1'b1) begin\n")
-        output_file.write("      memory_4[address_4] <= data_in_4;\n")
+        output_file.write("    if (write_enable == 1'b1) begin\n")
+        output_file.write("      memory[address] <= data_in;\n")
         output_file.write("    end\n")
-        output_file.write("    data_out_4 <= memory_4[address_4];\n")
-        output_file.write("    write_enable_4 <= 1'b0;\n\n")
+        output_file.write("    data_out <= memory[address];\n")
+        output_file.write("    write_enable <= 1'b0;\n\n")
 
     output_file.write("    //implement timer\n")
     output_file.write("    timer <= 16'h0000;\n\n")
@@ -690,8 +673,7 @@ def generate_CHIP(input_file,
 
             elif instruction["op"] == "memory_read_request":
                 output_file.write(
-                  "        address_%s <= register_%s;\n"%(
-                      instruction["element_size"],
+                  "        address <= register_%s;\n"%(
                       instruction["src"]))
 
             elif instruction["op"] == "memory_read_wait":
@@ -699,29 +681,22 @@ def generate_CHIP(input_file,
 
             elif instruction["op"] == "memory_read":
                 output_file.write(
-                  "        register_%s <= data_out_%s;\n"%(
-                      instruction["dest"],
-                      instruction["element_size"]))
+                  "        register_%s <= data_out;\n"%(
+                      instruction["dest"]))
 
             elif instruction["op"] == "memory_write":
-                output_file.write("        address_%s <= register_%s;\n"%(
-                    instruction["element_size"],
+                output_file.write("        address <= register_%s;\n"%(
                     instruction["src"]))
-                output_file.write("        data_in_%s <= register_%s;\n"%(
-                    instruction["element_size"],
+                output_file.write("        data_in <= register_%s;\n"%(
                     instruction["srcb"]))
-                output_file.write("        write_enable_%s <= 1'b1;\n"%(
-                    instruction["element_size"]))
+                output_file.write("        write_enable <= 1'b1;\n")
 
             elif instruction["op"] == "memory_write_literal":
-                output_file.write("        address_%s <= 16'd%s;\n"%(
-                    instruction["element_size"],
+                output_file.write("        address <= 16'd%s;\n"%(
                     instruction["address"]))
-                output_file.write("        data_in_%s <= %s;\n"%(
-                    instruction["element_size"],
+                output_file.write("        data_in <= %s;\n"%(
                     instruction["value"]))
-                output_file.write("        write_enable_%s <= 1'b1;\n"%(
-                    instruction["element_size"]))
+                output_file.write("        write_enable <= 1'b1;\n")
 
             elif instruction["op"] == "assert":
                 output_file.write( "        if (register_%s == 0) begin\n"%instruction["src"])

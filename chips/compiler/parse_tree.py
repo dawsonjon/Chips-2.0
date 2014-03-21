@@ -178,7 +178,6 @@ class Switch:
                  "dest":test, 
                  "src":result, 
                  "right":value, 
-                 "size": self.expression.size(),
                  "signed":True})
 
             instructions.append(
@@ -352,7 +351,7 @@ class ArrayDeclaration:
 
         self.allocator = allocator
         self._type = type_
-        self._size = size
+        self._size = size * element_size
         self._signed = False
         self.element_type = element_type
         self.element_size = element_size
@@ -364,10 +363,9 @@ class ArrayDeclaration:
 
         location = self.allocator.new_array(
             self.size(), 
-            self.initializer, 
-            self.element_size)
+            self.initializer)
 
-        register = self.allocator.new(2, "array")
+        register = self.allocator.new(4, "array")
 
         return ArrayInstance(
             location,
@@ -405,7 +403,7 @@ class ArrayInstance:
         self.register = register
         self.location = location
         self._type = type_
-        self._size = size * element_size
+        self._size = size
         self._signed = False
         self.element_type = element_type
         self.element_size = element_size
@@ -538,7 +536,18 @@ class Expression:
         return True
 
     def int_value(self):
-        if self.type_() == "float":
+        if self.type_() == "double":
+            byte_value = struct.pack(">d", self.value())
+            value  = ord(byte_value[0]) << 56
+            value |= ord(byte_value[1]) << 48
+            value |= ord(byte_value[2]) << 40
+            value |= ord(byte_value[3]) << 32
+            value |= ord(byte_value[4]) << 24
+            value |= ord(byte_value[5]) << 16
+            value |= ord(byte_value[6]) << 8
+            value |= ord(byte_value[7])
+            return value
+        elif self.type_() == "float":
             byte_value = struct.pack(">f", self.value())
             value  = ord(byte_value[0]) << 24
             value |= ord(byte_value[1]) << 16
@@ -598,12 +607,23 @@ class ANDOR(Expression):
 
 
 def get_binary_type(left, right, operator):
+
     """
     Given the type of the left and right hand operators, determine the type
     of the resulting value.
     """
 
     binary_types = {
+        "double,double,+"  : ("double", 8, True),
+        "double,double,-"  : ("double", 8, True),
+        "double,double,*"  : ("double", 8, True),
+        "double,double,/"  : ("double", 8, True),
+        "double,double,==" : ("int", 4, True),
+        "double,double,!=" : ("int", 4, True),
+        "double,double,<"  : ("int", 4, True),
+        "double,double,>"  : ("int", 4, True),
+        "double,double,<=" : ("int", 4, True),
+        "double,double,>=" : ("int", 4, True),
         "float,float,+"  : ("float", 4, True),
         "float,float,-"  : ("float", 4, True),
         "float,float,*"  : ("float", 4, True),
@@ -641,17 +661,29 @@ class Binary(Expression):
 
     def generate(self, result, allocator):
         new_register = allocator.new(self.size())
+
         try:
             instructions = self.right.generate(new_register, allocator)
 
             instructions.append(
                 {"op"  :self.operator,
                  "dest":result,
-                 "left":self.left.int_value(),
+                 "left":self.left.int_value() & 0xffffffff,
                  "src":new_register,
                  "type":self.type_(),
                  "size":self.size(),
                  "signed":self.signed()})
+
+            if self.size() == 8:
+                instructions.append(
+                    {"op"  :self.operator,
+                     "dest":result,
+                     "left":self.left.int_value() >> 32,
+                     "src":new_register + 1,
+                     "carry":True,
+                     "type":self.type_(),
+                     "size":self.size(),
+                     "signed":self.signed()})
 
         except NotConstant:
             try:
@@ -661,10 +693,21 @@ class Binary(Expression):
                     {"op"   :self.operator,
                      "dest" :result,
                      "src"  :new_register,
-                     "right":self.right.int_value(),
+                     "right":self.right.int_value() & 0xffffffff,
                      "type":self.type_(),
                      "size":self.size(),
                      "signed" :self.signed()})
+
+                if self.size() == 8:
+                    instructions.append(
+                        {"op"   :self.operator,
+                         "dest" :result + 1,
+                         "src"  :new_register + 1,
+                         "right":self.right.int_value() >> 32,
+                         "carry":True,
+                         "type":self.type_(),
+                         "size":self.size(),
+                         "signed" :self.signed()})
 
             except NotConstant:
                 instructions = self.left.generate(new_register, allocator)
@@ -679,6 +722,17 @@ class Binary(Expression):
                      "type":self.type_(),
                      "size":self.size(),
                      "signed":self.signed()})
+
+                if self.size() == 8:
+                    instructions.append(
+                        {"op"  :self.operator,
+                         "dest":result + 1,
+                         "src" :new_register + 1,
+                         "srcb":right + 1,
+                         "carry":True,
+                         "type":self.type_(),
+                         "size":self.size(),
+                         "signed":self.signed()})
 
                 allocator.free(right)
         allocator.free(new_register)
@@ -825,7 +879,7 @@ class Output(Expression):
         Expression.__init__(self, "int", 4, False)
 
     def generate(self, result, allocator):
-        temp1 = allocator.new(2)
+        temp1 = allocator.new(4)
         instructions = self.handle.generate(temp1, allocator)
         instructions.extend(self.expression.generate(result, allocator))
         instructions.append(
@@ -866,7 +920,7 @@ class Input(Expression):
         Expression.__init__(self, "int", 4, False)
 
     def generate(self, result, allocator):
-        temp1 = allocator.new(2)
+        temp1 = allocator.new(4)
         instructions = self.handle.generate(temp1, allocator)
         instructions.append(
                 {"op"   : "read",
@@ -880,7 +934,7 @@ class FileRead(Expression):
 
     def __init__(self, name):
         self.name = name
-        Expression.__init__(self, "int", 2, True)
+        Expression.__init__(self, "int", 4, True)
 
     def generate(self, result, allocator):
         return [{"op"   :"file_read", "dest" :result, "file_name":self.name}]
@@ -890,10 +944,10 @@ class Ready(Expression):
 
     def __init__(self, handle):
         self.handle = handle
-        Expression.__init__(self, "int", 2, False)
+        Expression.__init__(self, "int", 4, False)
 
     def generate(self, result, allocator):
-        temp1 = allocator.new(2)
+        temp1 = allocator.new(4)
         instructions = self.handle.generate(temp1, allocator)
 
         instructions.append(
@@ -978,10 +1032,20 @@ class ConstArray(Object):
                 instructions.append(
                     {"op":"memory_write_literal",
                      "address":location,
-                     "value":value,
-                     "element_size":self.instance.element_size})
+                     "value":value & 0xffffffff})
 
                 location += 1
+
+                if self.size() == 8:
+
+                    instructions.append(
+                        {"op":"memory_write_literal",
+                         "address":location,
+                         "value":value >> 32})
+
+                    location += 1
+
+
 
         instructions.append(
             {"op":"literal",
@@ -1020,8 +1084,8 @@ class ArrayIndex(Object):
 
     def generate(self, result, allocator):
         instructions = []
-        offset = allocator.new(2)
-        address = allocator.new(2)
+        offset = allocator.new(4)
+        address = allocator.new(4)
         instructions.extend(self.index_expression.generate(offset, allocator))
 
         instructions.append(
@@ -1031,32 +1095,42 @@ class ArrayIndex(Object):
              "srcb"  :self.instance.register,
              "signed":False})
 
-        instructions.append(
-            {"op"    :"memory_read_request",
-             "src"   :address,
-             "sequence": id(self),
-             "element_size":self.size()})
+        for i in range(self.instance.element_size//4):
 
-        instructions.append(
-            {"op"    :"memory_read_wait",
-             "src"   :address,
-             "sequence": id(self),
-             "element_size":self.size()})
+            instructions.append(
+                {"op"    :"memory_read_request",
+                 "src"   :address,
+                 "sequence": id(self)})
 
-        instructions.append(
-            {"op"    :"memory_read",
-             "src"   :address,
-             "dest"  :result,
-             "sequence": id(self),
-             "element_size":self.size()})
+            instructions.append(
+                {"op"    :"memory_read_wait",
+                 "src"   :address,
+                 "sequence": id(self)})
+
+            instructions.append(
+                {"op"    :"memory_read",
+                 "src"   :address,
+                 "dest"  :result+i,
+                 "sequence": id(self)})
+
+            #no need to increment the last time round
+            if i+4 == self.instance.element_size//4:
+                break
+
+            instructions.append(
+                {"op"     :"+",
+                 "dest"   :address,
+                 "src"    :address,
+                 "left"   :1,
+                 "signed" :False})
 
         allocator.free(address)
         allocator.free(offset)
         return instructions
 
     def copy(self, expression, result, allocator):
-        index = allocator.new(2)
-        address = allocator.new(2)
+        index = allocator.new(4)
+        address = allocator.new(4)
         instructions = expression.generate(result, allocator)
         instructions.extend(self.index_expression.generate(index, allocator))
 
@@ -1065,13 +1139,25 @@ class ArrayIndex(Object):
              "dest"   :address,
              "src"    :index,
              "srcb"   :self.instance.register,
-             "signed" :expression.signed()})
+             "signed" :False})
+        
+        for i in range(self.instance.element_size//4):
 
-        instructions.append(
-            {"op"    :"memory_write",
-             "src"   :address,
-             "srcb"  :result,
-             "element_size" :self.instance.element_size})
+            instructions.append(
+                {"op"    :"memory_write",
+                 "src"   :address,
+                 "srcb"  :result + i})
+
+            #no need to increment the last time round
+            if i+4 == self.instance.element_size//4:
+                break
+
+            instructions.append(
+                {"op"     :"+",
+                 "dest"   :address,
+                 "src"    :address,
+                 "left"   :1,
+                 "signed" :False})
 
         allocator.free(index)
         allocator.free(address)
@@ -1091,6 +1177,12 @@ class Variable(Object):
                  "dest":result,
                  "src" :self.instance.register})
 
+            if self.size() == 8:
+                instructions.append(
+                    {"op"  :"move",
+                     "dest":result+1,
+                     "src" :self.instance.register+1})
+
         return instructions
 
     def copy(self, expression, result, allocator):
@@ -1101,6 +1193,12 @@ class Variable(Object):
                 {"op"   : "move",
                  "dest" : self.instance.register,
                  "src"  : result})
+
+            if self.size() == 8:
+                instructions.append(
+                    {"op"   : "move",
+                     "dest" : self.instance.register+1,
+                     "src"  : result+1})
 
         return instructions
 
@@ -1131,13 +1229,27 @@ class PostIncrement(Expression):
              "src"   : self.lvalue.instance.register,
              "dest"  : result})
 
+        if self.size() == 8:
+            instructions.append(
+                {"op"    : "move",
+                 "src"   : self.lvalue.instance.register+1,
+                 "dest"  : result+1})
+
         instructions.append(
             {"op"    : self.operator,
              "dest"  : self.lvalue.instance.register,
              "right" : 1,
              "src"   : self.lvalue.instance.register,
-             "size"  : self.size(),
              "signed": self.signed()})
+
+        if self.size() == 8:
+            instructions.append(
+                {"op"    : self.operator,
+                 "carry" : True,
+                 "dest"  : self.lvalue.instance.register+1,
+                 "right" : 1,
+                 "src"   : self.lvalue.instance.register+1,
+                 "signed": self.signed()})
 
         return instructions
 
@@ -1156,21 +1268,29 @@ class Assignment(Expression):
 
 class Constant(Expression):
 
-    def __init__(self, value, type_="int", size=2, signed=True):
+    def __init__(self, value, type_="int", size=4, signed=True):
         self._value = value
         Expression.__init__(self, type_, size, signed)
 
     def generate(self, result, allocator):
 
+
         instructions = [{
             "op":"literal", 
             "dest":result, 
-            "size":self.size(),
-            "signed":self.size(),
-            "literal":self.int_value()}]
+            "signed":self.signed(),
+            "literal":self.int_value() & 0xffffffff}]
+
+        if self.size() == 8:
+
+            instructions.append(
+                {"op":"literal", 
+                "dest":result + 1, 
+                "signed":self.size(),
+                "literal":self.int_value() >> 32})
+
         return instructions
 
     def value(self):
        return self._value
-
 

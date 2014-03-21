@@ -85,17 +85,16 @@ def generate_instruction_set(instructions):
         encoded_instruction["srcb"] = 0
         encoded_instruction["literal"] = 0
         encoded_instruction["float"] = True
+        encoded_instruction["carry"] = False
         opcode["op"] = instruction["op"]
         opcode["right"] = False
         opcode["unsigned"] = False
         opcode["literal"] = False
         opcode["float"] = False
+        opcode["carry"] = False
 
         if "signed" in instruction:
             opcode["unsigned"] = not instruction["signed"]
-
-        if "element_size" in instruction:
-            opcode["element_size"] = instruction["element_size"]
 
         if "file_name" in instruction:
             opcode["file_name"] = instruction["file_name"]
@@ -142,6 +141,10 @@ def generate_instruction_set(instructions):
         if "label" in instruction:
             opcode["literal"] = True
             encoded_instruction["literal"] = instruction["label"]
+
+        if "carry" in instruction:
+            opcode["carry"] = True
+            encoded_instruction["carry"] = True
 
         if opcode not in instruction_set:
             instruction_set.append(opcode)
@@ -230,14 +233,10 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
       ("dest_2", register_bits),
       ("result_2", 32),
       ("write_enable_2", 1),
-      ("address_2", 16),
-      ("data_out_2", 16),
-      ("data_in_2", 16),
-      ("memory_enable_2", 1),
-      ("address_4", 16),
-      ("data_out_4", 32),
-      ("data_in_4", 32),
-      ("memory_enable_4", 1),
+      ("address", 16),
+      ("data_out", 32),
+      ("data_in", 32),
+      ("memory_enable", 1),
     ] + [
       ("s_output_" + i + "_stb", 32) for i in outputs
     ] + [
@@ -390,12 +389,9 @@ def generate_CHIP(input_file,
     for name, size in signals:
         write_declaration("  reg ", name, size)
 
-    memory_size_2 = int(allocator.memory_size_2)
-    memory_size_4 = int(allocator.memory_size_4)
-    if memory_size_2:
-        output_file.write("  reg [15:0] memory_2 [%i:0];\n"%(memory_size_2-1))
-    if memory_size_4:
-        output_file.write("  reg [31:0] memory_4 [%i:0];\n"%(memory_size_4-1))
+    memory_size = int(allocator.memory_size)
+    if memory_size:
+        output_file.write("  reg [31:0] memory [%i:0];\n"%(memory_size-1))
 
     output_file.write("  reg [%s:0] instructions [%i:0];\n"%(instruction_bits-1, len(instructions)-1))
     output_file.write("  reg [31:0] registers [%i:0];\n"%(len(registers)-1))
@@ -455,7 +451,7 @@ def generate_CHIP(input_file,
       "<=", "==", "!="]
 
 
-    if initialize_memory and (allocator.memory_content_2 or allocator.memory_content_4):
+    if initialize_memory and allocator.memory_content:
 
         output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
         output_file.write("  // MEMORY INITIALIZATION                                                      \n")
@@ -468,10 +464,8 @@ def generate_CHIP(input_file,
 
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
-        for location, content in allocator.memory_content_2.iteritems():
-            output_file.write("    memory_2[%s] = %s;\n"%(location, content))
-        for location, content in allocator.memory_content_4.iteritems():
-            output_file.write("    memory_4[%s] = %s;\n"%(location, content))
+        for location, content in allocator.memory_content.iteritems():
+            output_file.write("    memory[%s] = %s;\n"%(location, content))
         output_file.write("  end\n\n")
 
 
@@ -522,21 +516,13 @@ def generate_CHIP(input_file,
     output_file.write("  \n  always @(posedge clk)\n")
     output_file.write("  begin\n\n")
 
-    if memory_size_2:
-        output_file.write("    //implement memory for 2 byte x n arrays\n")
-        output_file.write("    if (memory_enable_2 == 1'b1) begin\n")
-        output_file.write("      memory_2[address_2] <= data_in_2;\n")
-        output_file.write("    end\n")
-        output_file.write("    data_out_2 <= memory_2[address_2];\n")
-        output_file.write("    memory_enable_2 <= 1'b0;\n\n")
-
-    if memory_size_4:
+    if memory_size:
         output_file.write("    //implement memory for 4 byte x n arrays\n")
-        output_file.write("    if (memory_enable_4 == 1'b1) begin\n")
-        output_file.write("      memory_4[address_4] <= data_in_4;\n")
+        output_file.write("    if (memory_enable == 1'b1) begin\n")
+        output_file.write("      memory[address] <= data_in;\n")
         output_file.write("    end\n")
-        output_file.write("    data_out_4 <= memory_4[address_4];\n")
-        output_file.write("    memory_enable_4 <= 1'b0;\n\n")
+        output_file.write("    data_out <= memory[address];\n")
+        output_file.write("    memory_enable <= 1'b0;\n\n")
 
     output_file.write("    write_enable_2 <= 0;\n")
 
@@ -856,8 +842,7 @@ def generate_CHIP(input_file,
         elif instruction["op"] == "memory_read_request":
             output_file.write("        16'd%s:\n"%(opcode))
             output_file.write("        begin\n")
-            output_file.write("          address_%s <= register_1;\n"%(
-              instruction["element_size"]))
+            output_file.write("          address <= register_1;\n")
             output_file.write("        end\n\n")
 
         elif instruction["op"] == "memory_read_wait":
@@ -866,20 +851,16 @@ def generate_CHIP(input_file,
         elif instruction["op"] == "memory_read":
             output_file.write("        16'd%s:\n"%(opcode))
             output_file.write("        begin\n")
-            output_file.write("          result_2 <= data_out_%s;\n"%(
-              instruction["element_size"]))
+            output_file.write("          result_2 <= data_out;\n")
             output_file.write("          write_enable_2 <= 1;\n")
             output_file.write("        end\n\n")
 
         elif instruction["op"] == "memory_write":
             output_file.write("        16'd%s:\n"%(opcode))
             output_file.write("        begin\n")
-            output_file.write("          address_%s <= register_1;\n"%(
-              instruction["element_size"]))
-            output_file.write("          data_in_%s <= registerb_1;\n"%(
-              instruction["element_size"]))
-            output_file.write("          memory_enable_%s <= 1'b1;\n"%(
-              instruction["element_size"]))
+            output_file.write("          address <= register_1;\n")
+            output_file.write("          data_in <= registerb_1;\n")
+            output_file.write("          memory_enable <= 1'b1;\n")
             output_file.write("        end\n\n")
 
         elif instruction["op"] == "assert":

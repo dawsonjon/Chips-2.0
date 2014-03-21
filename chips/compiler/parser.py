@@ -54,17 +54,17 @@ class Parser:
             if "signed" in type_specifiers:
                 self.tokens.error("Cannot be signed and unsigned")
 
-        size = 2
+        size = 4
         if "long" in type_specifiers:
             if "short" in type_specifiers:
                 self.tokens.error("Cannot be long and short")
-            size = 4
+            size = 8
 
         type_ = "int"
         for i in type_specifiers:
             if i in self.structs:
                 type_ = i
-                size = 2
+                size = 4
                 signed = False
 
         if "float" in type_specifiers:
@@ -78,13 +78,24 @@ class Parser:
             size = 4
             signed = True
 
+        if "double" in type_specifiers:
+            if "short" in type_specifiers:
+                self.tokens.error("Double cannot be short")
+            if "long" in type_specifiers:
+                self.tokens.error("Double cannot be long (but double can)")
+            if "unsigned" in type_specifiers:
+                self.tokens.error("Double cannot be unsigned")
+            type_ = "double"
+            size = 8
+            signed = True
+
         const = False 
         if "const" in type_specifiers:
             const = True
 
         if "void" in type_specifiers:
             type_ = "void"
-            size = 2
+            size = 4
             signed = False
 
 
@@ -105,7 +116,7 @@ class Parser:
                     self.tokens.expect("]")
                     declaration = ArrayDeclaration(
                         self.allocator,
-                        2,
+                        4,
                         type_+"[]",
                         type_,
                         size,
@@ -143,7 +154,7 @@ class Parser:
         function.size = size
         function.signed = signed
 
-        function.return_address = self.allocator.new(2, 
+        function.return_address = self.allocator.new(4, 
             function.name+" return address")
 
         if type_ != "void":
@@ -663,20 +674,23 @@ class Parser:
         """
 
         functions = {
-           "False,int,int,4,/" : "long_unsigned_divide_xxxx",
-           "True,int,int,4,/" : "long_divide_xxxx",
-           "False,int,int,2,/" : "unsigned_divide_xxxx",
-           "True,int,int,2,/" : "divide_xxxx",
-           "False,int,int,4,%" : "long_unsigned_modulo_xxxx",
-           "True,int,int,4,%" : "long_modulo_xxxx",
-           "False,int,int,2,%" : "unsigned_modulo_xxxx",
-           "True,int,int,2,%" : "modulo_xxxx",
+           #signed,left,right,size,operator
+           "False,int,int,4,/" : "unsigned_divide_xxxx",
+           "True,int,int,4,/" : "divide_xxxx",
+           "False,int,int,4,%" : "unsigned_modulo_xxxx",
+           "True,int,int,4,%" : "modulo_xxxx",
+
            "True,float,float,4,==" : "float_equal_xxxx",
            "True,float,float,4,!=" : "float_ne_xxxx",
            "True,float,float,4,<" : "float_lt_xxxx",
            "True,float,float,4,>" : "float_gt_xxxx",
            "True,float,float,4,<=" : "float_le_xxxx",
            "True,float,float,4,>=" : "float_ge_xxxx",
+
+           "False,int,int,8,/" : "long_unsigned_divide_xxxx",
+           "True,int,int,8,/" : "long_divide_xxxx",
+           "False,int,int,8,%" : "long_unsigned_modulo_xxxx",
+           "True,int,int,8,%" : "long_modulo_xxxx",
         }
 
         #select a function that matches the template.
@@ -689,6 +703,7 @@ class Parser:
 
         #Some things can't be implemented in verilog, substitute them with a function
         if signature in functions:
+            print "replacing", signature
             function = self.scope[functions[signature]]
             function_call = FunctionCall(function)
             function_call.arguments = [binary_expression.left, binary_expression.right]
@@ -920,7 +935,7 @@ class Parser:
     def parse_number(self):
         token = self.tokens.get()
         type_ = "int"
-        size = 2
+        size = 4
         signed = True
         if token.startswith("'"):
             try:
@@ -938,7 +953,7 @@ class Parser:
                     size,
                     "int[]",
                     "int",
-                    2,
+                    4,
                     False,
                     initializer,
                     self.initialize_memory)
@@ -968,7 +983,7 @@ class Parser:
                 if "U" in token.upper():
                     signed = False
                 if "L" in token.upper():
-                    size = 4
+                    size = 8
                 token = token.upper().replace("U", "")
                 value = int(eval(token))
 

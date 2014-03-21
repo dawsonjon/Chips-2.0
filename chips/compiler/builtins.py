@@ -14,14 +14,14 @@ unsigned unsigned_divide_xxxx(unsigned dividend, unsigned divisor){
     unsigned i = 0;
 
     while(1){
-        if( dividend & (1 << 15) ){
+        if( dividend & (1 << 31) ){
             remainder |= 1;
         }
         if( remainder >= divisor ){
             quotient |= 1;
             remainder -= divisor;
         }
-        if(i==15) break;
+        if(i==31) break;
         i++;
         quotient <<= 1;
         remainder <<= 1;
@@ -40,8 +40,8 @@ unsigned unsigned_modulo_xxxx(unsigned dividend, unsigned divisor){
 int divide_xxxx(int dividend, int divisor){
     unsigned udividend, udivisor, uquotient;
     unsigned dividend_sign, divisor_sign, quotient_sign;
-    dividend_sign = dividend & 0x8000u;
-    divisor_sign = divisor & 0x8000u;
+    dividend_sign = dividend & 0x80000000u;
+    divisor_sign = divisor & 0x80000000u;
     quotient_sign = dividend_sign ^ divisor_sign;
     udividend = dividend_sign ? -dividend : dividend;
     udivisor = divisor_sign ? -divisor : divisor;
@@ -53,8 +53,8 @@ int modulo_xxxx(int dividend, int divisor){
     unsigned udividend, udivisor, uquotient;
     unsigned dividend_sign, divisor_sign;
     int modulo;
-    dividend_sign = dividend & 0x8000u;
-    divisor_sign = divisor & 0x8000u;
+    dividend_sign = dividend & 0x80000000u;
+    divisor_sign = divisor & 0x80000000u;
     udividend = dividend_sign ? -dividend : dividend;
     udivisor = divisor_sign ? -divisor : divisor;
     modulo = unsigned_modulo_xxxx(udividend, udivisor);
@@ -64,19 +64,21 @@ int modulo_xxxx(int dividend, int divisor){
 
 long unsigned long_unsigned_modulo_yyyy;
 long unsigned long_unsigned_divide_xxxx(long unsigned dividend, long unsigned divisor){
+    report(dividend);
+    report(divisor);
     long unsigned remainder = 0;
     long unsigned quotient = 0;
     unsigned i = 0;
 
     while(1){
-        if( dividend & (1 << 31) ){
+        if( dividend & (1 << 63) ){
             remainder |= 1;
         }
         if( remainder >= divisor ){
             quotient |= 1;
             remainder -= divisor;
         }
-        if(i==31) break;
+        if(i==63) break;
         i++;
         quotient <<= 1;
         remainder <<= 1;
@@ -89,8 +91,8 @@ long unsigned long_unsigned_divide_xxxx(long unsigned dividend, long unsigned di
 long int long_divide_xxxx(long int dividend, long int divisor){
     long unsigned udividend, udivisor, uquotient;
     long unsigned dividend_sign, divisor_sign, quotient_sign;
-    dividend_sign = dividend & 0x80000000ul;
-    divisor_sign = divisor & 0x80000000ul;
+    dividend_sign = dividend & 0x8000000000000000ul;
+    divisor_sign = divisor & 0x8000000000000000ul;
     quotient_sign = dividend_sign ^ divisor_sign;
     udividend = dividend_sign ? -dividend : dividend;
     udivisor = divisor_sign ? -divisor : divisor;
@@ -108,8 +110,8 @@ long int long_modulo_xxxx(long int dividend, long int divisor){
     long unsigned udividend, udivisor;
     long unsigned dividend_sign, divisor_sign, quotient_sign;
     long int modulo;
-    dividend_sign = dividend & 0x80000000ul;
-    divisor_sign = divisor & 0x80000000ul;
+    dividend_sign = dividend & 0x8000000000000000ul;
+    divisor_sign = divisor & 0x8000000000000000ul;
     udividend = dividend_sign ? -dividend : dividend;
     udivisor = divisor_sign ? -divisor : divisor;
     modulo = long_unsigned_modulo_xxxx(udividend, udivisor);
@@ -117,62 +119,62 @@ long int long_modulo_xxxx(long int dividend, long int divisor){
     return modulo;
 }
 
-int float_equal_xxxx(long int a, long int b){
+int float_equal_xxxx(int a, int b){
     if (a < 0) {
-        a = 0x80000000ul - a;
+        a = 0x80000000u - a;
     }
     if (b < 0) {
-        b = 0x80000000ul - b;
+        b = 0x80000000u - b;
     }
     return  a == b;
 }
 
-int float_ne_xxxx(long int a, long int b){
+int float_ne_xxxx(int a, int b){
     if (a < 0) {
-        a = 0x80000000ul - a;
+        a = 0x80000000u - a;
     }
     if (b < 0) {
-        b = 0x80000000ul - b;
+        b = 0x80000000u - b;
     }
     return  a != b;
 }
 
-int float_lt_xxxx(long int a, long int b){
+int float_lt_xxxx(int a, int b){
     if (a < 0) {
-        a = 0x80000000ul - a;
+        a = 0x80000000u - a;
     }
     if (b < 0) {
-        b = 0x80000000ul - b;
+        b = 0x80000000u - b;
     }
     return  a < b;
 }
 
-int float_gt_xxxx(long int a, long int b){
+int float_gt_xxxx(int a, int b){
     if (a < 0) {
-        a = 0x80000000ul - a;
+        a = 0x80000000u - a;
     }
     if (b < 0) {
-        b = 0x80000000ul - b;
+        b = 0x80000000u - b;
     }
     return  a > b;
 }
 
-int float_le_xxxx(long int a, long int b){
+int float_le_xxxx(int a, int b){
     if (a < 0) {
-        a = 0x80000000ul - a;
+        a = 0x80000000u - a;
     }
     if (b < 0) {
-        b = 0x80000000ul - b;
+        b = 0x80000000u - b;
     }
     return  a <= b;
 }
 
-int float_ge_xxxx(long int a, long int b){
+int float_ge_xxxx(int a, int b){
     if (a < 0) {
-        a = 0x80000000ul - a;
+        a = 0x80000000u - a;
     }
     if (b < 0) {
-        b = 0x80000000ul - b;
+        b = 0x80000000u - b;
     }
     return  a >= b;
 }
