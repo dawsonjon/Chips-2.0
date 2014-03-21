@@ -60,15 +60,15 @@ class Chip:
         output_file.write("  input  clk;\n")
         output_file.write("  input  rst;\n")
         for i in self.inputs:
-            output_file.write("  input  [15:0] %s;\n"%i.name)
+            output_file.write("  input  [31:0] %s;\n"%i.name)
             output_file.write("  input  %s_stb;\n"%i.name)
             output_file.write("  output %s_ack;\n"%i.name)
         for i in self.outputs:
-            output_file.write("  output [15:0] %s;\n"%i.name)
+            output_file.write("  output [31:0] %s;\n"%i.name)
             output_file.write("  output %s_stb;\n"%i.name)
             output_file.write("  input  %s_ack;\n"%i.name)
         for i in self.wires:
-            output_file.write("  wire   [15:0] %s;\n"%i.name)
+            output_file.write("  wire   [31:0] %s;\n"%i.name)
             output_file.write("  wire   %s_stb;\n"%i.name)
             output_file.write("  wire   %s_ack;\n"%i.name)
         for instance in self.instances:
@@ -99,13 +99,13 @@ class Chip:
         output_file.write("  reg  clk;\n")
         output_file.write("  reg  rst;\n")
         for i in self.inputs:
-            output_file.write("  wire  [15:0] %s;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_stb;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_ack;\n"%i.name)
+            output_file.write("  wire  [31:0] %s;\n"%i.name)
+            output_file.write("  wire  %s_stb;\n"%i.name)
+            output_file.write("  wire  %s_ack;\n"%i.name)
         for i in self.outputs:
-            output_file.write("  wire  [15:0] %s;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_stb;\n"%i.name)
-            output_file.write("  wire  [15:0] %s_ack;\n"%i.name)
+            output_file.write("  wire  [31:0] %s;\n"%i.name)
+            output_file.write("  wire  %s_stb;\n"%i.name)
+            output_file.write("  wire  %s_ack;\n"%i.name)
 
         output_file.write("  \n  initial\n")
         output_file.write("  begin\n")
@@ -151,6 +151,7 @@ class Chip:
         files = ["%s.v"%i.name for i in self.components]
         files.append(self.name + ".v")
         files.append(self.name + "_tb.v")
+        files.append("chips_lib.v")
         files = " ".join(files)
 
         os.system("iverilog -o %s %s"%(self.name + "_tb", files))

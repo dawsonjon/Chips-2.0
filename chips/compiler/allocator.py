@@ -14,6 +14,10 @@ class Allocator:
         self.reuse = reuse
         self.memory_content_2 = {}
         self.memory_content_4 = {}
+        self.start = 0
+
+    def freeze(self):
+        self.start = max(self.all_registers.keys())
 
     def new_array(self, size, contents, element_size):
         if element_size == 2:
@@ -36,7 +40,7 @@ class Allocator:
 
     def new(self, size, name="temporary_register"):
         assert type(size) == int
-        reg = 0
+        reg = self.start
         while reg in self.registers or (reg in self.all_registers and self.regsize(reg) != size):
             reg += 1
         self.registers.append(reg)

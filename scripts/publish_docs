@@ -1,7 +1,11 @@
 #!/bin/bash
 
+cd docs
+make html
+cd ..
+
 cp -r docs/build/html/* ../chips_web/Chips-2.0
 cd ../chips_web/Chips-2.0
 git add .
 git commit -a -m "Update Documents"
-git push origin gh-pages
+git push

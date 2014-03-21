@@ -14,8 +14,6 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
 __version__ = "0.1"
 
-import fpu
-
 def unique(l):
 
     """In the absence of set in older python implementations, make list values unique"""
@@ -166,9 +164,9 @@ def calculate_jumps(instructions):
     labels = {}
     new_instructions = []
     for instruction in instructions:
-        if instruction["op"] == "label":
+       if instruction["op"] == "label":
             labels[instruction["label"]] = location
-        else:
+       else:
             new_instructions.append(instruction)
             location += 1
     instructions = new_instructions
@@ -193,7 +191,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
 
     #Do not generate a port in testbench mode
     inports = [
-      ("input_" + i, 16) for i in inputs
+      ("input_" + i, 32) for i in inputs
     ] + [
       ("input_" + i + "_stb", 1) for i in inputs
     ] + [
@@ -201,7 +199,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
     ]
 
     outports = [
-      ("output_" + i, 16) for i in outputs
+      ("output_" + i, 32) for i in outputs
     ] + [
       ("output_" + i + "_stb", 1) for i in outputs
     ] + [
@@ -241,11 +239,11 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits):
       ("data_in_4", 32),
       ("memory_enable_4", 1),
     ] + [
-      ("s_output_" + i + "_stb", 16) for i in outputs
+      ("s_output_" + i + "_stb", 32) for i in outputs
     ] + [
-      ("s_output_" + i, 16) for i in outputs
+      ("s_output_" + i, 32) for i in outputs
     ] + [
-      ("s_input_" + i + "_ack", 16) for i in inputs
+      ("s_input_" + i + "_ack", 32) for i in inputs
     ]
 
     if testbench:
@@ -318,17 +316,6 @@ def generate_CHIP(input_file,
     output_file.write("///%s\n"%"".join(["=" for i in name]))
     output_file.write("///\n")
     output_file.write("///Created by C2CHIP\n\n")
-
-    if enable_adder:
-        output_file.write(fpu.adder)
-    if enable_divider:
-        output_file.write(fpu.divider)
-    if enable_multiplier:
-        output_file.write(fpu.multiplier)
-    if enable_int_to_float:
-        output_file.write(fpu.int_to_float)
-    if enable_float_to_int:
-        output_file.write(fpu.float_to_int)
 
 
     output_file.write("//////////////////////////////////////////////////////////////////////////////\n")
@@ -816,8 +803,12 @@ def generate_CHIP(input_file,
                 output_file.write('              ({1\'d1, register_1[22:0]} / (2.0**23));\n')
                 output_file.write('          $fdisplay (%s, "%%f", fp_value);\n'%(
                   output_files[instruction["file_name"]]))
+            elif instruction["unsigned"]:
+
+                output_file.write("          $fdisplay (%s, \"%%d\", $unsigned(register_1));\n"%(
+                  output_files[instruction["file_name"]]))
             else:
-                output_file.write("          $fdisplay(%s, \"%%d\", register_1);\n"%(
+                output_file.write("          $fdisplay (%s, \"%%d\", $signed(register_1));\n"%(
                   output_files[instruction["file_name"]]))
             output_file.write("        end\n\n")
 
@@ -984,6 +975,7 @@ def generate_CHIP(input_file,
 
     if enable_adder:
         output_file.write("    if (adder_done) begin\n")
+        output_file.write("      result_2 <= adder_z;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -992,6 +984,7 @@ def generate_CHIP(input_file,
 
     if enable_multiplier:
         output_file.write("    if (multiplier_done) begin\n")
+        output_file.write("      result_2 <= multiplier_z;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1000,6 +993,7 @@ def generate_CHIP(input_file,
 
     if enable_divider:
         output_file.write("    if (divider_done) begin\n")
+        output_file.write("      result_2 <= divider_z;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1008,6 +1002,7 @@ def generate_CHIP(input_file,
 
     if enable_int_to_float:
         output_file.write("    if (int_to_float_done) begin\n")
+        output_file.write("      result_2 <= to_float;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1016,6 +1011,7 @@ def generate_CHIP(input_file,
 
     if enable_float_to_int:
         output_file.write("    if (float_to_int_done) begin\n")
+        output_file.write("      result_2 <= to_int;\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1079,7 +1075,6 @@ def connect_float_to_int(output_file):
     output_file.write("        to_int_ack <= 1;\n")
     output_file.write("        if (to_int_stb && to_int_ack) begin\n")
     output_file.write("          to_int_ack <= 0;\n")
-    output_file.write("          result_2 <= to_int;\n")
     output_file.write("          float_to_int_state <= wait_go;\n")
     output_file.write("          float_to_int_done <= 1;\n")
     output_file.write("        end\n")
@@ -1126,7 +1121,6 @@ def connect_int_to_float(output_file):
     output_file.write("        to_float_ack <= 1;\n")
     output_file.write("        if (to_float_stb && to_float_ack) begin\n")
     output_file.write("          to_float_ack <= 0;\n")
-    output_file.write("          result_2 <= to_float;\n")
     output_file.write("          int_to_float_state <= wait_go;\n")
     output_file.write("          int_to_float_done <= 1;\n")
     output_file.write("        end\n")
@@ -1184,7 +1178,6 @@ def connect_divider(output_file):
     output_file.write("        divider_z_ack <= 1;\n")
     output_file.write("        if (divider_z_stb && divider_z_ack) begin\n")
     output_file.write("          divider_z_ack <= 0;\n")
-    output_file.write("          result_2 <= divider_z;\n")
     output_file.write("          div_state <= wait_go;\n")
     output_file.write("          divider_done <= 1;\n")
     output_file.write("        end\n")
@@ -1243,7 +1236,6 @@ def connect_multiplier(output_file):
     output_file.write("        multiplier_z_ack <= 1;\n")
     output_file.write("        if (multiplier_z_stb && multiplier_z_ack) begin\n")
     output_file.write("          multiplier_z_ack <= 0;\n")
-    output_file.write("          result_2 <= multiplier_z;\n")
     output_file.write("          mul_state <= wait_go;\n")
     output_file.write("          multiplier_done <= 1;\n")
     output_file.write("        end\n")
@@ -1302,7 +1294,6 @@ def connect_adder(output_file):
     output_file.write("        adder_z_ack <= 1;\n")
     output_file.write("        if (adder_z_stb && adder_z_ack) begin\n")
     output_file.write("          adder_z_ack <= 0;\n")
-    output_file.write("          result_2 <= adder_z;\n")
     output_file.write("          add_state <= wait_go;\n")
     output_file.write("          adder_done <= 1;\n")
     output_file.write("        end\n")

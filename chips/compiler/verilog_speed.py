@@ -110,7 +110,7 @@ def generate_CHIP(input_file,
 
     #Do not generate a port in testbench mode
     inports = [
-      ("input_" + i, 16) for i in inputs
+      ("input_" + i, 32) for i in inputs
     ] + [
       ("input_" + i + "_stb", 1) for i in inputs
     ] + [
@@ -118,7 +118,7 @@ def generate_CHIP(input_file,
     ]
 
     outports = [
-      ("output_" + i, 16) for i in outputs
+      ("output_" + i, 32) for i in outputs
     ] + [
       ("output_" + i + "_stb", 1) for i in outputs
     ] + [
@@ -140,11 +140,11 @@ def generate_CHIP(input_file,
     ] + [
       ("register_%s"%(register), definition[1]*8) for register, definition in registers.iteritems()
     ] + [
-      ("s_output_" + i + "_stb", 16) for i in outputs
+      ("s_output_" + i + "_stb", 1) for i in outputs
     ] + [
-      ("s_output_" + i, 16) for i in outputs
+      ("s_output_" + i, 32) for i in outputs
     ] + [
-      ("s_input_" + i + "_ack", 16) for i in inputs
+      ("s_input_" + i + "_ack", 1) for i in inputs
     ]
 
     if testbench:
@@ -153,17 +153,6 @@ def generate_CHIP(input_file,
     else:
         inports.append(("clk", 1))
         inports.append(("rst", 1))
-
-    if enable_adder:
-        output_file.write(fpu.adder)
-    if enable_divider:
-        output_file.write(fpu.divider)
-    if enable_multiplier:
-        output_file.write(fpu.multiplier)
-    if enable_int_to_float:
-        output_file.write(fpu.int_to_float)
-    if enable_float_to_int:
-        output_file.write(fpu.float_to_int)
 
     #output the code in verilog
     output_file.write("//name : %s\n"%name)

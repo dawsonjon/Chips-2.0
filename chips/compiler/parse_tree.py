@@ -48,6 +48,7 @@ class Function:
         instructions.extend(self.statement.generate())
         if not hasattr(self, "return_value"):
             instructions.append({"op":"jmp_to_reg", "src":self.return_address})
+        self.allocator.freeze()
         return instructions
 
 
@@ -794,8 +795,8 @@ class FunctionCall(Expression):
         instructions = []
 
         for expression, argument in zip(
-            self.arguments, 
-            self.function.arguments):
+                self.arguments, 
+                self.function.arguments):
 
             temp_register = allocator.new(expression.size())
             instructions.extend(
@@ -821,7 +822,7 @@ class Output(Expression):
     def __init__(self, name, expression):
         self.name = name
         self.expression = expression
-        Expression.__init__(self, "int", 2, True)
+        Expression.__init__(self, self.expression.type_(), 2, True)
 
     def generate(self, result, allocator):
         instructions = self.expression.generate(result, allocator)
@@ -859,9 +860,9 @@ class FileWrite(Expression):
 
 class Input(Expression):
 
-    def __init__(self, name):
+    def __init__(self, name, type_="int"):
         self.name = name
-        Expression.__init__(self, "int", 2, True)
+        Expression.__init__(self, type_, 2, True)
 
     def generate(self, result, allocator):
         return [{"op"   :"read", "dest" :result, "input":self.name}]
