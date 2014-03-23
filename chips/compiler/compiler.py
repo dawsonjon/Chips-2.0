@@ -30,6 +30,7 @@ def comp(input_file, options=[]):
 
     reuse = "no_reuse" not in options
     initialize_memory = "no_initialize_memory" not in options
+    generate_library()
 
     try:
             #Optimize for area
@@ -37,9 +38,15 @@ def comp(input_file, options=[]):
             process = parser.parse_process()
             name = process.main.name
             instructions = process.generate()
+            if "dump_raw" in options:
+                for i in instructions:
+                    print i
             instructions = expand_macros(instructions, parser.allocator)
             instructions = cleanup_functions(instructions)
             instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
+            if "dump_optimised" in options:
+                for i in instructions:
+                    print i
             output_file = name + ".v"
             output_file = open(output_file, "w")
             inputs, outputs = generate_CHIP_area(

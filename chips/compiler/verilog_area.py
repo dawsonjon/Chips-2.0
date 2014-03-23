@@ -87,9 +87,6 @@ def generate_instruction_set(instructions):
         opcode["op"] = instruction["op"]
         opcode["literal"] = False
 
-        if instruction["op"] == "+":
-            print instruction
-
         if "file_name" in instruction:
             opcode["file_name"] = instruction["file_name"]
 
@@ -219,6 +216,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
       ("data_out", 32),
       ("data_in", 32),
       ("carry", 1),
+      ("product_hi", 32),
       ("memory_enable", 1),
     ] + [
       ("s_output_" + i + "_stb", 32) for i in outputs
@@ -348,20 +346,16 @@ def generate_CHIP(input_file,
         output_file.write("  integer %s;\n"%i)
 
 
-    def write_declaration(object_type, name, size, value=None):
+    def write_declaration(object_type, name, size):
         if size == 1:
             output_file.write(object_type)
             output_file.write(name)
-            if value is not None:
-                output_file.write("= %s'd%s"%(size,value))
             output_file.write(";\n")
         else:
             output_file.write(object_type)
             output_file.write("[%i:0]"%(size-1))
             output_file.write(" ")
             output_file.write(name)
-            if value is not None:
-                output_file.write("= %s'd%s"%(size,value))
             output_file.write(";\n")
 
     for name, size in inports:
@@ -880,6 +874,11 @@ def generate_CHIP(input_file,
                 instruction["line"],
                 instruction["file"],))
 
+        elif instruction["op"] == "long_report":
+            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed(register_1));\n'%(
+                instruction["line"],
+                instruction["file"],))
+
         elif instruction["op"] == "float_report":
            output_file.write('          fp_value = (register_1[31]?-1.0:1.0) *\n')
            output_file.write('              (2.0 ** (register_1[30:23]-127.0)) *\n')
@@ -889,6 +888,11 @@ def generate_CHIP(input_file,
                   instruction["file"]))
 
         elif instruction["op"] == "unsigned_report":
+           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register_1));\n'%(
+	       instruction["line"],
+	       instruction["file"]))
+
+        elif instruction["op"] == "long_unsigned_report":
            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register_1));\n'%(
 	       instruction["line"],
 	       instruction["file"]))

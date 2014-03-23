@@ -873,8 +873,9 @@ class Unary(Expression):
         new_register = allocator.new(self.size())
         instructions = self.expression.generate(new_register, allocator)
 
+        assert self.operator == "~"
         instructions.extend([
-            {"op":self.operator, 
+            {"op":"not", 
              "dest":result, 
              "src":new_register}])
 
@@ -1137,60 +1138,117 @@ class ArrayIndex(Object):
         instructions = []
         offset = allocator.new(4)
         address = allocator.new(4)
+        blocks_reg = allocator.new(4)
+        one = allocator.new(4)
+
+        blocks = self.instance.element_size//4
+
         instructions.extend(self.index_expression.generate(offset, allocator))
 
-        instructions.append(
-            {"op"    :"add",
-             "dest"  :address,
-             "src"   :offset,
-             "srcb"  :self.instance.register,
-             "signed":False})
+        instructions.append({
+            "op"    :"add",
+            "dest"  :address,
+            "src"   :offset,
+            "srcb"  :self.instance.register,
+        })
 
-        for i in range(self.instance.element_size//4):
+        instructions.append({
+            "op"      :"literal",
+            "literal" :blocks,
+            "dest"    :blocks_reg,
+        })
 
-            instructions.append(
-                {"op"    :"memory_read_request",
-                 "src"   :address,
-                 "sequence": id(self)})
+        instructions.append({
+            "op"      : "multiply",
+            "src"     : blocks_reg,
+            "srcb"    : address,
+            "dest"    : address,
+        })
 
-            instructions.append(
-                {"op"    :"memory_read_wait",
-                 "src"   :address,
-                 "sequence": id(self)})
+        instructions.append({
+            "op"      :"literal",
+            "literal" :1,
+            "dest"    :one,
+        })
 
-            instructions.append(
-                {"op"    :"memory_read",
-                 "src"   :address,
-                 "dest"  :result+i,
-                 "sequence": id(self)})
+
+        for i in range(blocks):
+
+            instructions.append({
+                "op"    :"memory_read_request",
+                "src"   :address,
+                "sequence": str(id(self)) + str(i),
+            })
+
+            instructions.append({
+                "op"    :"memory_read_wait",
+                "src"   :address,
+                "sequence": str(id(self)) + str(i),
+            })
+
+            instructions.append({
+                "op"    :"memory_read",
+                "src"   :address,
+                "dest"  :result+i,
+                "sequence": str(id(self)) + str(i),
+            })
 
             #no need to increment the last time round
-            if i+4 == self.instance.element_size//4:
+            if i+1 == blocks:
                 break
 
-            instructions.append(
-                {"op"     :"add",
-                 "dest"   :address,
-                 "src"    :address})
+            instructions.append({
+                "op"     :"add",
+                "srcb"   :one,
+                "dest"   :address,
+                "src"    :address,
+            })
 
         allocator.free(address)
         allocator.free(offset)
+        allocator.free(one)
+        allocator.free(blocks_reg)
         return instructions
 
     def copy(self, expression, result, allocator):
         index = allocator.new(4)
         address = allocator.new(4)
+        one = allocator.new(4)
+        blocks_reg = allocator.new(4)
+
+        blocks = self.instance.element_size//4
+
         instructions = expression.generate(result, allocator)
         instructions.extend(self.index_expression.generate(index, allocator))
 
-        instructions.append(
-            {"op"     :"add",
-             "dest"   :address,
-             "src"    :index,
-             "srcb"   :self.instance.register,
-             "signed" :False})
+        instructions.append({
+            "op"     :"add",
+            "dest"   :address,
+            "src"    :index,
+            "srcb"   :self.instance.register,
+            "signed" :False,
+        })
+
+        instructions.append({
+            "op"      :"literal",
+            "literal" :blocks,
+            "dest"    :blocks_reg,
+        })
+
+        instructions.append({
+            "op"      : "multiply",
+            "src"     : blocks_reg,
+            "srcb"    : address,
+            "dest"    : address,
+        })
+
+        instructions.append({
+            "op"      :"literal",
+            "literal" :1,
+            "dest"    :one,
+        })
         
-        for i in range(self.instance.element_size//4):
+        for i in range(blocks):
 
             instructions.append(
                 {"op"    :"memory_write",
@@ -1198,16 +1256,19 @@ class ArrayIndex(Object):
                  "srcb"  :result + i})
 
             #no need to increment the last time round
-            if i+4 == self.instance.element_size//4:
+            if i+1 == blocks:
                 break
 
             instructions.append(
                 {"op"     :"add",
+                 "srcb"   :one,
                  "dest"   :address,
                  "src"    :address})
 
         allocator.free(index)
         allocator.free(address)
+        allocator.free(one)
+        allocator.free(blocks_reg)
         return instructions
 
 
@@ -1271,29 +1332,33 @@ class PostIncrement(Expression):
 
         instructions = []
 
-        instructions.append(
-            {"op"    : "move",
+        instructions.append({
+             "op"    : "move",
              "src"   : self.lvalue.instance.register,
-             "dest"  : result})
+             "dest"  : result,
+         })
 
         #FIXME Does this work for longs?
         temp = allocator.new(4)
-        instructions.append(
-            {"op"      : "literal",
+        instructions.append({
+             "op"      : "literal",
              "literal" : 1,
-             "dest"    : temp})
+             "dest"    : temp,
+         })
 
         increment_instruction = select_increment_instruction(
             self.lvalue.size(), 
             self.lvalue.type_(), 
             self.lvalue.signed(), 
-            self.operator)
+            self.operator,
+        )
 
-        instructions.append(
-            {"op"    : increment_instruction,
+        instructions.append({
+             "op"    : increment_instruction,
              "dest"  : self.lvalue.instance.register,
              "src"   : self.lvalue.instance.register,
-             "srcb"  : temp})
+             "srcb"  : temp,
+        })
         allocator.free(temp)
 
         return instructions

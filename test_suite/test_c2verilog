@@ -707,6 +707,30 @@ void main(){
 """
 )
 
+#test("long inplace 0",
+#"""
+#int main(){
+  #long int a = 1;
+  #a += 1;
+  #assert(a == 2);
+  #a -= 1;
+  #assert(a == 1);
+  #a *= 2;
+  #assert(a == 2);
+  #a /= 2;
+  #assert(a == 1);
+  #a |= 2;
+  #assert(a == 3);
+  #a &= 2;
+  #assert(a == 2);
+  #a <<= 1;
+  #assert(a == 4);
+  #a >>= 1;
+  #assert(a == 2);
+  #return 0;
+#}
+#""")
+
 test("short_to_long 0",
 """
 void main(){
@@ -841,7 +865,7 @@ void main(){
 )
 
 #test long right shift macro
-for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+for n, i in enumerate([0, 1, 2, 62, 63, 64]):
     test("long_right_shift %i"%n,
     """
     void main(){
@@ -852,7 +876,7 @@ for n, i in enumerate([0, 1, 2, 30, 31, 32]):
     """%(i, hex((0x100000000 >> i) & 0xffffffffffffffff) + "u")
     )
 
-for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+for n, i in enumerate([0, 1, 2, 62, 63, 64]):
     test("long_right_shift %i"%(n + 6),
     """
     void main(){
@@ -864,7 +888,7 @@ for n, i in enumerate([0, 1, 2, 30, 31, 32]):
     )
 
 #test long unsigned right shift macro
-for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+for n, i in enumerate([0, 1, 2, 62, 63, 64]):
     test("unsigned_long_right_shift %i"%n,
     """
     void main(){
@@ -875,7 +899,7 @@ for n, i in enumerate([0, 1, 2, 30, 31, 32]):
     """%(i, hex((0x100000000 >> i) & 0xffffffffffffffff) + "u")
     )
 
-for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+for n, i in enumerate([0, 1, 2, 62, 63, 64]):
     test("unsigned_long_right_shift %i"%(n + 6),
     """
     void main(){
@@ -1568,60 +1592,60 @@ void main(){
 #typedef struct {long int a; int b;} struct_1;
 #
 #struct_1 test(){
-#    struct_1 my;
-#    my.a = 1;
-#    my.b = 2;
-#    return my;
+    #struct_1 my;
+    #my.a = 1;
+    #my.b = 2;
+    #return my;
 #}
 #
 #void main(){
-#    struct_1 blah;
-#    blah = test();
-#    assert(blah.a == 1);
-#    assert(blah.b == 2);
+    #struct_1 blah;
+    #blah = test();
+    #assert(blah.a == 1);
+    #assert(blah.b == 2);
 #}
 #"""
 #)
 
-#test("unsigned divide 1",
-#"""
-#void main(){
-  #unsigned a = 10;
-  #unsigned b = 5;
-  #assert(a/b==2);
-#}
-#"""
-#)
+test("unsigned divide 1",
+"""
+void main(){
+  unsigned a = 10;
+  unsigned b = 5;
+  assert(a/b==2);
+}
+"""
+)
 
-#test("long unsigned divide 1",
-#"""
-#void main(){
-  #long unsigned a = 1000000L;
-  #long unsigned b = 500000L;
-  #assert(a/b==2);
-#}
-#"""
-#)
-#
-#test("divide 1",
-#"""
-#void main(){
-  #int a = 10;
-  #int b = 5;
-  #assert(a/b==2);
-#}
-#"""
-#)
-#
-#test("long divide 1",
-#"""
-#void main(){
-  #long a = 1000000L;
-  #long b = 500000L;
-  #assert(a/b==2);
-#}
-#"""
-#)
+test("long unsigned divide 1",
+"""
+void main(){
+  long unsigned a = 1000000L;
+  long unsigned b = 500000L;
+  assert(a/b==2);
+}
+"""
+)
+
+test("divide 1",
+"""
+void main(){
+  int a = 10;
+  int b = 5;
+  assert(a/b==2);
+}
+"""
+)
+
+test("long divide 1",
+"""
+void main(){
+  long a = 1000000L;
+  long b = 500000L;
+  assert(a/b==2);
+}
+"""
+)
 
 test("long 1",
 """
@@ -1799,9 +1823,9 @@ int main(){
   unsigned b = 0x7fff;
   unsigned c[4];
   unsigned d[] = "asdfg";
-  assert(sizeof a == 8);
-  assert(sizeof b == 8);
-  assert(sizeof c == 32);
+  assert(sizeof a == 4);
+  assert(sizeof b == 4);
+  assert(sizeof c == 16);
   assert(sizeof d == 24);
   return 0;
 }
@@ -1929,7 +1953,7 @@ int main(){
 """
 )
 
-test("type_compatibility 4",
+test_fails("type_compatibility 4",
 """
 int main(){
   long a[2];
@@ -1940,7 +1964,7 @@ int main(){
 """
 )
 
-test("type_compatibility 5",
+test_fails("type_compatibility 5",
 """
 int main(){
   long a[2];
@@ -3582,6 +3606,7 @@ int main(){
   return 0;
 }
 """)
+
 test("inplace 0",
 """
 int main(){
@@ -3605,6 +3630,7 @@ int main(){
   return 0;
 }
 """)
+
 test("inplace 1",
 """
 int main(){
@@ -3631,6 +3657,7 @@ int main(){
   return 0;
 }
 """)
+
 test("increment",
 """
 int main(){
@@ -4443,3 +4470,5 @@ os.system("python-coverage combine")
 os.system("python-coverage report")
 os.system("python-coverage annotate ../c2verilog")
 os.system("python-coverage annotate ../chips/compiler/parser.py")
+os.system("python-coverage annotate ../chips/compiler/compiler.py")
+os.system("python-coverage annotate ../chips/compiler/verilog_area.py")

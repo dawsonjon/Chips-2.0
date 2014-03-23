@@ -14,10 +14,6 @@ unsigned unsigned_divide_xxxx(unsigned dividend, unsigned divisor){
     unsigned i = 0;
 
     while(1){
-        report(i);
-        report(dividend);
-        report(quotient);
-        report(remainder);
         if( dividend & (1 << 31) ){
             remainder |= 1;
         }
@@ -73,7 +69,7 @@ long unsigned long_unsigned_divide_xxxx(long unsigned dividend, long unsigned di
     unsigned i = 0;
 
     while(1){
-        if( dividend & (1 << 63) ){
+        if( (dividend & 0x8000000000000000ul) != 0){
             remainder |= 1;
         }
         if( remainder >= divisor ){
@@ -96,10 +92,10 @@ long int long_divide_xxxx(long int dividend, long int divisor){
     dividend_sign = dividend & 0x8000000000000000ul;
     divisor_sign = divisor & 0x8000000000000000ul;
     quotient_sign = dividend_sign ^ divisor_sign;
-    udividend = dividend_sign ? -dividend : dividend;
-    udivisor = divisor_sign ? -divisor : divisor;
+    udividend = (dividend_sign != 0) ? -dividend : dividend;
+    udivisor = (divisor_sign != 0) ? -divisor : divisor;
     uquotient = long_unsigned_divide_xxxx(udividend, udivisor);
-    return quotient_sign ? -uquotient : uquotient;
+    return (quotient_sign != 0) ? -uquotient : uquotient;
 }
 
 
@@ -114,10 +110,10 @@ long int long_modulo_xxxx(long int dividend, long int divisor){
     long int modulo;
     dividend_sign = dividend & 0x8000000000000000ul;
     divisor_sign = divisor & 0x8000000000000000ul;
-    udividend = dividend_sign ? -dividend : dividend;
-    udivisor = divisor_sign ? -divisor : divisor;
+    udividend = (dividend_sign != 0) ? -dividend : dividend;
+    udivisor = (divisor_sign != 0) ? -divisor : divisor;
     modulo = long_unsigned_modulo_xxxx(udividend, udivisor);
-    modulo = dividend_sign ? -modulo : modulo;
+    modulo = (dividend_sign != 0) ? -modulo : modulo;
     return modulo;
 }
 
@@ -152,14 +148,11 @@ int float_lt_xxxx(int a, int b){
 }
 
 int float_gt_xxxx(int a, int b){
-    report(a);
     if (a < 0) {
         a = 0x80000000u - a;
     }
-    report(b);
     if (b < 0) {
         b = 0x80000000u - b;
-    report(b);
     }
     return  a > b;
 }

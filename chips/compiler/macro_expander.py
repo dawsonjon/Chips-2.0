@@ -326,7 +326,7 @@ def long_shift_left(allocator, instruction):
 
         {
         "op"  : "literal",
-        "literal" : 0x3f,
+        "literal" : 0x7f,
         "dest": counter
         },
 
@@ -422,7 +422,7 @@ def long_shift_right(allocator, instruction):
 
         {
         "op"  : "literal",
-        "literal" : 0x3f,
+        "literal" : 0x7f,
         "dest": counter
         },
 
@@ -517,7 +517,7 @@ def unsigned_long_shift_right(allocator, instruction):
 
         {
         "op"  : "literal",
-        "literal" : 0x3f,
+        "literal" : 0x7f,
         "dest": counter
         },
 
@@ -674,12 +674,17 @@ def long_equal(allocator, instruction):
         "dest": dest
         },
 
+        #{"op":"report", "src":src, "line":0, "file":"macro"},
+        #{"op":"report", "src":srcb, "line":0, "file":"macro"},
+
         {
         "op"  : "equal",
         "src" : src + 1,
         "srcb" : srcb + 1,
         "dest": temp
         },
+        #{"op":"report", "src":src + 1, "line":0, "file":"macro"},
+        #{"op":"report", "src":srcb + 1, "line":0, "file":"macro"},
 
         {
         "op"   : "and",
@@ -1081,7 +1086,6 @@ def long_subtract(allocator, instruction):
         "dest": dest
         },
 
-        #{"op":"report", "src":dest, "line":0, "file":"macro"},
 
         {
         "op"  : "subtract_with_carry",

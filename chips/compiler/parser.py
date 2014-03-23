@@ -327,7 +327,6 @@ class Parser:
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
             if lvalue.const():
-
                 self.tokens.error(
                     "left hand operand of assignment is not modifiable")
 
@@ -335,11 +334,11 @@ class Parser:
             if operator == "=":
                 expression = self.parse_ternary_expression()
             else:
-
                 expression = self.parse_ternary_expression()
                 left = lvalue
                 left, expression = self.coerce_types(left, expression)
                 expression = Binary(operator[:-1], left, expression)
+                expression = self.substitute_function(expression)
 
             if expression.type_() != lvalue.type_():
                 if expression.type_() == "int" and lvalue.type_() == "float":
@@ -741,7 +740,7 @@ class Parser:
 
         #Some things can't be implemented in verilog, substitute them with a function
         if signature in functions:
-            print "replacing", signature
+            #print "replacing", signature
             function = self.scope[functions[signature]]
             function_call = FunctionCall(function)
             function_call.arguments = [binary_expression.left, binary_expression.right]
