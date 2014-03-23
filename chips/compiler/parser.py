@@ -220,6 +220,7 @@ class Parser:
 
         if hasattr(self.function, "return_value"):
             expression = self.parse_expression()
+
             if self.function.type_ == "int" and expression.type_() == "float":
                 expression = FloatToInt(expression)
             elif self.function.type_ == "float" and expression.type_() == "int":
@@ -229,6 +230,17 @@ class Parser:
                     "type mismatch in return statement expected: %s actual: %s"%(
                         self.function.type_,
                         expression.type_()))
+
+            if self.function.size == 4 and expression.size() == 8:
+                expression = LongToShort(expression)
+            elif self.function.size == 8 and expression.size() == 4:
+                expression = ShortToLong(expression)
+            elif self.function.size != expression.size():
+                self.tokens.error(
+                    "type mismatch in return statement expected: %s actual: %s"%(
+                        self.function.size,
+                        expression.size()))
+
             return_.expression = expression
 
         self.tokens.expect(";")
@@ -339,6 +351,17 @@ class Parser:
                         "type mismatch in assignment expected: %s actual: %s"%(
                             lvalue.type_(),
                             expression.type_()))
+
+            if expression.size() != lvalue.size():
+                if expression.size() == 4 and lvalue.size() == 8:
+                    expression = ShortToLong(expression)
+                elif expression.size() == 8 and lvalue.size() == 4:
+                    expression = LongToShort(expression)
+                else:
+                    self.tokens.error(
+                        "size mismatch in assignment expected: %s actual: %s"%(
+                            lvalue.size(),
+                            expression.size()))
 
             return Assignment(lvalue, expression, self.allocator)
         else:
@@ -615,6 +638,7 @@ class Parser:
                 else:
                     initializer = Constant(0, type_, size, signed)
 
+
                 if type_ != initializer.type_():
 
                     if type_ == "int" and initializer.type_() == "float":
@@ -626,6 +650,20 @@ class Parser:
                             "type mismatch in intializer expected: %s actual: %s"%(
                                 type_,
                                 intitializer.type_()))
+
+                if size != initializer.size():
+
+                    if size == 4 and initializer.size() == 8:
+                        initializer = LongToShort(initializer)
+                    elif size == 8 and initializer.size() == 4:
+                        initializer = ShortToLong(initializer)
+                    else:
+                        self.tokens.error(
+                            "size mismatch in intializer expected: %s actual: %s"%(
+                                size,
+                                initializer.size()))
+
+
                 declaration = VariableDeclaration(
                     self.allocator,
                     initializer,
@@ -726,6 +764,16 @@ class Parser:
                 self.tokens.error("Incompatible types : %s %s"%(
                     left.type_(),
                     right.type_()))
+
+        if left.size() != right.size():
+            if left.size() == 8 and right.size() == 4:
+                return left, ShortToLong(right)
+            elif left.size() == 4 and right.size() == 8:
+                return ShortToLong(left), right
+            else:
+                self.tokens.error("Incompatible sizes : %s %s"%(
+                    left.size(),
+                    right.size()))
 
         return left, right
 
@@ -918,6 +966,7 @@ class Parser:
         corrected_arguments = []
         for required, actual in zip(required_arguments, actual_arguments):
             if not compatible(required, actual):
+
                 if actual.type_() == "int" and required.type_() == "float":
                     actual = IntToFloat(actual)
                 elif actual.type_() == "float" and required.type_() == "int":
@@ -927,6 +976,18 @@ class Parser:
                         "type mismatch in assignment expected: %s actual: %s"%(
                             required.type_(),
                             actual.type_()))
+
+            if required.size() != actual.size():
+                if actual.size() == 4 and required.size() == 8:
+                    actual = ShortToLong(actual)
+                elif actual.size() == 8 and required.size() == 4:
+                    actual = LongToShort(actual)
+                else:
+                    self.tokens.error(
+                        "type mismatch in assignment expected: %s actual: %s"%(
+                            required.size(),
+                            actual.size()))
+
             corrected_arguments.append(actual)
         function_call.arguments = corrected_arguments
 

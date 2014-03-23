@@ -36,7 +36,7 @@ class Allocator:
         return self.output_names[handle]
 
     def freeze(self):
-        self.start = max(self.all_registers.keys())
+        self.start = max(self.all_registers.keys()) + 1
 
     def new_array(self, size, contents):
         reg = self.memory_size
@@ -67,3 +67,4 @@ class Allocator:
     def free(self, register):
         if register in self.registers and self.reuse:
             self.registers.remove(register)
+

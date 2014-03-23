@@ -14,6 +14,10 @@ unsigned unsigned_divide_xxxx(unsigned dividend, unsigned divisor){
     unsigned i = 0;
 
     while(1){
+        report(i);
+        report(dividend);
+        report(quotient);
+        report(remainder);
         if( dividend & (1 << 31) ){
             remainder |= 1;
         }
@@ -64,8 +68,6 @@ int modulo_xxxx(int dividend, int divisor){
 
 long unsigned long_unsigned_modulo_yyyy;
 long unsigned long_unsigned_divide_xxxx(long unsigned dividend, long unsigned divisor){
-    report(dividend);
-    report(divisor);
     long unsigned remainder = 0;
     long unsigned quotient = 0;
     unsigned i = 0;
@@ -150,11 +152,14 @@ int float_lt_xxxx(int a, int b){
 }
 
 int float_gt_xxxx(int a, int b){
+    report(a);
     if (a < 0) {
         a = 0x80000000u - a;
     }
+    report(b);
     if (b < 0) {
         b = 0x80000000u - b;
+    report(b);
     }
     return  a > b;
 }

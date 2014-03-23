@@ -25,23 +25,6 @@ def test(test, code, no_init=False):
     print test, "...fail"
     sys.exit(0)
 
-  if no_init:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
-  else:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
-  if(os.path.exists("main")):
-      os.remove("main")
-  if(os.path.exists("arbiter")):
-      os.remove("arbiter")
-  if(os.path.exists("real_main")):
-      os.remove("real_main")
-
-  if result == 0:
-    print test, "...pass"
-  else:
-    print test, "...fail"
-    sys.exit(0)
-
 def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
@@ -56,6 +39,852 @@ def test_fails(test, code, no_init=False):
     sys.exit(0)
   else:
     print test, "...pass"
+
+test("long_subtract 0",
+"""
+void main(){
+    long int i = 0x0000000000000000ul;
+    long int j = 0x0000000000000001ul;
+    assert((i - j) == 0xfffffffffffffffful);
+}
+"""
+)
+
+test("long_subtract 1",
+"""
+void main(){
+    long int i = 0xfffffffffffffffful;
+    long int j = 0x0000000000000001ul;
+    assert((i - j) == 0xfffffffffffffffeul);
+}
+"""
+)
+
+test("long_subtract 2",
+"""
+void main(){
+    long int i = 0x0000000100000000ul;
+    long int j = 0x0000000000000001ul;
+    assert((i - j) == 0x00000000fffffffful);
+}
+"""
+)
+
+test("long_subtract 3",
+"""
+void main(){
+    long int i = 0x7ffffffffffffffful;
+    long int j = 0x0000000000000001ul;
+    assert((i - j) == 0x7ffffffffffffffeul);
+}
+"""
+)
+
+test("long_subtract 4",
+"""
+void main(){
+    long int i = 0x8000000000000000ul;
+    long int j = 0x0000000000000002ul;
+    assert((i - j) == 0x7ffffffffffffffeul);
+}
+"""
+)
+
+test("long_add 0",
+"""
+void main(){
+    long int i = 0x0000000000000000ul;
+    long int j = 0x0000000000000001ul;
+    assert((i + j) == 0x0000000000000001ul);
+}
+"""
+)
+
+test("long_add 1",
+"""
+void main(){
+    long int i = 0xfffffffffffffffful;
+    long int j = 0x0000000000000001ul;
+    assert((i + j) == 0x0000000000000000ul);
+}
+"""
+)
+
+test("long_add 2",
+"""
+void main(){
+    long int i = 0x00000000fffffffful;
+    long int j = 0x0000000000000001ul;
+    assert((i + j) == 0x0000000100000000ul);
+}
+"""
+)
+
+test("long_add 3",
+"""
+void main(){
+    long int i = 0x7ffffffffffffffful;
+    long int j = 0x0000000000000001ul;
+    assert((i + j) == 0x8000000000000000ul);
+}
+"""
+)
+
+test("long_add 4",
+"""
+void main(){
+    long int i = 0x8000000000000000ul;
+    long int j = 0x0000000000000002ul;
+    assert((i + j) == 0x8000000000000002ul);
+}
+"""
+)
+
+test("long_and 0",
+"""
+void main(){
+    long int i = 0x5555555555555555ul;
+    long int j = 0xAAAAAAAAAAAAAAAAul;
+    assert((i & j) == 0x0000000000000000ul);
+}
+"""
+)
+
+test("long_and 1",
+"""
+void main(){
+    long int i = 0xAAAAAAAA55555555ul;
+    long int j = 0x55555555AAAAAAAAul;
+    assert((i & j) == 0x0000000000000000ul);
+}
+"""
+)
+
+test("long_and 2",
+"""
+void main(){
+    long int i = 0xAAAAAAAA55555555ul;
+    long int j = 0xAAAAAAAAAAAAAAAAul;
+    assert((i & j) == 0xAAAAAAAA00000000ul);
+}
+"""
+)
+
+test("long_and 3",
+"""
+void main(){
+    long int i = 0xAAAAAAAAAAAAAAAAul;
+    long int j = 0x55555555AAAAAAAAul;
+    assert((i & j) == 0x00000000AAAAAAAAul);
+}
+"""
+)
+
+test("long_or 0",
+"""
+void main(){
+    long int i = 0x5555555555555555ul;
+    long int j = 0xAAAAAAAAAAAAAAAAul;
+    assert((i | j) == 0xfffffffffffffffful);
+}
+"""
+)
+
+test("long_or 1",
+"""
+void main(){
+    long int i = 0xAAAAAAAA55555555ul;
+    long int j = 0x55555555AAAAAAAAul;
+    assert((i | j) == 0xfffffffffffffffful);
+}
+"""
+)
+
+test("long_or 2",
+"""
+void main(){
+    long int i = 0xAAAAAAAA55555555ul;
+    long int j = 0xAAAAAAAAAAAAAAAAul;
+    assert((i | j) == 0xAAAAAAAAfffffffful);
+}
+"""
+)
+
+test("long_or 3",
+"""
+void main(){
+    long int i = 0xAAAAAAAAAAAAAAAAul;
+    long int j = 0x55555555AAAAAAAAul;
+    assert((i | j) == 0xffffffffAAAAAAAAul);
+}
+"""
+)
+
+test("long_xor 0",
+"""
+void main(){
+    long int i = 0x5555555555555555ul;
+    long int j = 0xAAAAAAAAAAAAAAAAul;
+    assert((i ^ j) == 0xfffffffffffffffful);
+}
+"""
+)
+
+test("long_xor 1",
+"""
+void main(){
+    long int i = 0xAAAAAAAA55555555ul;
+    long int j = 0x55555555AAAAAAAAul;
+    assert((i ^ j) == 0xfffffffffffffffful);
+}
+"""
+)
+
+test("long_xor 2",
+"""
+void main(){
+    long int i = 0xAAAAAAAA55555555ul;
+    long int j = 0xAAAAAAAAAAAAAAAAul;
+    assert((i ^ j) == 0x00000000fffffffful);
+}
+"""
+)
+
+test("long_xor 3",
+"""
+void main(){
+    long int i = 0xAAAAAAAAAAAAAAAAul;
+    long int j = 0x55555555AAAAAAAAul;
+    assert((i ^ j) == 0xffffffff00000000ul);
+}
+"""
+)
+
+test("long_equal 0",
+"""
+void main(){
+    long int i = 0ul;
+    long int j = 0ul;
+    assert(i == j);
+}
+"""
+)
+
+test("long_equal 1",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0x0000000000000000ul;
+    assert((i == j) == 0);
+}
+"""
+)
+
+test("long_equal 2",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    int j = 0;
+    assert((i == j) == 0);
+}
+"""
+)
+
+test("long_equal 3",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0xffffffff00000000ul;
+    assert((i == j));
+}
+"""
+)
+
+test("long_greater 0",
+"""
+void main(){
+    long int i = 0x1ul;
+    long int j = 0x0ul;
+    assert(i > j);
+}
+"""
+)
+
+test("long_greater 1",
+"""
+void main(){
+    long int i = 0x100000000ul;
+    long int j = 0x0ul;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 2",
+"""
+void main(){
+    long int i = 0x100000001ul;
+    long int j = 0x100000000ul;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 3",
+"""
+void main(){
+    long int i = 0x200000001ul;
+    long int j = 0x100000001ul;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 4",
+"""
+void main(){
+    long int i = 0x200000000ul;
+    long int j = 0x100000001ul;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 5",
+"""
+void main(){
+    long int i = 0x000000000ul;
+    long int j = -1l;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 6",
+"""
+void main(){
+    long int i = -1;
+    long int j = -2;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 7",
+"""
+void main(){
+    long int i = -0x100000001l;
+    long int j = -0x100000002l;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 8",
+"""
+void main(){
+    long int i = -0x100000002l;
+    long int j = -0x100000001l;
+    assert((i < j));
+}
+"""
+)
+
+test("long_greater 9",
+"""
+void main(){
+    long int i = -0x100000001l;
+    long int j = -0x100000001l;
+    assert((i < j) == 0);
+}
+"""
+)
+
+test("long_greater 10",
+"""
+void main(){
+    long int i = 0x100000001ul;
+    long int j = 0x200000001ul;
+    assert((i < j));
+}
+"""
+)
+
+test("long_greater 11",
+"""
+void main(){
+    long int i = 1ul;
+    long int j = -1ul;
+    assert((i > j));
+}
+"""
+)
+
+test("long_greater 12",
+"""
+void main(){
+    long int i = 1ul;
+    long int j = -1ul;
+    assert((i < j) == 0);
+}
+"""
+)
+
+test("long_greater 13",
+"""
+void main(){
+    long int i = -1ul;
+    long int j = -1ul;
+    assert((i < j) == 0);
+}
+"""
+)
+
+test("long_greater 14",
+"""
+void main(){
+    long int i = 0xffffffff00000001ul;
+    long int j = 0xfffffffffffffffful;
+    assert(j > i);
+}
+"""
+)
+
+test("long_greater 15",
+"""
+void main(){
+    long int i = 0x0000000000000001ul;
+    long int j = 0x00000000fffffffful;
+    assert(j > i);
+}
+"""
+)
+
+test("unsigned_long_greater 0",
+"""
+void main(){
+    unsigned long int i = 0xfffffffffffffffful;
+    unsigned long int j = 0x0000000000000000ul;
+    assert(i > j);
+}
+"""
+)
+
+test("unsigned_long_greater 1",
+"""
+void main(){
+    unsigned long int i = 0xfffffffffffffffful;
+    unsigned long int j = 0x7ffffffffffffffful;
+    assert(i > j);
+}
+"""
+)
+
+test("unsigned_long_greater 2",
+"""
+void main(){
+    unsigned long int i = 0x00000000fffffffful;
+    unsigned long int j = 0x00000000fffffffful;
+    assert((i > j) == 0);
+}
+"""
+)
+test("unsigned_long_greater 3",
+"""
+void main(){
+    unsigned long int i = 0xffffffff00000000ul;
+    unsigned long int j = 0xffffffff00000000ul;
+    assert((i > j) == 0);
+}
+"""
+)
+
+test("unsigned_long_greater 4",
+"""
+void main(){
+    unsigned long int i = 0xffffffff00000000ul;
+    unsigned long int j = 0x00000000fffffffful;
+    assert((i > j));
+}
+"""
+)
+
+test("unsigned_long_greater 5",
+"""
+void main(){
+    unsigned long int i = 0x00000000fffffffful;
+    unsigned long int j = 0xffffffff00000000ul;
+    assert((i < j));
+}
+"""
+)
+
+test("unsigned_long_greater_equal 1",
+"""
+void main(){
+    unsigned long int i = 0xfffffffffffffffful;
+    unsigned long int j = 0x7ffffffffffffffful;
+    assert(i >= j);
+}
+"""
+)
+
+test("unsigned_long_greater_equal 2",
+"""
+void main(){
+    unsigned long int i = 0x00000000fffffffful;
+    unsigned long int j = 0x00000000fffffffful;
+    assert(i >= j);
+}
+"""
+)
+test("unsigned_long_greater_equal 3",
+"""
+void main(){
+    unsigned long int i = 0xffffffff00000000ul;
+    unsigned long int j = 0xffffffff00000000ul;
+    assert(i >= j);
+}
+"""
+)
+
+test("unsigned_long_greater_equal 4",
+"""
+void main(){
+    unsigned long int i = 0xffffffff00000000ul;
+    unsigned long int j = 0x00000000fffffffful;
+    assert(i >= j);
+}
+"""
+)
+
+test("unsigned_long_greater_equal 5",
+"""
+void main(){
+    unsigned long int i = 0x00000000fffffffful;
+    unsigned long int j = 0xffffffff00000000ul;
+    assert(i <= j);
+}
+"""
+)
+
+test("unsigned_long_greater_equal 6",
+"""
+void main(){
+    unsigned long int i = 0xffffffff00000000ul;
+    unsigned long int j = 0xfffffffffffffffful;
+    assert((i >= j)==0);
+}
+"""
+)
+
+test("unsigned_long_greater_equal 7",
+"""
+void main(){
+    unsigned long int i = 0x00000000fffffffful;
+    unsigned long int j = 0x0000000000000000ul;
+    assert(i >= j);
+}
+"""
+)
+
+test("long_greater_equal 1",
+"""
+void main(){
+    long int i = 0xfffffffffffffffful;
+    long int j = 0x7ffffffffffffffful;
+    assert((i >= j)==0);
+}
+"""
+)
+
+test("long_greater_equal 2",
+"""
+void main(){
+    long int i = 0x00000000fffffffful;
+    long int j = 0x00000000fffffffful;
+    assert(i >= j);
+}
+"""
+)
+test("long_greater_equal 3",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0xffffffff00000000ul;
+    assert(i >= j);
+}
+"""
+)
+
+test("long_greater_equal 4",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0x00000000fffffffful;
+    assert((i >= j) == 0);
+}
+"""
+)
+
+test("long_greater_equal 5",
+"""
+void main(){
+    long int i = 0x00000000fffffffful;
+    long int j = 0xffffffff00000000ul;
+    assert((i <= j) == 0);
+}
+"""
+)
+
+test("long_greater_equal 6",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0xfffffffffffffffful;
+    assert((i >= j) == 0);
+}
+"""
+)
+
+test("long_greater_equal 7",
+"""
+void main(){
+    long int i = 0x00000000fffffffful;
+    long int j = 0x0000000000000000ul;
+    assert((i <= j) == 0);
+}
+"""
+)
+
+test("long_not_equal 0",
+"""
+void main(){
+    long int i = 0ul;
+    long int j = 0ul;
+    assert((i != j) == 0);
+}
+"""
+)
+
+test("long_not_equal 1",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0x0000000000000000ul;
+    assert((i != j));
+}
+"""
+)
+
+test("long_not_equal 2",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    int j = 0;
+    assert((i == j) == 0);
+}
+"""
+)
+
+test("long_not_equal 3",
+"""
+void main(){
+    long int i = 0xffffffff00000000ul;
+    long int j = 0xffffffff00000001ul;
+    assert(i != j);
+}
+"""
+)
+
+test("long_not_equal 4",
+"""
+void main(){
+    long int i = 0xff7fffff00000000ul;
+    long int j = 0xffffffff00000000ul;
+    assert(i != j);
+}
+"""
+)
+
+test("short_to_long 0",
+"""
+void main(){
+    int i = -1;
+    long j;
+    j = i;
+    assert(j == -1);
+}
+"""
+)
+
+test("short_to_long 1",
+"""
+void main(){
+    int i = 0;
+    long j;
+    j = i;
+    assert(j == 0);
+}
+"""
+)
+
+
+#test left shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("left_shift %i"%n,
+    """
+    void main(){
+        int i = 10;
+        int j = %i;
+        assert(i << j == %s);
+    }
+    """%(i, hex((10 << i) & 0xffffffff) + "u")
+    )
+
+test("left_shift 6",
+"""
+void main(){
+    int i = 10;
+    int j = -1;
+    i = i << j;
+}
+"""
+)
+
+#test long left shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("long_left_shift %i"%n,
+    """
+    void main(){
+        long int i = 0x80000000l;
+        int j = %i;
+        assert(i << j == %s);
+    }
+    """%(i, hex((0x80000000 << i) & 0xffffffffffffffff) + "u")
+    )
+
+test("long_left_shift 6",
+"""
+void main(){
+    long int i = 10;
+    int j = -1;
+    i = i << j;
+}
+"""
+)
+
+#test right shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("right_shift %i"%n,
+    """
+    void main(){
+        int i = 0xffffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((-1 >> i) & 0xffffffff) + "u")
+    )
+
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("right_shift %i"%(n + 6),
+    """
+    void main(){
+        int i = 0x7fffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0x7fffffff >> i) & 0xffffffff) + "u")
+    )
+
+test("right_shift 12",
+"""
+void main(){
+    int i = 10;
+    int j = -1;
+    i = i >> j;
+}
+"""
+)
+
+#test right shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("unsigned_right_shift %i"%n,
+    """
+    void main(){
+        unsigned int i = 0xffffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0xffffffff >> i) & 0xffffffff) + "u")
+    )
+
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("unsigned_right_shift %i"%(n + 6),
+    """
+    void main(){
+        unsigned int i = 0x7fffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0x7fffffff >> i) & 0xffffffff) + "u")
+    )
+
+test("unsigned_right_shift 12",
+"""
+void main(){
+    int i = 10;
+    int j = -1;
+    i = i >> j;
+}
+"""
+)
+
+#test long right shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("long_right_shift %i"%n,
+    """
+    void main(){
+        long int i = 0x100000000l;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0x100000000 >> i) & 0xffffffffffffffff) + "u")
+    )
+
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("long_right_shift %i"%(n + 6),
+    """
+    void main(){
+        long int i = 0xfffffffffffffffful;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((-1 >> i) & 0xffffffffffffffff) + "u")
+    )
+
+#test long unsigned right shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("unsigned_long_right_shift %i"%n,
+    """
+    void main(){
+        unsigned long int i = 0x100000000l;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0x100000000 >> i) & 0xffffffffffffffff) + "u")
+    )
+
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("unsigned_long_right_shift %i"%(n + 6),
+    """
+    void main(){
+        unsigned long int i = 0xfffffffffffffffful;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0xffffffffffffffff >> i) & 0xffffffffffffffff) + "u")
+    )
 
 test("float_function 1",
 """
@@ -754,45 +1583,45 @@ void main(){
 #"""
 #)
 
-test("unsigned divide 1",
-"""
-void main(){
-  unsigned a = 10;
-  unsigned b = 5;
-  assert(a/b==2);
-}
-"""
-)
+#test("unsigned divide 1",
+#"""
+#void main(){
+  #unsigned a = 10;
+  #unsigned b = 5;
+  #assert(a/b==2);
+#}
+#"""
+#)
 
-test("long unsigned divide 1",
-"""
-void main(){
-  long unsigned a = 1000000L;
-  long unsigned b = 500000L;
-  assert(a/b==2);
-}
-"""
-)
-
-test("divide 1",
-"""
-void main(){
-  int a = 10;
-  int b = 5;
-  assert(a/b==2);
-}
-"""
-)
-
-test("long divide 1",
-"""
-void main(){
-  long a = 1000000L;
-  long b = 500000L;
-  assert(a/b==2);
-}
-"""
-)
+#test("long unsigned divide 1",
+#"""
+#void main(){
+  #long unsigned a = 1000000L;
+  #long unsigned b = 500000L;
+  #assert(a/b==2);
+#}
+#"""
+#)
+#
+#test("divide 1",
+#"""
+#void main(){
+  #int a = 10;
+  #int b = 5;
+  #assert(a/b==2);
+#}
+#"""
+#)
+#
+#test("long divide 1",
+#"""
+#void main(){
+  #long a = 1000000L;
+  #long b = 500000L;
+  #assert(a/b==2);
+#}
+#"""
+#)
 
 test("long 1",
 """
@@ -807,7 +1636,7 @@ test("long 2",
 """
 void main(){
   long a = 100000L;
-  assert(sizeof a == 4);
+  assert(sizeof a == 8);
 }
 """
 )
@@ -834,7 +1663,7 @@ void main(){
 test("long 5",
 """
 void main(){
-  long a = 0xffffffffUL;
+  long a = 0xffffffffffffffffUL;
   long b = 0x0;
   assert(a < b);
 }
@@ -884,7 +1713,7 @@ void test_long(long a){
 }
 
 void main(){
-  unsigned long a = 0xffffffffUL;
+  unsigned long a = 0xffffffffffffffffUL;
   test_long(a);
 }
 """
@@ -970,10 +1799,10 @@ int main(){
   unsigned b = 0x7fff;
   unsigned c[4];
   unsigned d[] = "asdfg";
-  assert(sizeof a == 2);
-  assert(sizeof b == 2);
-  assert(sizeof c == 8);
-  assert(sizeof d == 12);
+  assert(sizeof a == 8);
+  assert(sizeof b == 8);
+  assert(sizeof c == 32);
+  assert(sizeof d == 24);
   return 0;
 }
 """

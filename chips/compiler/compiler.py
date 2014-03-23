@@ -10,11 +10,10 @@ import os
 
 from chips.compiler.parser import Parser
 from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.optimizer import parallelise
+from chips.compiler.macro_expander import expand_macros
 from chips.compiler.optimizer import cleanup_functions
 from chips.compiler.optimizer import cleanup_registers
 from chips.compiler.tokens import Tokens
-from chips.compiler.verilog_speed import generate_CHIP as generate_CHIP_speed
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 import fpu
 
@@ -33,13 +32,12 @@ def comp(input_file, options=[]):
     initialize_memory = "no_initialize_memory" not in options
 
     try:
-        if "speed" not in options:
-
             #Optimize for area
             parser = Parser(input_file, reuse, initialize_memory)
             process = parser.parse_process()
             name = process.main.name
             instructions = process.generate()
+            instructions = expand_macros(instructions, parser.allocator)
             instructions = cleanup_functions(instructions)
             instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
             output_file = name + ".v"
@@ -53,33 +51,6 @@ def comp(input_file, options=[]):
                     parser.allocator,
                     initialize_memory)
             output_file.close()
-
-        else:
-
-            #Optimize for speed
-            parser = Parser(input_file, reuse, initialize_memory)
-            process = parser.parse_process()
-            name = process.main.name
-            instructions = process.generate()
-            instructions = cleanup_functions(instructions)
-            instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
-            if "no_concurrent" in sys.argv:
-                frames = [[i] for i in instructions]
-            else:
-                frames = parallelise(instructions)
-            output_file = name + ".v"
-            output_file = open(output_file, "w")
-            inputs, outputs = generate_CHIP_speed(
-                    input_file,
-                    name,
-                    frames,
-                    output_file,
-                    registers,
-                    parser.allocator,
-                    initialize_memory)
-            output_file.close()
-
-        generate_library()
 
     except C2CHIPError as err:
         print "Error in file:", err.filename, "at line:", err.lineno
