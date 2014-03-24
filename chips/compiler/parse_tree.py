@@ -141,13 +141,13 @@ class Report:
             else:
                 if self.expression.signed():
                             instructions.append(
-                            {"op":"long_unsigned_report",
+                            {"op":"long_report",
                              "src":result,
                              "line":self.line,
                              "file":self.filename,})
                 else:
                             instructions.append(
-                            {"op":"long_report",
+                            {"op":"long_unsigned_report",
                              "src":result,
                              "line":self.line,
                              "file":self.filename,})

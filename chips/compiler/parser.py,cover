@@ -1049,12 +1049,12 @@
   
 >                 if signed:
 >                     if value > 2**((size * 8)-1) - 1:
-!                         self.tokens.error("value too large")
+>                         self.tokens.error("value too large")
 >                     if value < -(2**((size * 8)-1)):
 !                         self.tokens.error("value too small")
 >                 else:
 >                     if value > 2**(size * 8) - 1:
-!                         self.tokens.error("value too large")
+>                         self.tokens.error("value too large")
 >                     if value < 0:
 !                         self.tokens.error("value too small")
   

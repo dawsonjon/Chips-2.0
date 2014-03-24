@@ -20,6 +20,11 @@ def expand_macros(instructions, allocator):
         elif opcode == "unsigned_shift_right":
             new_instructions.extend(unsigned_shift_right(allocator, instruction))
 
+        elif opcode == "long_report":
+            new_instructions.extend(long_report(allocator, instruction))
+        elif opcode == "long_unsigned_report":
+            new_instructions.extend(long_report(allocator, instruction))
+
         elif opcode == "long_shift_left":
             new_instructions.extend(long_shift_left(allocator, instruction))
         elif opcode == "long_shift_right":
@@ -40,6 +45,8 @@ def expand_macros(instructions, allocator):
             new_instructions.extend(long_add(allocator, instruction))
         elif opcode == "long_subtract":
             new_instructions.extend(long_subtract(allocator, instruction))
+        elif opcode == "long_multiply":
+            new_instructions.extend(long_multiply(allocator, instruction))
 
         elif opcode == "short_to_long":
             new_instructions.extend(short_to_long(allocator, instruction))
@@ -636,6 +643,21 @@ def short_to_long(allocator, instruction):
     ]
     return new_instruction
 
+def long_report(allocator, instruction):
+
+    src = instruction["src"]
+
+    new_instruction = [
+        {
+        "op"  : "load_hi",
+        "src" : src + 1,
+        "srcb": src + 1,
+        },
+        instruction,
+    ]
+
+    return new_instruction
+
 def unsigned_short_to_long(allocator, instruction):
     """
     Convert a short data type to a long data type
@@ -1095,4 +1117,61 @@ def long_subtract(allocator, instruction):
         },
 
     ]
+    return new_instruction
+
+def long_multiply(allocator, instruction):
+    """ perform multiply function on long numbers """
+
+    src = instruction["src"]
+    srcb = instruction["srcb"]
+    dest = instruction["dest"]
+
+    temp = allocator.new(4, "product_hi")
+
+    new_instruction = [
+
+        {
+        "op"  : "multiply",
+        "src" : src,
+        "srcb" : srcb,
+        "dest": dest
+        },
+
+        {
+        "op"  : "product_hi",
+        "dest": dest + 1
+        },
+
+        {
+        "op"  : "multiply",
+        "src" : src,
+        "srcb" : srcb + 1,
+        "dest": temp
+        },
+
+        {
+        "op"  : "add",
+        "src" : dest + 1,
+        "srcb" : temp,
+        "dest": dest + 1
+        },
+
+        {
+        "op"  : "multiply",
+        "src" : src + 1,
+        "srcb" : srcb,
+        "dest": temp
+        },
+
+        {
+        "op"  : "add",
+        "src" : dest + 1,
+        "srcb" : temp,
+        "dest": dest + 1
+        },
+
+    ]
+
+    allocator.free(temp);
+
     return new_instruction

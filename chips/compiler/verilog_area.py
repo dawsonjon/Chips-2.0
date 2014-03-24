@@ -217,6 +217,8 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
       ("data_in", 32),
       ("carry", 1),
       ("product_hi", 32),
+      ("register_hi", 32),
+      ("registerb_hi", 32),
       ("memory_enable", 1),
     ] + [
       ("s_output_" + i + "_stb", 32) for i in outputs
@@ -584,6 +586,10 @@ def generate_CHIP(input_file,
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
+        elif instruction["op"] == "load_hi":
+            output_file.write("          register_hi <= register_1;\n")
+            output_file.write("          registerb_hi <= registerb_1;\n")
+
         elif instruction["op"] == "add":
             output_file.write("          long_result = register_1 + registerb_1;\n")
             output_file.write("          result_2 <= long_result[31:0];\n")
@@ -615,9 +621,7 @@ def generate_CHIP(input_file,
             output_file.write("          write_enable_2 <= 1;\n")
 
         elif instruction["op"] == "product_hi":
-            output_file.write("          long_result = register_1 * registerb_1;\n")
-            output_file.write("          result_2 <= long_result[31:0];\n")
-            output_file.write("          product_hi <= long_result[63:32];\n")
+            output_file.write("          result_2 <= product_hi;\n")
             output_file.write("          write_enable_2 <= 1;\n")
 
         elif instruction["op"] == "or":
@@ -875,7 +879,7 @@ def generate_CHIP(input_file,
                 instruction["file"],))
 
         elif instruction["op"] == "long_report":
-            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed(register_1));\n'%(
+            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed({register_hi, register_1}));\n'%(
                 instruction["line"],
                 instruction["file"],))
 
@@ -893,7 +897,7 @@ def generate_CHIP(input_file,
 	       instruction["file"]))
 
         elif instruction["op"] == "long_unsigned_report":
-           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register_1));\n'%(
+           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned({register_hi, register_1}));\n'%(
 	       instruction["line"],
 	       instruction["file"]))
 
