@@ -2,7 +2,7 @@
 import os
 import sys
 from random import randint
-from numpy import uint64
+from numpy import uint64, int64
 
 os.system("python-coverage erase")
 
@@ -42,753 +42,159 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
-thoroughness = 100
+thoroughness = 5
 
 ################################################################################
 # Test long functions
 
-def long_function(operator, a, b):
-    if operator == "*":
-        return uint64(a) * uint64(b)
-    if operator == "+":
-        return uint64(a) * uint64(b)
-    if operator == "-":
-        return uint64(a) * uint64(b)
+class InvalidStimulus:
+    pass
 
-def test_corner_cases(operator):
+def long_function(type_, operator, a, b):
+    if operator == "*":
+        return int64(a) * int64(b)
+    if operator == "+":
+        return int64(a) + int64(b)
+    if operator == "-":
+        return int64(a) - int64(b)
+    if operator == "|":
+        return int64(a) | int64(b)
+    if operator == "&":
+        return int64(a) & int64(b)
+    if operator == "^":
+        return int64(a) ^ int64(b)
+    if operator == ">":
+        if type_.startswith("unsigned"):
+            return uint64(a) > uint64(b)
+        else:
+            return int64(a) > int64(b)
+    if operator == ">=":
+        if type_.startswith("unsigned"):
+            return uint64(a) >= uint64(b)
+        else:
+            return int64(a) >= int64(b)
+    if operator == "==":
+        return int64(a) == int64(b)
+    if operator == "!=":
+        return int64(a) != int64(b)
+    if operator == "<":
+        if type_.startswith("unsigned"):
+            return uint64(a) < uint64(b)
+        else:
+            return int64(a) < int64(b)
+    if operator == "<=":
+        if type_.startswith("unsigned"):
+            return uint64(a) <= uint64(b)
+        else:
+            return int64(a) <= int64(b)
+    if operator == "<<":
+        if b > 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        return int64(a) << int64(b)
+    if operator == ">>":
+        if b > 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) >> uint64(b)
+        else:
+            return int64(a) >> int64(b)
+    if operator == "/":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a)//uint64(b)
+        else:
+            negative = (a < 0) ^ (b < 0)
+            value = abs(a) // abs(b)
+            return -int64(value) if negative else int64(value)
+    if operator == "%":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) % uint64(b)
+        else:
+            negative = (a < 0)
+            value = abs(a) % abs(b)
+            return -int64(value) if negative else int64(value)
+
+def test_corner_cases(operator, type_):
     n = 0
     for a in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
         for b in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
-            test("long %s %i"%(operator, n),
-            """
-            void main(){
-                long int i = 0x%xul;
-                long int j = 0x%xul;
-                assert((i * j) == 0x%xul);
-            }
-            """%(uint64(a), 
-                 uint64(b), 
-                 long_function(operator,a,b))
-            )
-            n+=1
+            try:
+                test("long %s %i"%(operator, n),
+                """
+                void main(){
+                    %s i = 0x%xul;
+                    %s j = 0x%xul;
+                    assert((i %s j) == %su);
+                }
+                """%(type_, uint64(a), 
+                     type_, uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator,a,b)))
+                )
+                n+=1
+            except InvalidStimulus:
+                continue
+
             if n == thoroughness:
                 return
 
-def test_random(operator):
+def test_random(operator, type_):
     n = 0
     a = randint(-(2**63), (2**63)-1)
     b = randint(-(2**63), (2**63)-1)
-    while n <= thoroughness:
-        test("random long %s %i"%(operator, n),
-        """
-        void main(){
-            long int i = 0x%xul;
-            long int j = 0x%xul;
-            assert((i * j) == 0x%xul);
-        }
-        """%(uint64(a), 
-             uint64(b), 
-             long_function(operator, a, b))
-        )
+    while n < thoroughness:
+        try:
+            test("random long %s %i"%(operator, n),
+            """
+            void main(){
+                %s i = 0x%xul;
+                %s j = 0x%xul;
+                assert((i %s j) == %su);
+            }
+            """%(type_, uint64(a), 
+                 type_, uint64(b), 
+                 operator,
+                 hex(long_function(type_, operator, a, b)))
+            )
+        except InvalidStimulus:
+            pass
         n+=1
 
-for operator in ["*", "+", "-"]:
-    test_corner_cases(operator)
-    test_random(operator)
-
-################################################################################
-# Test long arithmetic
-
-test("long_subtract 0",
-"""
-void main(){
-    long int i = 0x0000000000000000ul;
-    long int j = 0x0000000000000001ul;
-    assert((i - j) == 0xfffffffffffffffful);
-}
-"""
-)
-
-test("long_subtract 1",
-"""
-void main(){
-    long int i = 0xfffffffffffffffful;
-    long int j = 0x0000000000000001ul;
-    assert((i - j) == 0xfffffffffffffffeul);
-}
-"""
-)
-
-test("long_subtract 2",
-"""
-void main(){
-    long int i = 0x0000000100000000ul;
-    long int j = 0x0000000000000001ul;
-    assert((i - j) == 0x00000000fffffffful);
-}
-"""
-)
-
-test("long_subtract 3",
-"""
-void main(){
-    long int i = 0x7ffffffffffffffful;
-    long int j = 0x0000000000000001ul;
-    assert((i - j) == 0x7ffffffffffffffeul);
-}
-"""
-)
-
-test("long_subtract 4",
-"""
-void main(){
-    long int i = 0x8000000000000000ul;
-    long int j = 0x0000000000000002ul;
-    assert((i - j) == 0x7ffffffffffffffeul);
-}
-"""
-)
-
-test("long_add 0",
-"""
-void main(){
-    long int i = 0x0000000000000000ul;
-    long int j = 0x0000000000000001ul;
-    assert((i + j) == 0x0000000000000001ul);
-}
-"""
-)
-
-test("long_add 1",
-"""
-void main(){
-    long int i = 0xfffffffffffffffful;
-    long int j = 0x0000000000000001ul;
-    assert((i + j) == 0x0000000000000000ul);
-}
-"""
-)
-
-test("long_add 2",
-"""
-void main(){
-    long int i = 0x00000000fffffffful;
-    long int j = 0x0000000000000001ul;
-    assert((i + j) == 0x0000000100000000ul);
-}
-"""
-)
-
-test("long_add 3",
-"""
-void main(){
-    long int i = 0x7ffffffffffffffful;
-    long int j = 0x0000000000000001ul;
-    assert((i + j) == 0x8000000000000000ul);
-}
-"""
-)
-
-test("long_add 4",
-"""
-void main(){
-    long int i = 0x8000000000000000ul;
-    long int j = 0x0000000000000002ul;
-    assert((i + j) == 0x8000000000000002ul);
-}
-"""
-)
-
-test("long_and 0",
-"""
-void main(){
-    long int i = 0x5555555555555555ul;
-    long int j = 0xAAAAAAAAAAAAAAAAul;
-    assert((i & j) == 0x0000000000000000ul);
-}
-"""
-)
-
-test("long_and 1",
-"""
-void main(){
-    long int i = 0xAAAAAAAA55555555ul;
-    long int j = 0x55555555AAAAAAAAul;
-    assert((i & j) == 0x0000000000000000ul);
-}
-"""
-)
-
-test("long_and 2",
-"""
-void main(){
-    long int i = 0xAAAAAAAA55555555ul;
-    long int j = 0xAAAAAAAAAAAAAAAAul;
-    assert((i & j) == 0xAAAAAAAA00000000ul);
-}
-"""
-)
-
-test("long_and 3",
-"""
-void main(){
-    long int i = 0xAAAAAAAAAAAAAAAAul;
-    long int j = 0x55555555AAAAAAAAul;
-    assert((i & j) == 0x00000000AAAAAAAAul);
-}
-"""
-)
-
-test("long_or 0",
-"""
-void main(){
-    long int i = 0x5555555555555555ul;
-    long int j = 0xAAAAAAAAAAAAAAAAul;
-    assert((i | j) == 0xfffffffffffffffful);
-}
-"""
-)
-
-test("long_or 1",
-"""
-void main(){
-    long int i = 0xAAAAAAAA55555555ul;
-    long int j = 0x55555555AAAAAAAAul;
-    assert((i | j) == 0xfffffffffffffffful);
-}
-"""
-)
-
-test("long_or 2",
-"""
-void main(){
-    long int i = 0xAAAAAAAA55555555ul;
-    long int j = 0xAAAAAAAAAAAAAAAAul;
-    assert((i | j) == 0xAAAAAAAAfffffffful);
-}
-"""
-)
-
-test("long_or 3",
-"""
-void main(){
-    long int i = 0xAAAAAAAAAAAAAAAAul;
-    long int j = 0x55555555AAAAAAAAul;
-    assert((i | j) == 0xffffffffAAAAAAAAul);
-}
-"""
-)
-
-test("long_xor 0",
-"""
-void main(){
-    long int i = 0x5555555555555555ul;
-    long int j = 0xAAAAAAAAAAAAAAAAul;
-    assert((i ^ j) == 0xfffffffffffffffful);
-}
-"""
-)
-
-test("long_xor 1",
-"""
-void main(){
-    long int i = 0xAAAAAAAA55555555ul;
-    long int j = 0x55555555AAAAAAAAul;
-    assert((i ^ j) == 0xfffffffffffffffful);
-}
-"""
-)
-
-test("long_xor 2",
-"""
-void main(){
-    long int i = 0xAAAAAAAA55555555ul;
-    long int j = 0xAAAAAAAAAAAAAAAAul;
-    assert((i ^ j) == 0x00000000fffffffful);
-}
-"""
-)
-
-test("long_xor 3",
-"""
-void main(){
-    long int i = 0xAAAAAAAAAAAAAAAAul;
-    long int j = 0x55555555AAAAAAAAul;
-    assert((i ^ j) == 0xffffffff00000000ul);
-}
-"""
-)
-
-test("long_equal 0",
-"""
-void main(){
-    long int i = 0ul;
-    long int j = 0ul;
-    assert(i == j);
-}
-"""
-)
-
-test("long_equal 1",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0x0000000000000000ul;
-    assert((i == j) == 0);
-}
-"""
-)
-
-test("long_equal 2",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    int j = 0;
-    assert((i == j) == 0);
-}
-"""
-)
-
-test("long_equal 3",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0xffffffff00000000ul;
-    assert((i == j));
-}
-"""
-)
-
-test("long_greater 0",
-"""
-void main(){
-    long int i = 0x1ul;
-    long int j = 0x0ul;
-    assert(i > j);
-}
-"""
-)
-
-test("long_greater 1",
-"""
-void main(){
-    long int i = 0x100000000ul;
-    long int j = 0x0ul;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 2",
-"""
-void main(){
-    long int i = 0x100000001ul;
-    long int j = 0x100000000ul;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 3",
-"""
-void main(){
-    long int i = 0x200000001ul;
-    long int j = 0x100000001ul;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 4",
-"""
-void main(){
-    long int i = 0x200000000ul;
-    long int j = 0x100000001ul;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 5",
-"""
-void main(){
-    long int i = 0x000000000ul;
-    long int j = -1l;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 6",
-"""
-void main(){
-    long int i = -1;
-    long int j = -2;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 7",
-"""
-void main(){
-    long int i = -0x100000001l;
-    long int j = -0x100000002l;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 8",
-"""
-void main(){
-    long int i = -0x100000002l;
-    long int j = -0x100000001l;
-    assert((i < j));
-}
-"""
-)
-
-test("long_greater 9",
-"""
-void main(){
-    long int i = -0x100000001l;
-    long int j = -0x100000001l;
-    assert((i < j) == 0);
-}
-"""
-)
-
-test("long_greater 10",
-"""
-void main(){
-    long int i = 0x100000001ul;
-    long int j = 0x200000001ul;
-    assert((i < j));
-}
-"""
-)
-
-test("long_greater 11",
-"""
-void main(){
-    long int i = 1ul;
-    long int j = -1ul;
-    assert((i > j));
-}
-"""
-)
-
-test("long_greater 12",
-"""
-void main(){
-    long int i = 1ul;
-    long int j = -1ul;
-    assert((i < j) == 0);
-}
-"""
-)
-
-test("long_greater 13",
-"""
-void main(){
-    long int i = -1ul;
-    long int j = -1ul;
-    assert((i < j) == 0);
-}
-"""
-)
-
-test("long_greater 14",
-"""
-void main(){
-    long int i = 0xffffffff00000001ul;
-    long int j = 0xfffffffffffffffful;
-    assert(j > i);
-}
-"""
-)
-
-test("long_greater 15",
-"""
-void main(){
-    long int i = 0x0000000000000001ul;
-    long int j = 0x00000000fffffffful;
-    assert(j > i);
-}
-"""
-)
-
-test("unsigned_long_greater 0",
-"""
-void main(){
-    unsigned long int i = 0xfffffffffffffffful;
-    unsigned long int j = 0x0000000000000000ul;
-    assert(i > j);
-}
-"""
-)
-
-test("unsigned_long_greater 1",
-"""
-void main(){
-    unsigned long int i = 0xfffffffffffffffful;
-    unsigned long int j = 0x7ffffffffffffffful;
-    assert(i > j);
-}
-"""
-)
-
-test("unsigned_long_greater 2",
-"""
-void main(){
-    unsigned long int i = 0x00000000fffffffful;
-    unsigned long int j = 0x00000000fffffffful;
-    assert((i > j) == 0);
-}
-"""
-)
-test("unsigned_long_greater 3",
-"""
-void main(){
-    unsigned long int i = 0xffffffff00000000ul;
-    unsigned long int j = 0xffffffff00000000ul;
-    assert((i > j) == 0);
-}
-"""
-)
-
-test("unsigned_long_greater 4",
-"""
-void main(){
-    unsigned long int i = 0xffffffff00000000ul;
-    unsigned long int j = 0x00000000fffffffful;
-    assert((i > j));
-}
-"""
-)
-
-test("unsigned_long_greater 5",
-"""
-void main(){
-    unsigned long int i = 0x00000000fffffffful;
-    unsigned long int j = 0xffffffff00000000ul;
-    assert((i < j));
-}
-"""
-)
-
-test("unsigned_long_greater_equal 1",
-"""
-void main(){
-    unsigned long int i = 0xfffffffffffffffful;
-    unsigned long int j = 0x7ffffffffffffffful;
-    assert(i >= j);
-}
-"""
-)
-
-test("unsigned_long_greater_equal 2",
-"""
-void main(){
-    unsigned long int i = 0x00000000fffffffful;
-    unsigned long int j = 0x00000000fffffffful;
-    assert(i >= j);
-}
-"""
-)
-test("unsigned_long_greater_equal 3",
-"""
-void main(){
-    unsigned long int i = 0xffffffff00000000ul;
-    unsigned long int j = 0xffffffff00000000ul;
-    assert(i >= j);
-}
-"""
-)
-
-test("unsigned_long_greater_equal 4",
-"""
-void main(){
-    unsigned long int i = 0xffffffff00000000ul;
-    unsigned long int j = 0x00000000fffffffful;
-    assert(i >= j);
-}
-"""
-)
-
-test("unsigned_long_greater_equal 5",
-"""
-void main(){
-    unsigned long int i = 0x00000000fffffffful;
-    unsigned long int j = 0xffffffff00000000ul;
-    assert(i <= j);
-}
-"""
-)
-
-test("unsigned_long_greater_equal 6",
-"""
-void main(){
-    unsigned long int i = 0xffffffff00000000ul;
-    unsigned long int j = 0xfffffffffffffffful;
-    assert((i >= j)==0);
-}
-"""
-)
-
-test("unsigned_long_greater_equal 7",
-"""
-void main(){
-    unsigned long int i = 0x00000000fffffffful;
-    unsigned long int j = 0x0000000000000000ul;
-    assert(i >= j);
-}
-"""
-)
-
-test("long_greater_equal 1",
-"""
-void main(){
-    long int i = 0xfffffffffffffffful;
-    long int j = 0x7ffffffffffffffful;
-    assert((i >= j)==0);
-}
-"""
-)
-
-test("long_greater_equal 2",
-"""
-void main(){
-    long int i = 0x00000000fffffffful;
-    long int j = 0x00000000fffffffful;
-    assert(i >= j);
-}
-"""
-)
-test("long_greater_equal 3",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0xffffffff00000000ul;
-    assert(i >= j);
-}
-"""
-)
-
-test("long_greater_equal 4",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0x00000000fffffffful;
-    assert((i >= j) == 0);
-}
-"""
-)
-
-test("long_greater_equal 5",
-"""
-void main(){
-    long int i = 0x00000000fffffffful;
-    long int j = 0xffffffff00000000ul;
-    assert((i <= j) == 0);
-}
-"""
-)
-
-test("long_greater_equal 6",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0xfffffffffffffffful;
-    assert((i >= j) == 0);
-}
-"""
-)
-
-test("long_greater_equal 7",
-"""
-void main(){
-    long int i = 0x00000000fffffffful;
-    long int j = 0x0000000000000000ul;
-    assert((i <= j) == 0);
-}
-"""
-)
-
-test("long_not_equal 0",
-"""
-void main(){
-    long int i = 0ul;
-    long int j = 0ul;
-    assert((i != j) == 0);
-}
-"""
-)
-
-test("long_not_equal 1",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0x0000000000000000ul;
-    assert((i != j));
-}
-"""
-)
-
-test("long_not_equal 2",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    int j = 0;
-    assert((i == j) == 0);
-}
-"""
-)
-
-test("long_not_equal 3",
-"""
-void main(){
-    long int i = 0xffffffff00000000ul;
-    long int j = 0xffffffff00000001ul;
-    assert(i != j);
-}
-"""
-)
-
-test("long_not_equal 4",
-"""
-void main(){
-    long int i = 0xff7fffff00000000ul;
-    long int j = 0xffffffff00000000ul;
-    assert(i != j);
-}
-"""
-)
-
-#test("long inplace 0",
-#"""
-#int main(){
-  #long int a = 1;
-  #a += 1;
-  #assert(a == 2);
-  #a -= 1;
-  #assert(a == 1);
-  #a *= 2;
-  #assert(a == 2);
-  #a /= 2;
-  #assert(a == 1);
-  #a |= 2;
-  #assert(a == 3);
-  #a &= 2;
-  #assert(a == 2);
-  #a <<= 1;
-  #assert(a == 4);
-  #a >>= 1;
-  #assert(a == 2);
-  #return 0;
-#}
-#""")
+for type_ in ["long int", "unsigned long int"]:
+    for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
+        test_corner_cases(operator, type_)
+        test_random(operator, type_)
+
+test("long inplace 0",
+"""
+int main(){
+  long int a = 1;
+  a += 1;
+  assert(a == 2);
+  a -= 1;
+  assert(a == 1);
+  a *= 2;
+  assert(a == 2);
+  a /= 2;
+  assert(a == 1);
+  a |= 2;
+  assert(a == 3);
+  a &= 2;
+  assert(a == 2);
+  a <<= 1;
+  assert(a == 4);
+  a >>= 1;
+  assert(a == 2);
+  return 0;
+}
+""")
 
 test("short_to_long 0",
 """
@@ -829,28 +235,6 @@ test("left_shift 6",
 """
 void main(){
     int i = 10;
-    int j = -1;
-    i = i << j;
-}
-"""
-)
-
-#test long left shift macro
-for n, i in enumerate([0, 1, 2, 30, 31, 32]):
-    test("long_left_shift %i"%n,
-    """
-    void main(){
-        long int i = 0x80000000l;
-        int j = %i;
-        assert(i << j == %s);
-    }
-    """%(i, hex((0x80000000 << i) & 0xffffffffffffffff) + "u")
-    )
-
-test("long_left_shift 6",
-"""
-void main(){
-    long int i = 10;
     int j = -1;
     i = i << j;
 }
@@ -923,52 +307,6 @@ void main(){
 """
 )
 
-#test long right shift macro
-for n, i in enumerate([0, 1, 2, 62, 63, 64]):
-    test("long_right_shift %i"%n,
-    """
-    void main(){
-        long int i = 0x100000000l;
-        int j = %i;
-        assert(i >> j == %s);
-    }
-    """%(i, hex((0x100000000 >> i) & 0xffffffffffffffff) + "u")
-    )
-
-for n, i in enumerate([0, 1, 2, 62, 63, 64]):
-    test("long_right_shift %i"%(n + 6),
-    """
-    void main(){
-        long int i = 0xfffffffffffffffful;
-        int j = %i;
-        assert(i >> j == %s);
-    }
-    """%(i, hex((-1 >> i) & 0xffffffffffffffff) + "u")
-    )
-
-#test long unsigned right shift macro
-for n, i in enumerate([0, 1, 2, 62, 63, 64]):
-    test("unsigned_long_right_shift %i"%n,
-    """
-    void main(){
-        unsigned long int i = 0x100000000l;
-        int j = %i;
-        assert(i >> j == %s);
-    }
-    """%(i, hex((0x100000000 >> i) & 0xffffffffffffffff) + "u")
-    )
-
-for n, i in enumerate([0, 1, 2, 62, 63, 64]):
-    test("unsigned_long_right_shift %i"%(n + 6),
-    """
-    void main(){
-        unsigned long int i = 0xfffffffffffffffful;
-        int j = %i;
-        assert(i >> j == %s);
-    }
-    """%(i, hex((0xffffffffffffffff >> i) & 0xffffffffffffffff) + "u")
-    )
-
 test("float_function 1",
 """
 float a(){
@@ -1001,16 +339,39 @@ void main(){
 """
 )
 
-test("float file 1",
+test_fails("long if 0",
 """
 void main(){
-    file_write(1.0, "test_file");
-    file_write(-1.0, "test_file");
-    file_write(2.0, "test_file");
-    file_write(-2.0, "test_file");
+    if(0x100000000l){
+        //should be true
+    } else {
+        assert(0);
+    }
 }
 """
 )
+
+test_fails("long if 1",
+"""
+void main(){
+    if(0x00000000l){
+        assert(0);
+    } else {
+    }
+}
+"""
+)
+
+#test("float file 1",
+#"""
+#void main(){
+    #file_write(1.0, "test_file");
+    #file_write(-1.0, "test_file");
+    #file_write(2.0, "test_file");
+    #file_write(-2.0, "test_file");
+#}
+#"""
+#)
 
 #test("float file 2",
 #"""
