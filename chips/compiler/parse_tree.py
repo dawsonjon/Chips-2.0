@@ -185,6 +185,13 @@ class If:
             instructions = []
             instructions.extend(self.expression.generate(result, self.allocator))
 
+            if self.expression.size() == 8:
+                instructions.append(
+                    {"op"    : "or",
+                     "src"   : result,
+                     "srcb"   : result + 1,
+                     "dest" : result})
+
             instructions.append(
                 {"op"    : "jmp_if_false",
                  "src"   : result,
@@ -208,32 +215,53 @@ class Switch:
         instructions = self.expression.generate(result, self.allocator)
         for value, case in self.cases.iteritems():
 
-            temp = self.allocator.new(4)
+            instructions.append({
+                "op":"literal", 
+                "dest":test, 
+                "literal":value & 0xffffffff,
+                 })
 
-            instructions.append(
-                {"op":"literal", 
-                 "dest":temp, 
-                 "src":result, 
-                 "literal":value})
+            instructions.append({
+                "op":"equal", 
+                "dest":test, 
+                "src":result, 
+                "srcb":test
+                })
 
-            instructions.append(
-                {"op":"equal", 
-                 "dest":test, 
-                 "src":result, 
-                 "srcb":temp})
+            if self.expression.size() == 8:
 
-            self.allocator.free(temp)
+                instructions.append({
+                    "op":"literal", 
+                    "dest":test + 1, 
+                    "literal":(value >> 32) & 0xffffffff
+                    })
 
-            instructions.append(
-                {"op":"jmp_if_true", 
-                 "src":test, 
-                 "label":"case_%s"%id(case)})
+                instructions.append({
+                    "op":"equal", 
+                    "dest":test + 1, 
+                    "src":result + 1, 
+                    "srcb":test + 1
+                    })
+
+                instructions.append({
+                    "op":"and", 
+                    "dest":test, 
+                    "src": test, 
+                    "srcb": test + 1
+                    })
+
+            instructions.append({
+                "op":"jmp_if_true", 
+                "src":test, 
+                "label":"case_%s"%id(case)
+                })
 
         if hasattr(self, "default"):
 
-            instructions.append(
-                {"op":"goto", 
-                 "label":"case_%s"%id(self.default)})
+            instructions.append({
+                "op":"goto", 
+                "label":"case_%s"%id(self.default)
+                })
 
         self.allocator.free(result)
         self.allocator.free(test)
@@ -278,10 +306,19 @@ class For:
             instructions.extend(
                 self.expression.generate(result, self.allocator))
 
-            instructions.append(
-                {"op":"jmp_if_false", 
-                 "src":result, 
-                 "label":"end_%s"%id(self)})
+            if self.expression.size() == 8:
+                instructions.append({
+                    "op"    : "or",
+                    "src"   : result,
+                    "srcb"   : result + 1,
+                    "dest" : result
+                    })
+
+            instructions.append({
+                "op":"jmp_if_false", 
+                "src":result, 
+                "label":"end_%s"%id(self)
+                })
 
             self.allocator.free(result)
         instructions.extend(self.statement3.generate())
@@ -463,17 +500,20 @@ class ArrayInstance:
             location=self.location 
             for value in self.initializer:
 
-                instructions.append(
-                    {"op":"memory_write_literal",
-                     "address":location,
-                     "value":value,
-                     "element_size":self.element_size})
+                instructions.append({
+                    "op":"memory_write_literal",
+                    "address":location,
+                    "value":value,
+                    "element_size":self.element_size
+                    })
+
                 location += 1
 
-        instructions.append(
-            {"op":"literal",
-             "literal":self.location,
-             "dest":self.register})
+        instructions.append({
+            "op":"literal",
+            "literal":self.location,
+            "dest":self.register
+            })
 
         return instructions
 
@@ -639,7 +679,17 @@ class ANDOR(Expression):
 
     def generate(self, result, allocator):
         instructions = self.left.generate(result, allocator)
-        instructions.append({"op":self.op, "src":result, "label":"end_%s"%id(self)})
+        if self.left.size() == 8:
+            temp = allocator.new(4)
+            instructions.append(
+                {"op"    : "or",
+                 "src"   : result,
+                 "srcb"   : result + 1,
+                 "dest" : temp})
+            instructions.append({"op":self.op, "src":temp, "label":"end_%s"%id(self)})
+            allocator.free(temp)
+        elif self.left.size() == 4:
+            instructions.append({"op":self.op, "src":result, "label":"end_%s"%id(self)})
         instructions.extend(self.right.generate(result, allocator))
         instructions.append({"op":"label", "label":"end_%s"%id(self)})
         return instructions
@@ -684,7 +734,8 @@ def get_binary_type(left, right, operator):
         "float,float,<"  : ("int", 4, True),
         "float,float,>"  : ("int", 4, True),
         "float,float,<=" : ("int", 4, True),
-        "float,float,>=" : ("int", 4, True)}
+        "float,float,>=" : ("int", 4, True),
+        }
 
     signature = ",".join([left.type_(), right.type_(), operator])
     if signature in binary_types:
@@ -725,17 +776,22 @@ class Binary(Expression):
             self.operator)
 
         if reverse_operands:
-            instructions.append(
-                 {"op"  :operation,
-                  "dest":result,
-                  "src" :right,
-                  "srcb":left})
+
+            instructions.append({
+                "op"  :operation,
+                "dest":result,
+                "src" :right,
+                "srcb":left,
+                })
+
         else:
-            instructions.append(
-                 {"op"  :operation,
-                  "dest":result,
-                  "src" :left,
-                  "srcb":right})
+
+            instructions.append({
+                "op"  :operation,
+                "dest":result,
+                "src" :left,
+                "srcb":right
+                })
 
         allocator.free(right)
         allocator.free(left)
@@ -773,15 +829,17 @@ class ShortToLong(Expression):
         instructions = self.expression.generate(new_register, allocator)
 
         if self.expression.signed():
-            instructions.extend([
-                {"op"   : "short_to_long", 
-                 "dest" : result, 
-                 "src"  : new_register}])
+            instructions.extend([{
+                "op"   : "short_to_long", 
+                "dest" : result, 
+                "src"  : new_register
+                }])
         else:
-            instructions.extend([
-                {"op"   : "unsigned_short_to_long", 
-                 "dest" : result, 
-                 "src"  : new_register}])
+            instructions.extend([{
+                "op"   : "unsigned_short_to_long", 
+                "dest" : result, 
+                "src"  : new_register
+                }])
 
         allocator.free(new_register)
         return instructions
@@ -800,10 +858,11 @@ class LongToShort(Expression):
         new_register = allocator.new(8)
         instructions = self.expression.generate(new_register, allocator)
 
-        instructions.extend([
-            {"op"   : "long_to_short", 
-             "dest" : result, 
-             "src"  : new_register}])
+        instructions.extend([{
+            "op"   : "long_to_short", 
+            "dest" : result, 
+            "src"  : new_register
+            }])
 
         allocator.free(new_register)
         return instructions
@@ -822,10 +881,11 @@ class IntToFloat(Expression):
         new_register = allocator.new(self.size())
         instructions = self.expression.generate(new_register, allocator)
 
-        instructions.extend([
-            {"op"   : "int_to_float", 
-             "dest" : result, 
-             "src"  : new_register}])
+        instructions.extend([{
+            "op"   : "int_to_float", 
+            "dest" : result, 
+            "src"  : new_register
+            }])
 
         allocator.free(new_register)
         return instructions
@@ -845,10 +905,11 @@ class FloatToInt(Expression):
         new_register = allocator.new(self.size())
         instructions = self.expression.generate(new_register, allocator)
 
-        instructions.extend([
-            {"op"   : "float_to_int", 
-             "dest" : result, 
-             "src"  : new_register}])
+        instructions.extend([{
+            "op"   : "float_to_int", 
+            "dest" : result, 
+            "src"  : new_register
+            }])
 
         allocator.free(new_register)
         return instructions
@@ -874,10 +935,11 @@ class Unary(Expression):
         instructions = self.expression.generate(new_register, allocator)
 
         assert self.operator == "~"
-        instructions.extend([
-            {"op":"not", 
-             "dest":result, 
-             "src":new_register}])
+        instructions.extend([{
+            "op":"not", 
+            "dest":result, 
+            "src":new_register,
+            }])
 
         allocator.free(new_register)
         return instructions
@@ -909,10 +971,11 @@ class FunctionCall(Expression):
                 argument.copy(expression, temp_register, allocator))
             allocator.free(temp_register)
 
-        instructions.append(
-            {"op"   :"jmp_and_link",
-             "dest" :self.function.return_address,
-             "label":"function_%s"%id(self.function)})
+        instructions.append({
+            "op"   :"jmp_and_link",
+            "dest" :self.function.return_address,
+            "label":"function_%s"%id(self.function)
+            })
 
         if hasattr(self.function, "return_value"):
 
@@ -934,10 +997,13 @@ class Output(Expression):
         temp1 = allocator.new(4)
         instructions = self.handle.generate(temp1, allocator)
         instructions.extend(self.expression.generate(result, allocator))
-        instructions.append(
-            {"op"   : "write", 
-             "src"  : temp1, 
-             "srcb" : result})
+
+        instructions.append({
+            "op"   : "write", 
+            "src"  : temp1, 
+            "srcb" : result
+            })
+
         allocator.free(temp1)
         return instructions
 
@@ -956,11 +1022,12 @@ class FileWrite(Expression):
     def generate(self, result, allocator):
         instructions = self.expression.generate(result, allocator)
 
-        instructions.append(
-            {"op"   :"file_write", 
-             "src"  :result, 
-             "type":self.expression.type_(),
-             "file_name":self.name})
+        instructions.append({
+            "op"        : "file_write", 
+            "src"       : result, 
+            "type"      : self.expression.type_(),
+            "file_name" : self.name,
+            })
 
         return instructions
 
@@ -974,10 +1041,13 @@ class Input(Expression):
     def generate(self, result, allocator):
         temp1 = allocator.new(4)
         instructions = self.handle.generate(temp1, allocator)
-        instructions.append(
-                {"op"   : "read",
-                 "src"  : temp1,
-                 "dest" : result})
+
+        instructions.append({
+            "op"   : "read",
+            "src"  : temp1,
+            "dest" : result
+            })
+
         allocator.free(temp1)
         return instructions
 
@@ -1002,10 +1072,11 @@ class Ready(Expression):
         temp1 = allocator.new(4)
         instructions = self.handle.generate(temp1, allocator)
 
-        instructions.append(
-            {"op"   :"ready", 
-             "src"  : temp1,
-             "dest" :result})
+        instructions.append({
+            "op"   :"ready", 
+            "src"  : temp1,
+            "dest" :result
+            })
 
         allocator.free(temp1)
         return instructions
@@ -1020,10 +1091,11 @@ class Struct(Object):
         instructions = []
         if result != self.declaration.register:
 
-            instructions.append(
-                {"op"  :"move",
-                 "dest":result,
-                 "src" :self.declaration.register})
+            instructions.append({
+                "op"  :"move",
+                "dest":result,
+                "src" :self.declaration.register
+                })
 
         return instructions
 
@@ -1049,10 +1121,11 @@ class Array(Object):
         instructions = []
         if result != self.instance.register:
 
-            instructions.append(
-                {"op"   : "move",
-                 "dest" : result,
-                 "src"  : self.instance.register})
+            instructions.append({
+                "op"   : "move",
+                "dest" : result,
+                "src"  : self.instance.register
+                })
 
         return instructions
 
@@ -1060,10 +1133,11 @@ class Array(Object):
         instructions = expression.generate(result, allocator)
         if result != self.instance.register:
 
-            instructions.append(
-                {"op"   : "move",
-                 "dest" : self.instance.register,
-                 "src"  : result})
+            instructions.append({
+                "op"   : "move",
+                "dest" : self.instance.register,
+                "src"  : result
+                })
 
         return instructions
 
@@ -1081,35 +1155,39 @@ class ConstArray(Object):
             location = self.instance.location
             for value in self.instance.initializer:
 
-                instructions.append(
-                    {"op":"memory_write_literal",
-                     "address":location,
-                     "value":value & 0xffffffff})
+                instructions.append({
+                    "op":"memory_write_literal",
+                    "address":location,
+                    "value":value & 0xffffffff,
+                    })
 
                 location += 1
 
                 if self.size() == 8:
 
-                    instructions.append(
-                        {"op":"memory_write_literal",
-                         "address":location,
-                         "value":value >> 32})
+                    instructions.append({
+                        "op":"memory_write_literal",
+                        "address":location,
+                        "value":value >> 32,
+                        })
 
                     location += 1
 
 
 
-        instructions.append(
-            {"op":"literal",
-             "literal":self.instance.location,
-             "dest":self.instance.register})
+        instructions.append({
+            "op":"literal",
+            "literal":self.instance.location,
+            "dest":self.instance.register,
+            })
 
         if result != self.instance.register:
 
-            instructions.append(
-                {"op"   : "move",
-                 "dest" : result,
-                 "src"  : self.instance.register})
+            instructions.append({
+                "op"   : "move",
+                "dest" : result,
+                "src"  : self.instance.register,
+                })
 
         return instructions
 
@@ -1117,10 +1195,11 @@ class ConstArray(Object):
         instructions = expression.generate(result, allocator)
         if result != self.instance.register:
 
-            instructions.append(
-                {"op"   : "move",
-                 "dest" : self.instance.register,
-                 "src"  : result})
+            instructions.append({
+                "op"   : "move",
+                "dest" : self.instance.register,
+                "src"  : result,
+                })
 
         return instructions
 
@@ -1150,26 +1229,26 @@ class ArrayIndex(Object):
             "dest"  :address,
             "src"   :offset,
             "srcb"  :self.instance.register,
-        })
+            })
 
         instructions.append({
             "op"      :"literal",
             "literal" :blocks,
             "dest"    :blocks_reg,
-        })
+            })
 
         instructions.append({
             "op"      : "multiply",
             "src"     : blocks_reg,
             "srcb"    : address,
             "dest"    : address,
-        })
+            })
 
         instructions.append({
             "op"      :"literal",
             "literal" :1,
             "dest"    :one,
-        })
+            })
 
 
         for i in range(blocks):
@@ -1178,20 +1257,20 @@ class ArrayIndex(Object):
                 "op"    :"memory_read_request",
                 "src"   :address,
                 "sequence": str(id(self)) + str(i),
-            })
+                })
 
             instructions.append({
                 "op"    :"memory_read_wait",
                 "src"   :address,
                 "sequence": str(id(self)) + str(i),
-            })
+                })
 
             instructions.append({
                 "op"    :"memory_read",
                 "src"   :address,
                 "dest"  :result+i,
                 "sequence": str(id(self)) + str(i),
-            })
+                })
 
             #no need to increment the last time round
             if i+1 == blocks:
@@ -1202,7 +1281,7 @@ class ArrayIndex(Object):
                 "srcb"   :one,
                 "dest"   :address,
                 "src"    :address,
-            })
+                })
 
         allocator.free(address)
         allocator.free(offset)
@@ -1227,43 +1306,45 @@ class ArrayIndex(Object):
             "src"    :index,
             "srcb"   :self.instance.register,
             "signed" :False,
-        })
+            })
 
         instructions.append({
             "op"      :"literal",
             "literal" :blocks,
             "dest"    :blocks_reg,
-        })
+            })
 
         instructions.append({
             "op"      : "multiply",
             "src"     : blocks_reg,
             "srcb"    : address,
             "dest"    : address,
-        })
+            })
 
         instructions.append({
             "op"      :"literal",
             "literal" :1,
             "dest"    :one,
-        })
+            })
         
         for i in range(blocks):
 
-            instructions.append(
-                {"op"    :"memory_write",
-                 "src"   :address,
-                 "srcb"  :result + i})
+            instructions.append({
+                "op"    :"memory_write",
+                "src"   :address,
+                "srcb"  :result + i
+                })
 
             #no need to increment the last time round
             if i+1 == blocks:
                 break
 
-            instructions.append(
-                {"op"     :"add",
-                 "srcb"   :one,
-                 "dest"   :address,
-                 "src"    :address})
+            instructions.append({
+                "op"     :"add",
+                "srcb"   :one,
+                "dest"   :address,
+                "src"    :address
+                })
 
         allocator.free(index)
         allocator.free(address)
@@ -1280,16 +1361,18 @@ class Variable(Object):
         instructions = []
         if result != self.instance.register:
 
-            instructions.append(
-                {"op"  :"move",
-                 "dest":result,
-                 "src" :self.instance.register})
+            instructions.append({
+                "op"  :"move",
+                "dest":result,
+                "src" :self.instance.register
+                })
 
             if self.size() == 8:
-                instructions.append(
-                    {"op"  :"move",
-                     "dest":result+1,
-                     "src" :self.instance.register+1})
+                instructions.append({
+                    "op"  :"move",
+                    "dest":result+1,
+                    "src" :self.instance.register+1
+                    })
 
         return instructions
 
@@ -1297,16 +1380,19 @@ class Variable(Object):
         instructions = expression.generate(result, allocator)
         if result != self.instance.register:
 
-            instructions.append(
-                {"op"   : "move",
-                 "dest" : self.instance.register,
-                 "src"  : result})
+            instructions.append({
+                "op"   : "move",
+                "dest" : self.instance.register,
+                "src"  : result
+                })
 
             if self.size() == 8:
-                instructions.append(
-                    {"op"   : "move",
-                     "dest" : self.instance.register+1,
-                     "src"  : result+1})
+
+                instructions.append({
+                    "op"   : "move",
+                    "dest" : self.instance.register+1,
+                    "src"  : result+1
+                    })
 
         return instructions
 
@@ -1393,6 +1479,7 @@ class Constant(Expression):
 
 
         if self.size() == 8:
+
             instructions.append({
                 "op":"literal", 
                 "dest":result + 1, 
@@ -1421,7 +1508,8 @@ def select_binary_instruction(left_size, right_size, type_, left_signed, right_s
         "|"  : ("or", False, False),
         "^"  : ("xor", False, False),
         "==" : ("equal", False, False),
-        "!=" : ("not_equal", False, False)}
+        "!=" : ("not_equal", False, False)
+        }
 
     name, reverse_operands, sign_sensitive = operation_names[operation]
 

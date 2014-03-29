@@ -390,7 +390,7 @@ class Parser:
         self.tokens.expect("switch")
         self.tokens.expect("(")
         expression = self.parse_expression()
-        if expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
+        if expression.type_() not in ["int"]:
             self.tokens.error(
                 "switch statement expression must be an integer like expression")
         self.tokens.expect(")")

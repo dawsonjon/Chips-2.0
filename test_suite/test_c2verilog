@@ -42,7 +42,7 @@ def test_fails(test, code, no_init=False):
   else:
     print test, "...pass"
 
-thoroughness = 5
+thoroughness = 10
 
 ################################################################################
 # Test long functions
@@ -339,7 +339,7 @@ void main(){
 """
 )
 
-test_fails("long if 0",
+test("long if 0",
 """
 void main(){
     if(0x100000000l){
@@ -351,10 +351,35 @@ void main(){
 """
 )
 
-test_fails("long if 1",
+test("long if 1",
+"""
+void main(){
+    long a = 0x1000000000l;
+    if(a){
+        //should be true
+    } else {
+        assert(0);
+    }
+}
+"""
+)
+
+test("long if 2",
 """
 void main(){
     if(0x00000000l){
+        assert(0);
+    } else {
+    }
+}
+"""
+)
+
+test("long if 3",
+"""
+void main(){
+    long a = 0x0000000000l;
+    if(a){
         assert(0);
     } else {
     }
@@ -1037,31 +1062,11 @@ void main(){
 """
 )
 
-test("long unsigned divide 1",
-"""
-void main(){
-  long unsigned a = 1000000L;
-  long unsigned b = 500000L;
-  assert(a/b==2);
-}
-"""
-)
-
 test("divide 1",
 """
 void main(){
   int a = 10;
   int b = 5;
-  assert(a/b==2);
-}
-"""
-)
-
-test("long divide 1",
-"""
-void main(){
-  long a = 1000000L;
-  long b = 500000L;
   assert(a/b==2);
 }
 """
@@ -1618,150 +1623,6 @@ int main(){
 
 """)
 
-test("unsigned long modulo 1",
-"""
-unsigned long int main(){
-  unsigned long int a = 3;
-  unsigned long int b = 4;
-  assert(a%b == 3);
-  return 0;
-}
-
-""")
-
-test("unsigned long modulo 3",
-"""
-unsigned long int main(){
-  unsigned long int a = 7;
-  unsigned long int b = 8;
-  assert(a%b == 7);
-  return 0;
-}
-
-""")
-
-test("unsigned long modulo 4",
-"""
-unsigned long int main(){
-  unsigned long int a = 15;
-  unsigned long int b = 8;
-  assert(a%b == 7);
-  return 0;
-}
-
-""")
-
-test("unsigned long modulo 9",
-"""
-unsigned long int main(){
-  unsigned long int a = 32766;
-  unsigned long int b = 0;
-  assert(a%b == 32766);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 1",
-"""
-unsigned long int main(){
-  unsigned long int a = 15;
-  unsigned long int b = 3;
-  assert(a/b == 5);
-  return 0;
-}
-
-""")
-
-
-test("unsigned long division 2",
-"""
-unsigned long int main(){
-  unsigned long int a = 12;
-  unsigned long int b = 4;
-  assert(a/b == 3);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 3",
-"""
-unsigned long int main(){
-  unsigned long int a = 1;
-  unsigned long int b = 1;
-  assert(a/b == 1);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 6",
-"""
-unsigned long int main(){
-  unsigned long int a = 0;
-  unsigned long int b = 1;
-  assert(a/b == 0);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 7",
-"""
-unsigned long int main(){
-  unsigned long int a = 5;
-  unsigned long int b = 2;
-  assert(a/b == 2);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 9",
-"""
-unsigned long int main(){
-  unsigned long int a = 0;
-  unsigned long int b = 32767;
-  assert(a/b == 0);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 10",
-"""
-unsigned long int main(){
-  unsigned long int a = 32767;
-  unsigned long int b = 1;
-  assert(a/b == 32767);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 11",
-"""
-unsigned long int main(){
-  unsigned long int a = 32767;
-  unsigned long int b = 2;
-  assert(a/b == 16383);
-  return 0;
-}
-
-""")
-
-test("unsigned long division 12",
-"""
-unsigned long int main(){
-  unsigned long int a = 32767;
-  unsigned long int b = 32767;
-  assert(a/b == 1);
-  return 0;
-}
-
-""")
-
 test("unsigned modulo 1",
 """
 unsigned int main(){
@@ -1901,260 +1762,6 @@ unsigned int main(){
   unsigned int a = 32767;
   unsigned int b = 32767;
   assert(a/b == 1);
-  return 0;
-}
-
-""")
-
-test("long modulo 1",
-"""
-long int main(){
-  long int a = 3;
-  long int b = 4;
-  assert(a%b == 3);
-  return 0;
-}
-
-""")
-
-test("long modulo 2",
-"""
-long int main(){
-  long int a = -3;
-  long int b = 4;
-  assert(a%b == -3);
-  return 0;
-}
-
-""")
-
-test("long modulo 3",
-"""
-long int main(){
-  long int a = 7;
-  long int b = 8;
-  assert(a%b == 7);
-  return 0;
-}
-
-""")
-
-test("long modulo 4",
-"""
-long int main(){
-  long int a = 15;
-  long int b = 8;
-  assert(a%b == 7);
-  return 0;
-}
-
-""")
-
-test("long modulo 5",
-"""
-long int main(){
-  long int a = -7;
-  long int b = 8;
-  assert(a%b == -7);
-  return 0;
-}
-
-""")
-
-test("long modulo 6",
-"""
-long int main(){
-  long int a = -15;
-  long int b = 8;
-  assert(a%b == -7);
-  return 0;
-}
-
-""")
-
-test("long modulo 7",
-"""
-long int main(){
-  long int a = 7;
-  long int b = -8;
-  assert(a%b == 7);
-  return 0;
-}
-
-""")
-
-test("long modulo 8",
-"""
-long int main(){
-  long int a = 15;
-  long int b = -8;
-  assert(a%b == 7);
-  return 0;
-}
-
-""")
-
-test("long modulo 9",
-"""
-long int main(){
-  long int a = 32766;
-  long int b = 0;
-  assert(a%b == 32766);
-  return 0;
-}
-
-""")
-
-test("long division 1",
-"""
-long int main(){
-  long int a = 15;
-  long int b = 3;
-  assert(a/b == 5);
-  return 0;
-}
-
-""")
-
-
-test("long division 2",
-"""
-long int main(){
-  long int a = 12;
-  long int b = 4;
-  assert(a/b == 3);
-  return 0;
-}
-
-""")
-
-test("long division 3",
-"""
-long int main(){
-  long int a = 1;
-  long int b = 1;
-  assert(a/b == 1);
-  return 0;
-}
-
-""")
-
-test("long division 4",
-"""
-long int main(){
-  long int a = 1;
-  long int b = -1;
-  assert(a/b == -1);
-  return 0;
-}
-
-""")
-
-test("long division 5",
-"""
-long int main(){
-  long int a = -1;
-  long int b = 1;
-  assert(a/b == -1);
-  return 0;
-}
-
-""")
-
-test("long division 6",
-"""
-long int main(){
-  long int a = 0;
-  long int b = 1;
-  assert(a/b == 0);
-  return 0;
-}
-
-""")
-
-test("long division 7",
-"""
-long int main(){
-  long int a = 5;
-  long int b = 2;
-  assert(a/b == 2);
-  return 0;
-}
-
-""")
-
-test("long division 8",
-"""
-long int main(){
-  long int a = -5;
-  long int b = 2;
-  assert(a/b == -2);
-  return 0;
-}
-
-""")
-
-test("long division 9",
-"""
-long int main(){
-  long int a = 0;
-  long int b = 32767;
-  assert(a/b == 0);
-  return 0;
-}
-
-""")
-
-test("long division 10",
-"""
-long int main(){
-  long int a = 32767;
-  long int b = 1;
-  assert(a/b == 32767);
-  return 0;
-}
-
-""")
-
-test("long division 11",
-"""
-long int main(){
-  long int a = 32767;
-  long int b = 2;
-  assert(a/b == 16383);
-  return 0;
-}
-
-""")
-
-test("long division 12",
-"""
-long int main(){
-  long int a = 32767;
-  long int b = 32767;
-  assert(a/b == 1);
-  return 0;
-}
-
-""")
-
-test("long division 13",
-"""
-long int main(){
-  long int a = -32767-1;
-  long int b = -32767-1;
-  assert(a/b == 1);
-  return 0;
-}
-
-""")
-
-test("long division 14",
-"""
-long int main(){
-  long int a = -32767;
-  long int b = -1;
-  assert(a/b == 32767);
   return 0;
 }
 
@@ -2971,6 +2578,19 @@ return a;
 }
 """
 )
+test("long switch 10",
+"""void main(){
+long int a = 0x1000000000l;
+int b = 123;
+switch(a){
+    case 0: assert(0); break;
+    case 0x1000000000l: b = 321; break;
+    default: break; break;
+}
+assert(b == 321);
+}
+"""
+)
 
 test("break 0",
 """
@@ -3627,6 +3247,32 @@ test("expression 20",
 int main(){
   int a = -1;
   assert(a >> 2 == -1);
+  return 0;
+}
+
+""")
+test("expression 21",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  long int a;
+  a = 0 && fail();
+  return 0;
+}
+
+""")
+test("expression 22",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  long int a;
+  a = 0x1000000000l || fail();
   return 0;
 }
 

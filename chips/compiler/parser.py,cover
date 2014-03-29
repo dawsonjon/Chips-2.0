@@ -234,7 +234,7 @@
 >             if self.function.size == 4 and expression.size() == 8:
 !                 expression = LongToShort(expression)
 >             elif self.function.size == 8 and expression.size() == 4:
->                 expression = ShortToLong(expression)
+!                 expression = ShortToLong(expression)
 >             elif self.function.size != expression.size():
 !                 self.tokens.error(
 !                     "type mismatch in return statement expected: %s actual: %s"%(
@@ -390,7 +390,7 @@
 >         self.tokens.expect("switch")
 >         self.tokens.expect("(")
 >         expression = self.parse_expression()
->         if expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
+>         if expression.type_() not in ["int"]:
 >             self.tokens.error(
 >                 "switch statement expression must be an integer like expression")
 >         self.tokens.expect(")")
@@ -883,13 +883,13 @@
 !         return FileRead(file_name)
   
 >     def parse_file_write(self):
->         self.tokens.expect("(")
->         expression = self.parse_expression()
->         self.tokens.expect(",")
->         file_name = self.tokens.get()
->         file_name = file_name.strip('"').decode("string_escape")
->         self.tokens.expect(")")
->         return FileWrite(file_name, expression)
+!         self.tokens.expect("(")
+!         expression = self.parse_expression()
+!         self.tokens.expect(",")
+!         file_name = self.tokens.get()
+!         file_name = file_name.strip('"').decode("string_escape")
+!         self.tokens.expect(")")
+!         return FileWrite(file_name, expression)
   
 >     def parse_input(self):
 >         self.tokens.expect("(")
@@ -937,7 +937,7 @@
 >         if name == "file_read":
 !             return self.parse_file_read()
 >         if name == "file_write":
->             return self.parse_file_write()
+!             return self.parse_file_write()
 >         if name not in self.scope:
 >             self.tokens.error("Unknown function: %s"%name)
 >         function = self.scope[name]
