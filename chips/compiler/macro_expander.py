@@ -24,6 +24,8 @@ def expand_macros(instructions, allocator):
             new_instructions.extend(long_report(allocator, instruction))
         elif opcode == "long_unsigned_report":
             new_instructions.extend(long_report(allocator, instruction))
+        elif opcode == "long_float_report":
+            new_instructions.extend(long_report(allocator, instruction))
 
         elif opcode == "long_shift_left":
             new_instructions.extend(long_shift_left(allocator, instruction))
@@ -48,8 +50,17 @@ def expand_macros(instructions, allocator):
         elif opcode == "long_multiply":
             new_instructions.extend(long_multiply(allocator, instruction))
 
-        elif opcode == "short_to_long":
-            new_instructions.extend(short_to_long(allocator, instruction))
+        elif opcode == "long_float_add":
+            new_instructions.extend(long_float_add(allocator, instruction))
+        elif opcode == "long_float_subtract":
+            new_instructions.extend(long_float_subtract(allocator, instruction))
+        elif opcode == "long_float_multiply":
+            new_instructions.extend(long_float_multiply(allocator, instruction))
+        elif opcode == "long_float_divide":
+            new_instructions.extend(long_float_divide(allocator, instruction))
+
+        elif opcode == "int_to_long":
+            new_instructions.extend(int_to_long(allocator, instruction))
 
         elif opcode == "long_equal":
             new_instructions.extend(long_equal(allocator, instruction))
@@ -594,7 +605,7 @@ def unsigned_long_shift_right(allocator, instruction):
 
     return new_instruction
 
-def short_to_long(allocator, instruction):
+def int_to_long(allocator, instruction):
     """
     Convert a short data type to a long data type
     """
@@ -1126,7 +1137,7 @@ def long_multiply(allocator, instruction):
     srcb = instruction["srcb"]
     dest = instruction["dest"]
 
-    temp = allocator.new(4, "product_hi")
+    temp = allocator.new(4, "result_hi")
 
     new_instruction = [
 
@@ -1138,7 +1149,7 @@ def long_multiply(allocator, instruction):
         },
 
         {
-        "op"  : "product_hi",
+        "op"  : "result_hi",
         "dest": dest + 1
         },
 
@@ -1174,4 +1185,112 @@ def long_multiply(allocator, instruction):
 
     allocator.free(temp);
 
+    return new_instruction
+
+def long_float_add(allocator, instruction):
+
+    src = instruction["src"]
+    srcb = instruction["srcb"]
+    dest = instruction["dest"]
+    new_instruction = [
+        {
+        "op"  : "load_hi",
+        "src" : src + 1,
+        "srcb" : srcb + 1,
+        },
+
+        {
+        "op"  : "long_float_add",
+        "src" : src,
+        "srcb" : srcb,
+        "dest": dest
+        },
+
+        {
+        "op"  : "result_hi",
+        "dest" : dest + 1,
+        },
+
+    ]
+    return new_instruction
+
+def long_float_subtract(allocator, instruction):
+
+    src = instruction["src"]
+    srcb = instruction["srcb"]
+    dest = instruction["dest"]
+    new_instruction = [
+        {
+        "op"  : "load_hi",
+        "src" : src + 1,
+        "srcb" : srcb + 1,
+        },
+
+        {
+        "op"  : "long_float_subtract",
+        "src" : src,
+        "srcb" : srcb,
+        "dest": dest
+        },
+
+        {
+        "op"  : "result_hi",
+        "dest" : dest + 1,
+        },
+
+    ]
+    return new_instruction
+
+def long_float_multiply(allocator, instruction):
+
+    src = instruction["src"]
+    srcb = instruction["srcb"]
+    dest = instruction["dest"]
+    new_instruction = [
+        {
+        "op"  : "load_hi",
+        "src" : src + 1,
+        "srcb" : srcb + 1,
+        },
+
+        {
+        "op"  : "long_float_multiply",
+        "src" : src,
+        "srcb" : srcb,
+        "dest": dest
+        },
+
+        {
+        "op"  : "result_hi",
+        "dest" : dest + 1,
+        },
+
+    ]
+    return new_instruction
+
+def long_float_divide(allocator, instruction):
+
+    src = instruction["src"]
+    srcb = instruction["srcb"]
+    dest = instruction["dest"]
+    new_instruction = [
+        {
+        "op"  : "load_hi",
+        "src" : src + 1,
+        "srcb" : srcb + 1,
+        },
+
+        {
+        "op"  : "long_float_divide",
+        "src" : src,
+        "srcb" : srcb,
+        "dest": dest
+        },
+
+        {
+        "op"  : "result_hi",
+        "dest" : dest + 1,
+        },
+
+    ]
     return new_instruction

@@ -15,18 +15,18 @@ The following types are available in chips:
         + `unsigned int`
         + `unsigned long`
         + `float`
+        + `double`
 
-A `char` is at least 8 bits wide.  An `int` is at least 16 bits wide.  A `long`
-is at least 32 bits wide.
+A `char` is at least 8 bits wide.  An `int` is at least 32 bits wide.  A `long`
+is at least 64 bits wide.
 
 The `float` type is implemented as an IEEE 754 single precision floating point
-number.
+number. The `double` and `long double` types are implemented as IEEE 754 double
+precision floating point numbers. Round-to-zero (ties to even) is the only
+supported rounding mode.
 
-At present, `long long` and `double` have not been implemented, but I
-plan to add support for these types in a later release.
-
-single dimensional arrays, `char[]`, `int[]` and `long[]` are supported, but
-multidimensional arrays are not yet supported.
+single dimensional arrays, `char[]`, `int[]`, `long[]`, `float[]` and `double[]`
+are supported, but multidimensional arrays are not yet supported.
 
 `struct` s are supported, you can define arrays of `struct` s, and `struct` s
 may contain arrays.
@@ -35,9 +35,9 @@ may contain arrays.
 
 Arrays may be passed (by reference) to functions.
 
-Pointers are not supported, and neither is dynamic memory allocation. This is a
-deliberate decision with low memory FPGAs in mind, and probably won't be
-supported in future releases.
+Pointers are not supported, and neither is dynamic memory allocation or
+recursion.  This is a deliberate decision with low memory FPGAs in mind, these
+features probably won't be supported in future releases.
 
 Functions
 ---------

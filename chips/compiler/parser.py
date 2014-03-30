@@ -9,8 +9,8 @@ from parse_tree import *
 from tokens import Tokens
 from allocator import Allocator
 
-types = ["float", "signed", "unsigned", "short", "long", "char", "int", "void"]
-numeric_types = ["float", "signed", "unsigned", "short", "long", "char", "int"]
+types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int", "void"]
+numeric_types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int"]
 storage_specifiers = ["const"]
 
 class Parser:
@@ -81,11 +81,9 @@ class Parser:
         if "double" in type_specifiers:
             if "short" in type_specifiers:
                 self.tokens.error("Double cannot be short")
-            if "long" in type_specifiers:
-                self.tokens.error("Double cannot be long (but double can)")
             if "unsigned" in type_specifiers:
                 self.tokens.error("Double cannot be unsigned")
-            type_ = "double"
+            type_ = "float"
             size = 8
             signed = True
 
@@ -221,20 +219,19 @@ class Parser:
         if hasattr(self.function, "return_value"):
             expression = self.parse_expression()
 
-            if self.function.type_ == "int" and expression.type_() == "float":
-                expression = FloatToInt(expression)
-            elif self.function.type_ == "float" and expression.type_() == "int":
-                expression = IntToFloat(expression)
+            if self.function.type_ == "float" and self.function.size == 8:
+                expression = to_double(expression)
+            elif self.function.type_ == "float" and self.function.size == 4:
+                expression = to_float(expression)
+            elif self.function.type_ == "int" and self.function.size == 8:
+                expression = to_long(expression)
+            elif self.function.type_ == "int" and self.function.size == 4:
+                expression = to_int(expression)
             elif self.function.type_ != expression.type_():
                 self.tokens.error(
                     "type mismatch in return statement expected: %s actual: %s"%(
                         self.function.type_,
                         expression.type_()))
-
-            if self.function.size == 4 and expression.size() == 8:
-                expression = LongToShort(expression)
-            elif self.function.size == 8 and expression.size() == 4:
-                expression = ShortToLong(expression)
             elif self.function.size != expression.size():
                 self.tokens.error(
                     "type mismatch in return statement expected: %s actual: %s"%(
@@ -340,27 +337,24 @@ class Parser:
                 expression = Binary(operator[:-1], left, expression)
                 expression = self.substitute_function(expression)
 
-            if expression.type_() != lvalue.type_():
-                if expression.type_() == "int" and lvalue.type_() == "float":
-                    expression = IntToFloat(expression)
-                elif expression.type_() == "float" and lvalue.type_() == "int":
-                    expression = FloatToInt(expression)
-                else:
-                    self.tokens.error(
-                        "type mismatch in assignment expected: %s actual: %s"%(
-                            lvalue.type_(),
-                            expression.type_()))
-
-            if expression.size() != lvalue.size():
-                if expression.size() == 4 and lvalue.size() == 8:
-                    expression = ShortToLong(expression)
-                elif expression.size() == 8 and lvalue.size() == 4:
-                    expression = LongToShort(expression)
-                else:
-                    self.tokens.error(
-                        "size mismatch in assignment expected: %s actual: %s"%(
-                            lvalue.size(),
-                            expression.size()))
+            if is_double(lvalue):
+                expression = to_double(expression)
+            elif is_float(lvalue):
+                expression = to_float(expression)
+            elif is_long(lvalue):
+                expression = to_long(expression)
+            elif is_int(lvalue):
+                expression = to_int(expression)
+            elif expression.type_() != lvalue.type_():
+                self.tokens.error(
+                    "type mismatch in assignment expected: %s actual: %s"%(
+                        lvalue.type_(),
+                        expression.type_()))
+            elif expression.size() != lvalue.size():
+                self.tokens.error(
+                    "size mismatch in assignment expected: %s actual: %s"%(
+                        lvalue.size(),
+                        expression.size()))
 
             return Assignment(lvalue, expression, self.allocator)
         else:
@@ -638,30 +632,24 @@ class Parser:
                     initializer = Constant(0, type_, size, signed)
 
 
-                if type_ != initializer.type_():
-
-                    if type_ == "int" and initializer.type_() == "float":
-                        initializer = FloatToInt(initializer)
-                    elif type_ == "float" and initializer.type_() == "int":
-                        initializer = IntToFloat(initializer)
-                    else:
-                        self.tokens.error(
-                            "type mismatch in intializer expected: %s actual: %s"%(
-                                type_,
-                                intitializer.type_()))
-
-                if size != initializer.size():
-
-                    if size == 4 and initializer.size() == 8:
-                        initializer = LongToShort(initializer)
-                    elif size == 8 and initializer.size() == 4:
-                        initializer = ShortToLong(initializer)
-                    else:
-                        self.tokens.error(
-                            "size mismatch in intializer expected: %s actual: %s"%(
-                                size,
-                                initializer.size()))
-
+                if type_ == "float" and size == 8:
+                    initializer = to_double(initializer)
+                elif type_ == "float" and size == 4:
+                    initializer = to_float(initializer)
+                elif type_ == "int" and size == 8:
+                    initializer = to_long(initializer)
+                elif type_ == "int" and size == 4:
+                    initializer = to_int(initializer)
+                elif type_ != initializer.type_():
+                    self.tokens.error(
+                        "type mismatch in intializer expected: %s actual: %s"%(
+                            type_,
+                            initializer.type_()))
+                elif size != initializer.size():
+                    self.tokens.error(
+                        "size mismatch in intializer expected: %s actual: %s"%(
+                            size,
+                            initializer.size()))
 
                 declaration = VariableDeclaration(
                     self.allocator,
@@ -724,6 +712,13 @@ class Parser:
            "True,float,float,4,<=" : "float_le_xxxx",
            "True,float,float,4,>=" : "float_ge_xxxx",
 
+           "True,float,float,8,==" : "long_float_equal_xxxx",
+           "True,float,float,8,!=" : "long_float_ne_xxxx",
+           "True,float,float,8,<" : "long_float_lt_xxxx",
+           "True,float,float,8,>" : "long_float_gt_xxxx",
+           "True,float,float,8,<=" : "long_float_le_xxxx",
+           "True,float,float,8,>=" : "long_float_ge_xxxx",
+
            "False,int,int,8,/" : "long_unsigned_divide_xxxx",
            "True,int,int,8,/" : "long_divide_xxxx",
            "False,int,int,8,%" : "long_unsigned_modulo_xxxx",
@@ -735,12 +730,11 @@ class Parser:
             str(binary_expression.signed()), 
             binary_expression.left.type_(), 
             binary_expression.right.type_(), 
-            str(binary_expression.size()), 
+            str(binary_expression.left.size()), 
             binary_expression.operator])
 
         #Some things can't be implemented in verilog, substitute them with a function
         if signature in functions:
-            #print "replacing", signature
             function = self.scope[functions[signature]]
             function_call = FunctionCall(function)
             function_call.arguments = [binary_expression.left, binary_expression.right]
@@ -754,25 +748,25 @@ class Parser:
         Convert numeric types in expressions.
         """
 
-        if left.type_() != right.type_():
-            if left.type_() == "float" and right.type_() == "int":
-                return left, IntToFloat(right)
-            elif left.type_() == "int" and right.type_() == "float":
-                return IntToFloat(left), right
-            else:
-                self.tokens.error("Incompatible types : %s %s"%(
-                    left.type_(),
-                    right.type_()))
-
-        if left.size() != right.size():
-            if left.size() == 8 and right.size() == 4:
-                return left, ShortToLong(right)
-            elif left.size() == 4 and right.size() == 8:
-                return ShortToLong(left), right
-            else:
-                self.tokens.error("Incompatible sizes : %s %s"%(
-                    left.size(),
-                    right.size()))
+        if is_double(left) or is_double(right):
+            right = to_double(right)
+            left = to_double(left)
+        elif is_float(left) or is_float(right):
+            right = to_float(right)
+            left = to_float(left)
+        elif is_long(left) or is_long(right):
+            right = to_long(right)
+            left = to_long(left)
+        elif left.type_() != right.type_():
+            self.tokens.error("Incompatible types : %s %s"%(
+                left.type_(),
+                right.type_(),
+                ))
+        elif left.size() != right.size():
+            self.tokens.error("Incompatible sizes : %s %s"%(
+                left.size(),
+                right.size(),
+                ))
 
         return left, right
 
@@ -966,24 +960,25 @@ class Parser:
         for required, actual in zip(required_arguments, actual_arguments):
             if not compatible(required, actual):
 
-                if actual.type_() == "int" and required.type_() == "float":
-                    actual = IntToFloat(actual)
-                elif actual.type_() == "float" and required.type_() == "int":
-                    actual = FloatToInt(actual)
-                else:
+                if required.type_() == "float" and required.size() == 8:
+                    actual = to_double(actual)
+                elif required.type_() == "float" and required.size() == 4:
+                    actual = to_float(actual)
+                elif required.type_() == "int" and required.size() == 8:
+                    actual = to_long(actual)
+                elif required.type_() == "int" and required.size() == 4:
+                    actual = to_int(actual)
+                elif required.type_() != required.type_():
+
                     self.tokens.error(
                         "type mismatch in assignment expected: %s actual: %s"%(
                             required.type_(),
                             actual.type_()))
 
-            if required.size() != actual.size():
-                if actual.size() == 4 and required.size() == 8:
-                    actual = ShortToLong(actual)
-                elif actual.size() == 8 and required.size() == 4:
-                    actual = LongToShort(actual)
-                else:
+                elif required.size() != actual.size():
+
                     self.tokens.error(
-                        "type mismatch in assignment expected: %s actual: %s"%(
+                        "size mismatch in assignment expected: %s actual: %s"%(
                             required.size(),
                             actual.size()))
 
@@ -1023,17 +1018,29 @@ class Parser:
         elif "." in token:
             #float literal
             try:
-                type_ = "float"
-                signed = True
-                size = 4
-                token = token.upper().replace("F", "")
-                token = token.upper().replace("L", "")
-                value = float(eval(token))
+                if "F" in token.upper():
+                    type_ = "float"
+                    signed = True
+                    size = 4
+                    token = token.upper().replace("F", "")
+                    token = token.upper().replace("L", "")
+                    value = float(eval(token))
 
-                try:
-                    byte_value = struct.pack(">f", value)
-                except OverflowError:
-                    self.tokens.error("value too large")
+                    try:
+                        byte_value = struct.pack(">f", value)
+                    except OverflowError:
+                        self.tokens.error("value too large")
+                else:
+                    type_ = "float"
+                    signed = True
+                    size = 8
+                    token = token.upper().replace("L", "")
+                    value = float(eval(token))
+
+                    try:
+                        byte_value = struct.pack(">d", value)
+                    except OverflowError:
+                        self.tokens.error("value too large")
 
             except SyntaxError:
                 self.tokens.error("%s is not a floating point literal"%token)
@@ -1102,3 +1109,56 @@ class Parser:
 
 def compatible(left, right):
     return left.type_() == right.type_()
+
+def is_double(expression):
+    return expression.size() == 8 and expression.type_() == "float"
+
+def is_float(expression):
+    return expression.size() == 4 and expression.type_() == "float"
+
+def is_long(expression):
+    return expression.size() == 8 and expression.type_() == "int"
+
+def is_int(expression):
+    return expression.size() == 4 and expression.type_() == "int"
+
+def to_double(expression):
+    if is_double(expression):
+        return expression
+    elif is_float(expression):
+        return FloatToDouble(expression)
+    elif is_long(expression):
+        return LongToDouble(expression)
+    elif is_int(expression):
+        return LongToDouble(IntToLong(expression))
+
+def to_float(expression):
+    if is_double(expression):
+        return DoubleToFloat(expression)
+    elif is_float(expression):
+        return expression
+    elif is_long(expression):
+        return DoubleToFloat(LongToDouble(expression))
+    elif is_int(expression):
+        return IntToFloat(expression)
+
+def to_long(expression):
+    if is_double(expression):
+        return DoubleToLong(expression)
+    elif is_float(expression):
+        return DoubleToLong(FloatToDouble(expression))
+    elif is_long(expression):
+        return expression
+    elif is_int(expression):
+        return IntToLong(expression)
+
+def to_int(expression):
+    if is_double(expression):
+        return LongToInt(DoubleToLong(expression))
+    elif is_float(expression):
+        return FloatToInt(expression)
+    elif is_long(expression):
+        return LongToInt(expression)
+    elif is_int(expression):
+        return expression
+

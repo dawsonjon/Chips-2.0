@@ -167,10 +167,456 @@ def test_random(operator, type_):
             pass
         n+=1
 
-for type_ in ["long int", "unsigned long int"]:
-    for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
-        test_corner_cases(operator, type_)
-        test_random(operator, type_)
+#for type_ in ["long int", "unsigned long int"]:
+    #for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
+        #test_corner_cases(operator, type_)
+        #test_random(operator, type_)
+
+#test("inplace double 1",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test *= 2.0;
+#    assert(test == 2.0);
+#    test *= 2.0;
+#    assert(test == 4.0);
+#    test *= 2.0;
+#    assert(test == 8.0);
+#}
+#"""
+#)
+#
+#test("inplace double 2",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test += 2.0;
+#    assert(test == 3.0);
+#    test += 2.0;
+#    assert(test == 5.0);
+#    test += 2.0;
+#    assert(test == 7.0);
+#}
+#"""
+#)
+#
+#test("inplace double 3",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test -= 2.0;
+#    assert(test == -1.0);
+#    test -= 2.0;
+#    assert(test == -3.0);
+#    test -= 2.0;
+#    assert(test == -5.0);
+#}
+#"""
+#)
+#
+#test("inplace double 4",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test /= 2.0;
+#    assert(test == 0.5);
+#    test /= 2.0;
+#    assert(test == 0.25);
+#    test /= 2.0;
+#    assert(test == 0.125);
+#}
+#"""
+#)
+#
+#test("inplace double 5",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test *= 2;
+#    assert(test == 2.0);
+#    test *= 2;
+#    assert(test == 4.0);
+#    test *= 2;
+#    assert(test == 8.0);
+#}
+#"""
+#)
+#
+#test("inplace double 6",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test += 2;
+#    assert(test == 3.0);
+#    test += 2;
+#    assert(test == 5.0);
+#    test += 2;
+#    assert(test == 7.0);
+#}
+#"""
+#)
+#
+#test("inplace double 7",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test -= 2;
+#    assert(test == -1.0);
+#    test -= 2;
+#    assert(test == -3.0);
+#    test -= 2;
+#    assert(test == -5.0);
+#}
+#"""
+#)
+#
+#test("inplace double 8",
+#"""
+#void main(){
+#    double test = 1.0;
+#    test /= 2;
+#    assert(test == 0.5);
+#    test /= 2;
+#    assert(test == 0.25);
+#    test /= 2;
+#    assert(test == 0.125);
+#}
+#"""
+#)
+
+test("double 1",
+"""
+void main(){
+    double test = 0.0;
+    assert(test == 0.0);
+}
+"""
+)
+test("double 2",
+"""
+void main(){
+    double test = 1.0;
+    assert(test > 0.0);
+}
+"""
+)
+test("double 3",
+"""
+void main(){
+    double test = 0.0;
+    assert(test < 1.0);
+}
+"""
+)
+test("double 4",
+"""
+void main(){
+    double test = 0.0;
+    double a = -1.0;
+    double b = -2.0;
+    double c = 2.0;
+    double d = 2.0;
+    assert(test > -1.0);
+    assert(a > b);
+    assert(b < a);
+    assert(c >= d);
+    assert(c <= d);
+}
+"""
+)
+test("double 5",
+"""
+void main(){
+    double test = 0.0;
+    assert(test == 0.0);
+}
+"""
+)
+test("double 6",
+"""
+void main(){
+    double blah[10];
+    blah[0] = 0.0;
+    blah[1] = 1.0;
+    blah[2] = 2.0;
+    blah[3] = 3.0;
+    assert(blah[0] == 0.0);
+    assert(blah[1] == 1.0);
+    assert(blah[2] == 2.0);
+    assert(blah[3] == 3.0);
+}
+"""
+)
+
+test("double 7",
+"""
+void main(){
+    double a = 2.0;
+    assert(a == 1.0 + 1.0);
+}
+"""
+)
+
+test("double 8",
+"""
+void main(){
+    double a = 2.0;
+    double b = 2.0;
+    assert(a+b == 4.0);
+}
+"""
+)
+
+test("double 9",
+"""
+void main(){
+    double a = -2.0;
+    double b = -2.0;
+    assert(a+b == -4.0);
+}
+"""
+)
+
+test("double 10",
+"""
+void main(){
+    double a = 2.0;
+    double b = 2.0;
+    assert(a-b == 0.0);
+}
+"""
+)
+
+test("double 11",
+"""
+void main(){
+    double a = 2.0;
+    double b = 4.0;
+    assert(a-b == -2.0);
+}
+"""
+)
+
+test("double 12",
+"""
+void main(){
+    double a = 1.0;
+    double b = 1.0;
+    assert(a*b == 1.0);
+}
+"""
+)
+
+test("double 13",
+"""
+void main(){
+    double a = 1.0;
+    double b = -1.0;
+    assert(a*b == -1.0);
+}
+"""
+)
+
+test("double 14",
+"""
+void main(){
+    double a = -1.0;
+    double b = -1.0;
+    assert(a*b == 1.0);
+}
+"""
+)
+
+test("double 15",
+"""
+void main(){
+    double a = -7.0;
+    double b = 6.0;
+    assert(a*b == -42.0);
+}
+"""
+)
+
+test("double 16",
+"""
+void main(){
+    double a = 6.0;
+    double b = 6.0;
+    assert(a/b == 1.0);
+}
+"""
+)
+
+test("double 17",
+"""
+void main(){
+    double a = 12.0;
+    double b = 6.0;
+    assert(a/b == 2.0);
+}
+"""
+)
+
+test("double 18",
+"""
+void main(){
+    int a = 2;
+    double b = 2.0;
+    assert(a+b == 4.0);
+}
+"""
+)
+
+test("double 19",
+"""
+void main(){
+    int a;
+    double b = 2.0;
+    a = b + 1.0;
+    assert(a == 3);
+}
+"""
+)
+
+test("double 20",
+"""
+void main(){
+    int a = 2;
+    double b;
+    b = a + 1.0;
+    assert(b == 3.0);
+}
+"""
+)
+
+test("double 21",
+"""
+typedef struct {double a; double b;} mystruct;
+void main(){
+    mystruct a;
+    a.a = 2.0;
+    a.b = 3.0;
+    assert(a.a == 2.0);
+    assert(a.b == 3.0);
+    assert(a.a + a.b == 5.0);
+}
+"""
+)
+test("double 22",
+"""
+typedef struct {double a; double b;} mystruct;
+
+void test(mystruct a){
+    assert(a.a == 2.0);
+    assert(a.b == 3.0);
+    assert(a.a + a.b == 5.0);
+}
+
+void main(){
+    mystruct a;
+    a.a = 2.0;
+    a.b = 3.0;
+    test(a);
+}
+"""
+)
+
+test("double 23",
+"""
+void test(double b){
+    assert(b/6.0 == 2.0);
+}
+
+void main(){
+    int a = 12.0;
+    test(a);
+}
+"""
+)
+
+test("double 24",
+"""
+double test(){
+    return 6.0;
+}
+
+void main(){
+    int a = 12.0;
+    assert(a/test() == 2.0);
+}
+"""
+)
+
+test("double 25",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a + b + c == 6.0);
+  return 0;
+}
+
+""")
+
+test("double 26",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a - b - c == -4.0);
+  return 0;
+}
+
+""")
+
+test("double 27",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a - (b - c) == 2.0);
+  return 0;
+}
+
+""")
+
+test("double 28",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a * b * c == 6.0);
+  return 0;
+}
+
+""")
+
+test("double 29",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 4.0;
+  assert(a/b/c == 0.125);
+  return 0;
+}
+
+""")
+
+test("double 30",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  assert(a - - b == 3.0);
+  return 0;
+}
+
+""")
 
 test("long inplace 0",
 """
@@ -480,13 +926,13 @@ void main(){
 test("inplace float 1",
 """
 void main(){
-    float test = 1.0;
-    test *= 2.0;
-    assert(test == 2.0);
-    test *= 2.0;
-    assert(test == 4.0);
-    test *= 2.0;
-    assert(test == 8.0);
+    float test = 1.0f;
+    test *= 2.0f;
+    assert(test == 2.0f);
+    test *= 2.0f;
+    assert(test == 4.0f);
+    test *= 2.0f;
+    assert(test == 8.0f);
 }
 """
 )
@@ -494,13 +940,13 @@ void main(){
 test("inplace float 2",
 """
 void main(){
-    float test = 1.0;
-    test += 2.0;
-    assert(test == 3.0);
-    test += 2.0;
-    assert(test == 5.0);
-    test += 2.0;
-    assert(test == 7.0);
+    float test = 1.0f;
+    test += 2.0f;
+    assert(test == 3.0f);
+    test += 2.0f;
+    assert(test == 5.0f);
+    test += 2.0f;
+    assert(test == 7.0f);
 }
 """
 )
@@ -508,13 +954,13 @@ void main(){
 test("inplace float 3",
 """
 void main(){
-    float test = 1.0;
+    float test = 1.0f;
     test -= 2.0;
-    assert(test == -1.0);
+    assert(test == -1.0f);
     test -= 2.0;
-    assert(test == -3.0);
+    assert(test == -3.0f);
     test -= 2.0;
-    assert(test == -5.0);
+    assert(test == -5.0f);
 }
 """
 )
@@ -522,13 +968,13 @@ void main(){
 test("inplace float 4",
 """
 void main(){
-    float test = 1.0;
-    test /= 2.0;
-    assert(test == 0.5);
-    test /= 2.0;
-    assert(test == 0.25);
-    test /= 2.0;
-    assert(test == 0.125);
+    float test = 1.0f;
+    test /= 2.0f;
+    assert(test == 0.5f);
+    test /= 2.0f;
+    assert(test == 0.25f);
+    test /= 2.0f;
+    assert(test == 0.125f);
 }
 """
 )
@@ -536,13 +982,13 @@ void main(){
 test("inplace float 5",
 """
 void main(){
-    float test = 1.0;
+    float test = 1.0f;
     test *= 2;
-    assert(test == 2.0);
+    assert(test == 2.0f);
     test *= 2;
-    assert(test == 4.0);
+    assert(test == 4.0f);
     test *= 2;
-    assert(test == 8.0);
+    assert(test == 8.0f);
 }
 """
 )
@@ -550,13 +996,13 @@ void main(){
 test("inplace float 6",
 """
 void main(){
-    float test = 1.0;
+    float test = 1.0f;
     test += 2;
-    assert(test == 3.0);
+    assert(test == 3.0f);
     test += 2;
-    assert(test == 5.0);
+    assert(test == 5.0f);
     test += 2;
-    assert(test == 7.0);
+    assert(test == 7.0f);
 }
 """
 )
@@ -564,13 +1010,13 @@ void main(){
 test("inplace float 7",
 """
 void main(){
-    float test = 1.0;
+    float test = 1.0f;
     test -= 2;
-    assert(test == -1.0);
+    assert(test == -1.0f);
     test -= 2;
-    assert(test == -3.0);
+    assert(test == -3.0f);
     test -= 2;
-    assert(test == -5.0);
+    assert(test == -5.0f);
 }
 """
 )
@@ -578,13 +1024,13 @@ void main(){
 test("inplace float 8",
 """
 void main(){
-    float test = 1.0;
+    float test = 1.0f;
     test /= 2;
-    assert(test == 0.5);
+    assert(test == 0.5f);
     test /= 2;
-    assert(test == 0.25);
+    assert(test == 0.25f);
     test /= 2;
-    assert(test == 0.125);
+    assert(test == 0.125f);
 }
 """
 )
@@ -592,36 +1038,36 @@ void main(){
 test("float 1",
 """
 void main(){
-    float test = 0.0;
-    assert(test == 0.0);
+    float test = 0.0f;
+    assert(test == 0.0f);
 }
 """
 )
 test("float 2",
 """
 void main(){
-    float test = 1.0;
-    assert(test > 0.0);
+    float test = 1.0f;
+    assert(test > 0.0f);
 }
 """
 )
 test("float 3",
 """
 void main(){
-    float test = 0.0;
-    assert(test < 1.0);
+    float test = 0.0f;
+    assert(test < 1.0f);
 }
 """
 )
 test("float 4",
 """
 void main(){
-    float test = 0.0;
-    float a = -1.0;
-    float b = -2.0;
-    float c = 2.0;
-    float d = 2.0;
-    assert(test > -1.0);
+    float test = 0.0f;
+    float a = -1.0f;
+    float b = -2.0f;
+    float c = 2.0f;
+    float d = 2.0f;
+    assert(test > -1.0f);
     assert(a > b);
     assert(b < a);
     assert(c >= d);
@@ -632,8 +1078,8 @@ void main(){
 test("float 5",
 """
 void main(){
-    float test = 0.0;
-    assert(test == 0.0);
+    float test = 0.0f;
+    assert(test == 0.0f);
 }
 """
 )
@@ -641,14 +1087,14 @@ test("float 6",
 """
 void main(){
     float blah[10];
-    blah[0] = 0.0;
-    blah[1] = 1.0;
-    blah[2] = 2.0;
-    blah[3] = 3.0;
-    assert(blah[0] == 0.0);
-    assert(blah[1] == 1.0);
-    assert(blah[2] == 2.0);
-    assert(blah[3] == 3.0);
+    blah[0] = 0.0f;
+    blah[1] = 1.0f;
+    blah[2] = 2.0f;
+    blah[3] = 3.0f;
+    assert(blah[0] == 0.0f);
+    assert(blah[1] == 1.0f);
+    assert(blah[2] == 2.0f);
+    assert(blah[3] == 3.0f);
 }
 """
 )
@@ -656,8 +1102,8 @@ void main(){
 test("float 7",
 """
 void main(){
-    float a = 2.0;
-    assert(a == 1.0 + 1.0);
+    float a = 2.0f;
+    assert(a == 1.0f + 1.0f);
 }
 """
 )
@@ -665,9 +1111,9 @@ void main(){
 test("float 8",
 """
 void main(){
-    float a = 2.0;
-    float b = 2.0;
-    assert(a+b == 4.0);
+    float a = 2.0f;
+    float b = 2.0f;
+    assert(a+b == 4.0f);
 }
 """
 )
@@ -675,9 +1121,9 @@ void main(){
 test("float 9",
 """
 void main(){
-    float a = -2.0;
-    float b = -2.0;
-    assert(a+b == -4.0);
+    float a = -2.0f;
+    float b = -2.0f;
+    assert(a+b == -4.0f);
 }
 """
 )
@@ -685,9 +1131,9 @@ void main(){
 test("float 10",
 """
 void main(){
-    float a = 2.0;
-    float b = 2.0;
-    assert(a-b == -0.0);
+    float a = 2.0f;
+    float b = 2.0f;
+    assert(a-b == -0.0f);
 }
 """
 )
@@ -695,9 +1141,9 @@ void main(){
 test("float 11",
 """
 void main(){
-    float a = 2.0;
-    float b = 4.0;
-    assert(a-b == -2.0);
+    float a = 2.0f;
+    float b = 4.0f;
+    assert(a-b == -2.0f);
 }
 """
 )
@@ -705,9 +1151,9 @@ void main(){
 test("float 12",
 """
 void main(){
-    float a = 1.0;
-    float b = 1.0;
-    assert(a*b == 1.0);
+    float a = 1.0f;
+    float b = 1.0f;
+    assert(a*b == 1.0f);
 }
 """
 )
@@ -715,9 +1161,9 @@ void main(){
 test("float 13",
 """
 void main(){
-    float a = 1.0;
-    float b = -1.0;
-    assert(a*b == -1.0);
+    float a = 1.0f;
+    float b = -1.0f;
+    assert(a*b == -1.0f);
 }
 """
 )
@@ -725,9 +1171,9 @@ void main(){
 test("float 14",
 """
 void main(){
-    float a = -1.0;
-    float b = -1.0;
-    assert(a*b == 1.0);
+    float a = -1.0f;
+    float b = -1.0f;
+    assert(a*b == 1.0f);
 }
 """
 )
@@ -735,9 +1181,9 @@ void main(){
 test("float 15",
 """
 void main(){
-    float a = -7.0;
-    float b = 6.0;
-    assert(a*b == -42.0);
+    float a = -7.0f;
+    float b = 6.0f;
+    assert(a*b == -42.0f);
 }
 """
 )
@@ -745,9 +1191,9 @@ void main(){
 test("float 16",
 """
 void main(){
-    float a = 6.0;
-    float b = 6.0;
-    assert(a/b == 1.0);
+    float a = 6.0f;
+    float b = 6.0f;
+    assert(a/b == 1.0f);
 }
 """
 )
@@ -755,9 +1201,9 @@ void main(){
 test("float 17",
 """
 void main(){
-    float a = 12.0;
-    float b = 6.0;
-    assert(a/b == 2.0);
+    float a = 12.0f;
+    float b = 6.0f;
+    assert(a/b == 2.0f);
 }
 """
 )
@@ -766,8 +1212,8 @@ test("float 18",
 """
 void main(){
     int a = 2;
-    float b = 2.0;
-    assert(a+b == 4.0);
+    float b = 2.0f;
+    assert(a+b == 4.0f);
 }
 """
 )
@@ -776,8 +1222,8 @@ test("float 19",
 """
 void main(){
     int a;
-    float b = 2.0;
-    a = b + 1.0;
+    float b = 2.0f;
+    a = b + 1.0f;
     assert(a == 3);
 }
 """
@@ -788,8 +1234,8 @@ test("float 20",
 void main(){
     int a = 2;
     float b;
-    b = a + 1.0;
-    assert(b == 3.0);
+    b = a + 1.0f;
+    assert(b == 3.0f);
 }
 """
 )
@@ -799,11 +1245,11 @@ test("float 21",
 typedef struct {float a; float b;} mystruct;
 void main(){
     mystruct a;
-    a.a = 2.0;
-    a.b = 3.0;
-    assert(a.a == 2.0);
-    assert(a.b == 3.0);
-    assert(a.a + a.b == 5.0);
+    a.a = 2.0f;
+    a.b = 3.0f;
+    assert(a.a == 2.0f);
+    assert(a.b == 3.0f);
+    assert(a.a + a.b == 5.0f);
 }
 """
 )
@@ -812,15 +1258,15 @@ test("float 22",
 typedef struct {float a; float b;} mystruct;
 
 void test(mystruct a){
-    assert(a.a == 2.0);
-    assert(a.b == 3.0);
-    assert(a.a + a.b == 5.0);
+    assert(a.a == 2.0f);
+    assert(a.b == 3.0f);
+    assert(a.a + a.b == 5.0f);
 }
 
 void main(){
     mystruct a;
-    a.a = 2.0;
-    a.b = 3.0;
+    a.a = 2.0f;
+    a.b = 3.0f;
     test(a);
 }
 """
@@ -829,11 +1275,11 @@ void main(){
 test("float 23",
 """
 void test(float b){
-    assert(b/6.0 == 2.0);
+    assert(b/6.0f == 2.0f);
 }
 
 void main(){
-    int a = 12.0;
+    int a = 12.0f;
     test(a);
 }
 """
@@ -842,12 +1288,12 @@ void main(){
 test("float 24",
 """
 float test(){
-    return 6.0;
+    return 6.0f;
 }
 
 void main(){
-    int a = 12.0;
-    assert(a/test() == 2.0);
+    int a = 12.0f;
+    assert(a/test() == 2.0f);
 }
 """
 )
@@ -855,10 +1301,10 @@ void main(){
 test("float 25",
 """
 int main(){
-  float a = 1.0;
-  float b = 2.0;
-  float c = 3.0;
-  assert(a + b + c == 6.0);
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a + b + c == 6.0f);
   return 0;
 }
 
@@ -867,10 +1313,10 @@ int main(){
 test("float 26",
 """
 int main(){
-  float a = 1.0;
-  float b = 2.0;
-  float c = 3.0;
-  assert(a - b - c == -4.0);
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a - b - c == -4.0f);
   return 0;
 }
 
@@ -879,10 +1325,10 @@ int main(){
 test("float 27",
 """
 int main(){
-  float a = 1.0;
-  float b = 2.0;
-  float c = 3.0;
-  assert(a - (b - c) == 2.0);
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a - (b - c) == 2.0f);
   return 0;
 }
 
@@ -891,10 +1337,10 @@ int main(){
 test("float 28",
 """
 int main(){
-  float a = 1.0;
-  float b = 2.0;
-  float c = 3.0;
-  assert(a * b * c == 6.0);
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a * b * c == 6.0f);
   return 0;
 }
 
@@ -903,10 +1349,10 @@ int main(){
 test("float 29",
 """
 int main(){
-  float a = 1.0;
-  float b = 2.0;
-  float c = 4.0;
-  assert(a/b/c == 0.125);
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 4.0f;
+  assert(a/b/c == 0.125f);
   return 0;
 }
 
@@ -915,9 +1361,9 @@ int main(){
 test("float 30",
 """
 int main(){
-  float a = 1.0;
-  float b = 2.0;
-  assert(a - - b == 3.0);
+  float a = 1.0f;
+  float b = 2.0f;
+  assert(a - - b == 3.0f);
   return 0;
 }
 

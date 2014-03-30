@@ -216,7 +216,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
       ("data_out", 32),
       ("data_in", 32),
       ("carry", 1),
-      ("product_hi", 32),
+      ("result_hi", 32),
       ("register_hi", 32),
       ("registerb_hi", 32),
       ("memory_enable", 1),
@@ -241,8 +241,15 @@ def floating_point_enables(instruction_set):
     enable_adder = False
     enable_multiplier = False
     enable_divider = False
+    enable_long_adder = False
+    enable_long_multiplier = False
+    enable_long_divider = False
     enable_int_to_float = False
     enable_float_to_int = False
+    enable_long_to_double = False
+    enable_double_to_long = False
+    enable_float_to_double = False
+    enable_double_to_float = False
     for i in instruction_set:
         if i["op"] == "float_add":
             enable_adder = True
@@ -252,15 +259,38 @@ def floating_point_enables(instruction_set):
             enable_multiplier = True
         if i["op"] == "float_divide":
             enable_divider = True
+        if i["op"] == "long_float_add":
+            enable_long_adder = True
+        if i["op"] == "long_float_subtract":
+            enable_long_adder = True
+        if i["op"] == "long_float_multiply":
+            enable_long_multiplier = True
+        if i["op"] == "long_float_divide":
+            enable_long_divider = True
         if i["op"] == "int_to_float":
             enable_int_to_float = True
         if i["op"] == "float_to_int":
             enable_float_to_int = True
+        if i["op"] == "long_to_double":
+            enable_long_to_double = True
+        if i["op"] == "double_to_long":
+            enable_double_to_long = True
+        if i["op"] == "float_to_double":
+            enable_float_to_double = True
+        if i["op"] == "double_to_float":
+            enable_double_to_float = True
 
     return (
         enable_adder, 
         enable_multiplier, 
         enable_divider, 
+        enable_long_adder, 
+        enable_long_multiplier, 
+        enable_long_divider, 
+        enable_long_to_double,
+        enable_double_to_long,
+        enable_float_to_double,
+        enable_double_to_float,
         enable_int_to_float, 
         enable_float_to_int)
 
@@ -283,7 +313,21 @@ def generate_CHIP(input_file,
     instruction_bits = 32 + register_bits*2 + opcode_bits
     declarations = generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, allocator)
     inputs, outputs, input_files, output_files, testbench, inports, outports, signals = declarations
-    enable_adder, enable_multiplier, enable_divider, enable_int_to_float, enable_float_to_int = floating_point_enables(instruction_set)
+
+    (
+    enable_adder, 
+    enable_multiplier, 
+    enable_divider,  
+    enable_long_adder, 
+    enable_long_multiplier, 
+    enable_long_divider, 
+    enable_long_to_double, 
+    enable_double_to_long, 
+    enable_float_to_double, 
+    enable_double_to_float, 
+    enable_int_to_float, 
+    enable_float_to_int
+    ) = floating_point_enables(instruction_set)
 
     #output the code in verilog
     output_file.write("//////////////////////////////////////////////////////////////////////////////\n")
@@ -326,13 +370,31 @@ def generate_CHIP(input_file,
         generate_multiplier_signals(output_file)
     if enable_divider:
         generate_divider_signals(output_file)
+    if enable_long_adder:
+        generate_long_adder_signals(output_file)
+    if enable_long_multiplier:
+        generate_long_multiplier_signals(output_file)
+    if enable_long_divider:
+        generate_long_divider_signals(output_file)
     if enable_int_to_float:
         generate_int_to_float_signals(output_file)
     if enable_float_to_int:
         generate_float_to_int_signals(output_file)
+    if enable_long_to_double:
+        generate_long_to_double_signals(output_file)
+    if enable_float_to_double:
+        generate_float_to_double_signals(output_file)
+    if enable_double_to_long:
+        generate_double_to_long_signals(output_file)
+    if enable_double_to_float:
+        generate_double_to_float_signals(output_file)
 
     output_file.write("  real fp_value;\n")
-    if enable_adder or enable_multiplier or enable_divider or enable_int_to_float or enable_float_to_int:
+    if (enable_adder or enable_multiplier or enable_divider or 
+        enable_long_adder or enable_long_multiplier or enable_long_divider or 
+        enable_float_to_double or enable_double_to_float or
+        enable_long_to_double or enable_double_to_long or enable_int_to_float or
+        enable_float_to_int):
         output_file.write("  parameter wait_go = 2'd0,\n")
         output_file.write("            write_a = 2'd1,\n")
         output_file.write("            write_b = 2'd2,\n")
@@ -405,7 +467,11 @@ def generate_CHIP(input_file,
         output_file.write("  end\n\n")
 
     #Instance Floating Point Arithmetic
-    if enable_adder or enable_multiplier or enable_divider or enable_int_to_float or enable_float_to_int:
+    if (enable_adder or enable_multiplier or enable_divider or 
+        enable_long_adder or enable_long_multiplier or enable_long_divider or 
+        enable_float_to_double or enable_double_to_float or
+        enable_long_to_double or enable_double_to_long or enable_int_to_float or
+        enable_float_to_int):
 
         output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
         output_file.write("  // Floating Point Arithmetic                                                  \n")
@@ -419,6 +485,20 @@ def generate_CHIP(input_file,
             connect_multiplier(output_file)
         if enable_adder:
             connect_adder(output_file)
+        if enable_long_divider:
+            connect_long_divider(output_file)
+        if enable_long_multiplier:
+            connect_long_multiplier(output_file)
+        if enable_long_adder:
+            connect_long_adder(output_file)
+        if enable_long_to_double:
+            connect_long_to_double(output_file)
+        if enable_double_to_long:
+            connect_double_to_long(output_file)
+        if enable_float_to_double:
+            connect_float_to_double(output_file)
+        if enable_double_to_float:
+            connect_double_to_float(output_file)
         if enable_int_to_float:
             connect_int_to_float(output_file)
         if enable_float_to_int:
@@ -508,10 +588,24 @@ def generate_CHIP(input_file,
         output_file.write("    multiplier_go <= 0;\n")
     if enable_adder:
         output_file.write("    adder_go <= 0;\n")
+    if enable_long_divider:
+        output_file.write("    long_divider_go <= 0;\n")
+    if enable_long_multiplier:
+        output_file.write("    long_multiplier_go <= 0;\n")
+    if enable_long_adder:
+        output_file.write("    long_adder_go <= 0;\n")
     if enable_int_to_float:
         output_file.write("    int_to_float_go <= 0;\n")
     if enable_float_to_int:
         output_file.write("    float_to_int_go <= 0;\n")
+    if enable_long_to_double:
+        output_file.write("    long_to_double_go <= 0;\n")
+    if enable_double_to_long:
+        output_file.write("    double_to_long_go <= 0;\n")
+    if enable_float_to_double:
+        output_file.write("    float_to_double_go <= 0;\n")
+    if enable_double_to_float:
+        output_file.write("    double_to_float_go <= 0;\n")
 
     output_file.write("    //stage 0 instruction fetch\n")
     output_file.write("    if (stage_0_enable) begin\n")
@@ -586,6 +680,34 @@ def generate_CHIP(input_file,
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
+        elif instruction["op"] == "long_to_double":
+            output_file.write("          long_to <= {register_hi, register_1};\n")
+            output_file.write("          long_to_double_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "double_to_long":
+            output_file.write("          double_to <= {register_hi, register_1};\n")
+            output_file.write("          double_to_long_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "float_to_double":
+            output_file.write("          float_to_d <= {register_hi, register_1};\n")
+            output_file.write("          float_to_double_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "double_to_float":
+            output_file.write("          double_to_f <= {register_hi, register_1};\n")
+            output_file.write("          double_to_float_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
         elif instruction["op"] == "load_hi":
             output_file.write("          register_hi <= register_1;\n")
             output_file.write("          registerb_hi <= registerb_1;\n")
@@ -617,11 +739,11 @@ def generate_CHIP(input_file,
         elif instruction["op"] == "multiply":
             output_file.write("          long_result = register_1 * registerb_1;\n")
             output_file.write("          result_2 <= long_result[31:0];\n")
-            output_file.write("          product_hi <= long_result[63:32];\n")
+            output_file.write("          result_hi <= long_result[63:32];\n")
             output_file.write("          write_enable_2 <= 1;\n")
 
-        elif instruction["op"] == "product_hi":
-            output_file.write("          result_2 <= product_hi;\n")
+        elif instruction["op"] == "result_hi":
+            output_file.write("          result_2 <= result_hi;\n")
             output_file.write("          write_enable_2 <= 1;\n")
 
         elif instruction["op"] == "or":
@@ -717,34 +839,34 @@ def generate_CHIP(input_file,
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
-        elif instruction["op"] == "double_add":
-            output_file.write("          double_adder_a <= register_1;\n")
-            output_file.write("          double_adder_b <= registerb_1;\n")
-            output_file.write("          double_adder_go <= 1;\n")
+        elif instruction["op"] == "long_float_add":
+            output_file.write("          long_adder_a <= {register_hi, register_1};\n")
+            output_file.write("          long_adder_b <= {registerb_hi, registerb_1};\n")
+            output_file.write("          long_adder_go <= 1;\n")
             output_file.write("          stage_0_enable <= 0;\n")
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
-        elif instruction["op"] == "double_subtract":
-            output_file.write("          double_adder_a <= register_1;\n")
-            output_file.write("          double_adder_b <= {~registerb_1[63], registerb_1[62:0]};\n")
-            output_file.write("          double_adder_go <= 1;\n")
+        elif instruction["op"] == "long_float_subtract":
+            output_file.write("          long_adder_a <= {register_hi, register_1};\n")
+            output_file.write("          long_adder_b <= {~registerb_hi[31], registerb_hi[30:0], registerb_1};\n")
+            output_file.write("          long_adder_go <= 1;\n")
             output_file.write("          stage_0_enable <= 0;\n")
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
-        elif instruction["op"] == "double_multiply":
-            output_file.write("          double_multiplier_a <= register_1;\n")
-            output_file.write("          double_multiplier_b <= registerb_1;\n")
-            output_file.write("          double_multiplier_go <= 1;\n")
+        elif instruction["op"] == "long_float_multiply":
+            output_file.write("          long_multiplier_a <= {register_hi, register_1};\n")
+            output_file.write("          long_multiplier_b <= {registerb_hi, registerb_1};\n")
+            output_file.write("          long_multiplier_go <= 1;\n")
             output_file.write("          stage_0_enable <= 0;\n")
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
-        elif instruction["op"] == "double_divide":
-            output_file.write("          double_divider_a <= register_1;\n")
-            output_file.write("          double_divider_b <= registerb_1;\n")
-            output_file.write("          double_divider_go <= 1;\n")
+        elif instruction["op"] == "long_float_divide":
+            output_file.write("          long_divider_a <= {register_hi, register_1};\n")
+            output_file.write("          long_divider_b <= {registerb_hi, registerb_1};\n")
+            output_file.write("          long_divider_go <= 1;\n")
             output_file.write("          stage_0_enable <= 0;\n")
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
@@ -891,6 +1013,14 @@ def generate_CHIP(input_file,
                   instruction["line"],
                   instruction["file"]))
 
+        elif instruction["op"] == "long_float_report":
+           output_file.write('          fp_value = (register_hi[31]?-1.0:1.0) *\n')
+           output_file.write('              (2.0 ** (register_hi[30:20]-1023.0)) *\n')
+           output_file.write('              ({1\'d1, register_hi[19:0], register_1} / (2.0**52));\n')
+           output_file.write('          $display ("%%f (report at line: %s in file: %s)", fp_value);\n'%(
+                  instruction["line"],
+                  instruction["file"]))
+
         elif instruction["op"] == "unsigned_report":
            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register_1));\n'%(
 	       instruction["line"],
@@ -987,6 +1117,36 @@ def generate_CHIP(input_file,
         output_file.write("      stage_2_enable <= 1;\n")
         output_file.write("    end\n\n")
 
+    if enable_long_adder:
+        output_file.write("    if (long_adder_done) begin\n")
+        output_file.write("      result_2 <= long_adder_z[31:0];\n")
+        output_file.write("      result_hi <= long_adder_z[63:32];\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_long_multiplier:
+        output_file.write("    if (long_multiplier_done) begin\n")
+        output_file.write("      result_2 <= long_multiplier_z[31:0];\n")
+        output_file.write("      result_hi <= long_multiplier_z[63:32];\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_long_divider:
+        output_file.write("    if (long_divider_done) begin\n")
+        output_file.write("      result_2 <= long_divider_z[31:0];\n")
+        output_file.write("      result_hi <= long_divider_z[63:32];\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
     if enable_int_to_float:
         output_file.write("    if (int_to_float_done) begin\n")
         output_file.write("      result_2 <= to_float;\n")
@@ -999,6 +1159,46 @@ def generate_CHIP(input_file,
     if enable_float_to_int:
         output_file.write("    if (float_to_int_done) begin\n")
         output_file.write("      result_2 <= to_int;\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_long_to_double:
+        output_file.write("    if (long_to_double_done) begin\n")
+        output_file.write("      result_2 <= to_double[31:0];\n")
+        output_file.write("      result_hi <= to_double[63:32];\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_double_to_long:
+        output_file.write("    if (double_to_long_done) begin\n")
+        output_file.write("      result_2 <= to_long[31:0];\n")
+        output_file.write("      result_hi <= to_long[63:32];\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_float_to_double:
+        output_file.write("    if (float_to_double_done) begin\n")
+        output_file.write("      result_2 <= f_to_double[31:0];\n")
+        output_file.write("      result_hi <= f_to_double[63:32];\n")
+        output_file.write("      write_enable_2 <= 1;\n")
+        output_file.write("      stage_0_enable <= 1;\n")
+        output_file.write("      stage_1_enable <= 1;\n")
+        output_file.write("      stage_2_enable <= 1;\n")
+        output_file.write("    end\n\n")
+
+    if enable_double_to_float:
+        output_file.write("    if (double_to_float_done) begin\n")
+        output_file.write("      result_2 <= d_to_float[31:0];\n")
+        output_file.write("      result_hi <= d_to_float[63:32];\n")
         output_file.write("      write_enable_2 <= 1;\n")
         output_file.write("      stage_0_enable <= 1;\n")
         output_file.write("      stage_1_enable <= 1;\n")
@@ -1117,6 +1317,190 @@ def connect_int_to_float(output_file):
     output_file.write("      int_to_float_state <= wait_go;\n")
     output_file.write("      int_to_stb <= 0;\n")
     output_file.write("      to_float_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
+def connect_double_to_long(output_file):
+    output_file.write("  \n  double_to_int double_to_long_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(double_to),\n")
+    output_file.write("    .input_a_stb(double_to_stb),\n")
+    output_file.write("    .input_a_ack(double_to_ack),\n")
+    output_file.write("    .output_z(to_long),\n")
+    output_file.write("    .output_z_stb(to_long_stb),\n")
+    output_file.write("    .output_z_ack(to_long_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    double_to_long_done <= 0;\n")
+    output_file.write("    case(double_to_long_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (double_to_long_go) begin\n")
+    output_file.write("          double_to_long_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        double_to_stb <= 1;\n")
+    output_file.write("        if (double_to_stb && double_to_ack) begin\n")
+    output_file.write("          double_to_stb <= 0;\n")
+    output_file.write("          double_to_long_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        to_long_ack <= 1;\n")
+    output_file.write("        if (to_long_stb && to_long_ack) begin\n")
+    output_file.write("          to_long_ack <= 0;\n")
+    output_file.write("          double_to_long_state <= wait_go;\n")
+    output_file.write("          double_to_long_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n")
+    output_file.write("    endcase\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      double_to_long_state <= wait_go;\n")
+    output_file.write("      double_to_stb <= 0;\n")
+    output_file.write("      to_long_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
+def connect_long_to_double(output_file):
+    output_file.write("  \n  int_to_double long_to_double_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(long_to),\n")
+    output_file.write("    .input_a_stb(long_to_stb),\n")
+    output_file.write("    .input_a_ack(long_to_ack),\n")
+    output_file.write("    .output_z(to_double),\n")
+    output_file.write("    .output_z_stb(to_double_stb),\n")
+    output_file.write("    .output_z_ack(to_double_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    long_to_double_done <= 0;\n")
+    output_file.write("    case(long_to_double_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (long_to_double_go) begin\n")
+    output_file.write("          long_to_double_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_to_stb <= 1;\n")
+    output_file.write("        if (long_to_stb && long_to_ack) begin\n")
+    output_file.write("          long_to_stb <= 0;\n")
+    output_file.write("          long_to_double_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        to_double_ack <= 1;\n")
+    output_file.write("        if (to_double_stb && to_double_ack) begin\n")
+    output_file.write("          to_double_ack <= 0;\n")
+    output_file.write("          long_to_double_state <= wait_go;\n")
+    output_file.write("          long_to_double_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n")
+    output_file.write("    endcase\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      long_to_double_state <= wait_go;\n")
+    output_file.write("      long_to_stb <= 0;\n")
+    output_file.write("      to_double_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
+def connect_double_to_float(output_file):
+    output_file.write("  \n  double_to_float double_to_float_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(double_to_f),\n")
+    output_file.write("    .input_a_stb(double_to_f_stb),\n")
+    output_file.write("    .input_a_ack(double_to_f_ack),\n")
+    output_file.write("    .output_z(d_to_float),\n")
+    output_file.write("    .output_z_stb(d_to_float_stb),\n")
+    output_file.write("    .output_z_ack(d_to_float_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    double_to_float_done <= 0;\n")
+    output_file.write("    case(double_to_float_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (double_to_float_go) begin\n")
+    output_file.write("          double_to_float_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        double_to_f_stb <= 1;\n")
+    output_file.write("        if (double_to_f_stb && double_to_f_ack) begin\n")
+    output_file.write("          double_to_f_stb <= 0;\n")
+    output_file.write("          double_to_float_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        d_to_float_ack <= 1;\n")
+    output_file.write("        if (d_to_float_stb && d_to_float_ack) begin\n")
+    output_file.write("          d_to_float_ack <= 0;\n")
+    output_file.write("          double_to_float_state <= wait_go;\n")
+    output_file.write("          double_to_float_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n")
+    output_file.write("    endcase\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      double_to_float_state <= wait_go;\n")
+    output_file.write("      double_to_f_stb <= 0;\n")
+    output_file.write("      d_to_float_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
+def connect_float_to_double(output_file):
+    output_file.write("  \n  float_to_double float_to_double_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(float_to_d),\n")
+    output_file.write("    .input_a_stb(float_to_d_stb),\n")
+    output_file.write("    .input_a_ack(float_to_d_ack),\n")
+    output_file.write("    .output_z(f_to_double),\n")
+    output_file.write("    .output_z_stb(f_to_double_stb),\n")
+    output_file.write("    .output_z_ack(f_to_double_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    float_to_double_done <= 0;\n")
+    output_file.write("    case(float_to_double_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (float_to_double_go) begin\n")
+    output_file.write("          float_to_double_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        float_to_d_stb <= 1;\n")
+    output_file.write("        if (float_to_d_stb && float_to_d_ack) begin\n")
+    output_file.write("          float_to_d_stb <= 0;\n")
+    output_file.write("          float_to_double_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        f_to_double_ack <= 1;\n")
+    output_file.write("        if (f_to_double_stb && f_to_double_ack) begin\n")
+    output_file.write("          f_to_double_ack <= 0;\n")
+    output_file.write("          float_to_double_state <= wait_go;\n")
+    output_file.write("          float_to_double_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n")
+    output_file.write("    endcase\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      float_to_double_state <= wait_go;\n")
+    output_file.write("      float_to_d_stb <= 0;\n")
+    output_file.write("      f_to_double_ack <= 0;\n")
     output_file.write("    end\n")
     output_file.write("  end\n\n")
 
@@ -1294,6 +1678,180 @@ def connect_adder(output_file):
     output_file.write("    end\n")
     output_file.write("  end\n\n")
 
+def connect_long_divider(output_file):
+    output_file.write("  \n  double_divider long_divider_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(long_divider_a),\n")
+    output_file.write("    .input_a_stb(long_divider_a_stb),\n")
+    output_file.write("    .input_a_ack(long_divider_a_ack),\n")
+    output_file.write("    .input_b(long_divider_b),\n")
+    output_file.write("    .input_b_stb(long_divider_b_stb),\n")
+    output_file.write("    .input_b_ack(long_divider_b_ack),\n")
+    output_file.write("    .output_z(long_divider_z),\n")
+    output_file.write("    .output_z_stb(long_divider_z_stb),\n")
+    output_file.write("    .output_z_ack(long_divider_z_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    long_divider_done <= 0;\n")
+    output_file.write("    case(long_div_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (long_divider_go) begin\n")
+    output_file.write("          long_div_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_divider_a_stb <= 1;\n")
+    output_file.write("        if (long_divider_a_stb && long_divider_a_ack) begin\n")
+    output_file.write("          long_divider_a_stb <= 0;\n")
+    output_file.write("          long_div_state <= write_b;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_b:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_divider_b_stb <= 1;\n")
+    output_file.write("        if (long_divider_b_stb && long_divider_b_ack) begin\n")
+    output_file.write("          long_divider_b_stb <= 0;\n")
+    output_file.write("          long_div_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_divider_z_ack <= 1;\n")
+    output_file.write("        if (long_divider_z_stb && long_divider_z_ack) begin\n")
+    output_file.write("          long_divider_z_ack <= 0;\n")
+    output_file.write("          long_div_state <= wait_go;\n")
+    output_file.write("          long_divider_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n")
+    output_file.write("    endcase\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      long_div_state <= wait_go;\n")
+    output_file.write("      long_divider_a_stb <= 0;\n")
+    output_file.write("      long_divider_b_stb <= 0;\n")
+    output_file.write("      long_divider_z_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
+def connect_long_multiplier(output_file):
+    output_file.write("  \n  double_multiplier long_multiplier_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(long_multiplier_a),\n")
+    output_file.write("    .input_a_stb(long_multiplier_a_stb),\n")
+    output_file.write("    .input_a_ack(long_multiplier_a_ack),\n")
+    output_file.write("    .input_b(long_multiplier_b),\n")
+    output_file.write("    .input_b_stb(long_multiplier_b_stb),\n")
+    output_file.write("    .input_b_ack(long_multiplier_b_ack),\n")
+    output_file.write("    .output_z(long_multiplier_z),\n")
+    output_file.write("    .output_z_stb(long_multiplier_z_stb),\n")
+    output_file.write("    .output_z_ack(long_multiplier_z_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    long_multiplier_done <= 0;\n")
+    output_file.write("    case(long_mul_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (long_multiplier_go) begin\n")
+    output_file.write("          long_mul_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_multiplier_a_stb <= 1;\n")
+    output_file.write("        if (long_multiplier_a_stb && long_multiplier_a_ack) begin\n")
+    output_file.write("          long_multiplier_a_stb <= 0;\n")
+    output_file.write("          long_mul_state <= write_b;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_b:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_multiplier_b_stb <= 1;\n")
+    output_file.write("        if (long_multiplier_b_stb && long_multiplier_b_ack) begin\n")
+    output_file.write("          long_multiplier_b_stb <= 0;\n")
+    output_file.write("          long_mul_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_multiplier_z_ack <= 1;\n")
+    output_file.write("        if (long_multiplier_z_stb && long_multiplier_z_ack) begin\n")
+    output_file.write("          long_multiplier_z_ack <= 0;\n")
+    output_file.write("          long_mul_state <= wait_go;\n")
+    output_file.write("          long_multiplier_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("    endcase\n\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      long_mul_state <= wait_go;\n")
+    output_file.write("      long_multiplier_a_stb <= 0;\n")
+    output_file.write("      long_multiplier_b_stb <= 0;\n")
+    output_file.write("      long_multiplier_z_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
+def connect_long_adder(output_file):
+    output_file.write("  \n  double_adder long_adder_1(\n")
+    output_file.write("    .clk(clk),\n")
+    output_file.write("    .rst(rst),\n")
+    output_file.write("    .input_a(long_adder_a),\n")
+    output_file.write("    .input_a_stb(long_adder_a_stb),\n")
+    output_file.write("    .input_a_ack(long_adder_a_ack),\n")
+    output_file.write("    .input_b(long_adder_b),\n")
+    output_file.write("    .input_b_stb(long_adder_b_stb),\n")
+    output_file.write("    .input_b_ack(long_adder_b_ack),\n")
+    output_file.write("    .output_z(long_adder_z),\n")
+    output_file.write("    .output_z_stb(long_adder_z_stb),\n")
+    output_file.write("    .output_z_ack(long_adder_z_ack)\n")
+    output_file.write("  );\n\n")
+    output_file.write("  \n  always @(posedge clk)\n")
+    output_file.write("  begin\n\n")
+    output_file.write("    long_adder_done <= 0;\n")
+    output_file.write("    case(long_add_state)\n\n")
+    output_file.write("      wait_go:\n")
+    output_file.write("      begin\n")
+    output_file.write("        if (long_adder_go) begin\n")
+    output_file.write("          long_add_state <= write_a;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_a:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_adder_a_stb <= 1;\n")
+    output_file.write("        if (long_adder_a_stb && long_adder_a_ack) begin\n")
+    output_file.write("          long_adder_a_stb <= 0;\n")
+    output_file.write("          long_add_state <= write_b;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      write_b:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_adder_b_stb <= 1;\n")
+    output_file.write("        if (long_adder_b_stb && long_adder_b_ack) begin\n")
+    output_file.write("          long_adder_b_stb <= 0;\n")
+    output_file.write("          long_add_state <= read_z;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n\n")
+    output_file.write("      read_z:\n")
+    output_file.write("      begin\n")
+    output_file.write("        long_adder_z_ack <= 1;\n")
+    output_file.write("        if (long_adder_z_stb && long_adder_z_ack) begin\n")
+    output_file.write("          long_adder_z_ack <= 0;\n")
+    output_file.write("          long_add_state <= wait_go;\n")
+    output_file.write("          long_adder_done <= 1;\n")
+    output_file.write("        end\n")
+    output_file.write("      end\n")
+    output_file.write("    endcase\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      long_add_state <= wait_go;\n")
+    output_file.write("      long_adder_a_stb <= 0;\n")
+    output_file.write("      long_adder_b_stb <= 0;\n")
+    output_file.write("      long_adder_z_ack <= 0;\n")
+    output_file.write("    end\n")
+    output_file.write("  end\n\n")
+
 def generate_float_to_int_signals(output_file):
     output_file.write("  reg [31:0] float_to;\n")
     output_file.write("  reg float_to_stb;\n")
@@ -1315,6 +1873,50 @@ def generate_int_to_float_signals(output_file):
     output_file.write("  reg [1:0] int_to_float_state;\n")
     output_file.write("  reg int_to_float_go;\n")
     output_file.write("  reg int_to_float_done;\n")
+
+def generate_double_to_long_signals(output_file):
+    output_file.write("  reg [63:0] double_to;\n")
+    output_file.write("  reg double_to_stb;\n")
+    output_file.write("  wire double_to_ack;\n")
+    output_file.write("  wire [63:0] to_long;\n")
+    output_file.write("  wire to_long_stb;\n")
+    output_file.write("  reg to_long_ack;\n")
+    output_file.write("  reg [1:0] double_to_long_state;\n")
+    output_file.write("  reg double_to_long_go;\n")
+    output_file.write("  reg double_to_long_done;\n")
+
+def generate_long_to_double_signals(output_file):
+    output_file.write("  reg [63:0] long_to;\n")
+    output_file.write("  reg long_to_stb;\n")
+    output_file.write("  wire long_to_ack;\n")
+    output_file.write("  wire [63:0] to_double;\n")
+    output_file.write("  wire to_double_stb;\n")
+    output_file.write("  reg to_double_ack;\n")
+    output_file.write("  reg [1:0] long_to_double_state;\n")
+    output_file.write("  reg long_to_double_go;\n")
+    output_file.write("  reg long_to_double_done;\n")
+
+def generate_double_to_float_signals(output_file):
+    output_file.write("  reg [63:0] double_to_f;\n")
+    output_file.write("  reg double_to_f_stb;\n")
+    output_file.write("  wire double_to_f_ack;\n")
+    output_file.write("  wire [31:0] d_to_float;\n")
+    output_file.write("  wire d_to_float_stb;\n")
+    output_file.write("  reg d_to_float_ack;\n")
+    output_file.write("  reg [1:0] double_to_float_state;\n")
+    output_file.write("  reg double_to_float_go;\n")
+    output_file.write("  reg double_to_float_done;\n")
+
+def generate_float_to_double_signals(output_file):
+    output_file.write("  reg [31:0] float_to_d;\n")
+    output_file.write("  reg float_to_d_stb;\n")
+    output_file.write("  wire float_to_d_ack;\n")
+    output_file.write("  wire [63:0] f_to_double;\n")
+    output_file.write("  wire f_to_double_stb;\n")
+    output_file.write("  reg f_to_double_ack;\n")
+    output_file.write("  reg [1:0] float_to_double_state;\n")
+    output_file.write("  reg float_to_double_go;\n")
+    output_file.write("  reg float_to_double_done;\n")
 
 def generate_divider_signals(output_file):
     output_file.write("  reg [31:0] divider_a;\n")
@@ -1357,3 +1959,45 @@ def generate_adder_signals(output_file):
     output_file.write("  reg [1:0] add_state;\n")
     output_file.write("  reg adder_go;\n")
     output_file.write("  reg adder_done;\n")
+
+def generate_long_divider_signals(output_file):
+    output_file.write("  reg [63:0] long_divider_a;\n")
+    output_file.write("  reg long_divider_a_stb;\n")
+    output_file.write("  wire long_divider_a_ack;\n")
+    output_file.write("  reg [63:0] long_divider_b;\n")
+    output_file.write("  reg long_divider_b_stb;\n")
+    output_file.write("  wire long_divider_b_ack;\n")
+    output_file.write("  wire [63:0] long_divider_z;\n")
+    output_file.write("  wire long_divider_z_stb;\n")
+    output_file.write("  reg long_divider_z_ack;\n")
+    output_file.write("  reg [1:0] long_div_state;\n")
+    output_file.write("  reg long_divider_go;\n")
+    output_file.write("  reg long_divider_done;\n")
+
+def generate_long_multiplier_signals(output_file):
+    output_file.write("  reg [63:0] long_multiplier_a;\n")
+    output_file.write("  reg long_multiplier_a_stb;\n")
+    output_file.write("  wire long_multiplier_a_ack;\n")
+    output_file.write("  reg [63:0] long_multiplier_b;\n")
+    output_file.write("  reg long_multiplier_b_stb;\n")
+    output_file.write("  wire long_multiplier_b_ack;\n")
+    output_file.write("  wire [63:0] long_multiplier_z;\n")
+    output_file.write("  wire long_multiplier_z_stb;\n")
+    output_file.write("  reg long_multiplier_z_ack;\n")
+    output_file.write("  reg [1:0] long_mul_state;\n")
+    output_file.write("  reg long_multiplier_go;\n")
+    output_file.write("  reg long_multiplier_done;\n")
+
+def generate_long_adder_signals(output_file):
+    output_file.write("  reg [63:0] long_adder_a;\n")
+    output_file.write("  reg long_adder_a_stb;\n")
+    output_file.write("  wire long_adder_a_ack;\n")
+    output_file.write("  reg [63:0] long_adder_b;\n")
+    output_file.write("  reg long_adder_b_stb;\n")
+    output_file.write("  wire long_adder_b_ack;\n")
+    output_file.write("  wire [63:0] long_adder_z;\n")
+    output_file.write("  wire long_adder_z_stb;\n")
+    output_file.write("  reg long_adder_z_ack;\n")
+    output_file.write("  reg [1:0] long_add_state;\n")
+    output_file.write("  reg long_adder_go;\n")
+    output_file.write("  reg long_adder_done;\n")

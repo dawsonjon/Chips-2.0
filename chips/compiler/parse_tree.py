@@ -292,7 +292,6 @@ class Loop:
         instructions.append({"op":"label", "label":"break_%s"%id(self)})
         return instructions
 
-
 class For:
 
     def generate(self):
@@ -640,7 +639,7 @@ class Expression:
                 value |= ord(byte_value[3])
                 return value
         else:
-            return self.value()
+            return int(self.value())
 
 
 class Object(Expression):
@@ -709,35 +708,15 @@ def get_binary_type(left, right, operator):
     """
 
     binary_types = {
-        "int,int,==" : ("int", 4, True),
-        "int,int,!=" : ("int", 4, True),
-        "int,int,<"  : ("int", 4, True),
-        "int,int,>"  : ("int", 4, True),
-        "int,int,<=" : ("int", 4, True),
-        "int,int,>=" : ("int", 4, True),
-        "double,double,+"  : ("double", 8, True),
-        "double,double,-"  : ("double", 8, True),
-        "double,double,*"  : ("double", 8, True),
-        "double,double,/"  : ("double", 8, True),
-        "double,double,==" : ("int", 4, True),
-        "double,double,!=" : ("int", 4, True),
-        "double,double,<"  : ("int", 4, True),
-        "double,double,>"  : ("int", 4, True),
-        "double,double,<=" : ("int", 4, True),
-        "double,double,>=" : ("int", 4, True),
-        "float,float,+"  : ("float", 4, True),
-        "float,float,-"  : ("float", 4, True),
-        "float,float,*"  : ("float", 4, True),
-        "float,float,/"  : ("float", 4, True),
-        "float,float,==" : ("int", 4, True),
-        "float,float,!=" : ("int", 4, True),
-        "float,float,<"  : ("int", 4, True),
-        "float,float,>"  : ("int", 4, True),
-        "float,float,<=" : ("int", 4, True),
-        "float,float,>=" : ("int", 4, True),
+        "==" : ("int", 4, True),
+        "!=" : ("int", 4, True),
+        "<"  : ("int", 4, True),
+        ">"  : ("int", 4, True),
+        "<=" : ("int", 4, True),
+        ">=" : ("int", 4, True),
         }
 
-    signature = ",".join([left.type_(), right.type_(), operator])
+    signature = ",".join([operator])
     if signature in binary_types:
         type_, size, signed = binary_types[signature]
     else:
@@ -817,7 +796,7 @@ class Binary(Expression):
 def SizeOf(expression):
     return Constant(expression.size())
 
-class ShortToLong(Expression):
+class IntToLong(Expression):
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -830,13 +809,13 @@ class ShortToLong(Expression):
 
         if self.expression.signed():
             instructions.extend([{
-                "op"   : "short_to_long", 
+                "op"   : "int_to_long", 
                 "dest" : result, 
                 "src"  : new_register
                 }])
         else:
             instructions.extend([{
-                "op"   : "unsigned_short_to_long", 
+                "op"   : "unsigned_int_to_long", 
                 "dest" : result, 
                 "src"  : new_register
                 }])
@@ -847,7 +826,7 @@ class ShortToLong(Expression):
     def value(self):
         return self.expression.value()
 
-class LongToShort(Expression):
+class LongToInt(Expression):
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -855,16 +834,7 @@ class LongToShort(Expression):
         Expression.__init__( self, "int", 4, expression.signed())
 
     def generate(self, result, allocator):
-        new_register = allocator.new(8)
-        instructions = self.expression.generate(new_register, allocator)
-
-        instructions.extend([{
-            "op"   : "long_to_short", 
-            "dest" : result, 
-            "src"  : new_register
-            }])
-
-        allocator.free(new_register)
+        instructions = self.expression.generate(result, allocator)
         return instructions
 
     def value(self):
@@ -910,6 +880,125 @@ class FloatToInt(Expression):
             "dest" : result, 
             "src"  : new_register
             }])
+
+        allocator.free(new_register)
+        return instructions
+
+    def value(self):
+        return int(self.expression.value())
+
+class DoubleToLong(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__( self, "int", 8, True)
+
+    def generate(self, result, allocator):
+        new_register = allocator.new(8)
+        instructions = self.expression.generate(new_register, allocator)
+
+        instructions.append({
+            "op"   : "load_hi", 
+            "src"  : new_register+1, 
+            "srcb" : new_register+1
+            })
+        instructions.append({
+            "op"   : "double_to_long", 
+            "dest" : result, 
+            "src"  : new_register
+            })
+        instructions.append({
+            "op"   : "result_hi", 
+            "dest" : result+1, 
+            })
+
+        allocator.free(new_register)
+        return instructions
+
+    def value(self):
+        return int(self.expression.value())
+
+class LongToDouble(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__( self, "float", 8, True)
+
+    def generate(self, result, allocator):
+        new_register = allocator.new(8)
+        instructions = self.expression.generate(new_register, allocator)
+
+        instructions.append({
+            "op"   : "load_hi", 
+            "src"  : new_register+1, 
+            "srcb" : new_register+1
+            })
+        instructions.append({
+            "op"   : "long_to_double", 
+            "dest" : result, 
+            "src"  : new_register
+            })
+        instructions.append({
+            "op"   : "result_hi", 
+            "dest" : result+1, 
+            })
+
+        allocator.free(new_register)
+        return instructions
+
+    def value(self):
+        return int(self.expression.value())
+
+class DoubleToFloat(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__( self, "float", 4, True)
+
+    def generate(self, result, allocator):
+        new_register = allocator.new(8)
+        instructions = self.expression.generate(new_register, allocator)
+
+        instructions.append({
+            "op"   : "load_hi", 
+            "src"  : new_register+1, 
+            "srcb" : new_register+1
+            })
+        instructions.append({
+            "op"   : "double_to_float", 
+            "dest" : result, 
+            "src"  : new_register
+            })
+
+        allocator.free(new_register)
+        return instructions
+
+    def value(self):
+        return int(self.expression.value())
+
+class FloatToDouble(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__( self, "float", 8, True)
+
+    def generate(self, result, allocator):
+        new_register = allocator.new(8)
+        instructions = self.expression.generate(new_register, allocator)
+
+        instructions.append({
+            "op"   : "float_to_double", 
+            "dest" : result, 
+            "src"  : new_register
+            })
+        instructions.append({
+            "op"   : "result_hi", 
+            "dest" : result+1, 
+            })
 
         allocator.free(new_register)
         return instructions
@@ -1470,13 +1559,13 @@ class Constant(Expression):
 
     def generate(self, result, allocator):
 
+        int_value = self.int_value()
 
         instructions = [{
             "op":"literal", 
             "dest":result, 
             "signed":self.signed(),
-            "literal":self.int_value() & 0xffffffff}]
-
+            "literal":int_value & 0xffffffff}]
 
         if self.size() == 8:
 
@@ -1484,7 +1573,7 @@ class Constant(Expression):
                 "op":"literal", 
                 "dest":result + 1, 
                 "signed":self.signed(),
-                "literal":(self.int_value() >> 32) & 0xffffffff})
+                "literal":(int_value >> 32) & 0xffffffff})
 
         return instructions
 

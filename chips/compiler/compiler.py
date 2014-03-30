@@ -22,8 +22,15 @@ def generate_library():
     output_file.write(fpu.adder)
     output_file.write(fpu.divider)
     output_file.write(fpu.multiplier)
+    output_file.write(fpu.double_divider)
+    output_file.write(fpu.double_multiplier)
+    output_file.write(fpu.double_adder)
     output_file.write(fpu.int_to_float)
     output_file.write(fpu.float_to_int)
+    output_file.write(fpu.int_to_double)
+    output_file.write(fpu.double_to_int)
+    output_file.write(fpu.float_to_double)
+    output_file.write(fpu.double_to_float)
     output_file.close()
 
 def comp(input_file, options=[]):
