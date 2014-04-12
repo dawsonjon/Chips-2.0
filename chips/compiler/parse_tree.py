@@ -44,6 +44,9 @@ class Process:
 
 class Function:
 
+    def __init__(self):
+        self.labels_in_scope = {}
+
     def generate(self):
         instructions = []
         instructions.append({"op":"label", "label":"function_%s"%id(self)})
@@ -277,16 +280,16 @@ class Label:
         
 class Goto:
 
-    def __init__(self, name, scope, filename, lineno):
-        self.name=name
-        self.scope=scope
+    def __init__(self, name, function, filename, lineno):
+        self.name=name #what label is being jumped to
+        self.function=function  #what function object are we in, to look inside its scope
         self.filename=filename
         self.lineno=lineno
         
     def generate(self):
-        if self.name not in self.scope:
+        if self.name not in self.function.labels_in_scope:
             raise C2CHIPError("Can't goto label not in scope: %s"%self.name + "\n", self.filename, self.lineno)
-        label = self.scope[self.name];        
+        label = self.function.labels_in_scope[self.name];        
        
         return [{"op":"goto", "label":"namedlabel_%s"%id(label)}]
         

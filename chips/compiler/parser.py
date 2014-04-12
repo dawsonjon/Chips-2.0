@@ -305,7 +305,7 @@ class Parser:
         name = self.tokens.get()
         self.tokens.expect(":")
         label = Label(name, self.parse_statement() )
-        self.scope[name] = label
+        self.function.labels_in_scope[name] = label
         return label
 
     def parse_goto(self):
@@ -313,7 +313,7 @@ class Parser:
         name = self.tokens.get()
         self.tokens.expect(";")
 
-        return Goto(name, self.scope, self.tokens.filename, self.tokens.lineno)
+        return Goto(name, self.function, self.tokens.filename, self.tokens.lineno)
 
     def parse_assignment(self):
         assignment_operators = [
