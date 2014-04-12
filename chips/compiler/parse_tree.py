@@ -4,6 +4,8 @@ __version__ = "0.1"
 
 import struct
 
+from chips.compiler.exceptions import C2CHIPError
+
 class NotConstant(Exception):
     pass
 
@@ -260,6 +262,35 @@ class Block:
         return instructions
 
 
+class Label:
+
+    def __init__(self, name, statement):
+        self.name=name
+        self.statement = statement
+        
+    def generate(self):
+        instructions=[]
+        instructions.append({"op":"label", "label":"namedlabel_%s"%id(self)})
+        instructions.extend(self.statement.generate())
+        return instructions
+        
+        
+class Goto:
+
+    def __init__(self, name, scope, filename, lineno):
+        self.name=name
+        self.scope=scope
+        self.filename=filename
+        self.lineno=lineno
+        
+    def generate(self):
+        if self.name not in self.scope:
+            raise C2CHIPError("Can't goto label not in scope: %s"%self.name + "\n", self.filename, self.lineno)
+        label = self.scope[self.name];        
+       
+        return [{"op":"goto", "label":"namedlabel_%s"%id(label)}]
+        
+        
 class CompoundDeclaration:
 
     def __init__(self, declarations):

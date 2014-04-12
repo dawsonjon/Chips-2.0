@@ -128,7 +128,7 @@ class Parser:
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
-        stored_scope = copy(self.scope)
+        stored_scope = copy(self.scope) 
         type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
@@ -180,7 +180,7 @@ class Parser:
         if type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Function must have a return statement")
         self.function = None
-        self.scope = stored_scope
+        self.scope = stored_scope #now we are done parsing the function, restore the previous scope
         self.scope[function.name] = function
         #main thread is last function
         self.main = function
@@ -289,6 +289,10 @@ class Parser:
             return self.parse_default()
         elif self.tokens.peek() == "wait_clocks":
             return self.parse_wait_clocks()
+        elif self.tokens.peek() == "goto":
+            return self.parse_goto();
+        elif self.tokens.peek(1) == ":":
+            return self.parse_labeled_statement()
         else:
             expression = self.parse_discard()
             self.tokens.expect(";")
@@ -296,6 +300,20 @@ class Parser:
 
     def parse_discard(self):
         return DiscardExpression(self.parse_expression(), self.allocator)
+
+    def parse_labeled_statement(self):
+        name = self.tokens.get()
+        self.tokens.expect(":")
+        label = Label(name, self.parse_statement() )
+        self.scope[name] = label
+        return label
+
+    def parse_goto(self):
+        self.tokens.expect("goto")
+        name = self.tokens.get()
+        self.tokens.expect(";")
+
+        return Goto(name, self.scope, self.tokens.filename, self.tokens.lineno)
 
     def parse_assignment(self):
         assignment_operators = [
