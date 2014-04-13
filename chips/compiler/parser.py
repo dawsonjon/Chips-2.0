@@ -18,13 +18,34 @@ class Parser:
     """Turn the C input file into a tree of expressions and statements."""
 
     def __init__(self, input_file, reuse, initialize_memory):
+    
+        self.symbols_defined_in_current_scope = {}
+        self.symbols_defined_stack = []
         self.scope = {}
+        self.scope_stack = []
+        
         self.function = None
         self.loop = None
         self.tokens = Tokens(input_file)
         self.allocator = Allocator(reuse)
         self.structs = []
         self.initialize_memory = initialize_memory
+        
+    def add_to_scope(self, name, obj):
+        #if the name has already been defined in the current scope, error out.
+        if name in self.symbols_defined_in_current_scope:
+            self.tokens.error("%s is already defined"%name)
+        self.symbols_defined_in_current_scope[name]=obj
+        self.scope[name]=obj
+        
+    def enter_scope(self):
+        self.symbols_defined_stack.append(self.symbols_defined_in_current_scope) #stack holds everything that has been defined in a underlying scope
+        self.scope_stack.append(copy(self.scope))
+        self.symbols_defined_in_current_scope = {}
+    
+    def leave_scope(self):
+        self.symbols_defined_in_current_scope = self.symbols_defined_stack.pop()
+        self.scope = self.scope_stack.pop()
 
     def parse_process(self):
         process = Process()
@@ -122,13 +143,13 @@ class Parser:
                         signed,
                         const)
         instance = declaration.instance()
-        self.scope[argument] = instance
+        self.add_to_scope(argument,instance)
         return instance.reference()
 
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
-        stored_scope = copy(self.scope) 
+        self.enter_scope()
         type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
@@ -180,8 +201,8 @@ class Parser:
         if type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Function must have a return statement")
         self.function = None
-        self.scope = stored_scope #now we are done parsing the function, restore the previous scope
-        self.scope[function.name] = function
+        self.leave_scope() #now we are done parsing the function, restore the previous scope
+        self.add_to_scope(function.name,function)
         #main thread is last function
         self.main = function
         return function
@@ -476,13 +497,13 @@ class Parser:
 
     def parse_block(self):
         block = Block()
-        stored_scope = copy(self.scope)
+        self.enter_scope()
         self.tokens.expect("{")
         block.statements = []
         while self.tokens.peek() != "}":
             block.statements.append(self.parse_statement())
         self.tokens.expect("}")
-        self.scope = stored_scope
+        self.leave_scope() #now we are done parsing the block, restore the previous scope
         return block
 
     def parse_struct_body(self):
@@ -509,7 +530,7 @@ class Parser:
         declaration = StructDeclaration(self.parse_struct_body())
         name = self.tokens.get()
         self.tokens.expect(";")
-        self.scope[name] = declaration
+        self.add_to_scope(name,declaration)
         self.structs.append(name)
 
     def parse_define_struct(self):
@@ -517,7 +538,7 @@ class Parser:
         name = self.tokens.get()
         declaration = StructDeclaration(self.parse_struct_body())
         self.tokens.expect(";")
-        self.scope[name] = declaration
+        self.add_to_scope(name,declaration)
 
     def parse_struct_declaration(self):
         self.tokens.expect("struct")
@@ -525,7 +546,7 @@ class Parser:
         name = self.tokens.get()
         self.tokens.expect(";")
         instance = self.scope[struct_name].instance()
-        self.scope[name] = instance
+        self.add_to_scope(name,instance)
         return instance
 
     def parse_global_declaration(self, type_, size, signed, const, name):
@@ -539,7 +560,7 @@ class Parser:
                 const,
                 name).instance()
 
-            self.scope[name] = instance
+            self.add_to_scope(name,instance)
             instances.append(instance)
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
@@ -562,7 +583,7 @@ class Parser:
                 const,
                 name).instance()
 
-            self.scope[name] = instance
+            self.add_to_scope(name,instance)
             instances.append(instance)
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
