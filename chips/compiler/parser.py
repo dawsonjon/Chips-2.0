@@ -149,7 +149,7 @@ class Parser:
     def parse_function(self):
         function = Function()
         function.allocator = self.allocator
-        self.enter_scope()
+        
         type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
@@ -158,6 +158,7 @@ class Parser:
             return self.parse_global_declaration(type_, size, signed, const, name)
 
         #otherwise continue parsing a function
+        self.enter_scope()
         self.tokens.expect("(")
         function.name = name
         function.type_ = type_
