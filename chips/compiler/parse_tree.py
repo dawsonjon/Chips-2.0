@@ -46,6 +46,7 @@ class Function:
 
     def __init__(self):
         self.labels_in_scope = {}
+        self.statement = None
 
     def generate(self):
         instructions = []
