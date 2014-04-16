@@ -59,7 +59,9 @@ class Parser:
             elif self.tokens.peek() == "typedef":
                 self.parse_typedef_struct()
             else:
-                process.functions.append(self.parse_function())
+                function = self.parse_function()
+                if function is not None:
+                    process.functions.append(function)
         process.main = self.main
         return process
 
@@ -243,9 +245,9 @@ class Parser:
                     #next section is ugly
                     #a better way would be a function to compare 2 types for exact equality
                     argumentInst = argumentVarRef.instance
-                    arg_type_, arg_size, arg_signed, arg_const = self.parse_type_specifier()
+                    arg_type, arg_size, arg_signed, arg_const = self.parse_type_specifier()
                     arg_name = self.tokens.get()
-                    print "%s: type %s, size %s, signed %s, const %s"%(arg_name, arg_type_, arg_size, arg_signed, arg_const)
+                    print "%s: type %s, size %s, signed %s, const %s"%(arg_name, arg_type, arg_size, arg_signed, arg_const)
 
                     function.argument_names.append(arg_name)
                     is_array = False
@@ -253,9 +255,9 @@ class Parser:
                         self.tokens.expect("[")
                         self.tokens.expect("]")
                         is_array = True
-                        arg_type_ = arg_type_ + "[]"
-                    if arg_type_ != argumentInst.type_():
-                        self.tokens.error("Function %s, argument %d, was previously declared to have type %s, but here, it is %s"%(name, index+1, argumentInst.type_(), arg_type_))
+                        arg_type = arg_type + "[]"
+                    if arg_type != argumentInst.type_():
+                        self.tokens.error("Function %s, argument %d, was previously declared to have type %s, but here, it is %s"%(name, index+1, argumentInst.type_(), arg_type))
                     if not is_array:
                         if arg_size != argumentInst.size():
                             self.tokens.error("Function %s, argument %d, was previously declared to have size %s, but here, it is %s"%(name, index+1, argumentInst.size(), arg_size))
@@ -272,7 +274,7 @@ class Parser:
                     if self.tokens.peek() == ",":
                         self.tokens.expect(",")
                 else:
-                    self.tokens.error("Function %s was previously declared to have %d arguments, but here, only %d are present"%(name, len(function.arguments),  index+1))
+                    self.tokens.error("Function %s was previously declared to have %d arguments, but here, only %d are present"%(name, len(function.arguments),  index))
             
             if self.tokens.peek() != ")":
                 self.tokens.error("Function %s was previously declared to have %d arguments, but here, more are present"%(name, len(function.arguments) ))
@@ -304,6 +306,9 @@ class Parser:
             
         #main thread is last function
         self.main = function
+        
+        if function_was_already_declared:
+            return None #The function object is returned upon the function's first mention, so here, return something that will not generate any code
         return function
 
     def parse_break(self):
@@ -1021,7 +1026,7 @@ class Parser:
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
-            self.tokens.error("Function %s takes %s arguments %s given."%(
+            self.tokens.error("Function %s takes %s arguments, %s given."%(
                 name,
                 len(function_call.function.arguments),
                 len(function_call.arguments)))
@@ -1036,7 +1041,7 @@ class Parser:
                     actual = FloatToInt(actual)
                 else:
                     self.tokens.error(
-                        "type mismatch in assignment expected: %s actual: %s"%(
+                        "type mismatch in assignment expected: %s, actual: %s"%(
                             required.type_(),
                             actual.type_()))
             corrected_arguments.append(actual)

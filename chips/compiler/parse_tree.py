@@ -26,6 +26,7 @@ class Process:
         instructions = []
         for function in self.functions:
             if hasattr(function, "declarations"):
+                #Not actually a function at all, but a global declaration
                 instructions.extend(function.generate())
 
         instructions.append(
@@ -49,6 +50,9 @@ class Function:
         self.statement = None
 
     def generate(self):
+        if self.statement is None:
+            raise C2CHIPError("Function %s was never given a body"%(self.name))
+            
         instructions = []
         instructions.append({"op":"label", "label":"function_%s"%id(self)})
         instructions.extend(self.statement.generate())
