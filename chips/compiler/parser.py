@@ -247,7 +247,7 @@ class Parser:
                     argumentInst = argumentVarRef.instance
                     arg_type, arg_size, arg_signed, arg_const = self.parse_type_specifier()
                     arg_name = self.tokens.get()
-                    print "%s: type %s, size %s, signed %s, const %s"%(arg_name, arg_type, arg_size, arg_signed, arg_const)
+                    #print "%s: type %s, size %s, signed %s, const %s"%(arg_name, arg_type, arg_size, arg_signed, arg_const)
 
                     function.argument_names.append(arg_name)
                     is_array = False
@@ -270,7 +270,7 @@ class Parser:
                             self.tokens.error("Function %s, argument %d, was previously declared to have element size %s, but here, it is %s"%(name, index+1, argumentInst.element_size, arg_size))
                         if arg_signed != argumentInst.element_signed:
                             self.tokens.error("Function %s, argument %d, was previously declared to have element signedness %s, but here, it is %s"%(name, index+1, argumentInst.element_signed, arg_signed))
-                            
+                        #array element constness?
                     if self.tokens.peek() == ",":
                         self.tokens.expect(",")
                 else:
@@ -430,6 +430,9 @@ class Parser:
         name = self.tokens.get()
         self.tokens.expect(":")
         label = Label(name, self.parse_statement() )
+        if name in self.function.labels_in_scope:
+            self.tokens.error(
+                    "label %s was already declared in this function"%name)
         self.function.labels_in_scope[name] = label
         return label
 
