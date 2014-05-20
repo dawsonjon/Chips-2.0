@@ -39,12 +39,12 @@ class Allocator:
         self.start = max(self.all_registers.keys()) + 1
 
     def new_array(self, size, contents):
-        reg = self.memory_size
-        self.memory_size += int(size)
+        free = self.memory_size
+        self.memory_size += int(size//4)
         if contents is not None:
-            for location, value in enumerate(contents, reg):
+            for location, value in enumerate(contents, free):
                 self.memory_content[location] = value
-        return reg
+        return free
 
     def regsize(self, reg):
         return self.all_registers[reg][1]

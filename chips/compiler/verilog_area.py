@@ -163,7 +163,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
     inputs = allocator.input_names.values()
     outputs = allocator.output_names.values()
     input_files = unique([i["file_name"] for i in instructions if "file_read" == i["op"]])
-    output_files = unique([i["file_name"] for i in instructions if "file_write" == i["op"]])
+    output_files = unique([i["file_name"] for i in instructions if i["op"] in ("file_write", "float_file_write", "long_float_file_write")])
     testbench = not inputs and not outputs and not no_tb_mode
 
     #Do not generate a port in testbench mode
@@ -915,12 +915,20 @@ def generate_CHIP(input_file,
             output_file.write("          write_enable_2 <= 1;\n")
             output_file.write("        end\n\n")
 
+        #FIXME - make work with special floating point values
         elif instruction["op"] == "float_file_write":
                 output_file.write('          fp_value = (register_1[31]?-1.0:1.0) *\n')
                 output_file.write('              (2.0 ** (register_1[30:23]-127.0)) *\n')
                 output_file.write('              ({1\'d1, register_1[22:0]} / (2.0**23));\n')
-                output_file.write('          $fdisplay (%s, "%%f", fp_value);\n'%(
-                  output_files[instruction["file_name"]]))
+                output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
+                  output_files[
+                  instruction["file_name"]]))
+
+        elif instruction["op"] == "long_float_file_write":
+                output_file.write('          fp_value = $bitstoreal({register_hi, register_1});\n')
+                output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
+                  output_files[
+                  instruction["file_name"]]))
 
         elif instruction["op"] == "unsigned_file_write":
                 output_file.write("          $fdisplay (%s, \"%%d\", $unsigned(register_1));\n"%(
@@ -995,6 +1003,7 @@ def generate_CHIP(input_file,
             output_file.write("          stage_1_enable <= 0;\n")
             output_file.write("          stage_2_enable <= 0;\n")
 
+        #FIXME - make work with special floating point values
         elif instruction["op"] == "report":
             output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed(register_1));\n'%(
                 instruction["line"],
@@ -1009,15 +1018,13 @@ def generate_CHIP(input_file,
            output_file.write('          fp_value = (register_1[31]?-1.0:1.0) *\n')
            output_file.write('              (2.0 ** (register_1[30:23]-127.0)) *\n')
            output_file.write('              ({1\'d1, register_1[22:0]} / (2.0**23));\n')
-           output_file.write('          $display ("%%f (report at line: %s in file: %s)", fp_value);\n'%(
+           output_file.write('          $display ("%%g (report (float) at line: %s in file: %s)", fp_value);\n'%(
                   instruction["line"],
                   instruction["file"]))
 
         elif instruction["op"] == "long_float_report":
-           output_file.write('          fp_value = (register_hi[31]?-1.0:1.0) *\n')
-           output_file.write('              (2.0 ** (register_hi[30:20]-1023.0)) *\n')
-           output_file.write('              ({1\'d1, register_hi[19:0], register_1} / (2.0**52));\n')
-           output_file.write('          $display ("%%f (report at line: %s in file: %s)", fp_value);\n'%(
+           output_file.write('          fp_value = $bitstoreal({register_hi, register_1});\n')
+           output_file.write('          $display ("%%g (report (double) at line: %s in file: %s)", fp_value);\n'%(
                   instruction["line"],
                   instruction["file"]))
 

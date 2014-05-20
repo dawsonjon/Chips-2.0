@@ -1,13 +1,13 @@
 /*globals*/
 unsigned long int seed;
 
-void srand(unsigned long int s){
+void srand(unsigned int s){
     seed = s;
 }
 
 unsigned long rand(){
-    const unsigned long a = 1103515245ul;
-    const unsigned long c = 12345ul;
+    const unsigned a = 1103515245u;
+    const unsigned c = 12345u;
     seed = (a*seed+c);
     return seed;
 }

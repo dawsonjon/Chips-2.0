@@ -28,8 +28,8 @@ The example shows a practical method of calculating the FFT using the
     /*globals*/
     const int n = 1024;
     const int m = 10;
-    float twiddle_step_real[m];
-    float twiddle_step_imaginary[m];
+    double twiddle_step_real[m];
+    double twiddle_step_imaginary[m];
     
     
     /*calculate twiddle factors and store them*/
@@ -56,10 +56,11 @@ The example shows a practical method of calculating the FFT using the
     }
     
     /*calculate fft*/
-    void fft(float reals[], float imaginaries[]){
+    void fft(double reals[], double imaginaries[]){
     
         int stage, subdft_size, span, i, ip, j;
-        float sr, si, temp_real, temp_imaginary, imaginary_twiddle, real_twiddle;
+        double sr, si, temp_real, temp_imaginary, imaginary_twiddle, real_twiddle;
+    
     
         //read data into array
         for(i=0; i<n; i++){
@@ -76,7 +77,6 @@ The example shows a practical method of calculating the FFT using the
     
         //butterfly multiplies
         for(stage=1; stage<=m; stage++){
-            report(stage);
             subdft_size = 1 << stage;
             span = subdft_size >> 1;
     
@@ -88,6 +88,9 @@ The example shows a practical method of calculating the FFT using the
             sr = twiddle_step_real[stage];
             si = twiddle_step_imaginary[stage];
     
+    
+    
+            report(stage);
             for(j=0; j<span; j++){
                 for(i=j; i<n; i+=subdft_size){
                     ip=i+span;
@@ -100,30 +103,33 @@ The example shows a practical method of calculating the FFT using the
     
                     reals[i]       = reals[i]+temp_real;
                     imaginaries[i] = imaginaries[i]+temp_imaginary;
+    
                 }
-                //trigonometric recreal_twiddlerence
+                //trigonometric recurrence
                 temp_real=real_twiddle;
                 real_twiddle      = temp_real*sr - imaginary_twiddle*si;
                 imaginary_twiddle = temp_real*si + imaginary_twiddle*sr;
             }
+    
         }
+    
     }
     
     void main(){
-        float reals[n];
-        float imaginaries[n];
+        double reals[n];
+        double imaginaries[n];
         unsigned i;
     
         /* pre-calculate sine and cosine*/
         calculate_twiddles();
     
-        /* generate a 64 sample cos wave */
+        /* generate a 64 sample sin wave */
         for(i=0; i<n; i++){
             reals[i] = 0.0;
             imaginaries[i] = 0.0;
         }
         for(i=0; i<=64; i++){
-            reals[i] = sin(2.0 * M_PI * (i/64.0));
+           reals[i] = sin(2.0 * M_PI * (i/64.0));
         }
     
         /* output time domain signal to a file */

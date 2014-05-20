@@ -35,9 +35,9 @@ Newton's method until further refinements agree to within a small degree.
     /* Jonathan P Dawson */
     /* 2013-12-23 */
     
-    /* find absolute value of a floating point number*/
+    /* find absolute value of a doubleing point number*/
     
-    float fabs(float n){
+    double fabs(double n){
         if (n < 0.0) {
             return - n;
         } else {
@@ -47,13 +47,13 @@ Newton's method until further refinements agree to within a small degree.
     
     /* approximate sqrt using newton's method*/
     
-    float sqrt(float n){
-        float square, x, old;
-        x = n/2;
+    double sqrt(double n){
+        double square, x, old;
+        x = n;
         old = 0.0;
-        while(fabs(old-x) > 0.000001){
+        while(old != x){
             old = x;
-            x -= (x*x-n)/(2*x);
+            x = (x + n/x)*0.5;
         }
         return x;
     }
@@ -61,8 +61,8 @@ Newton's method until further refinements agree to within a small degree.
     /* test sqrt function*/
     
     void main(){
-        float x;
-        for(x=0.0; x <= 10.0; x+= 0.1){
+        double x;
+        for(x=0.0; x <= 10.0; x+= 0.01){
             file_write(x, "x");
             file_write(sqrt(x), "sqrt_x");
         }

@@ -44,8 +44,351 @@ def test_fails(test, code, no_init=False):
 
 thoroughness = 10
 
+
+
+test("long array 1",
+"""
+void main(){
+    long int a[1024], b[1024], c;
+    a[0] = 2;
+    b[0] = 1;
+    assert(b[0] == 1);
+}
+"""
+)
+
 ################################################################################
 # Test long functions
+
+test("file write 1",
+"""
+void main(){
+    file_write(123, "test_file");
+}
+"""
+)
+
+test_file = open("test_file")
+assert test_file.read().strip().startswith("123")
+test_file.close()
+
+test("file write 2",
+"""
+void main(){
+    file_write(456u, "test_file");
+}
+"""
+)
+
+test_file = open("test_file")
+assert test_file.read().strip().startswith("456")
+test_file.close()
+
+test("file write 3",
+"""
+void main(){
+    file_write(123ul, "test_file");
+}
+"""
+)
+
+test_file = open("test_file")
+assert test_file.read().strip().startswith("123")
+test_file.close()
+
+test("file write 4",
+"""
+void main(){
+    file_write(456.7f, "test_file");
+}
+"""
+)
+
+test_file = open("test_file")
+assert test_file.read().strip().startswith("456.7")
+test_file.close()
+
+test("file write 5",
+"""
+void main(){
+    file_write(123.4, "test_file");
+}
+"""
+)
+
+test_file = open("test_file")
+assert test_file.read().strip().startswith("123.4")
+test_file.close()
+
+print "should report 123"
+test("report 1",
+"""
+void main(){
+    int a = 123;
+    report(a);
+}
+"""
+)
+
+print "should report 123"
+test("report 2",
+"""
+void main(){
+    unsigned int a = 123;
+    report(a);
+}
+"""
+)
+
+print "should report 123"
+test("report 3",
+"""
+void main(){
+    long unsigned int a = 123;
+    report(a);
+}
+"""
+)
+
+print "should report 123"
+test("report 4",
+"""
+void main(){
+    long int a = 123;
+    report(a);
+}
+"""
+)
+
+print "should report 123.0"
+test("report 5",
+"""
+void main(){
+    float a = 123.0;
+    report(a);
+}
+"""
+)
+
+print "should report 123.0"
+test("report 5",
+"""
+void main(){
+    double a = 123.0;
+    report(a);
+}
+"""
+)
+
+print "should report 0.0"
+test("report 5",
+"""
+void main(){
+    float a = 0.0;
+    report(a);
+}
+"""
+)
+
+print "should report 0.0"
+test("report 5",
+"""
+void main(){
+    double a = -0.0;
+    report(a);
+}
+"""
+)
+
+test("types 1",
+"""
+void main(){
+    float a;
+    a = 1.0;
+    assert(a == 1.0);
+}
+"""
+)
+
+test("types 2",
+"""
+void main(){
+    float a;
+    a = 1.0f;
+    assert(a == 1.0f);
+}
+"""
+)
+
+test("types 3",
+"""
+void main(){
+    float a;
+    a = 0.5;
+    assert(a == 0.5);
+}
+"""
+)
+
+test("types 4",
+"""
+void main(){
+    float a;
+    a = 0.5f;
+    assert(a == 0.5f);
+}
+"""
+)
+
+test("types 5",
+"""
+void main(){
+    float a;
+    a = 0.0;
+    assert(a == 0.0);
+}
+"""
+)
+
+test("types 6",
+"""
+void main(){
+    float a;
+    a = 0.0f;
+    assert(a == 0.0f);
+}
+"""
+)
+
+test("types 7",
+"""
+void main(){
+    float a;
+    a = -0.0;
+    assert(a == 0.0);
+}
+"""
+)
+
+test("types 8",
+"""
+void main(){
+    float a;
+    a = 0.0f;
+    assert(a == 0.0f);
+}
+"""
+)
+
+test("types 9",
+"""
+void main(){
+    float a;
+    a = 1ul;
+    assert(a == 1ul);
+}
+"""
+)
+
+test("types 10",
+"""
+void main(){
+    float a;
+    a = 10ul;
+    assert(a == 10ul);
+}
+"""
+)
+
+test("types 11",
+"""
+void main(){
+    float a;
+    a = 1u;
+    assert(a == 1u);
+}
+"""
+)
+
+test("types 12",
+"""
+void main(){
+    float a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test("types 13",
+"""
+void main(){
+    double a;
+    a = 1ul;
+    assert(a == 1ul);
+}
+"""
+)
+
+test("types 14",
+"""
+void main(){
+    double a;
+    a = 10ul;
+    assert(a == 10ul);
+}
+"""
+)
+
+test("types 15",
+"""
+void main(){
+    double a;
+    a = 1u;
+    assert(a == 1u);
+}
+"""
+)
+
+test("types 16",
+"""
+void main(){
+    double a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test("types 17",
+"""
+void main(){
+    long a;
+    a = 1u;
+    assert(a == 1u);
+}
+"""
+)
+
+test("types 18",
+"""
+void main(){
+    long a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test("types 19",
+"""
+void main(){
+    unsigned long a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
 
 class InvalidStimulus:
     pass
@@ -167,122 +510,126 @@ def test_random(operator, type_):
             pass
         n+=1
 
-#for type_ in ["long int", "unsigned long int"]:
-    #for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
-        #test_corner_cases(operator, type_)
-        #test_random(operator, type_)
+for type_ in ["long int", "unsigned long int"]:
+    for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
+        test_corner_cases(operator, type_)
+        test_random(operator, type_)
 
-#test("inplace double 1",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test *= 2.0;
-#    assert(test == 2.0);
-#    test *= 2.0;
-#    assert(test == 4.0);
-#    test *= 2.0;
-#    assert(test == 8.0);
-#}
-#"""
-#)
-#
-#test("inplace double 2",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test += 2.0;
-#    assert(test == 3.0);
-#    test += 2.0;
-#    assert(test == 5.0);
-#    test += 2.0;
-#    assert(test == 7.0);
-#}
-#"""
-#)
-#
-#test("inplace double 3",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test -= 2.0;
-#    assert(test == -1.0);
-#    test -= 2.0;
-#    assert(test == -3.0);
-#    test -= 2.0;
-#    assert(test == -5.0);
-#}
-#"""
-#)
-#
-#test("inplace double 4",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test /= 2.0;
-#    assert(test == 0.5);
-#    test /= 2.0;
-#    assert(test == 0.25);
-#    test /= 2.0;
-#    assert(test == 0.125);
-#}
-#"""
-#)
-#
-#test("inplace double 5",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test *= 2;
-#    assert(test == 2.0);
-#    test *= 2;
-#    assert(test == 4.0);
-#    test *= 2;
-#    assert(test == 8.0);
-#}
-#"""
-#)
-#
-#test("inplace double 6",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test += 2;
-#    assert(test == 3.0);
-#    test += 2;
-#    assert(test == 5.0);
-#    test += 2;
-#    assert(test == 7.0);
-#}
-#"""
-#)
-#
-#test("inplace double 7",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test -= 2;
-#    assert(test == -1.0);
-#    test -= 2;
-#    assert(test == -3.0);
-#    test -= 2;
-#    assert(test == -5.0);
-#}
-#"""
-#)
-#
-#test("inplace double 8",
-#"""
-#void main(){
-#    double test = 1.0;
-#    test /= 2;
-#    assert(test == 0.5);
-#    test /= 2;
-#    assert(test == 0.25);
-#    test /= 2;
-#    assert(test == 0.125);
-#}
-#"""
-#)
+test("long not 1",
+"""
+void main(){
+    unsigned long int a = 0xaaaaaaaaaaaaaaaaul;
+    assert(~a == 0x5555555555555555ul);
+}
+"""
+)
+
+test("long not 2",
+"""
+void main(){
+    long int a = 0x5555555555555555l;
+    assert(~a == ~0x5555555555555555l);
+}
+"""
+)
+
+test("inplace double 2",
+"""
+void main(){
+    double test = 1.0;
+    test += 2.0;
+    assert(test == 3.0);
+    test += 2.0;
+    assert(test == 5.0);
+    test += 2.0;
+    assert(test == 7.0);
+}
+"""
+)
+
+test("inplace double 3",
+"""
+void main(){
+    double test = 1.0;
+    test -= 2.0;
+    assert(test == -1.0);
+    test -= 2.0;
+    assert(test == -3.0);
+    test -= 2.0;
+    assert(test == -5.0);
+}
+"""
+)
+
+test("inplace double 4",
+"""
+void main(){
+    double test = 1.0;
+    test /= 2.0;
+    assert(test == 0.5);
+    test /= 2.0;
+    assert(test == 0.25);
+    test /= 2.0;
+    assert(test == 0.125);
+}
+"""
+)
+
+test("inplace double 5",
+"""
+void main(){
+    double test = 1.0;
+    test *= 2;
+    assert(test == 2.0);
+    test *= 2;
+    assert(test == 4.0);
+    test *= 2;
+    assert(test == 8.0);
+}
+"""
+)
+
+test("inplace double 6",
+"""
+void main(){
+    double test = 1.0;
+    test += 2;
+    assert(test == 3.0);
+    test += 2;
+    assert(test == 5.0);
+    test += 2;
+    assert(test == 7.0);
+}
+"""
+)
+
+test("inplace double 7",
+"""
+void main(){
+    double test = 1.0;
+    test -= 2;
+    assert(test == -1.0);
+    test -= 2;
+    assert(test == -3.0);
+    test -= 2;
+    assert(test == -5.0);
+}
+"""
+)
+
+test("inplace double 8",
+"""
+void main(){
+    double test = 1.0;
+    test /= 2;
+    assert(test == 0.5);
+    test /= 2;
+    assert(test == 0.25);
+    test /= 2;
+    assert(test == 0.125);
+}
+"""
+)
 
 test("double 1",
 """
@@ -3977,10 +4324,18 @@ int real_main(){
 }
 """)
 
+os.system("python-coverage run -p ../c2verilog dump_raw test.c")
+os.system("python-coverage run -p ../c2verilog dump_optimised test.c")
+
 os.system("python-coverage run -p ../c2verilog")
 os.system("python-coverage combine")
 os.system("python-coverage report")
 os.system("python-coverage annotate ../c2verilog")
 os.system("python-coverage annotate ../chips/compiler/parser.py")
+os.system("python-coverage annotate ../chips/compiler/compiler.py")
+os.system("python-coverage annotate ../chips/compiler/macro_expander.py")
+os.system("python-coverage annotate ../chips/compiler/optimizer.py")
+os.system("python-coverage annotate ../chips/compiler/tokens.py")
+os.system("python-coverage annotate ../chips/compiler/allocator.py")
 os.system("python-coverage annotate ../chips/compiler/compiler.py")
 os.system("python-coverage annotate ../chips/compiler/verilog_area.py")

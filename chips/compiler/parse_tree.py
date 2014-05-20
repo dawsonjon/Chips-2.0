@@ -22,9 +22,11 @@ class Process:
 
     def generate(self):
         instructions = []
-        for function in self.functions:
-            if hasattr(function, "declarations"):
-                instructions.extend(function.generate())
+
+        #generate declarations first
+        for declaration in self.functions:
+            if hasattr(declaration, "declarations"):
+                instructions.extend(declaration.generate())
 
         instructions.append(
             {"op"   :"jmp_and_link",
@@ -34,6 +36,9 @@ class Process:
         instructions.append(
             {"op":"stop"})
 
+
+        #then generate functions. This will ensure that memory has been
+        #reserved for globals before functions are compiled.
         for function in self.functions:
             if not hasattr(function, "declarations"):
                 instructions.extend(function.generate())
@@ -410,6 +415,9 @@ class VariableInstance:
     def size(self):
         return self._size
 
+    def argument_size(self):
+        return self.size()
+
     def signed(self):
         return self._signed
 
@@ -526,6 +534,7 @@ class ArrayInstance:
     def size(self):
         return self._size
 
+
     def signed(self):
         return self._signed
 
@@ -607,6 +616,9 @@ class Expression:
         return self.type_var
 
     def size(self):
+        return self.size_var
+
+    def argument_size(self):
         return self.size_var
 
     def signed(self):
@@ -1055,9 +1067,11 @@ class FunctionCall(Expression):
                 self.arguments, 
                 self.function.arguments):
 
-            temp_register = allocator.new(expression.size())
+            temp_register = allocator.new(expression.argument_size())
+
             instructions.extend(
                 argument.copy(expression, temp_register, allocator))
+
             allocator.free(temp_register)
 
         instructions.append({
@@ -1071,6 +1085,7 @@ class FunctionCall(Expression):
             instructions.extend(self.function.return_value.generate(
                 result, 
                 allocator))
+
 
         return instructions
 
@@ -1111,12 +1126,24 @@ class FileWrite(Expression):
     def generate(self, result, allocator):
         instructions = self.expression.generate(result, allocator)
 
-        instructions.append({
-            "op"        : "file_write", 
-            "src"       : result, 
-            "type"      : self.expression.type_(),
-            "file_name" : self.name,
-            })
+        if self.expression.type_() == "float" and self.expression.size() == 8:
+            instructions.append({
+                "op"        : "long_float_file_write", 
+                "src"       : result, 
+                "file_name" : self.name,
+                })
+        elif self.expression.type_() == "float" and self.expression.size() == 4:
+            instructions.append({
+                "op"        : "float_file_write", 
+                "src"       : result, 
+                "file_name" : self.name,
+                })
+        else:
+            instructions.append({
+                "op"        : "file_write", 
+                "src"       : result, 
+                "file_name" : self.name,
+                })
 
         return instructions
 
@@ -1230,6 +1257,9 @@ class Array(Object):
 
         return instructions
 
+    def argument_size(self):
+        return 4
+
 
 class ConstArray(Object):
 
@@ -1292,6 +1322,9 @@ class ConstArray(Object):
 
         return instructions
 
+    def argument_size(self):
+        return 4
+
 
 class ArrayIndex(Object):
 
@@ -1304,21 +1337,14 @@ class ArrayIndex(Object):
 
     def generate(self, result, allocator):
         instructions = []
-        offset = allocator.new(4)
         address = allocator.new(4)
         blocks_reg = allocator.new(4)
         one = allocator.new(4)
 
         blocks = self.instance.element_size//4
 
-        instructions.extend(self.index_expression.generate(offset, allocator))
+        instructions.extend(self.index_expression.generate(address, allocator))
 
-        instructions.append({
-            "op"    :"add",
-            "dest"  :address,
-            "src"   :offset,
-            "srcb"  :self.instance.register,
-            })
 
         instructions.append({
             "op"      :"literal",
@@ -1331,6 +1357,13 @@ class ArrayIndex(Object):
             "src"     : blocks_reg,
             "srcb"    : address,
             "dest"    : address,
+            })
+
+        instructions.append({
+            "op"    :"add",
+            "dest"  :address,
+            "src"   :address,
+            "srcb"  :self.instance.register,
             })
 
         instructions.append({
@@ -1373,13 +1406,11 @@ class ArrayIndex(Object):
                 })
 
         allocator.free(address)
-        allocator.free(offset)
         allocator.free(one)
         allocator.free(blocks_reg)
         return instructions
 
     def copy(self, expression, result, allocator):
-        index = allocator.new(4)
         address = allocator.new(4)
         one = allocator.new(4)
         blocks_reg = allocator.new(4)
@@ -1387,15 +1418,8 @@ class ArrayIndex(Object):
         blocks = self.instance.element_size//4
 
         instructions = expression.generate(result, allocator)
-        instructions.extend(self.index_expression.generate(index, allocator))
+        instructions.extend(self.index_expression.generate(address, allocator))
 
-        instructions.append({
-            "op"     :"add",
-            "dest"   :address,
-            "src"    :index,
-            "srcb"   :self.instance.register,
-            "signed" :False,
-            })
 
         instructions.append({
             "op"      :"literal",
@@ -1408,6 +1432,13 @@ class ArrayIndex(Object):
             "src"     : blocks_reg,
             "srcb"    : address,
             "dest"    : address,
+            })
+
+        instructions.append({
+            "op"     :"add",
+            "dest"   :address,
+            "src"    :address,
+            "srcb"   :self.instance.register,
             })
 
         instructions.append({
@@ -1435,7 +1466,6 @@ class ArrayIndex(Object):
                 "src"    :address
                 })
 
-        allocator.free(index)
         allocator.free(address)
         allocator.free(one)
         allocator.free(blocks_reg)

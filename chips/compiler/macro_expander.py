@@ -26,6 +26,8 @@ def expand_macros(instructions, allocator):
             new_instructions.extend(long_report(allocator, instruction))
         elif opcode == "long_float_report":
             new_instructions.extend(long_report(allocator, instruction))
+        elif opcode == "long_float_file_write":
+            new_instructions.extend(long_report(allocator, instruction))
 
         elif opcode == "long_shift_left":
             new_instructions.extend(long_shift_left(allocator, instruction))
@@ -61,6 +63,8 @@ def expand_macros(instructions, allocator):
 
         elif opcode == "int_to_long":
             new_instructions.extend(int_to_long(allocator, instruction))
+        elif opcode == "unsigned_int_to_long":
+            new_instructions.extend(unsigned_int_to_long(allocator, instruction))
 
         elif opcode == "long_equal":
             new_instructions.extend(long_equal(allocator, instruction))
@@ -603,6 +607,29 @@ def unsigned_long_shift_right(allocator, instruction):
     allocator.free(counter)
     allocator.free(one)
 
+    return new_instruction
+
+def unsigned_int_to_long(allocator, instruction):
+    """
+    Convert a short data type to a long data type
+    """
+
+    src = instruction["src"]
+    dest = instruction["dest"]
+    new_instruction = [
+
+        {
+        "op"  : "literal",
+        "literal" : 0,
+        "dest": dest + 1
+        },
+
+        {
+        "op"  : "move",
+        "src" : src,
+        "dest": dest
+        },
+    ]
     return new_instruction
 
 def int_to_long(allocator, instruction):
