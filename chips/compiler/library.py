@@ -171,6 +171,37 @@ void fprint_float(float f, handle){
     }
 }
 
+void fprint_double(double f, handle){
+    unsigned digit;
+    unsigned print = 0;
+    double significance = 100000000000000.0;
+
+    if( f < 0) {
+        fputc('-', handle);
+        f = -f;
+    }
+
+    while(significance >= 1.0){
+        digit = f / significance; 
+        print |= digit;
+        if(print){
+            fputc(digit + '0', handle);
+        }
+        f = f - (digit * significance);
+        significance /= 10.0;
+    }
+
+    fputc('.', handle);
+
+    while(significance > 0.0000000001){
+        digit = f / significance; 
+        fputc(digit + '0', handle);
+        f = f - (digit * significance);
+        significance /= 10.0;
+        if(f == 0.0) break;
+    }
+}
+
 void print_hex(int hex){
     fprint_hex(hex, stdout);
 }
@@ -179,8 +210,12 @@ void print_decimal(int decimal){
     fprint_decimal(decimal, stdout);
 }
 
-void fprint_float(float f, unsigned handle){
+void print_float(float f){
     fprint_float(f, stdout);
+}
+
+void print_double(double f){
+    fprint_double(f, stdout);
 }
 
 """,
@@ -346,7 +381,48 @@ float scan_float(){
 
     return sign * value;
 
-}""",
+}
+
+double scan_double(){
+
+    double value, significance, sign;
+
+    value = 0;
+    significance = 0.1
+
+    /*evaluate sign*/
+    if(c == '-'){
+        sign = -1;
+    } else if (c == '+'){
+        sign = 1;
+    } else {
+        sign = 1;
+        value = c - '0';
+    }
+
+    /*evaluate integer part*/
+    while(1){
+        c = stdin_get_char();
+        if(!isdigit(c)) break;
+        value *= 10;
+        value += c - '0';
+    }
+
+    /*evaluate fractional part*/
+    if(c == '.'){
+        while(1){
+            c = stdin_get_char();
+            if(!isdigit(c)) break;
+            value += significance * (c-'0');
+            significance /= 10.0;
+        }
+    }
+
+    return sign * value;
+
+}
+
+""",
 
 "math.h" : """
 
@@ -357,23 +433,23 @@ float scan_float(){
 
 
     /* globals */
-    const float M_LOG2E = 1.44269504089;
-    const float M_LOG10E = 0.4342944819;
-    const float M_LN2 = 0.69314718056;
-    const float M_LN10 = 2.30258509299;
-    const float M_PI = 3.14159265359;
-    const float M_PI_2 = 1.57079632679;
-    const float M_PI_4 = 0.78539816339;
-    const float M_1_PI = 0.31830988618;
-    const float M_2_PI = 0.63661977236;
-    const float M_2_SQRTPI = 1.1283791671;
-    const float M_SQRT2 = 1.41421356237;
+    const double M_LOG2E = 1.44269504089;
+    const double M_LOG10E = 0.4342944819;
+    const double M_LN2 = 0.69314718056;
+    const double M_LN10 = 2.30258509299;
+    const double M_PI = 3.14159265359;
+    const double M_PI_2 = 1.57079632679;
+    const double M_PI_4 = 0.78539816339;
+    const double M_1_PI = 0.31830988618;
+    const double M_2_PI = 0.63661977236;
+    const double M_2_SQRTPI = 1.1283791671;
+    const double M_SQRT2 = 1.41421356237;
 
     /*Taylor series approximation of Cosine function*/
 
-    float _taylor(float angle){
+    double _taylor(double angle){
 
-        float old, approximation, sign, power, fact;
+        double old, approximation, sign, power, fact;
         unsigned count, i;
 
         approximation = 1.0;
@@ -401,31 +477,31 @@ float scan_float(){
 
     /*return cos of angle in radians*/
 
-    float cos(float angle){
+    double cos(double angle){
         return _taylor(angle);
     }
 
     /*return sin of angle in radians*/
 
-    float sin(float angle){
+    double sin(double angle){
         return cos(angle-(M_PI/2));
     }
 
     /*return tan of angle in radians*/
 
-    float tan(float n){
+    double tan(double n){
         return sin(n) / cos(n);
     }
 
     /* return e ** x */
 
-    float exp(float x){
+    double exp(double x){
 
-        float result = 1.0;
+        double result = 1.0;
         unsigned n = 1;
-        float power = 1.0;
-        float factorial = 1.0;
-        float old = 0.0;
+        double power = 1.0;
+        double factorial = 1.0;
+        double old = 0.0;
 
         while(fabs(old - result) > 0.00001){
             old = result;
@@ -441,43 +517,43 @@ float scan_float(){
 
     /*return sinh of x in radians*/
 
-    float sinh(float x){
+    double sinh(double x){
         return (exp(x)-exp(-x))/2.0;
     }
 
     /*return cosh of x in radians*/
 
-    float cosh(float x){
+    double cosh(double x){
         return (exp(x)+exp(-x))/2.0;
     }
 
     /*return tanh of x in radians*/
 
-    float tanh(float x){
+    double tanh(double x){
         return sinh(x)/cosh(x);
     }
 
     /*return asinh of x in radians*/
 
-    float asinh(float x){
+    double asinh(double x){
         return log(x-sqrt((x * x) + 1.0));
     }
 
     /*return acosh of x in radians*/
 
-    float acosh(float x){
+    double acosh(double x){
         return log(x-sqrt((x * x) - 1.0));
     }
 
     /*return atanh of x in radians*/
 
-    float atanh(float x){
+    double atanh(double x){
         return 0.5 * log((1.0+x)/(1.0-x));
     }
 
-    /* Return absolute value of a float n*/
+    /* Return absolute value of a double n*/
 
-    float fabs(float n){
+    double fabs(double n){
         if (n < 0.0) {
             return - n;
         } else {
@@ -498,8 +574,8 @@ float scan_float(){
 
     /* return log_e(n) */
 
-    float log(float n){
-        float antilog, x, old;
+    double log(double n){
+        double antilog, x, old;
         x = 10.0;
         old = 0.0;
         while(fabs(old - x) > 0.00001){
@@ -512,13 +588,13 @@ float scan_float(){
 
     /* return log_10(n) */
 
-    float log10(float n){
+    double log10(double n){
         return log(n)/log(10);
     }
 
     /* return log_2(n) */
 
-    float log2(float n){
+    double log2(double n){
         return log(n)/log(2);
     }""",
 
