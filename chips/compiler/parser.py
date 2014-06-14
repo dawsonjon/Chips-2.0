@@ -674,6 +674,8 @@ class Parser:
             true_expression = constant_fold(self.parse_or_expression())
             self.tokens.expect(":")
             false_expression = constant_fold(self.parse_or_expression())
+            expression, true_expression = self.coerce_integer_types(expression, true_expression)
+            true_expression, false_expression = self.coerce_integer_types(true_expression, false_expression)
             expression = OR(AND(expression, true_expression), false_expression)
         return expression
 
@@ -681,14 +683,18 @@ class Parser:
         expression = self.parse_and_expression()
         while self.tokens.peek() in ["||"]:
             self.tokens.expect("||")
-            expression = OR(expression, self.parse_and_expression())
+            right = self.parse_and_expression()
+            expression, right = self.coerce_integer_types(expression, right)
+            expression = OR(expression, right)
         return expression
 
     def parse_and_expression(self):
         expression = self.parse_binary_expression(["|"])
         while self.tokens.peek() in ["&&"]:
             self.tokens.expect("&&")
-            expression = AND(expression, self.parse_binary_expression(["|"]))
+            right = self.parse_binary_expression(["|"])
+            expression, right = self.coerce_integer_types(expression, right)
+            expression = AND(expression, right)
         return expression
 
     def substitute_function(self, binary_expression):
@@ -758,6 +764,33 @@ class Parser:
             right = to_long(right)
             left = to_long(left)
         elif left.type_() != right.type_():
+            self.tokens.error("Incompatible types : %s %s"%(
+                left.type_(),
+                right.type_(),
+                ))
+        elif left.size() != right.size():
+            self.tokens.error("Incompatible sizes : %s %s"%(
+                left.size(),
+                right.size(),
+                ))
+
+        return left, right
+
+    def coerce_integer_types(self, left, right):
+
+        """
+        Convert integer types in expressions.
+        """
+
+        if is_long(left) or is_long(right):
+            right = to_long(right)
+            left = to_long(left)
+        elif left.type_() != "int":
+            self.tokens.error("Incompatible types : %s %s"%(
+                left.type_(),
+                right.type_(),
+                ))
+        elif right.type_() != "int":
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
                 right.type_(),

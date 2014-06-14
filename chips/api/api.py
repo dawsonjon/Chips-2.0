@@ -252,6 +252,401 @@ class _Instance:
             if i not in self.component.outputs:
                 raise C2CHIPError("%s has allready has a source %s"%(i, component.name))
 
+    def simulation_reset(self):
+
+        """reset the native python simulation"""
+
+        self.program_counter = 0
+        self.registers = {}
+        self.memory = {}
+
+    def simulation_step(self):
+
+        """execute the python simuilation by one step"""
+
+        instruction = self.instructions[program_counter]
+        src = instruction["src"]
+        srcb = instruction["srcb"]
+        literal = instruction["literal"]
+        program_counter += 1
+
+        if instruction["op"] == "nop":
+            pass
+
+        elif instruction["op"] == "literal":
+           self.registers[dest] = literal
+
+        elif instruction["op"] == "move":
+           self.registers[dest] = self.registers[src]
+
+        elif instruction["op"] == "not":
+           self.registers[dest] = ~self.registers[src]
+
+        elif instruction["op"] == "int_to_float":
+           f = float(self.registers[src])
+           self.registers[dest] = float_to_bits(f)
+
+        elif instruction["op"] == "float_to_int":
+           i = bits_to_float(self.registers[src])
+           self.registers[dest] = int(i)
+
+        elif instruction["op"] == "long_to_double":
+           double = float(join_words(self.register_hi, self.registers[src]))
+           self.register_hi, self.registers[dest] = split_words(double_to_bits(double))
+
+        elif instruction["op"] == "double_to_long":
+           bits = int(bits_to_double(join_words(self.register_hi, self.registers[src])))
+           self.register_hi, self.registers[dest] = split_words(bits)
+
+        elif instruction["op"] == "float_to_double":
+           f = bits_to_float(self.registers[src])
+           bits = double_to_bits(f)
+           self.register_hi, self.registers[dest] = split(bits)
+
+        elif instruction["op"] == "double_to_float":
+           double = float(join_words(self.register_hi, self.registers[src]))
+           bits = float_to_bits(f)
+           self.registers[dest] = bits
+
+        elif instruction["op"] == "load_hi":
+           self.register_hi = bits_to_float(self.registers[src])
+           self.registerb_hi = bits_to_float(self.registers[srcb])
+
+        elif instruction["op"] == "add":
+           lw = self.registers[src] + self.registers[srcb]
+           carry, self.registers[dest] = split_word(lw)
+           carry &= 1
+
+        elif instruction["op"] == "add_with_carry":
+           lw = self.registers[src] + self.registers[srcb] + carry
+           carry, self.registers[dest] = split_word(lw)
+           carry &= 1
+
+        elif instruction["op"] == "subtract":
+           lw = self.registers[src] + (~self.registers[srcb]) + 1
+           carry, self.registers[dest] = split_word(lw)
+           carry &= 1
+           carry ^= 1
+
+        elif instruction["op"] == "subtract_with_carry":
+           lw = self.registers[src] + (~self.registers[srcb]) + carry
+           carry, self.registers[dest] = split_word(lw)
+           carry &= 1
+           carry ^= 1
+
+        elif instruction["op"] == "multiply":
+           lw = self.registers[src] * self.registers[srcb]
+           self.register_hi, self.registers[dest] = split_word(lw)
+
+        elif instruction["op"] == "result_hi":
+            self.registers[dest] = self.register_hi
+
+        elif instruction["op"] == "or":
+            output_file.write("          result_2 <= register_1 | registerb_1;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "and":
+            output_file.write("          result_2 <= register_1 & registerb_1;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "xor":
+            output_file.write("          result_2 <= register_1 ^ registerb_1;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "shift_left":
+            output_file.write("          result_2 <= {register_1[30:0], 1'd0};\n")
+            output_file.write("          carry <= register_1[31];\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "shift_left_with_carry":
+            output_file.write("          result_2 <= {register_1[30:0], carry};\n")
+            output_file.write("          carry <= register_1[31];\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "shift_right":
+            output_file.write("          result_2 <= {register_1[31], register_1[31:1]};\n")
+            output_file.write("          carry <= register_1[0];\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "unsigned_shift_right":
+            output_file.write("          result_2 <= {1'd0, register_1[31:1]};\n")
+            output_file.write("          carry <= register_1[0];\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "shift_right_with_carry":
+            output_file.write("          result_2 = {carry, register_1[31:1]};\n")
+            output_file.write("          carry <= register_1[0];\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "greater":
+            output_file.write("          result_2 <= $signed(register_1) > $signed(registerb_1);\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "greater_equal":
+            output_file.write("          result_2 <= $signed(register_1) >= $signed(registerb_1);\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "unsigned_greater":
+            output_file.write("          result_2 <= $unsigned(register_1) > $unsigned(registerb_1);\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "unsigned_greater_equal":
+            output_file.write("          result_2 <= $unsigned(register_1) >= $unsigned(registerb_1);\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "equal":
+            output_file.write("          result_2 <= register_1 == registerb_1;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "not_equal":
+            output_file.write("          result_2 <= register_1 != registerb_1;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "float_add":
+            output_file.write("          adder_a <= register_1;\n")
+            output_file.write("          adder_b <= registerb_1;\n")
+            output_file.write("          adder_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "float_subtract":
+            output_file.write("          adder_a <= register_1;\n")
+            output_file.write("          adder_b <= {~registerb_1[31], registerb_1[30:0]};\n")
+            output_file.write("          adder_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "float_multiply":
+            output_file.write("          multiplier_a <= register_1;\n")
+            output_file.write("          multiplier_b <= registerb_1;\n")
+            output_file.write("          multiplier_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "float_divide":
+            output_file.write("          divider_a <= register_1;\n")
+            output_file.write("          divider_b <= registerb_1;\n")
+            output_file.write("          divider_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "long_float_add":
+            output_file.write("          long_adder_a <= {register_hi, register_1};\n")
+            output_file.write("          long_adder_b <= {registerb_hi, registerb_1};\n")
+            output_file.write("          long_adder_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "long_float_subtract":
+            output_file.write("          long_adder_a <= {register_hi, register_1};\n")
+            output_file.write("          long_adder_b <= {~registerb_hi[31], registerb_hi[30:0], registerb_1};\n")
+            output_file.write("          long_adder_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "long_float_multiply":
+            output_file.write("          long_multiplier_a <= {register_hi, register_1};\n")
+            output_file.write("          long_multiplier_b <= {registerb_hi, registerb_1};\n")
+            output_file.write("          long_multiplier_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "long_float_divide":
+            output_file.write("          long_divider_a <= {register_hi, register_1};\n")
+            output_file.write("          long_divider_b <= {registerb_hi, registerb_1};\n")
+            output_file.write("          long_divider_go <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "jmp_if_false":
+            output_file.write("          if (register_1 == 0) begin\n");
+            output_file.write("            program_counter <= literal_1;\n")
+            output_file.write("            stage_0_enable <= 1;\n")
+            output_file.write("            stage_1_enable <= 0;\n")
+            output_file.write("            stage_2_enable <= 0;\n")
+            output_file.write("          end\n")
+
+        elif instruction["op"] == "jmp_if_true":
+            output_file.write("          if (register_1 != 0) begin\n");
+            output_file.write("            program_counter <= literal_1;\n")
+            output_file.write("            stage_0_enable <= 1;\n")
+            output_file.write("            stage_1_enable <= 0;\n")
+            output_file.write("            stage_2_enable <= 0;\n")
+            output_file.write("          end\n")
+
+        elif instruction["op"] == "jmp_and_link":
+            output_file.write("          program_counter <= literal_1;\n")
+            output_file.write("          result_2 <= program_counter_1 + 1;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+            output_file.write("          stage_0_enable <= 1;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "jmp_to_reg":
+            output_file.write("          program_counter <= register_1;\n")
+            output_file.write("          stage_0_enable <= 1;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "goto":
+            output_file.write("          program_counter <= literal_1;\n")
+            output_file.write("          stage_0_enable <= 1;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        elif instruction["op"] == "file_read":
+            output_file.write("        16'd%s:\n"%(opcode))
+            output_file.write("        begin\n")
+            output_file.write("          file_count = $fscanf(%s, \"%%d\\n\", result_2);\n"%(
+              input_files[instruction["file_name"]]))
+            output_file.write("          write_enable_2 <= 1;\n")
+            output_file.write("        end\n\n")
+
+        #FIXME - make work with special floating point values
+        elif instruction["op"] == "float_file_write":
+                output_file.write('          fp_value = (register_1[31]?-1.0:1.0) *\n')
+                output_file.write('              (2.0 ** (register_1[30:23]-127.0)) *\n')
+                output_file.write('              ({1\'d1, register_1[22:0]} / (2.0**23));\n')
+                output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
+                  output_files[
+                  instruction["file_name"]]))
+
+        elif instruction["op"] == "long_float_file_write":
+                output_file.write('          fp_value = $bitstoreal({register_hi, register_1});\n')
+                output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
+                  output_files[
+                  instruction["file_name"]]))
+
+        elif instruction["op"] == "unsigned_file_write":
+                output_file.write("          $fdisplay (%s, \"%%d\", $unsigned(register_1));\n"%(
+                  output_files[instruction["file_name"]]))
+
+        elif instruction["op"] == "file_write":
+                output_file.write("          $fdisplay (%s, \"%%d\", $signed(register_1));\n"%(
+                  output_files[instruction["file_name"]]))
+
+        elif instruction["op"] == "read":
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+            output_file.write("          case(register_1)\n\n")
+            for handle, input_name in allocator.input_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              s_input_%s_ack <= 1'b1;\n"%input_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
+
+        elif instruction["op"] == "ready":
+            output_file.write("          result_2 <= 0;\n")
+            output_file.write("          case(register_1)\n\n")
+            for handle, input_name in allocator.input_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              result_2[0] <= s_input_%s_ack;\n"%input_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "write":
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+            output_file.write("          case(register_1)\n\n")
+            for handle, output_name in allocator.output_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              s_output_%s_stb <= 1'b1;\n"%output_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
+
+        elif instruction["op"] == "memory_read_request":
+            output_file.write("          address <= register_1;\n")
+
+        elif instruction["op"] == "memory_read_wait":
+            pass
+
+        elif instruction["op"] == "memory_read":
+            output_file.write("          result_2 <= data_out;\n")
+            output_file.write("          write_enable_2 <= 1;\n")
+
+        elif instruction["op"] == "memory_write":
+            output_file.write("          address <= register_1;\n")
+            output_file.write("          data_in <= registerb_1;\n")
+            output_file.write("          memory_enable <= 1'b1;\n")
+
+        elif instruction["op"] == "assert":
+            output_file.write("          if (register_1 == 0) begin\n")
+            output_file.write("            $display(\"Assertion failed at line: %s in file: %s\");\n"%(
+              instruction["line"],
+              instruction["file"]))
+            output_file.write("            $finish_and_return(1);\n")
+            output_file.write("          end\n")
+
+        elif instruction["op"] == "wait_clocks":
+            output_file.write("          timer <= register_1;\n")
+            output_file.write("          timer_enable <= 1;\n")
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+        #FIXME - make work with special floating point values
+        elif instruction["op"] == "report":
+            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed(register_1));\n'%(
+                instruction["line"],
+                instruction["file"],))
+
+        elif instruction["op"] == "long_report":
+            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed({register_hi, register_1}));\n'%(
+                instruction["line"],
+                instruction["file"],))
+
+        elif instruction["op"] == "float_report":
+           output_file.write('          fp_value = (register_1[31]?-1.0:1.0) *\n')
+           output_file.write('              (2.0 ** (register_1[30:23]-127.0)) *\n')
+           output_file.write('              ({1\'d1, register_1[22:0]} / (2.0**23));\n')
+           output_file.write('          $display ("%%g (report (float) at line: %s in file: %s)", fp_value);\n'%(
+                  instruction["line"],
+                  instruction["file"]))
+
+        elif instruction["op"] == "long_float_report":
+           output_file.write('          fp_value = $bitstoreal({register_hi, register_1});\n')
+           output_file.write('          $display ("%%g (report (double) at line: %s in file: %s)", fp_value);\n'%(
+                  instruction["line"],
+                  instruction["file"]))
+
+        elif instruction["op"] == "unsigned_report":
+           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register_1));\n'%(
+           instruction["line"],
+           instruction["file"]))
+
+        elif instruction["op"] == "long_unsigned_report":
+           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned({register_hi, register_1}));\n'%(
+           instruction["line"],
+           instruction["file"]))
+
+        elif instruction["op"] == "stop":
+            #If we are in testbench mode stop the simulation
+            #If we are part of a larger design, other C programs may still be running
+            for file_ in input_files.values():
+                output_file.write("          $fclose(%s);\n"%file_)
+            for file_ in output_files.values():
+                output_file.write("          $fclose(%s);\n"%file_)
+            if testbench:
+                output_file.write('          $finish;\n')
+            output_file.write("          stage_0_enable <= 0;\n")
+            output_file.write("          stage_1_enable <= 0;\n")
+            output_file.write("          stage_2_enable <= 0;\n")
+
+
 class Wire:
 
     """Create a connection between two components. A wire is a point to point
@@ -291,3 +686,45 @@ class Output:
         chip.outputs.append(self)
         self.source = None
         self.name = name
+
+def float_to_bits(f):
+    value = 0
+    for byte in struct.pack(">f", f)
+         value <<= 8
+         value |= byte 
+    return value
+
+def double_to_bits(f):
+    value = 0
+    for byte in struct.pack(">d", f)
+         value <<= 8
+         value |= byte 
+    return value
+
+def bits_to_float(bits):
+    byte_string = (
+        chr((bits & 0xff000000) >> 24) +
+        chr((bits & 0xff0000) >> 16) +
+        chr((bits & 0xff00) >> 8) +
+        chr((bits & 0xff))
+    )
+    return struct.unpack(">f", byte_string)
+
+def bits_to_double(bits):
+    byte_string = (
+        chr((bits & 0xff00000000000000) >> 56) +
+        chr((bits & 0xff000000000000) >> 48) +
+        chr((bits & 0xff0000000000) >> 40) +
+        chr((bits & 0xff00000000) >> 32) +
+        chr((bits & 0xff000000) >> 24) +
+        chr((bits & 0xff0000) >> 16) +
+        chr((bits & 0xff00) >> 8) +
+        chr((bits & 0xff))
+    )
+    return struct.unpack(">d", byte_string)
+
+def join_words(hi, lo):
+    return (hi << 32) | lo
+
+def split_words(lw):
+    return lw >> 32, lw & 0xffffffff

@@ -43,6 +43,7 @@ Features
           "chips.api"
       ],
       scripts=[
-          "c2verilog"
+          "c2verilog",
+          "csim"
       ]
 )

@@ -15,6 +15,7 @@ from chips.compiler.optimizer import cleanup_functions
 from chips.compiler.optimizer import cleanup_registers
 from chips.compiler.tokens import Tokens
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
+from chips.compiler.python_model import generate_python_model
 import fpu
 
 def generate_library():
@@ -65,6 +66,45 @@ def comp(input_file, options=[]):
                     parser.allocator,
                     initialize_memory)
             output_file.close()
+
+    except C2CHIPError as err:
+        print "Error in file:", err.filename, "at line:", err.lineno
+        print err.message
+        sys.exit(-1)
+
+
+    return name, inputs, outputs, ""
+
+def compile_python_model(input_file, options=[]):
+
+    reuse = "no_reuse" not in options
+    initialize_memory = "no_initialize_memory" not in options
+    generate_library()
+
+    try:
+            #Optimize for area
+            parser = Parser(input_file, reuse, initialize_memory)
+            process = parser.parse_process()
+            name = process.main.name
+            instructions = process.generate()
+            if "dump_raw" in options:
+                for i in instructions:
+                    print i
+            instructions = expand_macros(instructions, parser.allocator)
+            instructions = cleanup_functions(instructions)
+            instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
+            if "dump_optimised" in options:
+                for i in instructions:
+                    print i
+
+            inputs, outputs, model = generate_python_model(
+                    input_file,
+                    name,
+                    instructions,
+                    registers,
+                    parser.allocator)
+
+            return model
 
     except C2CHIPError as err:
         print "Error in file:", err.filename, "at line:", err.lineno

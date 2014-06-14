@@ -1035,12 +1035,18 @@ class Unary(Expression):
         new_register = allocator.new(self.size())
         instructions = self.expression.generate(new_register, allocator)
 
-        assert self.operator == "~"
-        instructions.extend([{
-            "op":"not", 
-            "dest":result, 
-            "src":new_register,
-            }])
+        if self.size() == 8:
+            instructions.extend([{
+                "op":"long_not", 
+                "dest":result, 
+                "src":new_register,
+                }])
+        else:
+            instructions.extend([{
+                "op":"not", 
+                "dest":result, 
+                "src":new_register,
+                }])
 
         allocator.free(new_register)
         return instructions
