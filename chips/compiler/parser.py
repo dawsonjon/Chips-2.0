@@ -18,13 +18,34 @@ class Parser:
     """Turn the C input file into a tree of expressions and statements."""
 
     def __init__(self, input_file, reuse, initialize_memory):
+    
+        self.symbols_defined_in_current_scope = {}
+        self.symbols_defined_stack = []
         self.scope = {}
+        self.scope_stack = []
+        
         self.function = None
         self.loop = None
         self.tokens = Tokens(input_file)
         self.allocator = Allocator(reuse)
         self.structs = []
         self.initialize_memory = initialize_memory
+        
+    def add_to_scope(self, name, obj):
+        #if the name has already been defined in the current scope, error out.
+        if name in self.symbols_defined_in_current_scope:
+            self.tokens.error("%s is already defined"%name)
+        self.symbols_defined_in_current_scope[name]=obj
+        self.scope[name]=obj
+        
+    def enter_scope(self):
+        self.symbols_defined_stack.append(self.symbols_defined_in_current_scope) #stack holds everything that has been defined in a underlying scope
+        self.scope_stack.append(copy(self.scope))
+        self.symbols_defined_in_current_scope = {}
+    
+    def leave_scope(self):
+        self.symbols_defined_in_current_scope = self.symbols_defined_stack.pop()
+        self.scope = self.scope_stack.pop()
 
     def parse_process(self):
         process = Process()
@@ -38,7 +59,9 @@ class Parser:
             elif self.tokens.peek() == "typedef":
                 self.parse_typedef_struct()
             else:
-                process.functions.append(self.parse_function())
+                function = self.parse_function()
+                if function is not None:
+                    process.functions.append(function)
         process.main = self.main
         return process
 
@@ -122,13 +145,13 @@ class Parser:
                         signed,
                         const)
         instance = declaration.instance()
-        self.scope[argument] = instance
-        return instance.reference()
+        return (argument, instance)
+        #self.add_to_scope(argument,instance)
+        #return instance.reference()
 
     def parse_function(self):
-        function = Function()
-        function.allocator = self.allocator
-        stored_scope = copy(self.scope)
+
+        
         type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
@@ -137,14 +160,39 @@ class Parser:
             return self.parse_global_declaration(type_, size, signed, const, name)
 
         #otherwise continue parsing a function
-        self.tokens.expect("(")
-        function.name = name
-        function.type_ = type_
-        function.size = size
-        function.signed = signed
+        
+        function_was_already_declared = False
+        
+        if name in self.scope:
+            #something already has the same name
+            function_was_already_declared = True
+            function = self.scope[name]
+            if not isinstance(function, Function):
+                self.tokens.error("%s was already mentioned, but was not a function"%name)
+            #check if return type matches
+            if function.type_ != type_:
+                self.tokens.error("return type of %s does not match the previously declared type; is %s, should be %s"%(name, type_, function.type_))
+            if function.size != size:
+                self.tokens.error("size of return type of %s does not match the previously declared size; is %s, should be %s"%(name, size, function.size))
+            if function.signed != signed:
+                self.tokens.error("signedness of return type of %s does not match the previously declared signedness; is %s, should be %s"%(name, signed, function.signed))
+            if function.const != const:
+                self.tokens.error("constness of return type of %s does not match the previously declared constness; is %s, should be %s"%(name, const, function.const))
+        else:
+            #first time this name is seen
 
-        function.return_address = self.allocator.new(2, 
-            function.name+" return address")
+        
+            function = Function()
+            function.allocator = self.allocator
+        
+            function.name = name
+            function.type_ = type_
+            function.size = size
+            function.signed = signed
+            function.const = const
+
+            function.return_address = self.allocator.new(2, 
+                function.name+" return address")
 
         if type_ != "void":
 
@@ -154,6 +202,7 @@ class Parser:
                 if self.tokens.peek() == "[":
                     self.tokens.error(
                         "Functions cannot return arrays")
+                    #if functions are changed to allow returning arrays, then check here if it matches the forward declaration, if any.
                 else:
                     declaration = VariableDeclaration(
                         self.allocator,
@@ -165,25 +214,101 @@ class Parser:
                         const)
 
             function.return_value = declaration.instance().reference()
+        
+        
+        self.tokens.expect("(")
 
-        function.arguments = []
-        while self.tokens.peek() != ")":
-            function.arguments.append(self.parse_argument())
-            if self.tokens.peek() == ",":
-                self.tokens.expect(",")
-            else:
-                break
+        #arguments must be allocated the first time the function is mentioned.
+        #because when other functions call this function, they need to use the allocated variables
+        #so don't allocate argument variables any time except the first time
+        #the next time you encounter this function, only check if the arguments are the correct type
+        
+        #Also, don't add the argument variables to the current scope unless you have an argument body, because the names can change.
+        
+        if not function_was_already_declared:
+            function.arguments = []
+            function.argument_names = [] #Gets overwritten if the names are changed
+            while self.tokens.peek() != ")":
+                (arg_name, instance) = self.parse_argument()
+                function.arguments.append(instance.reference())
+                function.argument_names.append(arg_name)
+                if self.tokens.peek() == ",":
+                    self.tokens.expect(",")
+                else:
+                    break
+        else:
+            #function was already declared
+            #check if arg types match
+            function.argument_names = [] #Gets overwritten if the names are changed
+            for index, argumentVarRef in enumerate(function.arguments):
+                if self.tokens.peek() != ")":
+                    #next section is ugly
+                    #a better way would be a function to compare 2 types for exact equality
+                    argumentInst = argumentVarRef.instance
+                    arg_type, arg_size, arg_signed, arg_const = self.parse_type_specifier()
+                    arg_name = self.tokens.get()
+                    #print "%s: type %s, size %s, signed %s, const %s"%(arg_name, arg_type, arg_size, arg_signed, arg_const)
 
+                    function.argument_names.append(arg_name)
+                    is_array = False
+                    if self.tokens.peek() == "[":
+                        self.tokens.expect("[")
+                        self.tokens.expect("]")
+                        is_array = True
+                        arg_type = arg_type + "[]"
+                    if arg_type != argumentInst.type_():
+                        self.tokens.error("Function %s, argument %d, was previously declared to have type %s, but here, it is %s"%(name, index+1, argumentInst.type_(), arg_type))
+                    if not is_array:
+                        if arg_size != argumentInst.size():
+                            self.tokens.error("Function %s, argument %d, was previously declared to have size %s, but here, it is %s"%(name, index+1, argumentInst.size(), arg_size))
+                        if arg_const != argumentInst.const():
+                            self.tokens.error("Function %s, argument %d, was previously declared to have constness %s, but here, it is %s"%(name, index+1, argumentInst.const(), arg_const))
+                        if arg_signed != argumentInst.signed():
+                            self.tokens.error("Function %s, argument %d, was previously declared to have signedness %s, but here, it is %s"%(name, index+1, argumentInst.signed(), arg_signed))
+                    else:
+                        if arg_size != argumentInst.element_size:
+                            self.tokens.error("Function %s, argument %d, was previously declared to have element size %s, but here, it is %s"%(name, index+1, argumentInst.element_size, arg_size))
+                        if arg_signed != argumentInst.element_signed:
+                            self.tokens.error("Function %s, argument %d, was previously declared to have element signedness %s, but here, it is %s"%(name, index+1, argumentInst.element_signed, arg_signed))
+                        #array element constness?
+                    if self.tokens.peek() == ",":
+                        self.tokens.expect(",")
+                else:
+                    self.tokens.error("Function %s was previously declared to have %d arguments, but here, only %d are present"%(name, len(function.arguments),  index))
+            
+            if self.tokens.peek() != ")":
+                self.tokens.error("Function %s was previously declared to have %d arguments, but here, more are present"%(name, len(function.arguments) ))
+        
+        #print function.arguments
+        
         self.tokens.expect(")")
-        self.function = function
-        function.statement = self.parse_statement()
-        if type_ != "void" and not hasattr(function, "return_statement"):
-            self.tokens.error("Function must have a return statement")
-        self.function = None
-        self.scope = stored_scope
-        self.scope[function.name] = function
+        
+        
+        if self.tokens.peek() == ";":
+            self.tokens.expect(";")
+        else:
+            self.enter_scope()
+            self.function = function
+            #body attached - add the argument variables to the new scope
+            for (arg_name, argumentVarRef) in zip(function.argument_names, function.arguments):
+                self.add_to_scope(arg_name, argumentVarRef.instance)
+            
+            if function.statement is not None:
+                self.tokens.error("A function body was already defined for %s, can't use another"%name)
+            function.statement = self.parse_block()
+            if type_ != "void" and not hasattr(function, "return_statement"):
+                self.tokens.error("Function must have a return statement")
+            self.function = None
+            self.leave_scope() #now we are done parsing the function, restore the previous scope
+            
+        if not function_was_already_declared:
+            self.add_to_scope(function.name,function)
+            
         #main thread is last function
         self.main = function
+        
+        if function_was_already_declared:
+            return None #The function object is returned upon the function's first mention, so here, return something that will not generate any code
         return function
 
     def parse_break(self):
@@ -289,6 +414,10 @@ class Parser:
             return self.parse_default()
         elif self.tokens.peek() == "wait_clocks":
             return self.parse_wait_clocks()
+        elif self.tokens.peek() == "goto":
+            return self.parse_goto();
+        elif self.tokens.peek(1) == ":":
+            return self.parse_labeled_statement()
         else:
             expression = self.parse_discard()
             self.tokens.expect(";")
@@ -296,6 +425,23 @@ class Parser:
 
     def parse_discard(self):
         return DiscardExpression(self.parse_expression(), self.allocator)
+
+    def parse_labeled_statement(self):
+        name = self.tokens.get()
+        self.tokens.expect(":")
+        label = Label(name, self.parse_statement() )
+        if name in self.function.labels_in_scope:
+            self.tokens.error(
+                    "label %s was already declared in this function"%name)
+        self.function.labels_in_scope[name] = label
+        return label
+
+    def parse_goto(self):
+        self.tokens.expect("goto")
+        name = self.tokens.get()
+        self.tokens.expect(";")
+
+        return Goto(name, self.function, self.tokens.filename, self.tokens.lineno)
 
     def parse_assignment(self):
         assignment_operators = [
@@ -458,13 +604,13 @@ class Parser:
 
     def parse_block(self):
         block = Block()
-        stored_scope = copy(self.scope)
+        self.enter_scope()
         self.tokens.expect("{")
         block.statements = []
         while self.tokens.peek() != "}":
             block.statements.append(self.parse_statement())
         self.tokens.expect("}")
-        self.scope = stored_scope
+        self.leave_scope() #now we are done parsing the block, restore the previous scope
         return block
 
     def parse_struct_body(self):
@@ -491,7 +637,7 @@ class Parser:
         declaration = StructDeclaration(self.parse_struct_body())
         name = self.tokens.get()
         self.tokens.expect(";")
-        self.scope[name] = declaration
+        self.add_to_scope(name,declaration)
         self.structs.append(name)
 
     def parse_define_struct(self):
@@ -499,7 +645,7 @@ class Parser:
         name = self.tokens.get()
         declaration = StructDeclaration(self.parse_struct_body())
         self.tokens.expect(";")
-        self.scope[name] = declaration
+        self.add_to_scope(name,declaration)
 
     def parse_struct_declaration(self):
         self.tokens.expect("struct")
@@ -507,7 +653,7 @@ class Parser:
         name = self.tokens.get()
         self.tokens.expect(";")
         instance = self.scope[struct_name].instance()
-        self.scope[name] = instance
+        self.add_to_scope(name,instance)
         return instance
 
     def parse_global_declaration(self, type_, size, signed, const, name):
@@ -521,7 +667,7 @@ class Parser:
                 const,
                 name).instance()
 
-            self.scope[name] = instance
+            self.add_to_scope(name,instance)
             instances.append(instance)
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
@@ -544,7 +690,7 @@ class Parser:
                 const,
                 name).instance()
 
-            self.scope[name] = instance
+            self.add_to_scope(name,instance)
             instances.append(instance)
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
@@ -883,7 +1029,7 @@ class Parser:
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
-            self.tokens.error("Function %s takes %s arguments %s given."%(
+            self.tokens.error("Function %s takes %s arguments, %s given."%(
                 name,
                 len(function_call.function.arguments),
                 len(function_call.arguments)))
@@ -898,7 +1044,7 @@ class Parser:
                     actual = FloatToInt(actual)
                 else:
                     self.tokens.error(
-                        "type mismatch in assignment expected: %s actual: %s"%(
+                        "type mismatch in assignment expected: %s, actual: %s"%(
                             required.type_(),
                             actual.type_()))
             corrected_arguments.append(actual)
@@ -987,10 +1133,9 @@ class Parser:
         if instance.type_() in numeric_types:
 
             if not hasattr(instance, "reference"):
-
                 self.tokens.error(
                     "Not an expression")
-
+               
             return Variable(instance)
         elif instance.type_().endswith("[]"):
             if self.tokens.peek() == "[":
