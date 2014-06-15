@@ -4252,59 +4252,6 @@ void main(){
 """
 )
 
-#test("input 1",
-#"""
-#int main(){
-  #int b;
-  #unsigned a = input("a");
-  #b = fgetc(a);
-  #return 0;
-#}
-
-#""")
-#
-#test("output 1",
-#"""
-#int main(){
-  #unsigned a = output("a");
-  #fputc(12, a);
-  #return 0;
-#}
-
-#""")
-#
-#test("input output 1",
-#"""
-#int main(){
-  #unsigned a = input("a");
-  #unsigned b = input("b");
-  #unsigned select = input("select");
-  #unsigned z = output("z");
-  #if (fgetc(select)){
-    #fputc(fgetc(a), z);
-  #} else {
-    #fputc(fgetc(b), z);
-  #}
-  #return 0;
-#}
-
-#""")
-#
-#test("input output 2",
-#"""
-#int arbiter(){
-  #unsigned a = input("a");
-  #unsigned b = input("b");
-  #unsigned z = output("z");
-  #while(1){
-    #if(ready(a)) fputc(fgetc(a), z);
-    #if(ready(a)) fputc(fgetc(b), z);
-  #}
-  #return 0;
-#}
-
-#""")
-
 test("main not main",
 """
 int main(){

@@ -47,28 +47,37 @@ def generate_python_model(input_file,
                   instructions,
                   registers,
                   allocator,
-                  no_tb_mode=False):
+                  inputs,
+                  outputs):
 
     instructions = calculate_jumps(instructions)
 
-    inputs = allocator.input_names.values()
-    outputs = allocator.output_names.values()
     input_files = unique([i["file_name"] for i in instructions if "file_read" == i["op"]])
     output_files = unique([i["file_name"] for i in instructions if i["op"] in ("file_write", "float_file_write", "long_float_file_write")])
 
-    return inputs, outputs, PythonModel(instructions, allocator.memory_content, input_files, output_files)
+    #map input numbers to port models
+    numbered_inputs = {}
+    for number, input_name in allocator.input_names.iteritems():
+        numbered_inputs[number] = inputs[input_name]
+    numbered_outputs = {}
+    for number, output_name in allocator.output_names.iteritems():
+        numbered_outputs[number] = outputs[output_name]
+
+    return PythonModel(instructions, allocator.memory_content, input_files, output_files, numbered_inputs, numbered_outputs)
 
 
 class PythonModel:
 
     """create a python model equivilent to the generated verilog"""
 
-    def __init__(self, instructions, memory_content, input_files, output_files):
+    def __init__(self, instructions, memory_content, input_files, output_files, inputs, outputs):
         self.instructions = instructions
         self.memory_content = memory_content
 
         self.input_file_names = input_files
         self.output_file_names = output_files
+        self.inputs = inputs
+        self.outputs = outputs
 
     def simulation_reset(self):
 
@@ -81,6 +90,8 @@ class PythonModel:
         self.registers = {}
         self.memory = self.memory_content
         self.address = 0
+        self.write_state = "wait_ack"
+        self.read_state = "wait_stb"
         
         self.input_files = {}
         for file_name in self.input_file_names:
@@ -325,20 +336,42 @@ class PythonModel:
         elif instruction["op"] == "file_write":
             self.output_files[instruction["file_name"]].write("%i\n"%int32(self.registers[src]))
 
-        #elif instruction["op"] == "read":
-            #if inputs[self.registers[src]].ready():
-                #self.registers[dest] = inputs[self.registers.get()]
-            #else:
-                #self.program_counter = old_program_counter
+        elif instruction["op"] == "read":
+
+
+            input_ = self.inputs[self.registers[src]]
+            self.program_counter = this_instruction
+
+            if self.read_state == "wait_stb":
+                if input_.stb:
+                    input_.ack = True
+                    self.read_state = "wait_nstb"
+                    self.registers[dest] = input_.data
+            elif self.read_state == "wait_nstb":
+                if not input_.stb:
+                    input_.ack = False
+                    self.read_state = "wait_stb"
+                    self.program_counter += 1
 
         elif instruction["op"] == "ready":
-            self.registers[dest] = self.inputs[self.registers[src]].ready()
+            input_ = self.inputs[self.registers[src]]
+            self.registers[dest] = int32(int(input_.stb))
 
         elif instruction["op"] == "write":
-            if outputs[self.registers[src]].ready():
-                outputs[self.registers[src]].put(self.registers[srcb])
-            else:
-                self.program_counter = old_program_counter
+
+            output = self.outputs[self.registers[src]]
+            output.data = self.registers[srcb]
+            self.program_counter = this_instruction
+
+            if self.write_state == "wait_ack":
+                output.stb = True
+                if output.ack:
+                    output.stb = False
+                    self.write_state = "wait_nack"
+            elif self.write_state == "wait_nack":
+                if not output.ack:
+                    self.write_state = "wait_ack"
+                    self.program_counter += 1
 
         elif instruction["op"] == "memory_read_request":
             self.address = self.registers[src]

@@ -75,7 +75,7 @@ def comp(input_file, options=[]):
 
     return name, inputs, outputs, ""
 
-def compile_python_model(input_file, options=[]):
+def compile_python_model(input_file, options=[], inputs = {}, outputs = {}):
 
     reuse = "no_reuse" not in options
     initialize_memory = "no_initialize_memory" not in options
@@ -97,12 +97,12 @@ def compile_python_model(input_file, options=[]):
                 for i in instructions:
                     print i
 
-            inputs, outputs, model = generate_python_model(
+            model = generate_python_model(
                     input_file,
                     name,
                     instructions,
                     registers,
-                    parser.allocator)
+                    parser.allocator, inputs, outputs)
 
             return model
 
@@ -111,5 +111,3 @@ def compile_python_model(input_file, options=[]):
         print err.message
         sys.exit(-1)
 
-
-    return name, inputs, outputs, ""
