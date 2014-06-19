@@ -46,11 +46,10 @@ def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  print "One error expected ..."
   if no_init:
-      result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
   else:
-      result = os.system("coverage2 run -p ../c2verilog iverilog run test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
   if result == 0:
     print test, "...fail"
     sys.exit(0)
@@ -4012,8 +4011,10 @@ int real_main(){
 }
 """)
 
-os.system("coverage2 run -p ../c2verilog")
+print "Test suite has passed!"
+
+os.system("coverage2 run -p ../c2verilog > /dev/null")
 os.system("coverage2 combine")
-os.system("coverage2 report")
+os.system("coverage2 report > coverage_report")
 os.system("coverage2 annotate ../c2verilog")
 os.system("coverage2 annotate ../chips/compiler/parser.py")
