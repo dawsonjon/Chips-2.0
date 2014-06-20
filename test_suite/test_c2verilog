@@ -2,7 +2,7 @@
 import os
 import sys
 
-os.system("python-coverage erase")
+os.system("coverage2 erase")
 
 def test(test, code, no_init=False):
   f = open("test.c", 'w')
