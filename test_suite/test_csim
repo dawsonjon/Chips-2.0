@@ -1,16 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os
 import sys
 from random import randint
 from numpy import uint64, int64
 
-os.system("python-coverage erase")
-
 def test(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  result = os.system("python-coverage run -p ../csim test.c")
+  result = os.system("coverage2 run -p ../csim test.c")
   if(os.path.exists("main")):
       os.remove("main")
   if(os.path.exists("arbiter")):
@@ -28,8 +26,7 @@ def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  print "One error expected ..."
-  result = os.system("python-coverage run -p ../csim test.c")
+  result = os.system("coverage2 run -p ../csim test.c > /dev/null")
   if result == 0:
     print test, "...fail"
     sys.exit(0)
@@ -4264,19 +4261,3 @@ int real_main(){
   return 0;
 }
 """)
-
-os.system("python-coverage run -p ../c2verilog dump_raw test.c")
-os.system("python-coverage run -p ../c2verilog dump_optimised test.c")
-
-os.system("python-coverage run -p ../c2verilog")
-os.system("python-coverage combine")
-os.system("python-coverage report")
-os.system("python-coverage annotate ../c2verilog")
-os.system("python-coverage annotate ../chips/compiler/parser.py")
-os.system("python-coverage annotate ../chips/compiler/compiler.py")
-os.system("python-coverage annotate ../chips/compiler/macro_expander.py")
-os.system("python-coverage annotate ../chips/compiler/optimizer.py")
-os.system("python-coverage annotate ../chips/compiler/tokens.py")
-os.system("python-coverage annotate ../chips/compiler/allocator.py")
-os.system("python-coverage annotate ../chips/compiler/compiler.py")
-os.system("python-coverage annotate ../chips/compiler/verilog_area.py")

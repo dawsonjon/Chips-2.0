@@ -373,13 +373,8 @@ class PythonModel:
                     self.write_state = "wait_ack"
                     self.program_counter += 1
 
-        elif instruction["op"] == "memory_read_request":
-            self.address = self.registers[src]
-
-        elif instruction["op"] == "memory_read_wait":
-            pass
-
         elif instruction["op"] == "memory_read":
+            self.address = self.registers[src]
             self.registers[dest] = int32(self.memory[self.address])
 
         elif instruction["op"] == "memory_write":

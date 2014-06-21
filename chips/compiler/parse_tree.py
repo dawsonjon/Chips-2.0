@@ -1382,18 +1382,6 @@ class ArrayIndex(Object):
         for i in range(blocks):
 
             instructions.append({
-                "op"    :"memory_read_request",
-                "src"   :address,
-                "sequence": str(id(self)) + str(i),
-                })
-
-            instructions.append({
-                "op"    :"memory_read_wait",
-                "src"   :address,
-                "sequence": str(id(self)) + str(i),
-                })
-
-            instructions.append({
                 "op"    :"memory_read",
                 "src"   :address,
                 "dest"  :result+i,

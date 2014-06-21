@@ -1999,10 +1999,10 @@ module double_adder(
 endmodule
 
 """
-int_to_double = """//Integer to IEEE Floating Point Converter (Double Precision)
+long_to_double = """//Integer to IEEE Floating Point Converter (Double Precision)
 //Copyright (C) Jonathan P Dawson 2013
 //2013-12-12
-module int_to_double(
+module long_to_double(
         input_a,
         input_a_stb,
         output_z_ack,
@@ -2141,10 +2141,10 @@ module int_to_double(
 endmodule
 
 """
-double_to_int = """//IEEE Floating Point to Integer Converter (Double Precision)
+double_to_long = """//IEEE Floating Point to Integer Converter (Double Precision)
 //Copyright (C) Jonathan P Dawson 2014
 //2014-01-11
-module double_to_int(
+module double_to_long(
         input_a,
         input_a_stb,
         output_z_ack,
