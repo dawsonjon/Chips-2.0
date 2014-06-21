@@ -179,12 +179,12 @@ class Tokens:
 
         raise C2CHIPError(string + "\n", self.filename, self.lineno)
 
-    def peek(self):
+    def peek(self, depth=0):
 
         """Return the next token in the stream, but don't consume it"""
 
-        if self.tokens:
-            return self.tokens[0][2]
+        if len(self.tokens) > depth:
+            return self.tokens[depth][2]
         else:
             return ""
 

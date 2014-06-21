@@ -1,17 +1,17 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 import os
 import sys
 
-os.system("python-coverage erase")
+os.system("coverage2 erase")
 
 def test(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
   if no_init:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run no_initialize_memory test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c")
   else:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run test.c")
   if(os.path.exists("main")):
       os.remove("main")
   if(os.path.exists("arbiter")):
@@ -26,9 +26,9 @@ def test(test, code, no_init=False):
     sys.exit(0)
 
   if no_init:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run speed no_initialize_memory test.c")
   else:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run speed test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run speed test.c")
   if(os.path.exists("main")):
       os.remove("main")
   if(os.path.exists("arbiter")):
@@ -46,16 +46,297 @@ def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  print "One error expected ..."
   if no_init:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run no_initialize_memory test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
   else:
-      result = os.system("python-coverage run -p ../c2verilog iverilog run test.c")
+      result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
   if result == 0:
     print test, "...fail"
     sys.exit(0)
   else:
     print test, "...pass"
+
+
+test_fails("function_syntax 1",
+"""
+float b(){
+    return 4.0;
+}
+void main() b();
+
+"""
+)
+
+
+
+test("goto 1",
+"""
+int something(){
+    int i=0;
+    while(i<100){
+        i++;
+        if(i==5){
+            goto fail;
+        }
+    }
+    return 0;
+    fail:
+        return 1;
+}
+
+void main(){
+  assert(something() == 1);
+}
+"""
+)
+
+test_fails("goto 2",
+"""
+void main(){
+    label1: report(1);
+    label1: report(1);
+}
+"""
+)
+
+test("goto 3",
+"""
+int a(){
+    goto label;
+    return 1;
+    label: return 5;
+}
+
+int b(){
+    goto label;
+    return 2;
+    label: return 6;
+}
+
+void main(){
+    assert(a()==5);
+    assert(b()==6);
+}
+
+"""
+)
+
+test_fails("goto 4",
+"""
+int a(){
+    goto label;
+    return 1;
+}
+
+int b(){
+    return 2;
+    label: return 6;
+}
+"""
+)
+
+test("goto 5",
+"""
+void main(){
+    int x=0;
+    loop:
+        x++;
+        if(x<5)
+            goto loop;
+    assert(x==5);
+}
+"""
+)
+
+test("function proto 1",
+"""
+int foo(int y);
+int foo(int x){return 3*x;}
+void main(){
+    assert(foo(2)==6);
+}
+"""
+)
+
+test("function proto 2",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+int foo(int z, int arry[]);
+void main(){
+    int arr[3];
+    arr[1]=4;
+    assert(foo(2,arr)==4);
+}
+"""
+)
+
+test_fails("function proto 3",
+"""
+int foo(int y, int arry[]);
+int foo(int x, float arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 4",
+"""
+void foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 5",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr){
+    return arr;
+}
+"""
+)
+
+test_fails("function proto 6",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arry[1];
+}
+"""
+)
+
+test_fails("function proto 7",
+"""
+int foo(int y, int arry[]);
+void main(){
+    int arr[3];
+    foo(0,arr);
+}
+"""
+)
+
+test_fails("function proto 8",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+int foo(int x, int arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 9",
+"""
+int foo(int y, long arry[]);
+int foo(int x, int arr[]){
+    return arr;
+}
+"""
+)
+
+test_fails("function proto 10",
+"""
+int foo(int y);
+int foo(long x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 11",
+"""
+int foo(int y);
+int foo(unsigned int x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 12",
+"""
+int foo(int y);
+int foo(const int x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 13",
+"""
+int foo(int y[]);
+int foo(unsigned int x[]){
+    return x[0];
+}
+"""
+)
+test_fails("function proto 14",
+"""
+int foo(int y[]);
+unsigned int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 15",
+"""
+int foo(int y[]);
+long int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 16",
+"""
+int foo(int y[]);
+const int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 17",
+"""
+int foo(int y[]);
+float foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 18",
+"""
+int foo(int y[], int z);
+int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 19",
+"""
+int foo(int y[]);
+int foo(int x[], int z){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 20",
+"""
+int foo;
+int foo(int x[], int z){
+    return x[0];
+}
+"""
+)
 
 test("float_function 1",
 """
@@ -175,6 +456,40 @@ void test(){
 
 void main(){
     int blah = test_var;
+}
+"""
+)
+
+test_fails("scope 2",
+"""
+float a(){
+    return 4.0;
+}
+float a(){
+    return 4.0;
+}
+
+"""
+)
+
+test_fails("scope 3",
+"""
+void main(){
+    int x = 0;
+    int x = 1;
+}
+"""
+)
+
+test("scope 4",
+"""
+void main(){
+    int x = 0;
+    {
+        int x = 1;
+        assert(x == 1);
+    }
+    assert(x == 0);
 }
 """
 )
@@ -3286,8 +3601,8 @@ test("expression 15",
 int main(){
   int a = 1;
   assert(!a == 0);
-  int a = 0;
-  assert(!a == 1);
+  int b = 0;
+  assert(!b == 1);
   return 0;
 }
 
@@ -3609,8 +3924,10 @@ int real_main(){
 }
 """)
 
-os.system("python-coverage run -p ../c2verilog")
-os.system("python-coverage combine")
-os.system("python-coverage report")
-os.system("python-coverage annotate ../c2verilog")
-os.system("python-coverage annotate ../chips/compiler/parser.py")
+print "Test suite has passed!"
+
+os.system("coverage2 run -p ../c2verilog > /dev/null")
+os.system("coverage2 combine")
+os.system("coverage2 report > coverage_report")
+os.system("coverage2 annotate ../c2verilog")
+os.system("coverage2 annotate ../chips/compiler/parser.py")

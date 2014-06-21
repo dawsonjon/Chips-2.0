@@ -4,3 +4,5 @@ test
 arbiter
 test_file
 chips_lib.v
+*,cover
+coverage_report

@@ -4,6 +4,8 @@ __version__ = "0.1"
 
 import struct
 
+from chips.compiler.exceptions import C2CHIPError
+
 class NotConstant(Exception):
     pass
 
@@ -24,6 +26,7 @@ class Process:
         instructions = []
         for function in self.functions:
             if hasattr(function, "declarations"):
+                #Not actually a function at all, but a global declaration
                 instructions.extend(function.generate())
 
         instructions.append(
@@ -42,7 +45,14 @@ class Process:
 
 class Function:
 
+    def __init__(self):
+        self.labels_in_scope = {}
+        self.statement = None
+
     def generate(self):
+        if self.statement is None:
+            raise C2CHIPError("Function %s was never given a body"%(self.name))
+            
         instructions = []
         instructions.append({"op":"label", "label":"function_%s"%id(self)})
         instructions.extend(self.statement.generate())
@@ -260,6 +270,35 @@ class Block:
         return instructions
 
 
+class Label:
+
+    def __init__(self, name, statement):
+        self.name=name
+        self.statement = statement
+        
+    def generate(self):
+        instructions=[]
+        instructions.append({"op":"label", "label":"namedlabel_%s"%id(self)})
+        instructions.extend(self.statement.generate())
+        return instructions
+        
+        
+class Goto:
+
+    def __init__(self, name, function, filename, lineno):
+        self.name=name #what label is being jumped to
+        self.function=function  #what function object are we in, to look inside its scope
+        self.filename=filename
+        self.lineno=lineno
+        
+    def generate(self):
+        if self.name not in self.function.labels_in_scope:
+            raise C2CHIPError("Can't goto label not in scope: %s"%self.name + "\n", self.filename, self.lineno)
+        label = self.function.labels_in_scope[self.name];        
+       
+        return [{"op":"goto", "label":"namedlabel_%s"%id(label)}]
+        
+        
 class CompoundDeclaration:
 
     def __init__(self, declarations):
