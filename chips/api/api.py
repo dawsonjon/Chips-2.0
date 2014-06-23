@@ -1,7 +1,9 @@
 from chips.compiler.exceptions import C2CHIPError
 import chips.compiler.compiler
+from chips.compiler.python_model import StopSim
 import os
 import sys
+
 
 class Chip:
 
@@ -172,10 +174,12 @@ class Chip:
         for input_ in self.inputs:
             input_.stb = False
             input_.ack = False
+            input_.simulation_reset()
 
         for output in self.outputs:
             output.stb = False
             output.ack = False
+            output.simulation_reset()
 
     def simulation_step(self):
 
@@ -184,20 +188,22 @@ class Chip:
         for instance in self.instances:
             instance.model.simulation_step()
 
+        for input_ in self.inputs:
+            input_.simulation_step()
+
+        for output in self.outputs:
+            output.simulation_step()
+
     def simulation_run(self):
 
         """execute the python simuilation to completion"""
 
         #if all instances have reached the end of execution then stop
-        done = False
-        while not done:
-            done = True
-            for instance in self.instances:
-                instance.model.simulation_step()
-                current_instruction = instance.model.instructions[instance.model.program_counter]
-                if current_instruction["op"] != "stop":
-                    done = False
-
+        try:
+            while True:
+                self.simulation_step()
+        except StopSim:
+            return
 
 class Component:
 
@@ -275,10 +281,16 @@ class _Instance:
 
         #check that correct number of wires have been passed in
         if len(self.component.inputs) != len(self.inputs):
-            raise C2CHIPError("Instance %s does not have the right number or inputs"%self.name)
+            print "component inputs:"
+            for i in self.component.inputs:
+                print i
+            print "instance inputs:"
+            for i in self.inputs:
+                print i
+            raise C2CHIPError("Instance %s does not have the right number or inputs"%self.component.name)
 
         if len(self.component.outputs) != len(self.outputs):
-            raise C2CHIPError("Instance %s does not have the right number or outputs"%self.name)
+            raise C2CHIPError("Instance %s does not have the right number or outputs"%self.component.name)
 
         #check for multiple sources or sinks
         for i in inputs.values():
@@ -329,6 +341,27 @@ class Input:
         self.sink = None
         self.name = name
 
+    def simulation_reset(self):
+        self.data = self.data_source()
+        self.write_state = "wait_ack"
+
+    def simulation_step(self):
+        if self.write_state == "wait_ack":
+            self.stb = True
+            if self.ack:
+                self.stb = False
+                self.write_state = "wait_nack"
+        elif self.write_state == "wait_nack":
+            if not self.ack:
+                self.write_state = "wait_ack"
+                self.data = self.data_source()
+
+    def data_source(self):
+
+        """Override this function in your application"""
+
+        pass
+
 class Output:
 
     """Create an output from the chip."""
@@ -343,3 +376,22 @@ class Output:
         self.source = None
         self.name = name
 
+    def simulation_reset(self):
+        self.read_state = "wait_stb"
+
+    def simulation_step(self):
+        if self.read_state == "wait_stb":
+            if self.stb:
+                self.ack = True
+                self.read_state = "wait_nstb"
+                self.data_sink(self.data)
+        elif self.read_state == "wait_nstb":
+            if not self.stb:
+                self.ack = False
+                self.read_state = "wait_stb"
+
+    def data_sink(data):
+
+        """override this function in your application"""
+
+        pass

@@ -12,6 +12,9 @@ import struct
 
 debug = False
 
+class StopSim(Exception):
+    pass
+
 def unique(l):
 
     """In the absence of set in older python implementations, make list values unique"""
@@ -439,6 +442,7 @@ class PythonModel:
                 file_.close()
             for file_ in self.output_files.values():
                 file_.close()
+            raise StopSim
 
 def float_to_bits(f):
     
