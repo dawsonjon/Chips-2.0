@@ -819,28 +819,35 @@ def generate_CHIP(input_file,
             output_file.write("          write_enable <= 1;\n")
             output_file.write("        end\n\n")
 
-        #FIXME - make work with special floating point values
         elif instruction["op"] == "float_file_write":
-                output_file.write('          fp_value = (register[31]?-1.0:1.0) *\n')
-                output_file.write('              (2.0 ** (register[30:23]-127.0)) *\n')
-                output_file.write('              ({1\'d1, register[22:0]} / (2.0**23));\n')
-                output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
+            output_file.write('          long_result[63] = register[31];\n')
+            output_file.write('          if (register[30:23] == 0) begin\n')
+            output_file.write('              long_result[62:52] = 0;\n')
+            output_file.write('          end else if (register[30:23] == 127) begin\n')
+            output_file.write('              long_result[62:52] = 1023;\n')
+            output_file.write('          end else begin\n')
+            output_file.write('              long_result[62:52] = (register[30:23] - 127) + 1023;\n')
+            output_file.write('          end\n')
+            output_file.write('          long_result[51:29] = register[22:0];\n')
+            output_file.write('          long_result[28:0] = 0;\n')
+            output_file.write('          fp_value = $bitstoreal(long_result);\n')
+            output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
                   output_files[
                   instruction["file_name"]]))
 
         elif instruction["op"] == "long_float_file_write":
-                output_file.write('          fp_value = $bitstoreal({register_hi, register});\n')
-                output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
+            output_file.write('          fp_value = $bitstoreal({register_hi, register});\n')
+            output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
                   output_files[
                   instruction["file_name"]]))
 
         elif instruction["op"] == "unsigned_file_write":
-                output_file.write("          $fdisplay (%s, \"%%d\", $unsigned(register));\n"%(
-                  output_files[instruction["file_name"]]))
+            output_file.write("          $fdisplay (%s, \"%%d\", $unsigned(register));\n"%(
+            output_files[instruction["file_name"]]))
 
         elif instruction["op"] == "file_write":
-                output_file.write("          $fdisplay (%s, \"%%d\", $signed(register));\n"%(
-                  output_files[instruction["file_name"]]))
+            output_file.write("          $fdisplay (%s, \"%%d\", $signed(register));\n"%(
+            output_files[instruction["file_name"]]))
 
         elif instruction["op"] == "read":
             output_file.write("          state <= read;\n")
@@ -880,21 +887,28 @@ def generate_CHIP(input_file,
             output_file.write("          timer <= register;\n")
             output_file.write("          state <= wait_state;\n")
 
-        #FIXME - make work with special floating point values
         elif instruction["op"] == "report":
-            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed(register));\n'%(
+            output_file.write('          $display ("%%d (report (int) at line: %s in file: %s)", $signed(register));\n'%(
                 instruction["line"],
                 instruction["file"],))
 
         elif instruction["op"] == "long_report":
-            output_file.write('          $display ("%%d (report at line: %s in file: %s)", $signed({register_hi, register}));\n'%(
+            output_file.write('          $display ("%%d (report (long) at line: %s in file: %s)", $signed({register_hi, register}));\n'%(
                 instruction["line"],
                 instruction["file"],))
 
         elif instruction["op"] == "float_report":
-           output_file.write('          fp_value = (register[31]?-1.0:1.0) *\n')
-           output_file.write('              (2.0 ** (register[30:23]-127.0)) *\n')
-           output_file.write('              ({1\'d1, register[22:0]} / (2.0**23));\n')
+           output_file.write('          long_result[63] = register[31];\n')
+           output_file.write('          if (register[30:23] == 0) begin\n')
+           output_file.write('              long_result[62:52] = 0;\n')
+           output_file.write('          end else if (register[30:23] == 127) begin\n')
+           output_file.write('              long_result[62:52] = 1023;\n')
+           output_file.write('          end else begin\n')
+           output_file.write('              long_result[62:52] = (register[30:23] - 127) + 1023;\n')
+           output_file.write('          end\n')
+           output_file.write('          long_result[51:29] = register[22:0];\n')
+           output_file.write('          long_result[28:0] = 0;\n')
+           output_file.write('          fp_value = $bitstoreal(long_result);\n')
            output_file.write('          $display ("%%g (report (float) at line: %s in file: %s)", fp_value);\n'%(
                   instruction["line"],
                   instruction["file"]))
@@ -906,12 +920,12 @@ def generate_CHIP(input_file,
                   instruction["file"]))
 
         elif instruction["op"] == "unsigned_report":
-           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned(register));\n'%(
+           output_file.write('          $display ("%%d (report (unsigned) at line: %s in file: %s)", $unsigned(register));\n'%(
 	       instruction["line"],
 	       instruction["file"]))
 
         elif instruction["op"] == "long_unsigned_report":
-           output_file.write('          $display ("%%d (report at line: %s in file: %s)", $unsigned({register_hi, register}));\n'%(
+           output_file.write('          $display ("%%d (report (unsigned long) at line: %s in file: %s)", $unsigned({register_hi, register}));\n'%(
 	       instruction["line"],
 	       instruction["file"]))
 

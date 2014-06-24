@@ -17,6 +17,34 @@ def constant_fold(expression):
     except NotConstant:
         return expression
 
+def bits_to_float(bits):
+
+    "convert integer containing the ieee 754 representation into a float"
+
+    byte_string = (
+        chr((bits & 0xff000000) >> 24) +
+        chr((bits & 0xff0000) >> 16) +
+        chr((bits & 0xff00) >> 8) +
+        chr((bits & 0xff))
+    )
+    return struct.unpack(">f", byte_string)[0]
+
+def bits_to_double(bits):
+
+    "convert integer containing the ieee 754 representation into a float"
+
+    bits = int(bits)
+    byte_string = (
+        chr((bits & 0xff00000000000000) >> 56) +
+        chr((bits & 0xff000000000000) >> 48) +
+        chr((bits & 0xff0000000000) >> 40) +
+        chr((bits & 0xff00000000) >> 32) +
+        chr((bits & 0xff000000) >> 24) +
+        chr((bits & 0xff0000) >> 16) +
+        chr((bits & 0xff00) >> 8) +
+        chr((bits & 0xff))
+    )
+    return struct.unpack(">d", byte_string)[0]
 
 class Process:
 
@@ -808,6 +836,62 @@ class Binary(Expression):
 def SizeOf(expression):
     return Constant(expression.size())
 
+class DoubleToBits(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__(self, "int", 8, expression.signed())
+
+    def generate(self, result, allocator):
+        instructions = self.expression.generate(result, allocator)
+        return instructions
+
+    def value(self):
+        return self.expression.int_value()
+
+class FloatToBits(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__(self, "int", 4, expression.signed())
+
+    def generate(self, result, allocator):
+        instructions = self.expression.generate(result, allocator)
+        return instructions
+
+    def value(self):
+        return self.expression.int_value()
+
+class BitsToDouble(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__(self, "float", 8, expression.signed())
+
+    def generate(self, result, allocator):
+        instructions = self.expression.generate(result, allocator)
+        return instructions
+
+    def value(self):
+        return bits_to_double(self.expression.value())
+
+class BitsToFloat(Expression):
+
+    def __init__(self, expression):
+        self.expression = constant_fold(expression)
+
+        Expression.__init__(self, "float", 4, expression.signed())
+
+    def generate(self, result, allocator):
+        instructions = self.expression.generate(result, allocator)
+        return instructions
+
+    def value(self):
+        return bits_to_float(self.expression.value())
+
 class IntToLong(Expression):
 
     def __init__(self, expression):
@@ -989,7 +1073,7 @@ class DoubleToFloat(Expression):
         return instructions
 
     def value(self):
-        return int(self.expression.value())
+        return float(self.expression.value())
 
 class FloatToDouble(Expression):
 
@@ -1016,7 +1100,7 @@ class FloatToDouble(Expression):
         return instructions
 
     def value(self):
-        return int(self.expression.value())
+        return float(self.expression.value())
 
 
 class Unary(Expression):

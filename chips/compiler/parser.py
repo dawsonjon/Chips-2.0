@@ -918,6 +918,30 @@ class Parser:
         self.tokens.expect(")")
         return FileWrite(file_name, expression)
 
+    def parse_double_to_bits(self):
+        self.tokens.expect("(")
+        expression = self.parse_expression()
+        self.tokens.expect(")")
+        return DoubleToBits(to_double(expression))
+
+    def parse_float_to_bits(self):
+        self.tokens.expect("(")
+        expression = self.parse_expression()
+        self.tokens.expect(")")
+        return FloatToBits(to_float(expression))
+
+    def parse_bits_to_double(self):
+        self.tokens.expect("(")
+        expression = self.parse_expression()
+        self.tokens.expect(")")
+        return BitsToDouble(to_long(expression))
+
+    def parse_bits_to_float(self):
+        self.tokens.expect("(")
+        expression = self.parse_expression()
+        self.tokens.expect(")")
+        return BitsToFloat(to_int(expression))
+
     def parse_input(self):
         self.tokens.expect("(")
         input_name = self.tokens.get().strip('"').decode("string_escape")
@@ -965,6 +989,14 @@ class Parser:
             return self.parse_file_read()
         if name == "file_write":
             return self.parse_file_write()
+        if name == "double_to_bits":
+            return self.parse_double_to_bits()
+        if name == "float_to_bits":
+            return self.parse_float_to_bits()
+        if name == "bits_to_double":
+            return self.parse_bits_to_double()
+        if name == "bits_to_float":
+            return self.parse_bits_to_float()
         if name not in self.scope:
             self.tokens.error("Unknown function: %s"%name)
         function = self.scope[name]
