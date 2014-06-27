@@ -17,11 +17,11 @@ class Parser:
 
     """Turn the C input file into a tree of expressions and statements."""
 
-    def __init__(self, input_file, reuse, initialize_memory):
+    def __init__(self, input_file, reuse, initialize_memory, parameters):
         self.scope = {}
         self.function = None
         self.loop = None
-        self.tokens = Tokens(input_file)
+        self.tokens = Tokens(input_file, parameters)
         self.allocator = Allocator(reuse)
         self.structs = []
         self.initialize_memory = initialize_memory

@@ -21,14 +21,23 @@ class Tokens:
     """Break the input file into a stream of tokens,
     provide functions to traverse the stream."""
 
-    def __init__(self, filename):
+    def __init__(self, filename, parameters = {}):
         self.tokens = []
         self.filename = None
         self.lineno = None
         self.scan("built in", StringIO.StringIO(builtins))
         self.scan(filename)
 
-    def scan(self, filename, input_file=None):
+        tokens = []
+        for token in self.tokens:
+            f, l, t = token
+            if t in parameters:
+                tokens.append((f, l, str(parameters[t])))
+            else:
+                tokens.append(token)
+        self.tokens = tokens
+
+    def scan(self, filename, input_file=None, parameters = {}):
 
         """Convert the test file into tokens"""
         self.filename = filename

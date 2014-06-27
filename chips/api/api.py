@@ -1,6 +1,6 @@
 from chips.compiler.exceptions import C2CHIPError
-import chips.compiler.compiler
 from chips.compiler.python_model import StopSim
+import chips.compiler.compiler
 import os
 import sys
 
@@ -28,11 +28,14 @@ class Chip:
         self.wires = []
         self.inputs = []
         self.outputs = []
-        self.components = []
+        self.components = {}
 
     def generate_verilog(self):
 
         """Generate verilog for the chip"""
+
+        for component in self.components.values():
+            component.generate_verilog()
 
         for i in self.wires:
             if i.source is None:
@@ -74,7 +77,7 @@ class Chip:
             output_file.write("  wire   %s_stb;\n"%i.name)
             output_file.write("  wire   %s_ack;\n"%i.name)
         for instance in self.instances:
-            component = instance.component.name
+            component = instance.component_name
             output_file.write("  %s %s_%s(\n    "%(component, component, id(instance)))
             ports = []
             ports.append(".clk(clk)")
@@ -150,7 +153,7 @@ class Chip:
 
         """Compile using the Iverilog simulator"""
 
-        files = ["%s.v"%i.name for i in self.components]
+        files = ["%s.v"%i.component_name for i in self.instances]
         files.append(self.name + ".v")
         files.append(self.name + "_tb.v")
         files.append("chips_lib.v")
@@ -185,8 +188,16 @@ class Chip:
 
         """execute the python simuilation by one step"""
 
+        AllDone = True
         for instance in self.instances:
-            instance.model.simulation_step()
+            try:
+                instance.model.simulation_step()
+                AllDone = False
+            except StopSim:
+                pass
+
+        if AllDone:
+            raise StopSim
 
         for input_ in self.inputs:
             input_.simulation_step()
@@ -227,41 +238,17 @@ class Component:
 
         """Takes a single string argument, the C code to compile"""
 
-        self.name, self.inputs, self.outputs, self.doc = chips.compiler.compiler.comp(C_file, options)
         self.C_file = C_file
         self.options = options
 
-    def __call__(self, chip, inputs, outputs):
+    def __call__(self, chip, inputs, outputs, parameters={}):
 
         """Takes three arguments:
             + chip, the chip that the component instance belongs to.
             + inputs, a list of *Wires* (or *Inputs*) to connect to the component inputs
-            + outputs, a list of *Wires* (or *Outputs*) to connect to the component outputs"""
-        return _Instance(self, chip, inputs, outputs)
-
-
-class VerilogComponent(Component):
-
-    """You can use the component class to add new components to your chip.
-    This version of Component allows components to be written directly in verilog.
-
-        my_component = Adder("adder", inputs = ["a", "b"], outputs = ["z"])
-
-    Once you have defined a component you can use the __call__ method to create
-    an instance of the component.
-
-    Remember that you can't simulate verilog components using a python model.
-
-    """
-
-    def __init__(self, name, inputs, outputs, docs):
-
-        """Takes a single string argument, the C code to compile"""
-
-        self.name = name
-        self.inputs = inputs
-        self.outputs = outputs
-        self.docs = docs
+            + outputs, a list of *Wires* (or *Outputs*) to connect to the component outputs
+            + parameters, a dictionary of parameters"""
+        return _Instance(self, chip, parameters, inputs, outputs)
 
 
 class _Instance:
@@ -269,28 +256,39 @@ class _Instance:
     """This class represents a component instance. You don't normaly need to
     create them directly, use the Component.__call__ method."""
 
-    def __init__(self, component, chip, inputs, outputs):
+    def __init__(self, component, chip, parameters, inputs, outputs):
         self.chip = chip
+        self.parameters = parameters
         self.inputs = inputs
         self.outputs = outputs
         self.component = component
         self.chip.instances.append(self)
-        if component not in chip.components:
-            chip.components.append(component)
 
+        #generate a python simulation model of the instance
+        self.model, component_inputs, component_outputs, component_name = chips.compiler.compiler.compile_python_model(
+                self.component.C_file, 
+                self.component.options, 
+                parameters,
+                inputs,
+                outputs, 
+                )
+
+        self.component_name = component_name
+        if component_name not in chip.components:
+            chip.components[component_name] = self
 
         #check that correct number of wires have been passed in
-        if len(self.component.inputs) != len(self.inputs):
+        if len(component_inputs) != len(self.inputs):
             print "component inputs:"
-            for i in self.component.inputs:
+            for i in component_inputs:
                 print i
             print "instance inputs:"
             for i in self.inputs:
                 print i
-            raise C2CHIPError("Instance %s does not have the right number or inputs"%self.component.name)
+            raise C2CHIPError("Instance %s does not have the right number or inputs"%component_name)
 
-        if len(self.component.outputs) != len(self.outputs):
-            raise C2CHIPError("Instance %s does not have the right number or outputs"%self.component.name)
+        if len(component_outputs) != len(self.outputs):
+            raise C2CHIPError("Instance %s does not have the right number or outputs"%component_name)
 
         #check for multiple sources or sinks
         for i in inputs.values():
@@ -304,15 +302,16 @@ class _Instance:
             i.source = self
 
         for i in inputs.keys():
-            if i not in self.component.inputs:
-                raise C2CHIPError("%s is not an input of component %s"%(i, component.name))
+            if i not in component_inputs:
+                raise C2CHIPError("%s is not an input of component %s"%(i, component_name))
 
         for i in outputs.keys():
-            if i not in self.component.outputs:
-                raise C2CHIPError("%s has allready has a source %s"%(i, component.name))
+            if i not in component_outputs:
+                raise C2CHIPError("%s has allready has a source %s"%(i, component_name))
 
-        #generate a python simulation model of the instance
-        self.model = chips.compiler.compiler.compile_python_model(self.component.C_file, self.component.options, inputs, outputs)
+    def generate_verilog(self):
+        chips.compiler.compiler.comp(self.component.C_file, self.component.options, self.parameters)
+
 
 
 class Wire:

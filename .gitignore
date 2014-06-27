@@ -11,3 +11,4 @@ build
 chips_lib.v
 *.bak
 *,cover
+play*.v

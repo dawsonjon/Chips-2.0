@@ -16,6 +16,7 @@ from chips.compiler.optimizer import cleanup_registers
 from chips.compiler.tokens import Tokens
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 from chips.compiler.python_model import generate_python_model
+from chips.api.hash import dict_to_hash
 import fpu
 
 def generate_library():
@@ -34,7 +35,7 @@ def generate_library():
     output_file.write(fpu.double_to_float)
     output_file.close()
 
-def comp(input_file, options=[]):
+def comp(input_file, options=[], parameters={}):
 
     reuse = "no_reuse" not in options
     initialize_memory = "no_initialize_memory" not in options
@@ -42,9 +43,9 @@ def comp(input_file, options=[]):
 
     try:
             #Optimize for area
-            parser = Parser(input_file, reuse, initialize_memory)
+            parser = Parser(input_file, reuse, initialize_memory, parameters)
             process = parser.parse_process()
-            name = process.main.name
+            name = process.main.name + dict_to_hash(parameters)
             instructions = process.generate()
             if "dump_raw" in options:
                 for i in instructions:
@@ -75,7 +76,13 @@ def comp(input_file, options=[]):
 
     return name, inputs, outputs, ""
 
-def compile_python_model(input_file, options=[], inputs = {}, outputs = {}):
+def compile_python_model(
+        input_file, 
+        options=[], 
+        parameters = {}, 
+        inputs = {}, 
+        outputs = {}
+        ):
 
     reuse = "no_reuse" not in options
     initialize_memory = "no_initialize_memory" not in options
@@ -83,9 +90,9 @@ def compile_python_model(input_file, options=[], inputs = {}, outputs = {}):
 
     try:
             #Optimize for area
-            parser = Parser(input_file, reuse, initialize_memory)
+            parser = Parser(input_file, reuse, initialize_memory, parameters)
             process = parser.parse_process()
-            name = process.main.name
+            name = process.main.name + dict_to_hash(parameters)
             instructions = process.generate()
             if "dump_raw" in options:
                 for i in instructions:
@@ -104,7 +111,7 @@ def compile_python_model(input_file, options=[], inputs = {}, outputs = {}):
                     registers,
                     parser.allocator, inputs, outputs)
 
-            return model
+            return model, parser.allocator.input_names.values(), parser.allocator.output_names.values(), name
 
     except C2CHIPError as err:
         print "Error in file:", err.filename, "at line:", err.lineno
