@@ -9,21 +9,21 @@ os.system("coverage2 erase")
 result = os.system("./test_c2verilog")
 
 if result == 0:
-  print test, "...pass"
+  print "...pass"
 else:
-  print test, "...fail"
+  print "...fail"
   sys.exit(0)
 
 result = os.system("./test_csim")
 
 if result == 0:
-  print test, "...pass"
+  print "...pass"
 else:
-  print test, "...fail"
+  print "...fail"
   sys.exit(0)
 
-os.system("coverage2 run -p ../c2verilog dump_raw test.c")
-os.system("coverage2 run -p ../c2verilog dump_optimised test.c")
+#os.system("coverage2 run -p ../c2verilog dump_raw test.c")
+#os.system("coverage2 run -p ../c2verilog dump_optimised test.c")
 os.system("coverage2 combine")
 os.system("coverage2 report > coverage_report")
 os.system("coverage2 annotate ../c2verilog")

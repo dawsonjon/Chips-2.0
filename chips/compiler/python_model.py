@@ -61,10 +61,12 @@ def generate_python_model(input_file,
     #map input numbers to port models
     numbered_inputs = {}
     for number, input_name in allocator.input_names.iteritems():
-        numbered_inputs[number] = inputs[input_name]
+        if input_name in inputs:
+            numbered_inputs[number] = inputs[input_name]
     numbered_outputs = {}
     for number, output_name in allocator.output_names.iteritems():
-        numbered_outputs[number] = outputs[output_name]
+        if output_name in outputs:
+            numbered_outputs[number] = outputs[output_name]
 
     return PythonModel(instructions, allocator.memory_content, input_files, output_files, numbered_inputs, numbered_outputs)
 
@@ -342,39 +344,54 @@ class PythonModel:
         elif instruction["op"] == "read":
 
 
-            input_ = self.inputs[self.registers[src]]
-            self.program_counter = this_instruction
+            if self.registers[src] not in self.inputs:
 
-            if self.read_state == "wait_stb":
-                if input_.stb:
-                    input_.ack = True
-                    self.read_state = "wait_nstb"
-                    self.registers[dest] = input_.data
-            elif self.read_state == "wait_nstb":
-                if not input_.stb:
-                    input_.ack = False
-                    self.read_state = "wait_stb"
-                    self.program_counter += 1
+                self.registers[dest] = 0
+
+            else:
+
+                input_ = self.inputs[self.registers[src]]
+                self.program_counter = this_instruction
+
+                if self.read_state == "wait_stb":
+                    if input_.stb:
+                        input_.ack = True
+                        self.read_state = "wait_nstb"
+                        self.registers[dest] = input_.data
+                elif self.read_state == "wait_nstb":
+                    if not input_.stb:
+                        input_.ack = False
+                        self.read_state = "wait_stb"
+                        self.program_counter += 1
 
         elif instruction["op"] == "ready":
-            input_ = self.inputs[self.registers[src]]
-            self.registers[dest] = int32(int(input_.stb))
+            if self.registers[src] not in self.inputs:
+                self.registers[dest] = 0
+            else:
+                input_ = self.inputs[self.registers[src]]
+                self.registers[dest] = int32(int(input_.stb))
 
         elif instruction["op"] == "write":
 
-            output = self.outputs[self.registers[src]]
-            output.data = self.registers[srcb]
-            self.program_counter = this_instruction
+            if self.registers[src] not in self.outputs:
 
-            if self.write_state == "wait_ack":
-                output.stb = True
-                if output.ack:
-                    output.stb = False
-                    self.write_state = "wait_nack"
-            elif self.write_state == "wait_nack":
-                if not output.ack:
-                    self.write_state = "wait_ack"
-                    self.program_counter += 1
+                pass
+
+            else:
+
+                output = self.outputs[self.registers[src]]
+                output.data = self.registers[srcb]
+                self.program_counter = this_instruction
+
+                if self.write_state == "wait_ack":
+                    output.stb = True
+                    if output.ack:
+                        output.stb = False
+                        self.write_state = "wait_nack"
+                elif self.write_state == "wait_nack":
+                    if not output.ack:
+                        self.write_state = "wait_ack"
+                        self.program_counter += 1
 
         elif instruction["op"] == "memory_read":
             self.address = self.registers[src]
@@ -385,52 +402,42 @@ class PythonModel:
 
         elif instruction["op"] == "assert":
             if self.registers[src] == 0:
-                print "Assertion failed at line: %s in file: %s"%(
-                  instruction["line"],
-                  instruction["file"],
-                )
-                exit(1)
-
-        elif instruction["op"] == "wait_clocks":
-            pass
-
-        elif instruction["op"] == "report":
-            print "%d (report at line: %s in file: %s)"%(
+                print "%d (report (int) at line: %s in file: %s)"%(
                 self.registers[src],
                 instruction["line"],
                 instruction["file"],
             )
 
         elif instruction["op"] == "long_report":
-            print "%d (report at line: %s in file: %s)"%(
+            print "%d (report (long) at line: %s in file: %s)"%(
                 join_words(self.register_hi, self.registers[src]),
                 instruction["line"],
                 instruction["file"],
             )
 
         elif instruction["op"] == "float_report":
-            print "%f (report at line: %s in file: %s)"%(
+            print "%f (report (float) at line: %s in file: %s)"%(
                 bits_to_float(self.registers[src]),
                 instruction["line"],
                 instruction["file"],
             )
 
         elif instruction["op"] == "long_float_report":
-            print "%f (report at line: %s in file: %s)"%(
+            print "%s (report (double) at line: %s in file: %s)"%(
                 bits_to_double(join_words(self.register_hi, self.registers[src])),
                 instruction["line"],
                 instruction["file"],
             )
 
         elif instruction["op"] == "unsigned_report":
-            print "%d (report at line: %s in file: %s)"%(
+            print "%d (report (unsigned) at line: %s in file: %s)"%(
                 uint32(self.registers[src]),
                 instruction["line"],
                 instruction["file"],
             )
 
         elif instruction["op"] == "long_unsigned_report":
-            print "%d (report at line: %s in file: %s)"%(
+            print "%d (report (unsigned long) at line: %s in file: %s)"%(
                 uint64(join_words(self.register_hi, self.registers[src])),
                 instruction["line"],
                 instruction["file"],

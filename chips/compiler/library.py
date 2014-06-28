@@ -44,12 +44,47 @@ void puts(unsigned string[]){
         fputs(string, stdout);
 }
 
-unsigned long getc(){
+unsigned getc(){
         return fgetc(stdout);
 }
 
 void putc(unsigned c){
         fputc(c, stdout);
+}
+
+/*Non-Standard Extensions*/
+
+void fput_double(double d, unsigned handle){
+    long l;
+    l = double_to_bits(d);
+    /*send low word*/
+    fputc(l & 0xffffffffu, handle);
+    /*send high word*/
+    fputc((l >> 32) & 0xffffffffu, handle);
+}
+
+double fget_double(unsigned handle){
+    long low, high;
+    double d;
+    /*get low word*/
+    low = fgetc(handle);
+    report(low);
+    /*get high word*/
+    high = fgetc(handle);
+    high <<= 32;
+    high |= low;
+    report(high);
+    d =  bits_to_double(high);
+    report(d);
+    return d;
+}
+
+void fput_float(float d, unsigned handle){
+    fputc(float_to_bits(d), handle);
+}
+
+float fget_float(unsigned handle){
+    return bits_to_float(fgetc(handle));
 }
 
 """,

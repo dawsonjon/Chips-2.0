@@ -1,31 +1,84 @@
 #!/usr/bin/env python2
 import os
 import sys
+import subprocess
 from random import randint
 from numpy import uint64, int64
 
-def test(test, code, no_init=False):
+def test(test, code, no_init=False, check_output=""):
+
+  #run only selected tests
+  if "selection" in sys.argv[1:] and test not in sys.argv[1:]:
+      return False
+
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  if no_init:
-      result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c")
-  else:
-      result = os.system("coverage2 run -p ../c2verilog iverilog run test.c")
-  if(os.path.exists("main")):
-      os.remove("main")
-  if(os.path.exists("arbiter")):
-      os.remove("arbiter")
-  if(os.path.exists("real_main")):
-      os.remove("real_main")
 
-  if result == 0:
-    print test, "...pass"
+  if "coverage" in sys.argv[1:]:
+      #Test using csim compiler
+      python_process = subprocess.Popen(["coverage2", "run", "-p", "../csim", "test.c"], stdout=subprocess.PIPE)
+
+      #Test using c2verilog compiler
+      if no_init:
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+      else:
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
   else:
-    print test, "...fail"
+      #Test using csim compiler
+      python_process = subprocess.Popen(["../csim", "test.c"], stdout=subprocess.PIPE)
+
+      #Test using c2verilog compiler
+      if no_init:
+          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+      else:
+          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+
+
+  result = python_process.wait()
+  quit = False
+  if result != 0:
+    print test, "csim ...fail"
+    quit = True
+
+  if check_output:
+      output = python_process.stdout.read()
+      if check_output not in output:
+         print test, "csim ...fail"
+         print "expected", check_output, "actual", output
+         quit = True
+
+  result = verilog_process.wait()
+  if result != 0:
+    print test, "verilog ...fail"
+    quit = True
+
+  if check_output:
+      output = verilog_process.stdout.read()
+      if check_output not in output:
+         print test, "verilog ...fail"
+         print "expected", check_output, "actual", output
+         quit = True
+
+  if quit:
     sys.exit(0)
 
+  for i in ["main", "arbiter", "real_main"]:
+      if(os.path.exists(i)):
+          os.remove(i)
+      if(os.path.exists(i+".v")):
+          os.remove(i+".v")
+
+  print test, "...pass"
+  return True
+
 def test_fails(test, code, no_init=False):
+
+  #run only selected tests
+  if "selection" in sys.argv[1:] and test not in sys.argv[1:]:
+      return False
+
+  #Test using c2verilog compiler
   f = open("test.c", 'w')
   f.write(code)
   f.close()
@@ -33,13 +86,21 @@ def test_fails(test, code, no_init=False):
       result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
   else:
       result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
+
   if result == 0:
     print test, "...fail"
     sys.exit(0)
   else:
     print test, "...pass"
 
-thoroughness = 10
+  #Test using csim compiler
+  result = os.system("coverage2 run -p ../csim test.c > /dev/null")
+
+  if result == 0:
+    print test, "...fail"
+    sys.exit(0)
+  else:
+    print test, "...pass"
 
 
 test("double_to_bits 1",
@@ -83,6 +144,22 @@ void main(){
 }
 """
 )
+
+test("bits_to_double 2",
+"""
+void main(){
+    double d = 1.0;
+    for(d=1.0; d<100000000.0; d*=10){
+        assert(bits_to_double(double_to_bits(d)) == d);
+    }
+    double d = 1.0;
+    for(d=1.0; d>0.0000000001; d/=10){
+        assert(bits_to_double(double_to_bits(d)) == d);
+    }
+}
+"""
+)
+
 test("bits_to_float 1",
 """
 void main(){
@@ -93,6 +170,21 @@ void main(){
     assert(bits_to_float(0x80000000ul) == -0.0);
     assert(bits_to_float(c) == 0.0);
     assert(bits_to_float(0x00000000ul) == 0.0);
+}
+"""
+)
+
+test("bits_to_float 2",
+"""
+void main(){
+    float d = 1.0;
+    for(d=1.0; d<100000000.0; d*=10){
+        assert(bits_to_float(float_to_bits(d)) == d);
+    }
+    float d = 1.0;
+    for(d=1.0; d>0.0000000001; d/=10){
+        assert(bits_to_float(float_to_bits(d)) == d);
+    }
 }
 """
 )
@@ -108,148 +200,209 @@ void main(){
 """
 )
 
-################################################################################
-# Test long functions
-
-test("file write 1",
+if test("file write 1",
 """
 void main(){
     file_write(123, "test_file");
 }
 """
-)
+):
 
-test_file = open("test_file")
-assert test_file.read().strip().startswith("123")
-test_file.close()
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("123")
+    test_file.close()
 
-test("file write 2",
+if test("file write 2",
 """
 void main(){
     file_write(456u, "test_file");
 }
 """
-)
+):
 
-test_file = open("test_file")
-assert test_file.read().strip().startswith("456")
-test_file.close()
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("456")
+    test_file.close()
 
-test("file write 3",
+if test("file write 3",
 """
 void main(){
     file_write(123ul, "test_file");
 }
 """
-)
+):
 
-test_file = open("test_file")
-assert test_file.read().strip().startswith("123")
-test_file.close()
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("123")
+    test_file.close()
 
-test("file write 4",
+if test("file write 4",
 """
 void main(){
     file_write(456.7f, "test_file");
 }
 """
-)
+):
 
-test_file = open("test_file")
-assert test_file.read().strip().startswith("456.7")
-test_file.close()
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("456.7")
+    test_file.close()
 
-test("file write 5",
+if test("file write 5",
 """
 void main(){
     file_write(123.4, "test_file");
 }
 """
-)
+):
 
-test_file = open("test_file")
-assert test_file.read().strip().startswith("123.4")
-test_file.close()
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("123.4")
+    test_file.close()
 
-print "should report 123"
 test("report 1",
 """
 void main(){
     int a = 123;
     report(a);
 }
-"""
-)
+""",
+check_output = "123")
 
-print "should report 123"
 test("report 2",
 """
 void main(){
     unsigned int a = 123;
     report(a);
 }
-"""
-)
+""",
+check_output = "123")
 
-print "should report 123"
 test("report 3",
 """
 void main(){
     long unsigned int a = 123;
     report(a);
 }
-"""
-)
+""",
+check_output = "123")
 
-print "should report 123"
 test("report 4",
 """
 void main(){
     long int a = 123;
     report(a);
 }
-"""
-)
+""",
+check_output = "123")
 
-print "should report 123.0"
 test("report 5",
 """
 void main(){
     float a = 123.0;
     report(a);
 }
-"""
-)
+""",
+check_output = "123.0")
 
-print "should report 123.0"
-test("report 5",
+test("report 6",
 """
 void main(){
     double a = 123.0;
     report(a);
 }
-"""
-)
+""", 
+check_output = "123.0")
 
-print "should report 0.0"
-test("report 5",
+test("report 7",
 """
 void main(){
     float a = 0.0;
     report(a);
 }
-"""
-)
+""",
+check_output = "0.0")
 
-print "should report 0.0"
-test("report 5",
+test("report 8",
 """
 void main(){
-    double a = -0.0;
+    double a = 0.0 * -1.0;
     report(a);
 }
+""",
+check_output = "-0.0")
+
+test("report 9",
 """
-)
+void main(){
+    float a = bits_to_float(0x7f800000u); //inf
+    report(a);
+}
+""",
+check_output = "inf")
+
+test("report 10",
+"""
+void main(){
+    float a = bits_to_float(0xff800000u); //-inf
+    report(a);
+}
+""",
+check_output = "-inf")
+
+test("report 11",
+"""
+void main(){
+    float a = bits_to_float(0x7fc00000u); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("report 12",
+"""
+void main(){
+    float a = bits_to_float(0xffc00000u); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("report 13",
+"""
+void main(){
+    double a = bits_to_double(0x7ff0000000000000ul); //inf
+    report(a);
+}
+""",
+check_output = "inf")
+
+test("report 14",
+"""
+void main(){
+    double a = bits_to_double(0xfff0000000000000ul); //-inf
+    report(a);
+}
+""",
+check_output = "-inf")
+
+test("report 15",
+"""
+void main(){
+    double a = bits_to_double(0x7ff8000000000000ul); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("report 16",
+"""
+void main(){
+    double a = bits_to_double(0xfff8000000000000ul); //nan
+    report(a);
+}
+""",
+check_output = "nan")
 
 test("types 1",
 """
@@ -441,125 +594,6 @@ void main(){
 """
 )
 
-class InvalidStimulus:
-    pass
-
-def long_function(type_, operator, a, b):
-    if operator == "*":
-        return int64(a) * int64(b)
-    if operator == "+":
-        return int64(a) + int64(b)
-    if operator == "-":
-        return int64(a) - int64(b)
-    if operator == "|":
-        return int64(a) | int64(b)
-    if operator == "&":
-        return int64(a) & int64(b)
-    if operator == "^":
-        return int64(a) ^ int64(b)
-    if operator == ">":
-        if type_.startswith("unsigned"):
-            return uint64(a) > uint64(b)
-        else:
-            return int64(a) > int64(b)
-    if operator == ">=":
-        if type_.startswith("unsigned"):
-            return uint64(a) >= uint64(b)
-        else:
-            return int64(a) >= int64(b)
-    if operator == "==":
-        return int64(a) == int64(b)
-    if operator == "!=":
-        return int64(a) != int64(b)
-    if operator == "<":
-        if type_.startswith("unsigned"):
-            return uint64(a) < uint64(b)
-        else:
-            return int64(a) < int64(b)
-    if operator == "<=":
-        if type_.startswith("unsigned"):
-            return uint64(a) <= uint64(b)
-        else:
-            return int64(a) <= int64(b)
-    if operator == "<<":
-        if b > 64:
-            raise InvalidStimulus
-        if b < 0:
-            raise InvalidStimulus
-        return int64(a) << int64(b)
-    if operator == ">>":
-        if b > 64:
-            raise InvalidStimulus
-        if b < 0:
-            raise InvalidStimulus
-        if type_.startswith("unsigned"):
-            return uint64(a) >> uint64(b)
-        else:
-            return int64(a) >> int64(b)
-    if operator == "/":
-        if b == 0:
-            raise InvalidStimulus
-        if type_.startswith("unsigned"):
-            return uint64(a)//uint64(b)
-        else:
-            negative = (a < 0) ^ (b < 0)
-            value = abs(a) // abs(b)
-            return -int64(value) if negative else int64(value)
-    if operator == "%":
-        if b == 0:
-            raise InvalidStimulus
-        if type_.startswith("unsigned"):
-            return uint64(a) % uint64(b)
-        else:
-            negative = (a < 0)
-            value = abs(a) % abs(b)
-            return -int64(value) if negative else int64(value)
-
-def test_corner_cases(operator, type_):
-    n = 0
-    for a in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
-        for b in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
-            try:
-                test("long %s %i"%(operator, n),
-                """
-                void main(){
-                    %s i = 0x%xul;
-                    %s j = 0x%xul;
-                    assert((i %s j) == %su);
-                }
-                """%(type_, uint64(a), 
-                     type_, uint64(b), 
-                     operator,
-                     hex(long_function(type_, operator,a,b)))
-                )
-                n+=1
-            except InvalidStimulus:
-                continue
-
-            if n == thoroughness:
-                return
-
-def test_random(operator, type_):
-    n = 0
-    a = randint(-(2**63), (2**63)-1)
-    b = randint(-(2**63), (2**63)-1)
-    while n < thoroughness:
-        try:
-            test("random long %s %i"%(operator, n),
-            """
-            void main(){
-                %s i = 0x%xul;
-                %s j = 0x%xul;
-                assert((i %s j) == %su);
-            }
-            """%(type_, uint64(a), 
-                 type_, uint64(b), 
-                 operator,
-                 hex(long_function(type_, operator, a, b)))
-            )
-        except InvalidStimulus:
-            pass
-        n+=1
 
 
 test("long not 1",
@@ -4326,38 +4360,38 @@ int main(){
 
 """)
 
-test("input output 1",
-"""
-int main(){
-  unsigned a = input("a");
-  unsigned b = input("b");
-  unsigned select = input("select");
-  unsigned z = output("z");
-  if (fgetc(select)){
-    fputc(fgetc(a), z);
-  } else {
-    fputc(fgetc(b), z);
-  }
-  return 0;
-}
+#test("input output 1",
+#"""
+#int main(){
+  #unsigned a = input("a");
+  #unsigned b = input("b");
+  #unsigned select = input("select");
+  #unsigned z = output("z");
+  #if (fgetc(select)){
+    #fputc(fgetc(a), z);
+  #} else {
+    #fputc(fgetc(b), z);
+  #}
+  #return 0;
+#}
 
-""")
-
-test("input output 2",
-"""
-int arbiter(){
-  unsigned a = input("a");
-  unsigned b = input("b");
-  unsigned z = output("z");
-  while(1){
-    if(ready(a)) fputc(fgetc(a), z);
-    if(ready(a)) fputc(fgetc(b), z);
-  }
-  return 0;
-}
-
-""")
-
+#""")
+#
+#test("input output 2",
+#"""
+#int arbiter(){
+  #unsigned a = input("a");
+  #unsigned b = input("b");
+  #unsigned z = output("z");
+  #while(1){
+    #if(ready(a)) fputc(fgetc(a), z);
+    #if(ready(a)) fputc(fgetc(b), z);
+  #}
+  #return 0;
+#}
+#
+#""")
+#
 test("main not main",
 """
 int main(){
@@ -4370,6 +4404,129 @@ int real_main(){
   return 0;
 }
 """)
+
+thoroughness = 10
+
+class InvalidStimulus:
+    pass
+
+def long_function(type_, operator, a, b):
+    if operator == "*":
+        return int64(a) * int64(b)
+    if operator == "+":
+        return uint64((int(a) + int(b)) & 0xffffffffffffffff)
+    if operator == "-":
+        return uint64((int(a) - int(b)) & 0xffffffffffffffff)
+    if operator == "|":
+        return int64(a) | int64(b)
+    if operator == "&":
+        return int64(a) & int64(b)
+    if operator == "^":
+        return int64(a) ^ int64(b)
+    if operator == ">":
+        if type_.startswith("unsigned"):
+            return uint64(a) > uint64(b)
+        else:
+            return int64(a) > int64(b)
+    if operator == ">=":
+        if type_.startswith("unsigned"):
+            return uint64(a) >= uint64(b)
+        else:
+            return int64(a) >= int64(b)
+    if operator == "==":
+        return int64(a) == int64(b)
+    if operator == "!=":
+        return int64(a) != int64(b)
+    if operator == "<":
+        if type_.startswith("unsigned"):
+            return uint64(a) < uint64(b)
+        else:
+            return int64(a) < int64(b)
+    if operator == "<=":
+        if type_.startswith("unsigned"):
+            return uint64(a) <= uint64(b)
+        else:
+            return int64(a) <= int64(b)
+    if operator == "<<":
+        if b > 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        return int64(a) << int64(b)
+    if operator == ">>":
+        if b > 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) >> uint64(b)
+        else:
+            return int64(a) >> int64(b)
+    if operator == "/":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a)//uint64(b)
+        else:
+            negative = (a < 0) ^ (b < 0)
+            value = abs(a) // abs(b)
+            return -int64(value) if negative else int64(value)
+    if operator == "%":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) % uint64(b)
+        else:
+            negative = (a < 0)
+            value = abs(a) % abs(b)
+            return -int64(value) if negative else int64(value)
+
+
+def test_corner_cases(operator, type_):
+    n = 0
+    for a in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
+        for b in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
+            try:
+                test("long %s %i"%(operator, n),
+                """
+                void main(){
+                    %s i = 0x%xul;
+                    %s j = 0x%xul;
+                    assert((i %s j) == %su);
+                }
+                """%(type_, uint64(a), 
+                     type_, uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator,a,b)))
+                )
+                n+=1
+            except InvalidStimulus:
+                continue
+
+            if n == thoroughness:
+                return
+
+def test_random(operator, type_):
+    n = 0
+    a = randint(-(2**63), (2**63)-1)
+    b = randint(-(2**63), (2**63)-1)
+    while n < thoroughness:
+        try:
+            test("random long %s %i"%(operator, n),
+            """
+            void main(){
+                %s i = 0x%xul;
+                %s j = 0x%xul;
+                assert((i %s j) == %su);
+            }
+            """%(type_, uint64(a), 
+                 type_, uint64(b), 
+                 operator,
+                 hex(long_function(type_, operator, a, b)))
+            )
+        except InvalidStimulus:
+            pass
+        n+=1
 
 for type_ in ["long int", "unsigned long int"]:
     for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:

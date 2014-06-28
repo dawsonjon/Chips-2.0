@@ -109,7 +109,9 @@ def compile_python_model(
                     name,
                     instructions,
                     registers,
-                    parser.allocator, inputs, outputs)
+                    parser.allocator, 
+                    inputs, 
+                    outputs)
 
             return model, parser.allocator.input_names.values(), parser.allocator.output_names.values(), name
 

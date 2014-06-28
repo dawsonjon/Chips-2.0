@@ -901,21 +901,21 @@ def generate_CHIP(input_file,
            output_file.write('          long_result[63] = register[31];\n')
            output_file.write('          if (register[30:23] == 0) begin\n')
            output_file.write('              long_result[62:52] = 0;\n')
-           output_file.write('          end else if (register[30:23] == 127) begin\n')
-           output_file.write('              long_result[62:52] = 1023;\n')
+           output_file.write('          end else if (register[30:23] == 255) begin\n')
+           output_file.write('              long_result[62:52] = 2047;\n')
            output_file.write('          end else begin\n')
            output_file.write('              long_result[62:52] = (register[30:23] - 127) + 1023;\n')
            output_file.write('          end\n')
            output_file.write('          long_result[51:29] = register[22:0];\n')
            output_file.write('          long_result[28:0] = 0;\n')
            output_file.write('          fp_value = $bitstoreal(long_result);\n')
-           output_file.write('          $display ("%%g (report (float) at line: %s in file: %s)", fp_value);\n'%(
+           output_file.write('          $display ("%%f (report (float) at line: %s in file: %s)", fp_value);\n'%(
                   instruction["line"],
                   instruction["file"]))
 
         elif instruction["op"] == "long_float_report":
            output_file.write('          fp_value = $bitstoreal({register_hi, register});\n')
-           output_file.write('          $display ("%%g (report (double) at line: %s in file: %s)", fp_value);\n'%(
+           output_file.write('          $display ("%%f (report (double) at line: %s in file: %s)", fp_value);\n'%(
                   instruction["line"],
                   instruction["file"]))
 
