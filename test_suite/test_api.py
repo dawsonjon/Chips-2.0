@@ -45,3 +45,10 @@ Component("test_suite/double_producer.c")(my_chip, inputs={}, outputs={"z":wire}
 Component("test_suite/double_consumer.c")(my_chip, inputs={"a":wire}, outputs={})
 my_chip.simulation_reset()
 my_chip.simulation_run()
+
+my_chip = Chip("interconnect")
+wire = Wire(my_chip)
+Component("test_suite/long_producer.c")(my_chip, inputs={}, outputs={"z":wire})
+Component("test_suite/long_consumer.c")(my_chip, inputs={"a":wire}, outputs={})
+my_chip.simulation_reset()
+my_chip.simulation_run()

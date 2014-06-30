@@ -197,6 +197,15 @@ class Tokens:
         else:
             return ""
 
+    def peek_next(self):
+
+        """Return the next next token in the stream, but don't consume it"""
+
+        if len(self.tokens) > 1:
+            return self.tokens[1][2]
+        else:
+            return ""
+
     def get(self):
 
         """Return the next token in the stream, and consume it"""

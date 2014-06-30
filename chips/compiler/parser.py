@@ -869,6 +869,34 @@ class Parser:
             expression = self.parse_unary_expression()
             return SizeOf(expression)
 
+        #cast operation
+        elif self.tokens.peek() == "(" and self.tokens.peek_next() in numeric_types:
+            self.tokens.expect("(")
+            type_, size, signed, const = self.parse_type_specifier()
+            self.tokens.expect(")")
+            expression = self.parse_unary_expression()
+
+            if type_ == "float" and size == 8:
+                expression = to_double(expression)
+            elif type_ == "float" and size == 4:
+                expression = to_float(expression)
+            elif type_ == "int" and size == 8:
+                expression = to_long(expression)
+            elif type_ == "int" and size == 4:
+                expression = to_int(expression)
+            elif type_ != expression.type_():
+                self.tokens.error(
+                    "cannot cast incompatible types expected: %s actual: %s"%(
+                        type_,
+                        expression.type_()))
+            elif size != expression.size():
+                self.tokens.error(
+                    "cannot cast incompatible types expected: %s actual: %s"%(
+                        size,
+                        expression.size()))
+            
+            return expression
+
         else:
             return self.parse_postfix_expression()
 
@@ -1024,7 +1052,6 @@ class Parser:
         corrected_arguments = []
         for required, actual in zip(required_arguments, actual_arguments):
             if not compatible(required, actual):
-
                 if required.type_() == "float" and required.size() == 8:
                     actual = to_double(actual)
                 elif required.type_() == "float" and required.size() == 4:
@@ -1173,7 +1200,7 @@ class Parser:
                 return Struct(instance)
 
 def compatible(left, right):
-    return left.type_() == right.type_()
+    return left.type_() == right.type_() and left.size() == right.size()
 
 def is_double(expression):
     return expression.size() == 8 and expression.type_() == "float"

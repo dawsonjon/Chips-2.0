@@ -160,6 +160,14 @@ void main(){
 """
 )
 
+test("bits_to_double 3",
+"""
+void main(){
+    assert(bits_to_double(0x405ec00000000000ul) == 123.0);
+}
+"""
+)
+
 test("bits_to_float 1",
 """
 void main(){
@@ -181,7 +189,6 @@ void main(){
     for(d=1.0; d<100000000.0; d*=10){
         assert(bits_to_float(float_to_bits(d)) == d);
     }
-    float d = 1.0;
     for(d=1.0; d>0.0000000001; d/=10){
         assert(bits_to_float(float_to_bits(d)) == d);
     }
@@ -3903,6 +3910,20 @@ int main(){
 }
 
 """)
+test("function 7",
+"""
+
+int func(long a){
+  assert(a == -1l);
+  return a;
+}
+
+int main(){
+  assert(func(-1) == -1);
+  return 0;
+}
+
+""")
 test("expression 1",
 """
 int main(){
@@ -4405,7 +4426,7 @@ int real_main(){
 }
 """)
 
-thoroughness = 10
+thoroughness = 100
 
 class InvalidStimulus:
     pass
@@ -4484,8 +4505,8 @@ def long_function(type_, operator, a, b):
 
 def test_corner_cases(operator, type_):
     n = 0
-    for a in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
-        for b in [0, 1, -1, 0x80000000, (2**63)-1, -(2**63)]:
+    for a in [0, 1, -1, 31, 32, 33, 0x80000000, (2**63)-1, -(2**63)]:
+        for b in [0, 1, -1, 31, 32, 33, 0x80000000, (2**63)-1, -(2**63)]:
             try:
                 test("long %s %i"%(operator, n),
                 """

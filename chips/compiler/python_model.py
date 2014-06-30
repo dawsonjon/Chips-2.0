@@ -229,16 +229,17 @@ class PythonModel:
            self.registers[dest] = uint32(self.registers[src] << 1) | carry_in
 
         elif instruction["op"] == "shift_right":
-           self.registers[dest] = int32(self.registers[src]) >> 1
            self.carry = self.registers[src] & 1
+           self.registers[dest] = int32(self.registers[src]) >> 1
 
         elif instruction["op"] == "unsigned_shift_right":
-           self.registers[dest] = uint32(self.registers[src]) >> 1
            self.carry = self.registers[src] & 1
+           self.registers[dest] = uint32(self.registers[src]) >> 1
 
         elif instruction["op"] == "shift_right_with_carry":
-           self.registers[dest] = (uint32(self.registers[src]) >> 1) | (self.carry << 31)
+           carry_in = self.carry
            self.carry = self.registers[src] & 1
+           self.registers[dest] = (uint32(self.registers[src]) >> 1) | (carry_in << 31)
 
         elif instruction["op"] == "greater":
            self.registers[dest] = int32(int32(self.registers[src]) > int32(self.registers[srcb]))
@@ -402,7 +403,13 @@ class PythonModel:
 
         elif instruction["op"] == "assert":
             if self.registers[src] == 0:
-                print "%d (report (int) at line: %s in file: %s)"%(
+                print "(assertion failed at line: %s in file: %s)"%(
+                instruction["line"],
+                instruction["file"])
+                exit(1)
+
+        elif instruction["op"] == "report":
+            print "%d (report (int) at line: %s in file: %s)"%(
                 self.registers[src],
                 instruction["line"],
                 instruction["file"],

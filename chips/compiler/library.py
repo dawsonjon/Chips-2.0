@@ -55,27 +55,24 @@ void putc(unsigned c){
 /*Non-Standard Extensions*/
 
 void fput_double(double d, unsigned handle){
-    long l;
+    unsigned long l;
+    unsigned low, high;
     l = double_to_bits(d);
-    /*send low word*/
-    fputc(l & 0xffffffffu, handle);
-    /*send high word*/
-    fputc((l >> 32) & 0xffffffffu, handle);
+    low = l & 0xffffffffu;
+    high = l >> 32;
+    fputc(low, handle);
+    fputc(high, handle);
 }
 
 double fget_double(unsigned handle){
-    long low, high;
+    int low, high;
+    unsigned long l;
     double d;
-    /*get low word*/
     low = fgetc(handle);
-    report(low);
-    /*get high word*/
     high = fgetc(handle);
-    high <<= 32;
-    high |= low;
-    report(high);
-    d =  bits_to_double(high);
-    report(d);
+    l = ((long) high) << 32;
+    l |= low;
+    d =  bits_to_double(l);
     return d;
 }
 
@@ -85,6 +82,25 @@ void fput_float(float d, unsigned handle){
 
 float fget_float(unsigned handle){
     return bits_to_float(fgetc(handle));
+}
+
+void fput_long(long d, unsigned handle){
+    int low, high;
+    long l = d;
+    low = l & 0xffffffffu;
+    high = l >> 32;
+    fputc(low, handle);
+    fputc(high, handle);
+}
+
+long fget_long(unsigned handle){
+    int low, high;
+    long l;
+    low = fgetc(handle);
+    high = fgetc(handle);
+    l = ((long) high) << 32;
+    l |= low;
+    return l;
 }
 
 """,
