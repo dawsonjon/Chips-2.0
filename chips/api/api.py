@@ -3,6 +3,8 @@ from chips.compiler.python_model import StopSim
 import chips.compiler.compiler
 import os
 import sys
+import struct
+from numpy import int32, int64, uint32, uint64
 
 
 class Chip:
@@ -394,3 +396,53 @@ class Output:
         """override this function in your application"""
 
         pass
+
+def float_to_bits(f):
+
+    "convert a floating point number into an integer containing the ieee 754 representation."
+
+    value = 0
+    for byte in struct.pack(">f", f):
+         value <<= 8
+         value |= ord(byte)
+    return int32(value)
+
+def double_to_bits(f):
+
+    "convert a double precision floating point number into a 64 bit integer containing the ieee 754 representation."
+
+    value = 0
+    for byte in struct.pack(">d", f):
+         value <<= 8
+         value |= ord(byte) 
+    return uint64(value)
+
+def bits_to_float(bits):
+
+    "convert integer containing the ieee 754 representation into a float"
+
+    byte_string = (
+        chr((bits & 0xff000000) >> 24) +
+        chr((bits & 0xff0000) >> 16) +
+        chr((bits & 0xff00) >> 8) +
+        chr((bits & 0xff))
+    )
+    return struct.unpack(">f", byte_string)[0]
+
+def bits_to_double(bits):
+
+    "convert integer containing the ieee 754 representation into a float"
+
+    bits = int(bits)
+    byte_string = (
+        chr((bits & 0xff00000000000000) >> 56) +
+        chr((bits & 0xff000000000000) >> 48) +
+        chr((bits & 0xff0000000000) >> 40) +
+        chr((bits & 0xff00000000) >> 32) +
+        chr((bits & 0xff000000) >> 24) +
+        chr((bits & 0xff0000) >> 16) +
+        chr((bits & 0xff00) >> 8) +
+        chr((bits & 0xff))
+    )
+    return struct.unpack(">d", byte_string)[0]
+

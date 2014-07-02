@@ -396,7 +396,7 @@ class PythonModel:
 
         elif instruction["op"] == "memory_read":
             self.address = self.registers[src]
-            self.registers[dest] = int32(self.memory[self.address])
+            self.registers[dest] = int32(self.memory.get(self.address, 0))
 
         elif instruction["op"] == "memory_write":
             self.memory[self.registers[src]] = int32(self.registers[srcb])

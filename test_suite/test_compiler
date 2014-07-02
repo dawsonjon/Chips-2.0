@@ -601,6 +601,22 @@ void main(){
 """
 )
 
+test_fails("types 20",
+"""
+/*Check that you can't call a variable*/
+int a;
+long b;
+float c;
+double d;
+void main(){
+    a();
+    b();
+    c();
+    d();
+}
+"""
+)
+
 
 
 test("long not 1",

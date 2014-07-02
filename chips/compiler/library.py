@@ -496,6 +496,66 @@ double scan_double(){
     const double M_2_SQRTPI = 1.1283791671;
     const double M_SQRT2 = 1.41421356237;
 
+    /* Return absolute value of a double n*/
+
+    double fabs(double n){
+        if (n < 0.0) {
+            return - n;
+        } else {
+            return n;
+        }
+    }
+
+    /* return e ** x */
+
+    double exp(double x){
+
+        double result = 1.0;
+        unsigned n = 1;
+        double power = 1.0;
+        double factorial = 1.0;
+        double old = 0.0;
+
+        while(fabs(old - result) > 0.00001){
+            old = result;
+            power *= x;
+            factorial *= n;
+            result += (power/factorial);
+            n++;
+        }
+
+        return result;
+
+    }
+
+    /* return log_e(n) */
+
+    double log(double n){
+        double antilog, x, old;
+        x = 10.0;
+        old = 0.0;
+        while(fabs(old - x) > 0.00001){
+            old = x;
+            antilog = exp(x);
+            x -= (antilog - n)/antilog;
+        }
+        return x;
+    }
+
+    /* approximate sqrt using newton's method*/
+
+    double sqrt(double n){
+        double square, x, old;
+        x = n;
+        old = 0.0;
+        while(old != x){
+            old = x;
+            x = (x + n/x)*0.5;
+        }
+        return x;
+    }
+
+
     /*Taylor series approximation of Cosine function*/
 
     double _taylor(double angle){
@@ -544,27 +604,6 @@ double scan_double(){
         return sin(n) / cos(n);
     }
 
-    /* return e ** x */
-
-    double exp(double x){
-
-        double result = 1.0;
-        unsigned n = 1;
-        double power = 1.0;
-        double factorial = 1.0;
-        double old = 0.0;
-
-        while(fabs(old - result) > 0.00001){
-            old = result;
-            power *= x;
-            factorial *= n;
-            result += (power/factorial);
-            n++;
-        }
-
-        return result;
-
-    }
 
     /*return sinh of x in radians*/
 
@@ -602,15 +641,6 @@ double scan_double(){
         return 0.5 * log((1.0+x)/(1.0-x));
     }
 
-    /* Return absolute value of a double n*/
-
-    double fabs(double n){
-        if (n < 0.0) {
-            return - n;
-        } else {
-            return n;
-        }
-    }
 
     /* Return absolute value of integer n*/
 
@@ -623,19 +653,6 @@ double scan_double(){
     }
 
 
-    /* return log_e(n) */
-
-    double log(double n){
-        double antilog, x, old;
-        x = 10.0;
-        old = 0.0;
-        while(fabs(old - x) > 0.00001){
-            old = x;
-            antilog = exp(x);
-            x -= (antilog - n)/antilog;
-        }
-        return x;
-    }
 
     /* return log_10(n) */
 

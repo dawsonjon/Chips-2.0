@@ -220,13 +220,13 @@ class Parser:
             expression = self.parse_expression()
 
             if self.function.type_ == "float" and self.function.size == 8:
-                expression = to_double(expression)
+                expression = self.to_double(expression)
             elif self.function.type_ == "float" and self.function.size == 4:
-                expression = to_float(expression)
+                expression = self.to_float(expression)
             elif self.function.type_ == "int" and self.function.size == 8:
-                expression = to_long(expression)
+                expression = self.to_long(expression)
             elif self.function.type_ == "int" and self.function.size == 4:
-                expression = to_int(expression)
+                expression = self.to_int(expression)
             elif self.function.type_ != expression.type_():
                 self.tokens.error(
                     "type mismatch in return statement expected: %s actual: %s"%(
@@ -338,13 +338,13 @@ class Parser:
                 expression = self.substitute_function(expression)
 
             if is_double(lvalue):
-                expression = to_double(expression)
+                expression = self.to_double(expression)
             elif is_float(lvalue):
-                expression = to_float(expression)
+                expression = self.to_float(expression)
             elif is_long(lvalue):
-                expression = to_long(expression)
+                expression = self.to_long(expression)
             elif is_int(lvalue):
-                expression = to_int(expression)
+                expression = self.to_int(expression)
             elif expression.type_() != lvalue.type_():
                 self.tokens.error(
                     "type mismatch in assignment expected: %s actual: %s"%(
@@ -633,13 +633,13 @@ class Parser:
 
 
                 if type_ == "float" and size == 8:
-                    initializer = to_double(initializer)
+                    initializer = self.to_double(initializer)
                 elif type_ == "float" and size == 4:
-                    initializer = to_float(initializer)
+                    initializer = self.to_float(initializer)
                 elif type_ == "int" and size == 8:
-                    initializer = to_long(initializer)
+                    initializer = self.to_long(initializer)
                 elif type_ == "int" and size == 4:
-                    initializer = to_int(initializer)
+                    initializer = self.to_int(initializer)
                 elif type_ != initializer.type_():
                     self.tokens.error(
                         "type mismatch in intializer expected: %s actual: %s"%(
@@ -755,14 +755,14 @@ class Parser:
         """
 
         if is_double(left) or is_double(right):
-            right = to_double(right)
-            left = to_double(left)
+            right = self.to_double(right)
+            left = self.to_double(left)
         elif is_float(left) or is_float(right):
-            right = to_float(right)
-            left = to_float(left)
+            right = self.to_float(right)
+            left = self.to_float(left)
         elif is_long(left) or is_long(right):
-            right = to_long(right)
-            left = to_long(left)
+            right = self.to_long(right)
+            left = self.to_long(left)
         elif left.type_() != right.type_():
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
@@ -783,8 +783,8 @@ class Parser:
         """
 
         if is_long(left) or is_long(right):
-            right = to_long(right)
-            left = to_long(left)
+            right = self.to_long(right)
+            left = self.to_long(left)
         elif left.type_() != "int":
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
@@ -877,13 +877,13 @@ class Parser:
             expression = self.parse_unary_expression()
 
             if type_ == "float" and size == 8:
-                expression = to_double(expression)
+                expression = self.to_double(expression)
             elif type_ == "float" and size == 4:
-                expression = to_float(expression)
+                expression = self.to_float(expression)
             elif type_ == "int" and size == 8:
-                expression = to_long(expression)
+                expression = self.to_long(expression)
             elif type_ == "int" and size == 4:
-                expression = to_int(expression)
+                expression = self.to_int(expression)
             elif type_ != expression.type_():
                 self.tokens.error(
                     "cannot cast incompatible types expected: %s actual: %s"%(
@@ -950,25 +950,25 @@ class Parser:
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return DoubleToBits(to_double(expression))
+        return DoubleToBits(self.to_double(expression))
 
     def parse_float_to_bits(self):
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return FloatToBits(to_float(expression))
+        return FloatToBits(self.to_float(expression))
 
     def parse_bits_to_double(self):
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return BitsToDouble(to_long(expression))
+        return BitsToDouble(self.to_long(expression))
 
     def parse_bits_to_float(self):
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return BitsToFloat(to_int(expression))
+        return BitsToFloat(self.to_int(expression))
 
     def parse_input(self):
         self.tokens.expect("(")
@@ -1040,6 +1040,9 @@ class Parser:
         self.tokens.expect(")")
 
 
+        if not hasattr(function_call.function, "arguments"):
+            self.tokens.error("%s is not a function and cannot be called"%name)
+
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
@@ -1053,13 +1056,13 @@ class Parser:
         for required, actual in zip(required_arguments, actual_arguments):
             if not compatible(required, actual):
                 if required.type_() == "float" and required.size() == 8:
-                    actual = to_double(actual)
+                    actual = self.to_double(actual)
                 elif required.type_() == "float" and required.size() == 4:
-                    actual = to_float(actual)
+                    actual = self.to_float(actual)
                 elif required.type_() == "int" and required.size() == 8:
-                    actual = to_long(actual)
+                    actual = self.to_long(actual)
                 elif required.type_() == "int" and required.size() == 4:
-                    actual = to_int(actual)
+                    actual = self.to_int(actual)
                 elif required.type_() != required.type_():
 
                     self.tokens.error(
@@ -1199,6 +1202,54 @@ class Parser:
             else:
                 return Struct(instance)
 
+    def to_double(self, expression):
+        if is_double(expression):
+            return expression
+        elif is_float(expression):
+            return FloatToDouble(expression)
+        elif is_long(expression):
+            return LongToDouble(expression)
+        elif is_int(expression):
+            return LongToDouble(IntToLong(expression))
+        else:
+            self.tokens.error("cannot convert expression with type %s to double"%expression.type_())
+
+    def to_float(self, expression):
+        if is_double(expression):
+            return DoubleToFloat(expression)
+        elif is_float(expression):
+            return expression
+        elif is_long(expression):
+            return DoubleToFloat(LongToDouble(expression))
+        elif is_int(expression):
+            return IntToFloat(expression)
+        else:
+            self.tokens.error("cannot convert expression with type %s to float"%expression.type_())
+
+    def to_long(self, expression):
+        if is_double(expression):
+            return DoubleToLong(expression)
+        elif is_float(expression):
+            return DoubleToLong(FloatToDouble(expression))
+        elif is_long(expression):
+            return expression
+        elif is_int(expression):
+            return IntToLong(expression)
+        else:
+            self.tokens.error("cannot convert expression with type %s to long"%expression.type_())
+
+    def to_int(self, expression):
+        if is_double(expression):
+            return LongToInt(DoubleToLong(expression))
+        elif is_float(expression):
+            return FloatToInt(expression)
+        elif is_long(expression):
+            return LongToInt(expression)
+        elif is_int(expression):
+            return expression
+        else:
+            self.tokens.error("cannot convert expression with type %s to int"%expression.type_())
+
 def compatible(left, right):
     return left.type_() == right.type_() and left.size() == right.size()
 
@@ -1214,43 +1265,4 @@ def is_long(expression):
 def is_int(expression):
     return expression.size() == 4 and expression.type_() == "int"
 
-def to_double(expression):
-    if is_double(expression):
-        return expression
-    elif is_float(expression):
-        return FloatToDouble(expression)
-    elif is_long(expression):
-        return LongToDouble(expression)
-    elif is_int(expression):
-        return LongToDouble(IntToLong(expression))
-
-def to_float(expression):
-    if is_double(expression):
-        return DoubleToFloat(expression)
-    elif is_float(expression):
-        return expression
-    elif is_long(expression):
-        return DoubleToFloat(LongToDouble(expression))
-    elif is_int(expression):
-        return IntToFloat(expression)
-
-def to_long(expression):
-    if is_double(expression):
-        return DoubleToLong(expression)
-    elif is_float(expression):
-        return DoubleToLong(FloatToDouble(expression))
-    elif is_long(expression):
-        return expression
-    elif is_int(expression):
-        return IntToLong(expression)
-
-def to_int(expression):
-    if is_double(expression):
-        return LongToInt(DoubleToLong(expression))
-    elif is_float(expression):
-        return FloatToInt(expression)
-    elif is_long(expression):
-        return LongToInt(expression)
-    elif is_int(expression):
-        return expression
 
