@@ -19,7 +19,7 @@ def cleanup():
 atexit.register(cleanup)
 
 def run_c(file_name):
-    process = subprocess.Popen(["../c2verilog", "iverilog", "run", str(file_name)])
+    process = subprocess.Popen(["../csim", str(file_name)])
     children.append(process)
     process.wait()
     children.remove(process)

@@ -4,6 +4,7 @@ import chips.compiler.compiler
 import os
 import sys
 import struct
+import itertools
 from numpy import int32, int64, uint32, uint64
 
 
@@ -34,7 +35,7 @@ class Chip:
 
     def generate_verilog(self):
 
-        """Generate verilog for the chip"""
+        """Generate verilog for the chip""" 
 
         for component in self.components.values():
             component.generate_verilog()
@@ -397,12 +398,121 @@ class Output:
 
         pass
 
+class Stimulus(Input):
+
+    """Simulate a chip input using a sequence object"""
+
+    def __init__(self, chip, name, type_, sequence):
+        Input.__init__(self, chip, name)
+        self.sequence = sequence
+        self.type_ = "float"
+        self.high = False
+       
+    def simulation_reset(self):
+        self.iterator = itertools.cycle(iter(self.sequence))
+        Input.simulation_reset(self)
+
+    def data_source(self):
+
+        """Override the Input data_sorce() method to read data from a sequence"""
+
+        if self.type_ == "int":
+
+            return next(self.iterator)
+
+        elif self.type_ == "long":
+
+            if self.high:
+                word = self.high
+                self.high = False
+                return word
+            else:
+                long_word = next(self.iterator)
+                self.high = long_word >> 32
+                return long_word | 0xffffffff
+
+        elif self.type_ == "float":
+
+            return float_to_bits(next(self.iterator))
+
+        elif self.type_ == "double":
+
+            if self.high:
+                word = self.high
+                self.high = False
+                return word
+            else:
+                long_word = double_to_bits(next(self.iterator))
+                self.high = long_word >> 32
+                return long_word | 0xffffffff
+
+    def __iter__(self):
+
+        """Make a Stimulus work as a sequence"""
+
+        return len(self.sequence)
+
+    def __len__(self):
+
+        """Make a Stimulus work with the len() function"""
+
+        return len(self.sequence)
+
+class Response(Output):
+
+    """Capture output values during a simulation"""
+
+    def __init__(self, chip, name, type_, stop_samples = None):
+        Output.__init__(self, chip, name)
+        self.type_ = type_
+        self.stop_samples = stop_samples
+        self.high = False
+
+    def simulation_reset(self):
+        self.l = []
+        Output.simulation_reset(self)
+       
+    def data_sink(self, value):
+
+        if self.type_ == "int":
+
+            self.l.append(value)
+
+        elif self.type_ == "long":
+
+            if self.high:
+                self.l.append(self.high << 32 | value)
+            else:
+                self.high = value
+
+        elif self.type_ == "float":
+
+            self.l.append(bits_to_float(value))
+
+        elif self.type_ == "double":
+
+            if self.high:
+                self.l.append(bits_to_double(self.high << 32 | value))
+            else:
+                self.high = value
+
+
+        if self.stop_samples:
+            if len(self.l) >= self.stop_samples:
+                raise StopSim
+
+    def __iter__(self):
+        return iter(self.l)
+
+    def __len__(self):
+        return len(self.l)
+
 def float_to_bits(f):
 
     "convert a floating point number into an integer containing the ieee 754 representation."
 
     value = 0
-    for byte in struct.pack(">f", f):
+    for byte in struct.pack(">f", float(f)):
          value <<= 8
          value |= ord(byte)
     return int32(value)
@@ -412,7 +522,7 @@ def double_to_bits(f):
     "convert a double precision floating point number into a 64 bit integer containing the ieee 754 representation."
 
     value = 0
-    for byte in struct.pack(">d", f):
+    for byte in struct.pack(">d", float(f)):
          value <<= 8
          value |= ord(byte) 
     return uint64(value)

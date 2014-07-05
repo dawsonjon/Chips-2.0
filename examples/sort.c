@@ -1,4 +1,4 @@
-/* fft.c */
+/* sort.c */
 /* Jonathan P Dawson */
 /* 2013-12-23 */
 

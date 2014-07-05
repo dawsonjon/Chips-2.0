@@ -6,4 +6,6 @@ Examples
 .. include:: example_3.rst
 .. include:: example_4.rst
 .. include:: example_5.rst
+.. include:: example_6.rst
+.. include:: example_7.rst
 
