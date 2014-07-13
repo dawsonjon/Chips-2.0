@@ -49,7 +49,7 @@ def generate_docs():
     documentation = """
 
 Approximating Sine and Cosine functions using Taylor Series
------------------------------------------------------------
+===========================================================
 
 In this example, we calculate an approximation of the cosine functions using
 the `Taylor series <http://en.wikipedia.org/wiki/Taylor_series>`_:

@@ -1,30 +1,15 @@
 #!/usr/bin/env python
 
-import subprocess
-import atexit
-from math import pi
-from chips.api.api import *
-
-try:
-    import scipy as s
-    from scipy.signal import firwin
-except ImportError:
-    print "You need scipy to run this script!"
-    exit(0)
-
-try:
-    import numpy as n
-except ImportError:
-    print "You need numpy to run this script!"
-    exit(0)
-
-try:
-    from matplotlib import pyplot
-except ImportError:
-    print "You need matplotlib to run this script!"
-    exit(0)
+import inspect
 
 def test():
+
+    from math import pi
+    from numpy import abs
+    from scipy import fft
+    from scipy.signal import firwin
+    from matplotlib import pyplot
+    from chips.api.api import Chip, Stimulus, Response, Wire, Component
 
     #create a chip
     chip = Chip("filter_example")
@@ -59,7 +44,7 @@ def test():
     chip.simulation_run()
         
     #plot the result
-    pyplot.semilogy(n.abs(s.fft(list(output)))[0:len(output)/2])
+    pyplot.semilogy(abs(fft(list(output)))[0:len(output)/2])
     pyplot.title("Magnitude of Impulse Response")
     pyplot.xlim(0, 512)
     pyplot.xlabel("X Sample")
@@ -76,13 +61,17 @@ def generate_docs():
     documentation = """
 
 FIR Filter
-----------
+==========
 
 An FIR filter contains a tapped delay line. By applying a weighting to each
 tap, and summing the results we can create a filter. The coefficients of the
 filter are critical. Here we create the coefficients using the firwin function
 from the SciPy package. In this example we create a low pass filter using a
 Blackman window. The Blackman window gives good attenuation in the stop band.
+
+.. code-block:: python
+    
+    %s
 
 The C code includes a simple test routine that calculates the frequency
 spectrum of a 64 point sine wave.
@@ -105,7 +94,10 @@ throughput rate.
 `The Scientist and Engineer's Guide to Digital Signal Processing <http://www.dspguide.com/>`_ 
 gives a straight forward introduction, and can be viewed on-line for free. 
 
-"""%indent(open("fir.c").read())
+"""%(
+        ''.join(inspect.getsourcelines(test)[0][2:]),
+        indent(open("fir.c").read())
+    )
 
     document = open("../docs/source/examples/example_6.rst", "w").write(documentation)
 

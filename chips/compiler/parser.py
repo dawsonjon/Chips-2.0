@@ -1070,10 +1070,10 @@ class Parser:
                             required.type_(),
                             actual.type_()))
 
-                elif required.size() != actual.size():
+                elif required.argument_size() != actual.argument_size():
 
                     self.tokens.error(
-                        "size mismatch in assignment expected: %s actual: %s"%(
+                        "size mismatch in function argument expected: %s actual: %s"%(
                             required.size(),
                             actual.size()))
 

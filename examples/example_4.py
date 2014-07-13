@@ -45,7 +45,7 @@ def generate_docs():
     documentation = """
 
 Pseudo Random Number Generator
-------------------------------
+==============================
 
 This example uses a 
 `Linear Congruential Generator (LCG) <http://en.wikipedia.org/wiki/Linear_congruential_generator>`_ to generate Pseudo Random Numbers.

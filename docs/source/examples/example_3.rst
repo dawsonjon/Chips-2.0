@@ -1,7 +1,7 @@
 
 
 Implement Quicksort
--------------------
+===================
 
 This example sorts an array of data using the 
 `Quick Sort algorithm <http://en.wikipedia.org/wiki/Quicksort>`_
@@ -12,7 +12,7 @@ possible to implement the function using an explicitly created stack.
 
 .. code-block:: c
 
-    /* fft.c */
+    /* sort.c */
     /* Jonathan P Dawson */
     /* 2013-12-23 */
     

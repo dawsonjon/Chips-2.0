@@ -1,13 +1,63 @@
 
 
 FIR Filter
-----------
+==========
 
 An FIR filter contains a tapped delay line. By applying a weighting to each
 tap, and summing the results we can create a filter. The coefficients of the
 filter are critical. Here we create the coefficients using the firwin function
 from the SciPy package. In this example we create a low pass filter using a
 Blackman window. The Blackman window gives good attenuation in the stop band.
+
+.. code-block:: python
+    
+        from math import pi
+    from numpy import abs
+    from scipy import fft
+    from scipy.signal import firwin
+    from matplotlib import pyplot
+    from chips.api.api import Chip, Stimulus, Response, Wire, Component
+
+    #create a chip
+    chip = Chip("filter_example")
+
+    #low pass filter half nyquist 50 tap
+    kernel = Stimulus(chip, "kernel", "float", firwin(50, 0.5, window="blackman"))
+
+    #impulse response
+    input_ = Stimulus(chip, "input", "float", [1.0] + [0.0 for i in range(1024)])
+    output = Response(chip, "output", "float", 1024)
+    
+    #create a filter component using the C code
+    fir_comp = Component("fir.c")
+
+    #add an instance to the chip
+    fir_inst_1 = fir_comp(
+        chip, 
+        inputs = {
+            "a":input_,
+            "k":kernel,
+        },
+        outputs = {
+            "z":output,
+        },
+        parameters = {
+            "N":len(kernel)-1,
+        },
+    )
+
+    #run the simulation
+    chip.simulation_reset()
+    chip.simulation_run()
+        
+    #plot the result
+    pyplot.semilogy(abs(fft(list(output)))[0:len(output)/2])
+    pyplot.title("Magnitude of Impulse Response")
+    pyplot.xlim(0, 512)
+    pyplot.xlabel("X Sample")
+    pyplot.savefig("../docs/source/examples/images/example_6.png")
+    pyplot.show()
+
 
 The C code includes a simple test routine that calculates the frequency
 spectrum of a 64 point sine wave.

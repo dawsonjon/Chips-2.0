@@ -1,7 +1,7 @@
 
 
 FM Modulation
---------------
+=============
 
 It is often useful in digital hardware to simulate a sin wave numerically. It
 is possible to implements a sinusoidal oscillator, without having to calculate

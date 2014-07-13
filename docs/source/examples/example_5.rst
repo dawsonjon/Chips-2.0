@@ -1,7 +1,7 @@
 
 
 Fast Fourier Transform
-----------------------
+======================
 
 This example builds on the Taylor series example. We assume that the sin and
 cos routines have been placed into a library of math functions math.h, along

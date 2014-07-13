@@ -43,7 +43,7 @@ def generate_docs():
     documentation = """
 
 Calculate Square Root using Newton's Method
--------------------------------------------
+===========================================
 
 In this example, we calculate the sqrt of a number using `Newton's method
 <http://en.wikipedia.org/wiki/Newton's_method#Square_root_of_a_number>`_.

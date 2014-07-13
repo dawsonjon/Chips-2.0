@@ -1,59 +1,79 @@
 
 
-FM Modulation
---------------
+Edge Detection
+==============
 
-It is often useful in digital hardware to simulate a sin wave numerically. It
-is possible to implements a sinusoidal oscillator, without having to calculate
-the value of the sinusoid for each sample. A typical approach to this in
-hardware is to store within a lookup table a series of values, and to sweep
-through those values at a programmable rate. This method relies on a large
-amount of memory, and the memory requirements increase rapidly for high
-resolutions. It is possible to improve the resolution using techniques such as
-interpolation.  
+This simple example shows how a simple 3x3 convolution matrix can be used to
+perform an *edge detect* operation on a grey-scale image. The convolution matrix
+is the "quick mask" matrix presented in `Image Processing in C <http://homepages.inf.ed.ac.uk/rbf/BOOKS/PHILLIPS/cips2ed.pdf>`_ which
+also gives a straight forward introduction to edge detection algorithms.
 
-In this example however, an alternative method is employed,
-trigonometric recurrence allows us to calculate the sin and cosine of a small
-angle just once. From there, subsequent samples can be found using multipliers.
-
+The Python Imaging Library allows real images to be used in the simulation.
 
 .. code-block:: c
 
-    #include <stdio.h>
-    #include <math.h>
+    /*Edge Detection*/
+    /*Jonathan P Dawson 2014-07-06*/
     
-    unsigned frequency_in = input("frequency");
-    unsigned sin_out = output("sin");
-    unsigned cos_out = output("cos");
+    void set_xy(int image[], int x, int y, int pixel){
+        if(x<0) return;
+        if(x>=WIDTH) return;
+        image[x+y*WIDTH] = pixel;
+    }
     
-    void dds(){
-        float sin_x, cos_x, new_sin, new_cos, si, sr, frequency;
-        int i;
+    int get_xy(int image[], int x, int y){
+        if(x<0) return 0;
+        if(x>=WIDTH) return 0;
+        return image[x+y*WIDTH];
+    }
     
-        cos_x = 1.0;
-        sin_x = 0.0;
-        sr = cos(2.0 * M_PI/N);
-        si = sin(2.0 * M_PI/N);
+    void main()
+    {
+    
+        unsigned image_in = input("image_in");
+        unsigned image_out = output("image_out");
+    
+        unsigned image[SIZE];
+        unsigned new_image[SIZE];
+    
+        int x, y, pixel;
     
         while(1){
-            frequency = fget_float(frequency_in);
-            for(i=0; i<frequency; i++){
-                new_cos = cos_x*sr - sin_x*si;
-                new_sin = cos_x*si + sin_x*sr;
-                cos_x = new_cos;
-                sin_x = new_sin;
-            }
-            fput_float(cos_x, sin_out);
-            fput_float(sin_x, cos_out);
-        }
     
+            /* read in image */
+            for(y=0; y<HEIGHT; y++){
+                for(x=0; x<WIDTH; x++){
+                    set_xy(image, x, y, fgetc(image_in));
+                }
+                report(y);
+            }
+    
+            /* apply edge detect */
+            for(y=0; y<HEIGHT; y++){
+                for(x=0; x<WIDTH; x++){
+    
+                    pixel =  get_xy(image, x,   y  ) << 2;
+                    pixel -= get_xy(image, x-1, y+1);
+                    pixel -= get_xy(image, x+1, y-1);
+                    pixel -= get_xy(image, x-1, y-1);
+                    pixel -= get_xy(image, x+1, y+1);
+                    set_xy(new_image, x, y, pixel);
+                }
+                report(y);
+            }
+    
+            /* write out image */
+            for(y=0; y<HEIGHT; y++){
+                for(x=0; x<WIDTH; x++){
+                    fputc(get_xy(new_image, x, y), image_out);
+                }
+                report(y);
+            }
+    
+        }
     }
 
-Conveniently, using this method, both a sin and cosine wave are generated. This
-is useful in complex mixers which require a coherent sin and cosine wave. We
-can control the frequency of the generated wave by stepping through the
-waveform more quickly. If the step rate is received from an input, this can be
-used to achieve frequency modulation.
 
-.. image:: images/example_8.png
+.. image:: images/test.bmp
+.. image:: images/after.bmp
 

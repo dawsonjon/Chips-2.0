@@ -405,7 +405,7 @@ class Stimulus(Input):
     def __init__(self, chip, name, type_, sequence):
         Input.__init__(self, chip, name)
         self.sequence = sequence
-        self.type_ = "float"
+        self.type_ = type_
         self.high = False
        
     def simulation_reset(self):
@@ -417,7 +417,6 @@ class Stimulus(Input):
         """Override the Input data_sorce() method to read data from a sequence"""
 
         if self.type_ == "int":
-
             return next(self.iterator)
 
         elif self.type_ == "long":
@@ -450,7 +449,7 @@ class Stimulus(Input):
 
         """Make a Stimulus work as a sequence"""
 
-        return len(self.sequence)
+        return iter(self.sequence)
 
     def __len__(self):
 
