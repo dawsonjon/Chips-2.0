@@ -3219,38 +3219,6 @@ int main(){
 """
 )
 
-test("array passing 2",
-"""
-
-int test(int a[]){
-    assert(a[0] == 0);
-    assert(a[1] == 1);
-    assert(a[2] == 2);
-    assert(a[3] == 3);
-    a[0] = 4;
-    a[1] = 5;
-    a[2] = 6;
-    a[3] = 7;
-    return 0;
-}
-
-int main(){
-  int a[4];
-  int b[4];
-  a[0] = 0;
-  a[1] = 1;
-  a[2] = 2;
-  a[3] = 3;
-  b = a;
-  test(b);
-  assert(a[0] == 4);
-  assert(a[1] == 5);
-  assert(a[2] == 6);
-  assert(a[3] == 7);
-  return 0;
-}"""
-)
-
 test("struct 1",
 """
 struct blah {int a; int b; int c;};

@@ -1063,21 +1063,21 @@ class Parser:
                     actual = self.to_int(actual)
 
                 #types should match
-                elif required.type_() != required.type_():
+                elif required.type_() != actual.type_():
                     self.tokens.error(
                         "type mismatch in assignment expected: %s actual: %s"%(
                             required.type_(),
                             actual.type_()))
 
                 #size should match for non-arrays
-                elif required.size() != actual.size() and not required.type_().endswith("[]"):
+                elif not required.type_().endswith("[]") and required.size() != actual.size():
                     self.tokens.error(
                         "size mismatch in function argument expected: %s actual: %s"%(
                             required.size(),
                             actual.size()))
 
-                #element size should match for non-arrays
-                elif required.element_size != actual.element_size and required.type_().endswith("[]"):
+                #element size should match for arrays
+                elif required.type_().endswith("[]") and required.element_size != actual.element_size:
                     self.tokens.error(
                         "element size mismatch in function argument expected: %s actual: %s"%(
                             required.element_size(),
@@ -1089,94 +1089,109 @@ class Parser:
         return function_call
 
     def parse_number(self):
-
         token = self.tokens.get()
         type_ = "int"
         size = 4
         signed = True
-
-        #Parser character literals
-        #
         if token.startswith("'"):
-            try:
-                token = eval(token)
-                value = ord(token)
-            except SyntaxError:
-                self.tokens.error("%s is not a character literal"%token)
-
-        #Parser string literals
-        #
+            return self.parse_character_literal(token)
         elif token.startswith('"'):
-            try:
-                initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
-                size = len(initializer)
-                initialize_memory = self.initialize_memory
-                declaration = ArrayDeclaration(
-                    size = size,
-                    type_ = "int[]",
-                    element_type = "int",
-                    element_size = 4,
-                    element_signed = False,
-                    initializer = initializer
-                )
-                return declaration.instance(self.function)
-            except SyntaxError:
-                self.tokens.error("%s is not a character literal"%token)
-
-        #Parse floating point literals
-        #
+            return self.parse_string_literal(token)
         elif "." in token:
-            try:
-                if "F" in token.upper():
-                    type_ = "float"
-                    signed = True
-                    size = 4
-                    token = token.upper().replace("F", "")
-                    token = token.upper().replace("L", "")
-                    value = float(eval(token))
-
-                    try:
-                        byte_value = struct.pack(">f", value)
-                    except OverflowError:
-                        self.tokens.error("value too large")
-                else:
-                    type_ = "float"
-                    signed = True
-                    size = 8
-                    token = token.upper().replace("L", "")
-                    value = float(eval(token))
-
-                    try:
-                        byte_value = struct.pack(">d", value)
-                    except OverflowError:
-                        self.tokens.error("value too large")
-            except SyntaxError:
-                self.tokens.error("%s is not a floating point literal"%token)
-
-        #Parser integer literals
-        #
+            return self.parse_floating_point_literal(token)
         else:
-            try:
-                if "U" in token.upper():
-                    signed = False
-                if "L" in token.upper():
-                    size = 8
-                token = token.upper().replace("U", "")
-                value = int(eval(token))
-                if signed:
-                    if value > 2**((size * 8)-1) - 1:
-                        self.tokens.error("value too large")
-                    if value < -(2**((size * 8)-1)):
-                        self.tokens.error("value too small")
-                else:
-                    if value > 2**(size * 8) - 1:
-                        self.tokens.error("value too large")
-                    if value < 0:
-                        self.tokens.error("value too small")
-            except SyntaxError:
-                self.tokens.error("%s is not an integer literal"%token)
+            return self.parse_integer_literal(token)
 
-        return Constant(value, type_, size, signed)
+    def parse_character_literal(self, token):
+        type_ = "int"
+        size = 4
+        signed = True
+        try:
+            token = eval(token)
+            value = ord(token)
+            return Constant(value, type_, size, signed)
+        except SyntaxError:
+            self.tokens.error("%s is not a character literal"%token)
+
+    def parse_string_literal(self, token): 
+        type_ = "int"
+        size = 4
+        signed = True
+        try:
+            initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
+            size = len(initializer)
+            initialize_memory = self.initialize_memory
+            declaration = ArrayDeclaration(
+                size = size,
+                type_ = "int[]",
+                element_type = "int",
+                element_size = 4,
+                element_signed = False,
+                initializer = initializer
+            )
+            instance = declaration.instance(self.function)
+            #since we don't return instance, it doesn't get generated.
+            #treat as a global
+            instance.local = False
+            self.function.referenced_globals.append(instance)
+            return instance.reference()
+        except SyntaxError:
+            self.tokens.error("%s is not a character literal"%token)
+
+    def parse_floating_point_literal(self, token): 
+        type_ = "int"
+        size = 4
+        signed = True
+        try:
+            if "F" in token.upper():
+                type_ = "float"
+                signed = True
+                size = 4
+                token = token.upper().replace("F", "")
+                token = token.upper().replace("L", "")
+                value = float(eval(token))
+                try:
+                    byte_value = struct.pack(">f", value)
+                except OverflowError:
+                    self.tokens.error("value too large")
+            else:
+                type_ = "float"
+                signed = True
+                size = 8
+                token = token.upper().replace("L", "")
+                value = float(eval(token))
+                try:
+                    byte_value = struct.pack(">d", value)
+                except OverflowError:
+                    self.tokens.error("value too large")
+            return Constant(value, type_, size, signed)
+        except SyntaxError:
+            self.tokens.error("%s is not a floating point literal"%token)
+
+    def parse_integer_literal(self, token): 
+        type_ = "int"
+        size = 4
+        signed = True
+        try:
+            if "U" in token.upper():
+                signed = False
+            if "L" in token.upper():
+                size = 8
+            token = token.upper().replace("U", "")
+            value = int(eval(token))
+            if signed:
+                if value > 2**((size * 8)-1) - 1:
+                    self.tokens.error("value too large")
+                if value < -(2**((size * 8)-1)):
+                    self.tokens.error("value too small")
+            else:
+                if value > 2**(size * 8) - 1:
+                    self.tokens.error("value too large")
+                if value < 0:
+                    self.tokens.error("value too small")
+            return Constant(value, type_, size, signed)
+        except SyntaxError:
+            self.tokens.error("%s is not an integer literal"%token)
 
     def parse_variable(self, name):
         if name not in self.scope:
@@ -1188,13 +1203,13 @@ class Parser:
 
     def parse_variable_array_struct(self, instance):
 
-        #Store inside the current function any globals that get referenced
-        #if a global isn't referenced it doesn't get compiled.
+        #store inside the current function any globals that get referenced
+        #if a global isn't referenced it doesn't get compiled
         #
         if not instance.local:
             self.function.referenced_globals.append(instance)
 
-        #Parse simple numeric variables
+        #parse simple numeric variables
         #
         if instance.type_() in numeric_types:
             if not hasattr(instance, "reference"):
@@ -1202,7 +1217,7 @@ class Parser:
                     "Not an expression")
             return Variable(instance)
 
-        #Parse Arrays
+        #parse arrays
         #
         elif instance.type_().endswith("[]"):
             array = instance.reference()
@@ -1217,13 +1232,15 @@ class Parser:
             else:
                 return array
 
-        #Parse structs
+        #parse structs
         #
         elif instance.type_().startswith("struct"):
             if self.tokens.peek() == ".":
                 self.tokens.expect(".")
                 member = self.tokens.get()
-                return self.parse_variable_array_struct(instance.members[member])
+                return self.parse_variable_array_struct(
+                    instance.members[member],
+                )
             else:
                 return Struct(instance)
 
@@ -1237,7 +1254,8 @@ class Parser:
         elif is_int(expression):
             return LongToDouble(IntToLong(expression))
         else:
-            self.tokens.error("cannot convert expression with type %s to double"%expression.type_())
+            self.tokens.error(
+                "cannot convert expression with type %s to double"%expression.type_())
 
     def to_float(self, expression):
         if is_double(expression):
