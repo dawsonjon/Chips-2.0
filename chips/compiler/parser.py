@@ -13,13 +13,20 @@ types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int"
 numeric_types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int"]
 storage_specifiers = ["const"]
 
+class GlobalScope:
+    def __init__(self):
+        self.offset = 0
+        self.is_global = True
+
+
 class Parser:
 
     """Turn the C input file into a tree of expressions and statements."""
 
     def __init__(self, input_file, reuse, initialize_memory, parameters):
         self.scope = {}
-        self.function = None
+        self.global_scope = GlobalScope()
+        self.function = self.global_scope
         self.loop = None
         self.tokens = Tokens(input_file, parameters)
         self.allocator = Allocator(reuse)
@@ -40,6 +47,8 @@ class Parser:
             else:
                 process.functions.append(self.parse_function())
         process.main = self.main
+        process.scope = self.scope
+        self.main.referenced = True
         return process
 
     def parse_type_specifier(self):
@@ -93,7 +102,7 @@ class Parser:
 
         if "void" in type_specifiers:
             type_ = "void"
-            size = 4
+            size = 0
             signed = False
 
 
@@ -113,31 +122,25 @@ class Parser:
                     self.tokens.expect("[")
                     self.tokens.expect("]")
                     declaration = ArrayDeclaration(
-                        self.allocator,
-                        4,
-                        type_+"[]",
-                        type_,
-                        size,
-                        signed, 
-                        None,
-                        self.initialize_memory)
+                        size = 4,
+                        type_ = type_+"[]",
+                        element_type = type_,
+                        element_size = size,
+                        element_signed = signed,
+                    )
                 else:
                     declaration = VariableDeclaration(
-                        self.allocator,
                         None,
                         argument,
                         type_,
                         size,
                         signed,
                         const)
-        instance = declaration.instance()
+        instance = declaration.argument_instance(self.function)
         self.scope[argument] = instance
         return instance.reference()
 
     def parse_function(self):
-        function = Function()
-        function.allocator = self.allocator
-        stored_scope = copy(self.scope)
         type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
@@ -147,33 +150,9 @@ class Parser:
 
         #otherwise continue parsing a function
         self.tokens.expect("(")
-        function.name = name
-        function.type_ = type_
-        function.size = size
-        function.signed = signed
-
-        function.return_address = self.allocator.new(4, 
-            function.name+" return address")
-
-        if type_ != "void":
-
-            if type_ in self.structs:
-                declaration = self.scope[type_]
-            else:
-                if self.tokens.peek() == "[":
-                    self.tokens.error(
-                        "Functions cannot return arrays")
-                else:
-                    declaration = VariableDeclaration(
-                        self.allocator,
-                        None,
-                        function.name+" return value",
-                        type_,
-                        size,
-                        signed,
-                        const)
-
-            function.return_value = declaration.instance().reference()
+        stored_scope = copy(self.scope)
+        function = Function(name, type_, size, signed)
+        self.function = function
 
         function.arguments = []
         while self.tokens.peek() != ")":
@@ -184,13 +163,15 @@ class Parser:
                 break
 
         self.tokens.expect(")")
-        self.function = function
         function.statement = self.parse_statement()
+
         if type_ != "void" and not hasattr(function, "return_statement"):
-            self.tokens.error("Function must have a return statement")
-        self.function = None
+            self.tokens.error("Non-void function must have a return statement")
+
+        self.function = self.global_scope
         self.scope = stored_scope
         self.scope[function.name] = function
+
         #main thread is last function
         self.main = function
         return function
@@ -212,30 +193,29 @@ class Parser:
     def parse_return(self):
         return_ = Return()
         return_.function = self.function
-        return_.allocator = self.allocator
         self.function.return_statement = return_
         self.tokens.expect("return")
 
-        if hasattr(self.function, "return_value"):
+        if self.function.type_() != "void":
             expression = self.parse_expression()
 
-            if self.function.type_ == "float" and self.function.size == 8:
+            if self.function.type_() == "float" and self.function.size() == 8:
                 expression = self.to_double(expression)
-            elif self.function.type_ == "float" and self.function.size == 4:
+            elif self.function.type_() == "float" and self.function.size() == 4:
                 expression = self.to_float(expression)
-            elif self.function.type_ == "int" and self.function.size == 8:
+            elif self.function.type_() == "int" and self.function.size() == 8:
                 expression = self.to_long(expression)
-            elif self.function.type_ == "int" and self.function.size == 4:
+            elif self.function.type_() == "int" and self.function.size() == 4:
                 expression = self.to_int(expression)
-            elif self.function.type_ != expression.type_():
+            elif self.function.type_() != expression.type_():
                 self.tokens.error(
                     "type mismatch in return statement expected: %s actual: %s"%(
-                        self.function.type_,
+                        self.function.type_(),
                         expression.type_()))
-            elif self.function.size != expression.size():
+            elif self.function.size() != expression.size():
                 self.tokens.error(
                     "type mismatch in return statement expected: %s actual: %s"%(
-                        self.function.size,
+                        self.function.size(),
                         expression.size()))
 
             return_.expression = expression
@@ -245,7 +225,6 @@ class Parser:
 
     def parse_assert(self):
         assert_ = Assert()
-        assert_.allocator = self.allocator
         self.tokens.expect("assert")
         self.tokens.expect("(")
         assert_.expression = self.parse_expression()
@@ -257,7 +236,6 @@ class Parser:
 
     def parse_report(self):
         report_ = Report()
-        report_.allocator = self.allocator
         self.tokens.expect("report")
         self.tokens.expect("(")
         report_.expression = self.parse_expression()
@@ -269,7 +247,6 @@ class Parser:
 
     def parse_wait_clocks(self):
         wait_clocks = WaitClocks()
-        wait_clocks.allocator = self.allocator
         self.tokens.expect("wait_clocks")
         self.tokens.expect("(")
         wait_clocks.expression = self.parse_expression()
@@ -315,7 +292,7 @@ class Parser:
             return expression
 
     def parse_discard(self):
-        return DiscardExpression(self.parse_expression(), self.allocator)
+        return DiscardExpression(self.parse_expression())
 
     def parse_assignment(self):
         assignment_operators = [
@@ -356,13 +333,15 @@ class Parser:
                         lvalue.size(),
                         expression.size()))
 
-            return Assignment(lvalue, expression, self.allocator)
+            if not hasattr(lvalue, "copy"):
+                self.tokens.error("lvalue is not modifiable in assignment")
+
+            return Assignment(lvalue, expression)
         else:
             return lvalue
 
     def parse_if(self):
         if_ = If()
-        if_.allocator = self.allocator
         self.tokens.expect("if")
         self.tokens.expect("(")
         if_.expression = self.parse_expression()
@@ -393,7 +372,6 @@ class Parser:
         statement = self.parse_statement()
         self.loop = stored_loop
         switch.expression = expression
-        switch.allocator = self.allocator
         switch.statement = statement
         return switch
 
@@ -443,7 +421,6 @@ class Parser:
         loop.statement = if_
         break_ = Break()
         break_.loop = loop
-        if_.allocator = self.allocator
         if expression.type_() not in ["int"]:
             self.tokens.error(
                 "while statement conditional must be an integer like expression")
@@ -455,7 +432,6 @@ class Parser:
 
     def parse_for(self):
         for_ = For()
-        for_.allocator = self.allocator
         self.tokens.expect("for")
         self.tokens.expect("(")
         if self.tokens.peek() != ";":
@@ -533,7 +509,7 @@ class Parser:
         struct_name = self.tokens.get()
         name = self.tokens.get()
         self.tokens.expect(";")
-        instance = self.scope[struct_name].instance()
+        instance = self.scope[struct_name].instance(self.function)
         self.scope[name] = instance
         return instance
 
@@ -546,7 +522,7 @@ class Parser:
                 size, 
                 signed, 
                 const,
-                name).instance()
+                name).instance(self.function)
 
             self.scope[name] = instance
             instances.append(instance)
@@ -569,7 +545,7 @@ class Parser:
                 size, 
                 signed, 
                 const,
-                name).instance()
+                name).instance(self.function)
 
             self.scope[name] = instance
             instances.append(instance)
@@ -612,16 +588,14 @@ class Parser:
                         "array size must be specified if not initialized")
 
                 array_type=type_+"[]"
-                initialize_memory = self.initialize_memory
                 declaration = ArrayDeclaration(
-                    self.allocator,
-                    array_size,
-                    array_type,
-                    type_,
-                    size,
-                    signed,
-                    initializer,
-                    self.initialize_memory)
+                    size = array_size,
+                    type_ = array_type,
+                    element_type = type_,
+                    element_size = size,
+                    element_signed = signed,
+                    initializer = initializer,
+                )
 
             #simple variable declaration
             else:
@@ -652,7 +626,6 @@ class Parser:
                             initializer.size()))
 
                 declaration = VariableDeclaration(
-                    self.allocator,
                     initializer,
                     name,
                     type_,
@@ -743,6 +716,7 @@ class Parser:
         if signature in functions:
             function = self.scope[functions[signature]]
             function_call = FunctionCall(function)
+            self.function.called_functions.append(function)
             function_call.arguments = [binary_expression.left, binary_expression.right]
             return function_call
         else:
@@ -907,7 +881,6 @@ class Parser:
             expression = PostIncrement(
                 operator[:-1],
                 expression,
-                self.allocator
             )
         return expression
 
@@ -1003,6 +976,8 @@ class Parser:
         return Output(handle, expression)
 
     def parse_function_call(self, name):
+
+        #First filter out built-in "functions"
         if name == "input":
             return self.parse_input()
         if name == "output":
@@ -1027,8 +1002,12 @@ class Parser:
             return self.parse_bits_to_float()
         if name not in self.scope:
             self.tokens.error("Unknown function: %s"%name)
+
+        #Pass the function call
+        #
         function = self.scope[name]
         function_call = FunctionCall(function)
+        self.function.called_functions.append(function)
         function_call.arguments = []
         self.tokens.expect("(")
         while self.tokens.peek() != ")":
@@ -1039,10 +1018,13 @@ class Parser:
                 break
         self.tokens.expect(")")
 
-
+        #Check that the thing being called is a function
+        #
         if not hasattr(function_call.function, "arguments"):
             self.tokens.error("%s is not a function and cannot be called"%name)
 
+        #Check that the correct number of arguments has been given
+        #
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
@@ -1050,11 +1032,17 @@ class Parser:
                 name,
                 len(function_call.function.arguments),
                 len(function_call.arguments)))
+
+        #Check that each argument is of a suitable type for the function being called
+        #Some numerical types may be promoted during function calls
+        #
         required_arguments = function_call.function.arguments
         actual_arguments = function_call.arguments
         corrected_arguments = []
         for required, actual in zip(required_arguments, actual_arguments):
             if not compatible(required, actual):
+
+                #attempt to promote numeric types
                 if required.type_() == "float" and required.size() == 8:
                     actual = self.to_double(actual)
                 elif required.type_() == "float" and required.size() == 4:
@@ -1063,19 +1051,27 @@ class Parser:
                     actual = self.to_long(actual)
                 elif required.type_() == "int" and required.size() == 4:
                     actual = self.to_int(actual)
-                elif required.type_() != required.type_():
 
+                #types should match
+                elif required.type_() != required.type_():
                     self.tokens.error(
                         "type mismatch in assignment expected: %s actual: %s"%(
                             required.type_(),
                             actual.type_()))
 
-                elif required.argument_size() != actual.argument_size():
-
+                #size should match for non-arrays
+                elif required.size() != actual.size() and not required.type_().endswith("[]"):
                     self.tokens.error(
                         "size mismatch in function argument expected: %s actual: %s"%(
                             required.size(),
                             actual.size()))
+
+                #element size should match for non-arrays
+                elif required.element_size != actual.element_size and required.type_().endswith("[]"):
+                    self.tokens.error(
+                        "element size mismatch in function argument expected: %s actual: %s"%(
+                            required.element_size(),
+                            actual.element_size()))
 
             corrected_arguments.append(actual)
         function_call.arguments = corrected_arguments
@@ -1083,35 +1079,43 @@ class Parser:
         return function_call
 
     def parse_number(self):
+
         token = self.tokens.get()
         type_ = "int"
         size = 4
         signed = True
+
+        #Parser character literals
+        #
         if token.startswith("'"):
             try:
                 token = eval(token)
                 value = ord(token)
             except SyntaxError:
                 self.tokens.error("%s is not a character literal"%token)
+
+        #Parser string literals
+        #
         elif token.startswith('"'):
             try:
                 initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
                 size = len(initializer)
                 initialize_memory = self.initialize_memory
                 declaration = ArrayDeclaration(
-                    self.allocator,
-                    size,
-                    "int[]",
-                    "int",
-                    4,
-                    False,
-                    initializer,
-                    self.initialize_memory)
-                return ConstArray(declaration.instance())
+                    size = size,
+                    type_ = "int[]",
+                    element_type = "int",
+                    element_size = 4,
+                    element_signed = False,
+                    initializer = initializer
+                )
+                return declaration.instance(self.function)
             except SyntaxError:
                 self.tokens.error("%s is not a character literal"%token)
+
+        #Parse floating point literals
+        #
         elif "." in token:
-            #float literal
             try:
                 if "F" in token.upper():
                     type_ = "float"
@@ -1136,11 +1140,12 @@ class Parser:
                         byte_value = struct.pack(">d", value)
                     except OverflowError:
                         self.tokens.error("value too large")
-
             except SyntaxError:
                 self.tokens.error("%s is not a floating point literal"%token)
+
+        #Parser integer literals
+        #
         else:
-            #integer literal
             try:
                 if "U" in token.upper():
                     signed = False
@@ -1148,7 +1153,6 @@ class Parser:
                     size = 8
                 token = token.upper().replace("U", "")
                 value = int(eval(token))
-
                 if signed:
                     if value > 2**((size * 8)-1) - 1:
                         self.tokens.error("value too large")
@@ -1159,7 +1163,6 @@ class Parser:
                         self.tokens.error("value too large")
                     if value < 0:
                         self.tokens.error("value too small")
-
             except SyntaxError:
                 self.tokens.error("%s is not an integer literal"%token)
 
@@ -1169,9 +1172,15 @@ class Parser:
         if name not in self.scope:
             self.tokens.error("Unknown variable: %s"%name)
         instance = self.scope[name]
+        if not hasattr(instance, "local"):
+                self.tokens.error("%s does not name an object"%name)
         return self.parse_variable_array_struct(instance)
 
     def parse_variable_array_struct(self, instance):
+
+        if not instance.local:
+            self.function.referenced_globals.append(instance)
+
         if instance.type_() in numeric_types:
 
             if not hasattr(instance, "reference"):
@@ -1181,6 +1190,7 @@ class Parser:
 
             return Variable(instance)
         elif instance.type_().endswith("[]"):
+            array = Array(instance)
             if self.tokens.peek() == "[":
                 self.tokens.expect("[")
                 index_expression = self.parse_expression()
@@ -1190,15 +1200,14 @@ class Parser:
                     self.tokens.error(
                         "Array indices must be an integer like expression")
 
-                return ArrayIndex(instance, index_expression)
+                return ArrayIndex(array, index_expression)
             else:
-                return Array(instance)
+                return array
         elif instance.type_().startswith("struct"):
             if self.tokens.peek() == ".":
                 self.tokens.expect(".")
                 member = self.tokens.get()
-                instance = instance.members[member]
-                return self.parse_variable_array_struct(instance)
+                return self.parse_variable_array_struct(instance.members[member])
             else:
                 return Struct(instance)
 

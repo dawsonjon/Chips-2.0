@@ -49,40 +49,92 @@ def bits_to_double(bits):
 class Process:
 
     def generate(self):
+
+        called_functions = []
+        referenced_globals = []
+        def find_functions(function):
+            if function not in called_functions:
+                called_functions.append(function)
+                for global_object in function.referenced_globals:
+                    if global_object not in referenced_globals:
+                        referenced_globals.append(global_object)
+            for i in function.called_functions:
+                find_functions(i)
+        find_functions(self.main)
+
         instructions = []
 
-        #generate declarations first
-        for declaration in self.functions:
-            if hasattr(declaration, "declarations"):
-                instructions.extend(declaration.generate())
+        #reserve stack space for global objects and function return values
+        global_size = sum([i.size() for i in called_functions + referenced_globals])
+        if global_size:
+            instructions.append({
+                "op"   :"new",
+                "literal":global_size,
+            })
+        offset = 0
+        for global_object in referenced_globals + called_functions:
+            instructions.extend(global_object.initialise(offset))
+            offset += global_object.size()//4
 
-        instructions.append(
-            {"op"   :"jmp_and_link",
-             "dest" :self.main.return_address,
-             "label":"function_%s"%id(self.main)})
+        #start with a call to main
+        instructions.append({
+            "op"   :"prologue",
+        })
+        instructions.append({
+            "op"   :"call",
+            "label":"function_%s"%id(self.main)
+        })
 
+        #then stop
         instructions.append(
             {"op":"stop"})
 
-
         #then generate functions. This will ensure that memory has been
         #reserved for globals before functions are compiled.
-        for function in self.functions:
-            if not hasattr(function, "declarations"):
-                instructions.extend(function.generate())
+        for function in called_functions:
+            instructions.extend(function.generate())
+
         return instructions
 
 
 class Function:
 
+    def __init__(self, name, type_, size, signed):
+        self.offset = 0
+        self.name = name
+        self._type_ = type_
+        self._size = size
+        self._signed = signed
+        self.called_functions = []
+        self.referenced_globals = []
+
     def generate(self):
         instructions = []
-        instructions.append({"op":"label", "label":"function_%s"%id(self)})
+        instructions.append({
+            "op":"label", 
+            "label":"function_%s"%id(self),
+        })
+        instructions.append({
+            "op"   :"new",
+            "literal":self.offset,
+        })
         instructions.extend(self.statement.generate())
-        if not hasattr(self, "return_value"):
-            instructions.append({"op":"jmp_to_reg", "src":self.return_address})
-        self.allocator.freeze()
+        if not hasattr(self, "return_statement"):
+            instructions.append({"op":"return"})
         return instructions
+
+    def initialise(self, offset):
+        self.return_pointer = offset
+        return []
+
+    def size(self):
+        return self._size
+
+    def type_(self):
+        return self._type_
+
+    def signed(self):
+        return self._signed
 
 
 class Break:
@@ -100,15 +152,17 @@ class Continue:
 class Assert:
 
     def generate(self):
-        result = self.allocator.new(self.expression.size())
-        instructions = self.expression.generate(result, self.allocator)
-        self.allocator.free(result)
+        instructions = self.expression.generate()
 
-        instructions.append(
-            {"op":"assert", 
-             "src":result, 
-             "line":self.line, 
-             "file":self.filename})
+        instructions.append({
+            "op":"pop_a_lo",
+        })
+
+        instructions.append({
+            "op":"assert",
+            "line":self.line,
+            "file":self.filename,
+        })
 
         return instructions
 
@@ -116,21 +170,18 @@ class Assert:
 class Return:
 
     def generate(self):
+        instructions = []
         if hasattr(self, "expression"):
-
-            result = self.allocator.new(self.function.size)
-            instructions=self.function.return_value.copy(
-                self.expression, 
-                result, 
-                self.allocator)
-            self.allocator.free(result)
-
-        else:
-            instructions = []
-
-        instructions.append(
-            {"op":"jmp_to_reg", 
-             "src":self.function.return_address})
+            instructions.extend(self.expression.generate())
+            instructions.append({
+                "op":"global",
+                "literal":self.function.return_pointer,
+            })
+            instructions.append({
+                "op":"pop",
+                "literal":self.function.size()//4,
+            })
+        instructions.append({"op":"return"})
 
         return instructions
 
@@ -138,52 +189,59 @@ class Return:
 class Report:
 
     def generate(self):
-        result = self.allocator.new(self.expression.size())
-        instructions = self.expression.generate(result, self.allocator)
-        self.allocator.free(result)
+        instructions = self.expression.generate()
 
         if self.expression.size() == 4:
+            instructions.append({
+                "op":"pop_a_lo",
+            })
             if self.expression.type_() == "float":
-                instructions.append(
-                    {"op":"float_report",
-                     "src":result,
-                     "line":self.line,
-                     "file":self.filename})
+                instructions.append({
+                    "op":"float_report",
+                    "line":self.line,
+                    "file":self.filename
+                })
             else:
                 if self.expression.signed():
-                            instructions.append(
-                            {"op":"unsigned_report",
-                             "src":result,
-                             "line":self.line,
-                             "file":self.filename,})
+                    instructions.append({
+                        "op":"report",
+                        "line":self.line,
+                        "file":self.filename,
+                    })
                 else:
-                            instructions.append(
-                            {"op":"report",
-                             "src":result,
-                             "line":self.line,
-                             "file":self.filename,})
+                    instructions.append({
+                        "op":"unsigned_report",
+                        "line":self.line,
+                        "file":self.filename,
+                    })
 
         elif self.expression.size() == 8:
 
+            instructions.append({
+                "op":"pop_a_hi",
+            })
+            instructions.append({
+                "op":"pop_a_lo",
+            })
             if self.expression.type_() == "float":
-                instructions.append(
-                    {"op":"long_float_report",
-                     "src":result,
-                     "line":self.line,
-                     "file":self.filename})
+                instructions.append({
+                    "op":"long_float_report",
+                    "line":self.line,
+                    "file":self.filename,
+                })
             else:
                 if self.expression.signed():
-                            instructions.append(
-                            {"op":"long_report",
-                             "src":result,
-                             "line":self.line,
-                             "file":self.filename,})
+                    instructions.append({
+                        "op":"long_report",
+                        "line":self.line,
+                        "file":self.filename,
+                    })
                 else:
-                            instructions.append(
-                            {"op":"long_unsigned_report",
-                             "src":result,
-                             "line":self.line,
-                             "file":self.filename,})
+                    instructions.append({
+                        "op":"long_unsigned_report",
+                        "line":self.line,
+                        "file":self.filename,
+                    })
 
         return instructions
 
@@ -191,19 +249,15 @@ class Report:
 class WaitClocks:
 
     def generate(self):
-        result = self.allocator.new(self.expression.size())
-        instructions = self.expression.generate(result, self.allocator)
-        self.allocator.free(result)
-        instructions.append({"op":"wait_clocks", "src":result})
+        instructions = self.expression.generate()
+        instructions.append({"op":"wait_clocks"})
         return instructions
 
 
 class If:
 
     def generate(self):
-
         try:
-
             if self.expression.value():
                 return self.true_statement.generate()
             else:
@@ -213,24 +267,16 @@ class If:
                     return []
 
         except NotConstant:
-
-            result = self.allocator.new(self.expression.size())
             instructions = []
-            instructions.extend(self.expression.generate(result, self.allocator))
-
+            instructions.extend(self.expression.generate())
             if self.expression.size() == 8:
-                instructions.append(
-                    {"op"    : "or",
-                     "src"   : result,
-                     "srcb"   : result + 1,
-                     "dest" : result})
-
-            instructions.append(
-                {"op"    : "jmp_if_false",
-                 "src"   : result,
-                 "label" : "else_%s"%id(self)})
-
-            self.allocator.free(result)
+                instructions.append({
+                    "op"    : "or",
+                })
+            instructions.append({
+                "op"    : "jmp_if_false",
+                "label" : "else_%s"%id(self)
+            })
             instructions.extend(self.true_statement.generate())
             instructions.append({"op":"goto", "label":"end_%s"%id(self)})
             instructions.append({"op":"label", "label":"else_%s"%id(self)})
@@ -243,61 +289,37 @@ class If:
 class Switch:
 
     def generate(self):
-        result = self.allocator.new(self.expression.size())
-        test = self.allocator.new(self.expression.size())
-        instructions = self.expression.generate(result, self.allocator)
+        instructions = self.expression.generate()
         for value, case in self.cases.iteritems():
 
-            instructions.append({
-                "op":"literal", 
-                "dest":test, 
-                "literal":value & 0xffffffff,
-                 })
-
-            instructions.append({
-                "op":"equal", 
-                "dest":test, 
-                "src":result, 
-                "srcb":test
-                })
-
-            if self.expression.size() == 8:
-
+            if self.expression.size() == 4:
                 instructions.append({
-                    "op":"literal", 
-                    "dest":test + 1, 
+                    "op":"push_literal",
+                    "literal":value & 0xffffffff,
+                })
+                instructions.append({
+                    "op":"equal",
+                })
+            else:
+                instructions.append({
+                    "op":"push_long_literal",
                     "literal":(value >> 32) & 0xffffffff
-                    })
-
-                instructions.append({
-                    "op":"equal", 
-                    "dest":test + 1, 
-                    "src":result + 1, 
-                    "srcb":test + 1
-                    })
-
-                instructions.append({
-                    "op":"and", 
-                    "dest":test, 
-                    "src": test, 
-                    "srcb": test + 1
-                    })
-
-            instructions.append({
-                "op":"jmp_if_true", 
-                "src":test, 
-                "label":"case_%s"%id(case)
                 })
+                instructions.append({
+                    "op":"long_equal",
+                })
+            instructions.append({
+                "op":"jmp_if_true",
+                "label":"case_%s"%id(case)
+            })
 
         if hasattr(self, "default"):
 
             instructions.append({
-                "op":"goto", 
+                "op":"goto",
                 "label":"case_%s"%id(self.default)
-                })
+            })
 
-        self.allocator.free(result)
-        self.allocator.free(test)
         instructions.extend(self.statement.generate())
         instructions.append({"op":"label", "label":"break_%s"%id(self)})
         return instructions
@@ -333,26 +355,19 @@ class For:
             instructions.extend(self.statement1.generate())
         instructions.append({"op":"label", "label":"begin_%s"%id(self)})
         if hasattr(self, "expression"):
-            result = self.allocator.new(self.expression.size())
 
-            instructions.extend(
-                self.expression.generate(result, self.allocator))
+            instructions.extend( self.expression.generate())
 
             if self.expression.size() == 8:
                 instructions.append({
                     "op"    : "or",
-                    "src"   : result,
-                    "srcb"   : result + 1,
-                    "dest" : result
                     })
 
             instructions.append({
-                "op":"jmp_if_false", 
-                "src":result, 
+                "op":"jmp_if_false",
                 "label":"end_%s"%id(self)
                 })
 
-            self.allocator.free(result)
         instructions.extend(self.statement3.generate())
         instructions.append({"op":"label", "label":"continue_%s"%id(self)})
         if hasattr(self, "statement2"):
@@ -386,26 +401,35 @@ class CompoundDeclaration:
 
 class VariableDeclaration:
 
-    def __init__(self, allocator, initializer, name, type_, size, signed, const):
+    def __init__(self, initializer, name, type_, size, signed, const):
         self.initializer = initializer
-        self.allocator = allocator
         self._type = type_
         self._size = size
         self._signed = signed
         self._const = const
         self.name = name
 
-    def instance(self):
-        register = self.allocator.new(self.size(), "variable "+self.name)
+    def instance(self, function):
+
+        if hasattr(function, "is_global"):
+            local = False
+        else:
+            local = True
+
+        offset = function.offset
+        function.offset += self.size()//4
 
         return VariableInstance(
-            register, 
-            self.initializer, 
-            self.type_(), 
-            self.size(), 
-            self.signed(), 
-            self.const(),
-            self.allocator)
+            local,
+            offset,
+            self.initializer,
+            self.type_(),
+            self.size(),
+            self.signed(),
+            self.const())
+
+    def argument_instance(self, function):
+        return self.instance(function)
 
     def type_(self):
         return self._type
@@ -422,17 +446,45 @@ class VariableDeclaration:
 
 class VariableInstance:
 
-    def __init__(self, register, initializer, type_, size, signed, const, allocator):
-        self.register = register
+    def __init__(self, local, offset, initializer, type_, size, signed, const):
+        self.local = local
+        self.offset = offset
         self._type = type_
         self.initializer = initializer
         self._size = size
         self._signed = signed
         self._const = const
-        self.allocator = allocator
+
+    def initialise(self, offset):
+        #initialise is used for global variables before program starts
+        assert not self.local
+        self.offset = offset
+        instructions = []
+        instructions.extend(self.initializer.generate())
+        instructions.append({
+            "op":"global",
+            "literal":self.offset,
+        })
+        instructions.append({
+            "op":"pop",
+            "literal":self.size()//4,
+        })
+        return instructions
 
     def generate(self):
-        return self.initializer.generate(self.register, self.allocator)
+        #generate is used for local variables each time a function is called
+        assert self.local
+        instructions = []
+        instructions.extend(self.initializer.generate())
+        instructions.append({
+            "op":"local",
+            "literal":self.offset,
+        })
+        instructions.append({
+            "op":"pop",
+            "literal":self.size()//4,
+        })
+        return instructions
 
     def reference(self):
         return Variable(self)
@@ -443,9 +495,6 @@ class VariableInstance:
     def size(self):
         return self._size
 
-    def argument_size(self):
-        return self.size()
-
     def signed(self):
         return self._signed
 
@@ -455,17 +504,16 @@ class VariableInstance:
 
 class ArrayDeclaration:
 
-    def __init__(self,
-                 allocator,
-                 size,
-                 type_,
-                 element_type,
-                 element_size,
-                 element_signed,
-                 initializer = None,
-                 initialize_memory = False):
+    def __init__(
+        self,
+        size,
+        type_,
+        element_type,
+        element_size,
+        element_signed,
+        initializer = None,
+    ):
 
-        self.allocator = allocator
         self._type = type_
         self._size = size * element_size
         self._signed = False
@@ -473,26 +521,98 @@ class ArrayDeclaration:
         self.element_size = element_size
         self.element_signed = element_signed
         self.initializer = initializer
-        self.initialize_memory = initialize_memory
 
-    def instance(self):
-
-        location = self.allocator.new_array(
-            self.size(), 
-            self.initializer)
-
-        register = self.allocator.new(4, "array")
-
+    def instance(self, function):
+        if hasattr(function, "is_global"):
+            local = False
+        else:
+            local = True
+        offset = function.offset
+        function.offset += self.size()//4
         return ArrayInstance(
-            location,
-            register,
+            local,
+            offset,
             self.size(),
             self.type_(),
             self.initializer,
-            self.initialize_memory,
             self.element_type,
             self.element_size,
-            self.element_signed)
+            self.element_signed,
+        )
+
+    def argument_instance(self, function):
+        local = True
+        offset = function.offset
+        function.offset += 4
+        return ArrayArgumentInstance(
+            offset,
+            4,
+            self.type_(),
+            self.initializer,
+            self.element_type,
+            self.element_size,
+            self.element_signed,
+        )
+
+    def type_(self):
+        return self._type
+
+    def size(self):
+        return self._size
+
+    def signed(self):
+        return self._signed
+
+class ArrayArgumentInstance:
+
+    def __init__(
+        self,
+        offset,
+        size,
+        type_,
+        initializer,
+        element_type,
+        element_size,
+        element_signed,
+    ):
+        self.local = True
+        self.offset = offset
+        self._type = type_
+        self._size = size
+        self._signed = False
+        self.element_type = element_type
+        self.element_size = element_size
+        self.element_signed = element_signed
+        self.initializer = initializer
+
+    def generate(self):
+        assert self.local
+        instructions = []
+        instructions.append({
+            "op":"local",
+            "literal":self.offset
+        })
+        instructions.append({
+            "op":"push",
+            "literal":1
+        })
+        return instructions
+
+    def copy(self):
+        assert self.local
+        instructions = []
+        instructions.append({
+            "op":"local",
+            "literal":self.offset
+        })
+        instructions.append({
+            "op":"pop",
+            "literal":1
+        })
+        return instructions
+
+    def reference(self):
+        return ArrayArgument(self)
 
     def type_(self):
         return self._type
@@ -505,19 +625,19 @@ class ArrayDeclaration:
 
 class ArrayInstance:
 
-    def __init__(self,
-                 location,
-                 register,
-                 size,
-                 type_,
-                 initializer,
-                 initialize_memory,
-                 element_type,
-                 element_size,
-                 element_signed):
-
-        self.register = register
-        self.location = location
+    def __init__(
+        self,
+        local,
+        offset,
+        size,
+        type_,
+        initializer,
+        element_type,
+        element_size,
+        element_signed
+    ):
+        self.local = local
+        self.offset = offset
         self._type = type_
         self._size = size
         self._signed = False
@@ -525,33 +645,45 @@ class ArrayInstance:
         self.element_size = element_size
         self.element_signed = element_signed
         self.initializer = initializer
-        self.initialize_memory = initialize_memory
 
-    def generate(self, result=None):
+    def initialise(self, offset):
+        self.offset = offset
         instructions = []
-        #If initialize memory is true, the memory content will initialised (as at configuration time)
-        #If initialize memory is false, then the memory will need to be filled by the program.
-        if not self.initialize_memory and self.initializer is not None:
-            location=self.location 
+        assert not self.local
+        if self.initializer:
             for value in self.initializer:
-
                 instructions.append({
-                    "op":"memory_write_literal",
-                    "address":location,
-                    "value":value,
-                    "element_size":self.element_size
-                    })
-
-                location += 1
-
-        instructions.append({
-            "op":"literal",
-            "literal":self.location,
-            "dest":self.register
+                    "op":"push_literal",
+                    "literal":value,
+                })
+            instructions.append({
+                "op":"global",
+                "literal":self.offset,
             })
-
+            instructions.append({
+                "op":"pop",
+                "literal":self.size()//4,
+            })
         return instructions
 
+    def generate(self):
+        instructions = []
+        assert self.local
+        if self.initializer:
+            for value in self.initializer:
+                instructions.append({
+                    "op":"push_literal",
+                    "literal":value,
+                })
+            instructions.append({
+                "op":"local",
+                "literal":self.offset,
+            })
+            instructions.append({
+                "op":"pop",
+                "literal":self.size()//4,
+            })
+        return instructions
 
     def reference(self):
         return Array(self)
@@ -561,7 +693,6 @@ class ArrayInstance:
 
     def size(self):
         return self._size
-
 
     def signed(self):
         return self._signed
@@ -576,11 +707,26 @@ class StructDeclaration:
         self._size = sum([i.size() for i in members.values()])
         self._signed = False
 
-    def instance(self):
-        instances = {}
-        for name, declaration in self.members.iteritems():
-            instances[name] = declaration.instance()
-        return StructInstance(instances)
+    def argument_instance(self, function):
+        return self.instance(function)
+
+    def instance(self, function):
+
+        if hasattr(function, "is_global"):
+            local = False
+        else:
+            local = True
+        offset = function.offset
+        self.member_instances = dict([(n, i.instance(function)) for n, i in self.members.iteritems()])
+
+        return StructInstance(
+            local,
+            offset,
+            self.type_(),
+            self.size(),
+            self.signed(),
+            self.member_instances,
+        )
 
     def type_(self):
         return self._type
@@ -594,17 +740,43 @@ class StructDeclaration:
 
 class StructInstance:
 
-    def __init__(self, members):
+    def __init__(self, local, offset, type_, size, signed, members):
         self.members = members
-        self._type = "struct {%s}"%"; ".join(
-            [i.type_() for i in members.values()])
-        self._size = sum([i.size() for i in members.values()])
-        self._signed = False
+        self.local = local
+        self.offset = offset
+        self._type = type_
+        self._size = size
+        self._signed = signed
+
+        self.offsets = {}
+        struct_offset = 0
+        for name, instance in self.members.iteritems():
+            self.offsets[name] = struct_offset
+            struct_offset += instance.size()//4
 
     def generate(self):
         instructions = []
-        for member in self.members.values():
-            instructions.extend(member.generate())
+        #instructions.append({
+            #"op":"new",
+            #"literal":self.size(),
+        #})
+        return instructions
+
+    def initialise(self, offset):
+        #initialise is used for global variables before program starts
+        assert not self.local
+        self.offset = offset
+        instructions = []
+        #no support for initialisers yet
+        #instructions.extend(self.initializer.generate())
+        #instructions.append({
+        #    "op":"global",
+        #    "literal":self.offset,
+        #})
+        #instructions.append({
+        #    "op":"pop",
+        #    "literal":self.size()//4,
+        #})
         return instructions
 
     def reference(self):
@@ -622,14 +794,15 @@ class StructInstance:
 
 class DiscardExpression:
 
-    def __init__(self, expression, allocator):
+    def __init__(self, expression):
         self.expression = expression
-        self.allocator = allocator
 
     def generate(self):
-        result = self.allocator.new(self.expression.size())
-        instructions = self.expression.generate(result, self.allocator)
-        self.allocator.free(result)
+        instructions = self.expression.generate()
+        instructions.append({
+            "op":"free",
+            "literal":self.expression.size()//4,
+        })
         return instructions
 
 
@@ -644,9 +817,6 @@ class Expression:
         return self.type_var
 
     def size(self):
-        return self.size_var
-
-    def argument_size(self):
         return self.size_var
 
     def signed(self):
@@ -711,25 +881,19 @@ class ANDOR(Expression):
         self.op = op
 
         Expression.__init__(
-            self, 
-            "int", 
-            max(left.size(), right.size()), 
+            self,
+            "int",
+            max(left.size(), right.size()),
             left.signed() and right.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.left.generate(result, allocator)
+    def generate(self):
+        instructions = self.left.generate()
         if self.left.size() == 8:
-            temp = allocator.new(4)
-            instructions.append(
-                {"op"    : "or",
-                 "src"   : result,
-                 "srcb"   : result + 1,
-                 "dest" : temp})
-            instructions.append({"op":self.op, "src":temp, "label":"end_%s"%id(self)})
-            allocator.free(temp)
+            instructions.append({"op" : "or"})
+            instructions.append({"op":self.op, "label":"end_%s"%id(self)})
         elif self.left.size() == 4:
-            instructions.append({"op":self.op, "src":result, "label":"end_%s"%id(self)})
-        instructions.extend(self.right.generate(result, allocator))
+            instructions.append({"op":self.op, "label":"end_%s"%id(self)})
+        instructions.extend(self.right.generate())
         instructions.append({"op":"label", "label":"end_%s"%id(self)})
         return instructions
 
@@ -775,45 +939,37 @@ class Binary(Expression):
         type_, size, signed = get_binary_type(left, right, operator)
 
         Expression.__init__(
-            self, 
-            type_, 
-            size, 
+            self,
+            type_,
+            size,
             signed)
 
-    def generate(self, result, allocator):
-        left = allocator.new(self.left.size())
-        instructions = self.left.generate(left, allocator)
-        right = allocator.new(self.right.size())
-        instructions.extend(self.right.generate(right, allocator))
+    def generate(self):
+
+        instructions = []
 
         operation, reverse_operands = select_binary_instruction(
-            self.left.size(), 
-            self.right.size(), 
-            self.type_(), 
-            self.left.signed(), 
-            self.right.signed(), 
+            self.left.size(),
+            self.right.size(),
+            self.type_(),
+            self.left.signed(),
+            self.right.signed(),
             self.operator)
 
         if reverse_operands:
-
+            instructions.extend(self.right.generate())
+            instructions.extend(self.left.generate())
             instructions.append({
                 "op"  :operation,
-                "dest":result,
-                "src" :right,
-                "srcb":left,
-                })
+            })
 
         else:
-
+            instructions.extend(self.left.generate())
+            instructions.extend(self.right.generate())
             instructions.append({
                 "op"  :operation,
-                "dest":result,
-                "src" :left,
-                "srcb":right
-                })
+            })
 
-        allocator.free(right)
-        allocator.free(left)
         return instructions
 
     def value(self):
@@ -821,15 +977,15 @@ class Binary(Expression):
         if self.type_() == "int":
 
             return int(eval("%s %s %s"%(
-                self.left.value(), 
-                self.operator, 
+                self.left.value(),
+                self.operator,
                 self.right.value())))
 
         else:
 
             return float(eval("%s %s %s"%(
-                self.left.value(), 
-                self.operator, 
+                self.left.value(),
+                self.operator,
                 self.right.value())))
 
 
@@ -843,8 +999,8 @@ class DoubleToBits(Expression):
 
         Expression.__init__(self, "int", 8, expression.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
         return instructions
 
     def value(self):
@@ -857,8 +1013,8 @@ class FloatToBits(Expression):
 
         Expression.__init__(self, "int", 4, expression.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
         return instructions
 
     def value(self):
@@ -871,8 +1027,8 @@ class BitsToDouble(Expression):
 
         Expression.__init__(self, "float", 8, expression.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
         return instructions
 
     def value(self):
@@ -885,8 +1041,8 @@ class BitsToFloat(Expression):
 
         Expression.__init__(self, "float", 4, expression.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
         return instructions
 
     def value(self):
@@ -899,24 +1055,19 @@ class IntToLong(Expression):
 
         Expression.__init__( self, "int", 8, expression.signed())
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(4)
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         if self.expression.signed():
-            instructions.extend([{
-                "op"   : "int_to_long", 
-                "dest" : result, 
-                "src"  : new_register
-                }])
+            instructions.append({
+                "op"   : "int_to_long",
+            })
         else:
-            instructions.extend([{
-                "op"   : "unsigned_int_to_long", 
-                "dest" : result, 
-                "src"  : new_register
-                }])
+            instructions.append({
+                "op"   : "push_literal",
+                "literal":0,
+            })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -929,8 +1080,12 @@ class LongToInt(Expression):
 
         Expression.__init__( self, "int", 4, expression.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
+        instructions.append({
+            "op"   : "free",
+            "literal":1,
+        })
         return instructions
 
     def value(self):
@@ -943,17 +1098,19 @@ class IntToFloat(Expression):
 
         Expression.__init__( self, "float", 4, True)
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(self.size())
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
-        instructions.extend([{
-            "op"   : "int_to_float", 
-            "dest" : result, 
-            "src"  : new_register
-            }])
+        instructions.append({
+            "op"   : "pop_a_lo",
+        })
+        instructions.append({
+            "op"   : "int_to_float",
+        })
+        instructions.append({
+            "op"   : "push_a_lo",
+        })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -967,17 +1124,19 @@ class FloatToInt(Expression):
 
         Expression.__init__( self, "int", 4, True)
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(self.size())
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
-        instructions.extend([{
-            "op"   : "float_to_int", 
-            "dest" : result, 
-            "src"  : new_register
-            }])
+        instructions.append({
+            "op"   : "pop_a_lo",
+        })
+        instructions.append({
+            "op"   : "float_to_int",
+        })
+        instructions.append({
+            "op"   : "push_a_lo",
+        })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -990,26 +1149,19 @@ class DoubleToLong(Expression):
 
         Expression.__init__( self, "int", 8, True)
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(8)
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         instructions.append({
-            "op"   : "load_hi", 
-            "src"  : new_register+1, 
-            "srcb" : new_register+1
+            "op"   : "load_hi",
             })
         instructions.append({
-            "op"   : "double_to_long", 
-            "dest" : result, 
-            "src"  : new_register
+            "op"   : "double_to_long",
             })
         instructions.append({
-            "op"   : "result_hi", 
-            "dest" : result+1, 
+            "op"   : "result_hi",
             })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -1022,26 +1174,25 @@ class LongToDouble(Expression):
 
         Expression.__init__( self, "float", 8, True)
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(8)
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         instructions.append({
-            "op"   : "load_hi", 
-            "src"  : new_register+1, 
-            "srcb" : new_register+1
-            })
+            "op"   : "pop_a_hi",
+        })
         instructions.append({
-            "op"   : "long_to_double", 
-            "dest" : result, 
-            "src"  : new_register
-            })
+            "op"   : "pop_a_lo",
+        })
         instructions.append({
-            "op"   : "result_hi", 
-            "dest" : result+1, 
-            })
+            "op"   : "long_to_double",
+        })
+        instructions.append({
+            "op"   : "push_a_lo",
+        })
+        instructions.append({
+            "op"   : "push_a_hi",
+        })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -1054,22 +1205,22 @@ class DoubleToFloat(Expression):
 
         Expression.__init__( self, "float", 4, True)
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(8)
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         instructions.append({
-            "op"   : "load_hi", 
-            "src"  : new_register+1, 
-            "srcb" : new_register+1
-            })
+            "op"   : "pop_a_hi",
+        })
         instructions.append({
-            "op"   : "double_to_float", 
-            "dest" : result, 
-            "src"  : new_register
-            })
+            "op"   : "pop_a_lo",
+        })
+        instructions.append({
+            "op"   : "double_to_float",
+        })
+        instructions.append({
+            "op"   : "push_a_lo",
+        })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -1082,21 +1233,22 @@ class FloatToDouble(Expression):
 
         Expression.__init__( self, "float", 8, True)
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(8)
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         instructions.append({
-            "op"   : "float_to_double", 
-            "dest" : result, 
-            "src"  : new_register
-            })
+            "op"   : "pop_a_lo",
+        })
         instructions.append({
-            "op"   : "result_hi", 
-            "dest" : result+1, 
-            })
+            "op"   : "float_to_double",
+        })
+        instructions.append({
+            "op"   : "push_a_lo",
+        })
+        instructions.append({
+            "op"   : "push_a_hi",
+        })
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -1110,29 +1262,23 @@ class Unary(Expression):
         self.operator = operator
 
         Expression.__init__(
-            self, 
-            expression.type_(), 
-            expression.size(), 
+            self,
+            expression.type_(),
+            expression.size(),
             expression.signed())
 
-    def generate(self, result, allocator):
-        new_register = allocator.new(self.size())
-        instructions = self.expression.generate(new_register, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         if self.size() == 8:
             instructions.extend([{
-                "op":"long_not", 
-                "dest":result, 
-                "src":new_register,
+                "op":"long_not",
                 }])
         else:
             instructions.extend([{
-                "op":"not", 
-                "dest":result, 
-                "src":new_register,
+                "op":"not",
                 }])
 
-        allocator.free(new_register)
         return instructions
 
     def value(self):
@@ -1145,37 +1291,36 @@ class FunctionCall(Expression):
         self.function = function
 
         Expression.__init__(
-            self, 
-            function.type_, 
-            function.size, 
-            function.signed)
+            self,
+            function.type_(),
+            function.size(),
+            function.signed())
 
-    def generate(self, result, allocator):
+    def generate(self):
         instructions = []
 
-        for expression, argument in zip(
-                self.arguments, 
-                self.function.arguments):
+        instructions.append({"op":"prologue"})
 
-            temp_register = allocator.new(expression.argument_size())
+        #place arguments on stack
+        for expression in self.arguments:
+            instructions.extend(expression.generate())
 
-            instructions.extend(
-                argument.copy(expression, temp_register, allocator))
-
-            allocator.free(temp_register)
-
+        #call function
         instructions.append({
-            "op"   :"jmp_and_link",
-            "dest" :self.function.return_address,
+            "op"   :"call",
             "label":"function_%s"%id(self.function)
+        })
+
+        instructions.append({"op":"epilogue"})
+        if self.function.type_ != "void":
+            instructions.append({
+                "op":"global",
+                "literal":self.function.return_pointer
             })
-
-        if hasattr(self.function, "return_value"):
-
-            instructions.extend(self.function.return_value.generate(
-                result, 
-                allocator))
-
+            instructions.append({
+                "op":"push",
+                "literal":self.function.size()//4
+            })
 
         return instructions
 
@@ -1187,18 +1332,14 @@ class Output(Expression):
         self.expression = expression
         Expression.__init__(self, "int", 4, False)
 
-    def generate(self, result, allocator):
-        temp1 = allocator.new(4)
-        instructions = self.handle.generate(temp1, allocator)
-        instructions.extend(self.expression.generate(result, allocator))
+    def generate(self):
+        instructions = self.handle.generate()
+        instructions.extend(self.expression.generate())
 
         instructions.append({
-            "op"   : "write", 
-            "src"  : temp1, 
-            "srcb" : result
-            })
+            "op"   : "write",
+        })
 
-        allocator.free(temp1)
         return instructions
 
 
@@ -1208,30 +1349,44 @@ class FileWrite(Expression):
         self.name = name
         self.expression = expression
         Expression.__init__(
-            self, 
-            expression.type_(), 
-            expression.size(), 
+            self,
+            expression.type_(),
+            expression.size(),
             expression.signed())
 
-    def generate(self, result, allocator):
-        instructions = self.expression.generate(result, allocator)
+    def generate(self):
+        instructions = self.expression.generate()
 
         if self.expression.type_() == "float" and self.expression.size() == 8:
             instructions.append({
-                "op"        : "long_float_file_write", 
-                "src"       : result, 
+                "op"        : "pop_a_hi",
+            })
+            instructions.append({
+                "op"        : "pop_a_lo",
+            })
+            instructions.append({
+                "op"        : "long_float_file_write",
                 "file_name" : self.name,
-                })
+            })
         elif self.expression.type_() == "float" and self.expression.size() == 4:
             instructions.append({
-                "op"        : "float_file_write", 
-                "src"       : result, 
+                "op"        : "float_file_write",
                 "file_name" : self.name,
                 })
+        elif self.expression.type_() == "int" and self.expression.size() == 8:
+            instructions.append({
+                "op"        : "pop_a_hi",
+            })
+            instructions.append({
+                "op"        : "pop_a_lo",
+            })
+            instructions.append({
+                "op"        : "long_file_write",
+                "file_name" : self.name,
+            })
         else:
             instructions.append({
-                "op"        : "file_write", 
-                "src"       : result, 
+                "op"        : "file_write",
                 "file_name" : self.name,
                 })
 
@@ -1244,17 +1399,13 @@ class Input(Expression):
         self.handle = handle
         Expression.__init__(self, "int", 4, False)
 
-    def generate(self, result, allocator):
-        temp1 = allocator.new(4)
-        instructions = self.handle.generate(temp1, allocator)
+    def generate(self):
+        instructions = self.handle.generate()
 
         instructions.append({
             "op"   : "read",
-            "src"  : temp1,
-            "dest" : result
             })
 
-        allocator.free(temp1)
         return instructions
 
 
@@ -1264,8 +1415,8 @@ class FileRead(Expression):
         self.name = name
         Expression.__init__(self, "int", 4, True)
 
-    def generate(self, result, allocator):
-        return [{"op"   :"file_read", "dest" :result, "file_name":self.name}]
+    def generate(self):
+        return [{"op"   :"file_read", "file_name":self.name}]
 
 
 class Ready(Expression):
@@ -1274,46 +1425,96 @@ class Ready(Expression):
         self.handle = handle
         Expression.__init__(self, "int", 4, False)
 
-    def generate(self, result, allocator):
-        temp1 = allocator.new(4)
-        instructions = self.handle.generate(temp1, allocator)
+    def generate(self):
+        instructions = self.handle.generate()
 
         instructions.append({
-            "op"   :"ready", 
-            "src"  : temp1,
-            "dest" :result
-            })
+            "op"   :"ready",
+        })
 
-        allocator.free(temp1)
         return instructions
-
 
 class Struct(Object):
 
     def __init__(self, instance):
         Object.__init__(self, instance)
 
-    def generate(self, result, allocator):
+    def generate(self):
         instructions = []
-        if result != self.declaration.register:
-
+        if self.instance.local:
             instructions.append({
-                "op"  :"move",
-                "dest":result,
-                "src" :self.declaration.register
-                })
+                "op":"local",
+                "literal":self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op":"global",
+                "literal":self.instance.offset,
+            })
+        instructions.append({
+            "op":"push",
+            "literal":self.instance.size()//4,
+        })
+        return instructions
+
+    def copy(self, expression, leave_on_stack=True):
+        instructions = []
+        if self.instance.local:
+            instructions.append({
+                "op":"local",
+                "literal":self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op":"global",
+                "literal":self.instance.offset,
+            })
+        if leave_on_stack:
+            instructions.append({
+                "op":"push",
+                "literal":self.instance.size()//4,
+            })
 
         return instructions
 
-    def copy(self, expression, result, allocator):
+class ArrayArgument(Object):
+
+    def __init__(self, instance):
+        Object.__init__(self, instance)
+        self.element_size = instance.element_size
+        self.element_type = instance.element_size
+        self.element_signed = instance.element_signed
+
+    def generate(self):
+        #leave the address of the first element on the stack
         instructions = []
+        instructions.append({
+            "op" : "local",
+            "literal" : self.instance.offset,
+        })
+        instructions.append({
+            "op" : "push",
+            "literal" : 1,
+        })
 
-        for lvalue, rvalue in zip(
-            self.instance.members.values(), 
-            expression.instance.members.values()):
+        return instructions
 
-            instructions.extend(
-                lvalue.reference().copy(rvalue.reference(), result, allocator))
+    def copy(self, expression, leave_on_stack=True):
+        instructions = expression.generate()
+        if self.instance.local:
+            instructions.append({
+                "op" : "local",
+                "literal" : self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op" : "global",
+                "literal" : self.instance.offset,
+            })
+        instructions.append({
+            "op" : "pop",
+            "literal" : 1,
+        })
 
         return instructions
 
@@ -1322,231 +1523,109 @@ class Array(Object):
 
     def __init__(self, instance):
         Object.__init__(self, instance)
+        self.element_type = instance.element_type
+        self.element_size = instance.element_size
+        self.element_signed = instance.element_signed
 
-    def generate(self, result, allocator):
+    def generate(self):
+        #leave the address of the first element on the stack
         instructions = []
-        if result != self.instance.register:
-
-            instructions.append({
-                "op"   : "move",
-                "dest" : result,
-                "src"  : self.instance.register
-                })
-
-        return instructions
-
-    def copy(self, expression, result, allocator):
-        instructions = expression.generate(result, allocator)
-        if result != self.instance.register:
-
-            instructions.append({
-                "op"   : "move",
-                "dest" : self.instance.register,
-                "src"  : result
-                })
-
-        return instructions
-
-    def argument_size(self):
-        return 4
-
-
-class ConstArray(Object):
-
-    def __init__(self, instance):
-        Object.__init__(self, instance)
-
-    def generate(self, result, allocator):
-        instructions = []
-        #If initialize memory is true, the memory content will initialised (as at configuration time)
-        #If initialize memory is false, then the memory will need to be filled by the program.
-        if not self.instance.initialize_memory and self.instance.initializer is not None:
-            location = self.instance.location
-            for value in self.instance.initializer:
-
-                instructions.append({
-                    "op":"memory_write_literal",
-                    "address":location,
-                    "value":value & 0xffffffff,
-                    })
-
-                location += 1
-
-                if self.size() == 8:
-
-                    instructions.append({
-                        "op":"memory_write_literal",
-                        "address":location,
-                        "value":value >> 32,
-                        })
-
-                    location += 1
-
-
-
         instructions.append({
-            "op":"literal",
-            "literal":self.instance.location,
-            "dest":self.instance.register,
+            "op" : "push_literal",
+            "literal" : self.instance.offset,
+        })
+        if self.instance.local:
+            instructions.append({
+                "op" : "local_to_global",
+                "literal" : self.instance.offset,
             })
-
-        if result != self.instance.register:
-
-            instructions.append({
-                "op"   : "move",
-                "dest" : result,
-                "src"  : self.instance.register,
-                })
-
         return instructions
-
-    def copy(self, expression, result, allocator):
-        instructions = expression.generate(result, allocator)
-        if result != self.instance.register:
-
-            instructions.append({
-                "op"   : "move",
-                "dest" : self.instance.register,
-                "src"  : result,
-                })
-
-        return instructions
-
-    def argument_size(self):
-        return 4
-
 
 class ArrayIndex(Object):
 
-    def __init__(self, instance, index_expression):
-        Object.__init__(self, instance)
+    def __init__(self, array, index_expression):
+        Object.__init__(self, array.instance)
         assert self.type_var.endswith("[]")
         self.type_var = self.type_var[:-2]
-        self.size_var = instance.element_size
+        self.size_var = array.instance.element_size
         self.index_expression = index_expression
+        self.array = array
 
-    def generate(self, result, allocator):
+    def generate(self):
         instructions = []
-        address = allocator.new(4)
-        blocks_reg = allocator.new(4)
-        one = allocator.new(4)
 
-        blocks = self.instance.element_size//4
+        #Leave a pointer to first element of array on TOS
+        instructions.extend(self.array.generate())
 
-        instructions.extend(self.index_expression.generate(address, allocator))
-
+        #Leave the relative position in TOS
+        instructions.extend(self.index_expression.generate())
 
         instructions.append({
-            "op"      :"literal",
-            "literal" :blocks,
-            "dest"    :blocks_reg,
-            })
+            "op":"push_literal",
+            "literal":self.array.instance.element_size//4,
+        })
 
         instructions.append({
-            "op"      : "multiply",
-            "src"     : blocks_reg,
-            "srcb"    : address,
-            "dest"    : address,
-            })
+            "op":"multiply",
+        })
 
         instructions.append({
-            "op"    :"add",
-            "dest"  :address,
-            "src"   :address,
-            "srcb"  :self.instance.register,
-            })
+            "op":"add",
+        })
 
         instructions.append({
-            "op"      :"literal",
-            "literal" :1,
-            "dest"    :one,
-            })
+            "op":"pop_global",
+        })
 
+        instructions.append({
+            "op":"push",
+            "literal":self.array.instance.element_size//4,
+        })
 
-        for i in range(blocks):
-
-            instructions.append({
-                "op"    :"memory_read",
-                "src"   :address,
-                "dest"  :result+i,
-                "sequence": str(id(self)) + str(i),
-                })
-
-            #no need to increment the last time round
-            if i+1 == blocks:
-                break
-
-            instructions.append({
-                "op"     :"add",
-                "srcb"   :one,
-                "dest"   :address,
-                "src"    :address,
-                })
-
-        allocator.free(address)
-        allocator.free(one)
-        allocator.free(blocks_reg)
         return instructions
 
-    def copy(self, expression, result, allocator):
-        address = allocator.new(4)
-        one = allocator.new(4)
-        blocks_reg = allocator.new(4)
+    def copy(self, expression, leave_on_stack=True):
 
-        blocks = self.instance.element_size//4
+        instructions = []
 
-        instructions = expression.generate(result, allocator)
-        instructions.extend(self.index_expression.generate(address, allocator))
+        #load value into stack
+        instructions.extend(expression.generate())
 
+        #Leave a pointer to first element of array on TOS
+        instructions.extend(self.array.generate())
+
+        #Leave the relative position in TOS
+        instructions.extend(self.index_expression.generate())
+
+        #Scale by stack size
+        instructions.append({
+            "op":"push_literal",
+            "literal":self.array.instance.element_size//4,
+        })
 
         instructions.append({
-            "op"      :"literal",
-            "literal" :blocks,
-            "dest"    :blocks_reg,
-            })
+            "op":"multiply",
+        })
 
         instructions.append({
-            "op"      : "multiply",
-            "src"     : blocks_reg,
-            "srcb"    : address,
-            "dest"    : address,
-            })
+            "op":"add",
+        })
 
         instructions.append({
-            "op"     :"add",
-            "dest"   :address,
-            "src"    :address,
-            "srcb"   :self.instance.register,
-            })
+            "op":"pop_global",
+        })
 
         instructions.append({
-            "op"      :"literal",
-            "literal" :1,
-            "dest"    :one,
-            })
-        
-        for i in range(blocks):
+            "op":"pop",
+            "literal":self.array.instance.element_size//4,
+        })
 
+        if leave_on_stack:
             instructions.append({
-                "op"    :"memory_write",
-                "src"   :address,
-                "srcb"  :result + i
-                })
+                "op":"push",
+                "literal":self.array.instance.element_size//4,
+            })
 
-            #no need to increment the last time round
-            if i+1 == blocks:
-                break
-
-            instructions.append({
-                "op"     :"add",
-                "srcb"   :one,
-                "dest"   :address,
-                "src"    :address
-                })
-
-        allocator.free(address)
-        allocator.free(one)
-        allocator.free(blocks_reg)
         return instructions
 
 
@@ -1554,42 +1633,53 @@ class Variable(Object):
     def __init__(self, instance):
         Object.__init__(self, instance)
 
-    def generate(self, result, allocator):
+    def generate(self):
+
         instructions = []
-        if result != self.instance.register:
 
+        if self.instance.local:
             instructions.append({
-                "op"  :"move",
-                "dest":result,
-                "src" :self.instance.register
-                })
-
-            if self.size() == 8:
-                instructions.append({
-                    "op"  :"move",
-                    "dest":result+1,
-                    "src" :self.instance.register+1
-                    })
+                "op":"local",
+                "literal":self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op":"global",
+                "literal":self.instance.offset,
+            })
+        instructions.append({
+            "op":"push",
+            "literal":self.size()//4,
+        })
 
         return instructions
 
-    def copy(self, expression, result, allocator):
-        instructions = expression.generate(result, allocator)
-        if result != self.instance.register:
+    def copy(self, expression, leave_on_stack=True):
 
+
+        instructions = []
+
+        instructions.extend(expression.generate())
+
+        if self.instance.local:
             instructions.append({
-                "op"   : "move",
-                "dest" : self.instance.register,
-                "src"  : result
-                })
-
-            if self.size() == 8:
-
-                instructions.append({
-                    "op"   : "move",
-                    "dest" : self.instance.register+1,
-                    "src"  : result+1
-                    })
+                "op":"local",
+                "literal":self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op":"global",
+                "literal":self.instance.offset,
+            })
+        instructions.append({
+            "op":"pop",
+            "literal":self.size()//4,
+        })
+        if leave_on_stack:
+            instructions.append({
+                "op":"push",
+                "literal":self.size()//4,
+            })
 
         return instructions
 
@@ -1605,58 +1695,63 @@ class Variable(Object):
 
 class PostIncrement(Expression):
 
-    def  __init__(self, operator, lvalue, allocator):
+    def  __init__(self, operator, lvalue):
         self.operator = operator
         self.lvalue = lvalue
-        allocator = allocator
         Expression.__init__(self, lvalue.type_(), lvalue.size(), lvalue.signed())
 
-    def generate(self, result, allocator):
+    def generate(self):
 
         instructions = []
 
-        instructions.append({
-             "op"    : "move",
-             "src"   : self.lvalue.instance.register,
-             "dest"  : result,
-         })
+        if self.size() == 8:
 
-        #FIXME Does this work for longs?
-        temp = allocator.new(4)
-        instructions.append({
-             "op"      : "literal",
-             "literal" : 1,
-             "dest"    : temp,
-         })
+            instructions.append({
+                 "op":"push_long_local",
+                 "offset":self.lvalue.instance.offset,
+            })
 
-        increment_instruction = select_increment_instruction(
-            self.lvalue.size(), 
-            self.lvalue.type_(), 
-            self.lvalue.signed(), 
-            self.operator,
-        )
+            if self.operator.startswith("+"):
+                instructions.append({
+                     "op":"increment_long_local",
+                     "offset":self.lvalue.instance.offset,
+                })
+            else:
+                instructions.append({
+                     "op":"decrement_long_local",
+                     "offset":self.lvalue.instance.offset,
+                })
 
-        instructions.append({
-             "op"    : increment_instruction,
-             "dest"  : self.lvalue.instance.register,
-             "src"   : self.lvalue.instance.register,
-             "srcb"  : temp,
-        })
-        allocator.free(temp)
+        else:
+
+            instructions.append({
+                 "op":"push_local",
+                 "offset":self.lvalue.instance.offset,
+            })
+
+            if self.operator.startswith("+"):
+                instructions.append({
+                     "op":"increment_local",
+                     "offset":self.lvalue.instance.offset,
+                })
+            else:
+                instructions.append({
+                     "op":"decrement_local",
+                     "offset":self.lvalue.instance.offset,
+                })
 
         return instructions
 
 
 class Assignment(Expression):
 
-    def __init__(self, lvalue, expression, allocator):
+    def __init__(self, lvalue, expression):
         Expression.__init__(self, lvalue.type_(), lvalue.size(), lvalue.signed())
         self.lvalue = lvalue
         self.expression = expression
-        self.allocator = allocator
 
-    def generate(self, result, allocator):
-        return self.lvalue.copy(self.expression, result, allocator)
+    def generate(self, leave_on_stack=True):
+        return self.lvalue.copy(self.expression, leave_on_stack)
 
 
 class Constant(Expression):
@@ -1665,28 +1760,26 @@ class Constant(Expression):
         self._value = value
         Expression.__init__(self, type_, size, signed)
 
-    def generate(self, result, allocator):
+    def generate(self):
 
         int_value = self.int_value()
 
         instructions = [{
-            "op":"literal", 
-            "dest":result, 
-            "signed":self.signed(),
+            "op":"push_literal",
+            "comment":"const",
             "literal":int_value & 0xffffffff}]
 
         if self.size() == 8:
 
             instructions.append({
-                "op":"literal", 
-                "dest":result + 1, 
-                "signed":self.signed(),
+                "op":"push_literal",
+                "comment":"const",
                 "literal":(int_value >> 32) & 0xffffffff})
 
         return instructions
 
     def value(self):
-       return self._value
+        return self._value
 
 def select_binary_instruction(left_size, right_size, type_, left_signed, right_signed, operation):
     operation_names = {
@@ -1714,10 +1807,10 @@ def select_binary_instruction(left_size, right_size, type_, left_signed, right_s
         name = "float_" + name
 
     if left_size == 8 or right_size == 8:
-        name = "long_" + name    
+        name = "long_" + name
 
     if sign_sensitive and not (left_signed and right_signed):
-        name = "unsigned_" + name    
+        name = "unsigned_" + name
 
     return name, reverse_operands
 
@@ -1732,6 +1825,6 @@ def select_increment_instruction(size, type_, signed, operation):
         name = "float_" + name
 
     if size == 8:
-        name = "long_" + name    
+        name = "long_" + name
 
     return name

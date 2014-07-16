@@ -10,9 +10,8 @@ import os
 
 from chips.compiler.parser import Parser
 from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.macro_expander import expand_macros
 from chips.compiler.optimizer import cleanup_functions
-from chips.compiler.optimizer import cleanup_registers
+from chips.compiler.macro_expander import expand_macros
 from chips.compiler.tokens import Tokens
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 from chips.compiler.python_model import generate_python_model
@@ -94,21 +93,15 @@ def compile_python_model(
             process = parser.parse_process()
             name = process.main.name + dict_to_hash(parameters)
             instructions = process.generate()
-            if "dump_raw" in options:
+            if "dump" in options:
                 for i in instructions:
                     print i
             instructions = expand_macros(instructions, parser.allocator)
-            instructions = cleanup_functions(instructions)
-            instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
-            if "dump_optimised" in options:
-                for i in instructions:
-                    print i
 
             model = generate_python_model(
                     input_file,
                     name,
                     instructions,
-                    registers,
                     parser.allocator, 
                     inputs, 
                     outputs)
