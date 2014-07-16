@@ -59,7 +59,8 @@ class Process:
                     if global_object not in referenced_globals:
                         referenced_globals.append(global_object)
             for i in function.called_functions:
-                find_functions(i)
+                if i not in called_functions:
+                    find_functions(i)
         find_functions(self.main)
 
         instructions = []
@@ -868,11 +869,11 @@ class Object(Expression):
 
 
 def AND(left, right):
-    return ANDOR(left, right, "jmp_if_false")
+    return ANDOR(left, right, "jmp_if_true")
 
 
 def OR(left, right):
-    return ANDOR(left, right, "jmp_if_true")
+    return ANDOR(left, right, "jmp_if_false")
 
 
 class ANDOR(Expression):
@@ -881,7 +882,6 @@ class ANDOR(Expression):
         self.left = constant_fold(left)
         self.right = constant_fold(right)
         self.op = op
-
         Expression.__init__(
             self,
             "int",
@@ -889,18 +889,63 @@ class ANDOR(Expression):
             left.signed() and right.signed())
 
     def generate(self):
-        instructions = self.left.generate()
+        instructions = []
+        instructions.extend(self.left.generate())
         if self.left.size() == 8:
-            instructions.append({"op" : "or"})
-            instructions.append({"op":self.op, "label":"end_%s"%id(self)})
+            instructions.append({
+                "op" : "pop_a_hi",
+            })
+            instructions.append({
+                "op" : "pop_a_lo",
+            })
+            instructions.append({
+                "op" : "push_a_lo",
+            })
+            instructions.append({
+                "op" : "push_a_hi",
+            })
+            instructions.append({
+                "op" : "or",
+            })
         elif self.left.size() == 4:
-            instructions.append({"op":self.op, "label":"end_%s"%id(self)})
+            instructions.append({
+                "op" : "pop_a_lo",
+            })
+            instructions.append({
+                "op" : "push_a_lo",
+            })
+        instructions.append({
+            "op":self.op, 
+            "label":"alternate_%s"%id(self),
+        })
+        if self.left.size() == 8:
+            instructions.append({
+                "op" : "push_a_lo",
+            })
+            instructions.append({
+                "op" : "push_a_hi",
+            })
+        elif self.left.size() == 4:
+            instructions.append({
+                "op" : "push_a_lo",
+            })
+        instructions.append({
+            "op":"goto", 
+            "label":"end_%s"%id(self),
+        })
+        instructions.append({
+            "op":"label", 
+            "label":"alternate_%s"%id(self),
+        })
         instructions.extend(self.right.generate())
-        instructions.append({"op":"label", "label":"end_%s"%id(self)})
+        instructions.append({
+            "op":"label", 
+            "label":"end_%s"%id(self),
+        })
         return instructions
 
     def value(self):
-        if self.op == "jmp_if_false":
+        if self.op == "jmp_if_true":
             return self.left.value() and self.right.value()
         else:
             return self.left.value() or self.right.value()
@@ -1155,14 +1200,20 @@ class DoubleToLong(Expression):
         instructions = self.expression.generate()
 
         instructions.append({
-            "op"   : "load_hi",
-            })
+            "op"   : "pop_a_hi",
+        })
+        instructions.append({
+            "op"   : "pop_a_lo",
+        })
         instructions.append({
             "op"   : "double_to_long",
-            })
+        })
         instructions.append({
-            "op"   : "result_hi",
-            })
+            "op"   : "push_a_lo",
+        })
+        instructions.append({
+            "op"   : "push_a_hi",
+        })
 
         return instructions
 
@@ -1707,41 +1758,39 @@ class PostIncrement(Expression):
 
         instructions = []
 
-        if self.size() == 8:
-
+        instructions.append({
+            "op":"local",
+            "literal":self.lvalue.instance.offset,
+        })
+        instructions.append({
+            "op":"push",
+            "literal":1,
+        })
+        instructions.append({
+            "op":"pop_a_lo",
+        })
+        instructions.append({
+            "op":"push_a_lo",
+        })
+        instructions.append({
+            "op":"push_literal",
+            "literal":1,
+        })
+        if self.operator.startswith("+"):
             instructions.append({
-                 "op":"push_long_local",
-                 "offset":self.lvalue.instance.offset,
+                 "op":"add",
             })
-
-            if self.operator.startswith("+"):
-                instructions.append({
-                     "op":"increment_long_local",
-                     "offset":self.lvalue.instance.offset,
-                })
-            else:
-                instructions.append({
-                     "op":"decrement_long_local",
-                     "offset":self.lvalue.instance.offset,
-                })
-
         else:
-
             instructions.append({
-                 "op":"push_local",
-                 "offset":self.lvalue.instance.offset,
+                 "op":"subtract",
             })
-
-            if self.operator.startswith("+"):
-                instructions.append({
-                     "op":"increment_local",
-                     "offset":self.lvalue.instance.offset,
-                })
-            else:
-                instructions.append({
-                     "op":"decrement_local",
-                     "offset":self.lvalue.instance.offset,
-                })
+        instructions.append({
+            "op":"pop",
+            "literal":1,
+        })
+        instructions.append({
+            "op":"push_a_lo",
+        })
 
         return instructions
 

@@ -137,7 +137,6 @@ class Parser:
                         signed,
                         const)
         instance = declaration.argument_instance(self.function)
-        print instance, self.function
         self.scope[argument] = instance
         return instance.reference()
 
@@ -157,9 +156,11 @@ class Parser:
         #parse the function argument list
         #
         self.tokens.expect("(")
+        function = Function(name, type_, size, signed)
+        #add the function to the scope before starting
+        self.scope[function.name] = function
         #store the scope so that we can put it back when we are done
         stored_scope = copy(self.scope)
-        function = Function(name, type_, size, signed)
         self.function = function
         function.arguments = []
         while self.tokens.peek() != ")":
@@ -170,7 +171,6 @@ class Parser:
                 break
         self.tokens.expect(")")
         function.statement = self.parse_statement()
-        
         if type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Non-void function must have a return statement")
 
@@ -178,8 +178,6 @@ class Parser:
         #
         self.function = self.global_scope
         self.scope = stored_scope
-        #remember to add the funcion we have just defined to the global scope
-        self.scope[function.name] = function
         #the last function to be compiled is considered the main function
         self.main = function
 

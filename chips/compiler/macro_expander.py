@@ -10,12 +10,34 @@ def expand_macros(instructions, allocator):
     for instruction in instructions:
         if instruction["op"] == "long_equal":
             new_instructions.extend(long_equal(instruction))
+        elif instruction["op"] == "long_not_equal":
+            new_instructions.extend(long_not_equal(instruction))
         elif instruction["op"] == "long_greater":
             new_instructions.extend(long_greater(instruction))
+        elif instruction["op"] == "long_greater_equal":
+            new_instructions.extend(long_greater_equal(instruction))
+        elif instruction["op"] == "unsigned_long_greater":
+            new_instructions.extend(unsigned_long_greater(instruction))
+        elif instruction["op"] == "unsigned_long_greater_equal":
+            new_instructions.extend(unsigned_long_greater_equal(instruction))
         elif instruction["op"] == "long_add":
             new_instructions.extend(long_add(instruction))
         elif instruction["op"] == "long_subtract":
             new_instructions.extend(long_subtract(instruction))
+        elif instruction["op"] == "long_multiply":
+            new_instructions.extend(long_multiply(instruction))
+        elif instruction["op"] == "long_and":
+            new_instructions.extend(long_and(instruction))
+        elif instruction["op"] == "long_or":
+            new_instructions.extend(long_or(instruction))
+        elif instruction["op"] == "long_xor":
+            new_instructions.extend(long_xor(instruction))
+        elif instruction["op"] == "long_shift_left":
+            new_instructions.extend(long_shift_left(instruction))
+        elif instruction["op"] == "long_shift_right":
+            new_instructions.extend(long_shift_right(instruction))
+        elif instruction["op"] == "long_not":
+            new_instructions.extend(long_not(instruction))
         elif instruction["op"] == "long_float_add":
             new_instructions.extend(long_float_add(instruction))
         elif instruction["op"] == "long_float_subtract":
@@ -277,194 +299,93 @@ def unsigned_shift_right(allocator, instruction):
 
     return new_instruction
 
-def long_shift_left(allocator, instruction):
-    """
-    Long Shift Left (by a programable amount)
+def long_shift_left(instruction):
+
+    """Long Shift Left (by a programable amount)
     Implemented using 1 bit shifts.
     """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    start = unique()
-    end = unique()
-
-    counter = allocator.new(4, "shift_counter")
-    one = allocator.new(4, "one")
-
     new_instruction = [
         {
-        "op"  : "literal",
-        "literal" : 1,
-        "dest": one
+        "op"  : "pop_b_hi",
         },
-
         {
-        "op"  : "literal",
-        "literal" : 0x7f,
-        "dest": counter
+        "op"  : "pop_b_lo",
         },
-
         {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
+        "op"  : "pop_a_hi",
         },
-
         {
-        "op"  : "move",
-        "src" : src + 1,
-        "dest": dest + 1
+        "op"  : "pop_a_lo",
         },
 
+        #shift low
         {
-        "op"  : "and",
-        "src" : srcb,
-        "srcb" : counter,
-        "dest": counter
+        "op"  : "push_a_lo",
         },
-
         {
-        "op"    : "label",
-        "label" : start
+        "op"  : "push_b_lo",
         },
-
-
-        {
-        "op"    : "jmp_if_false",
-        "src"   : counter,
-        "label" : end
-        },
-
         {
         "op"  : "shift_left",
-        "src" : dest,
-        "dest": dest
         },
 
+        #shift high
+        {
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_lo",
+        },
         {
         "op"  : "shift_left_with_carry",
-        "src" : dest + 1,
-        "dest": dest + 1
-        },
-
-        {
-        "op"   : "subtract",
-        "src"  : counter,
-        "srcb" : one,
-        "dest" : counter
-        },
-
-
-        {
-        "op"    : "goto",
-        "label" : start
-        },
-
-
-        {
-        "op"    : "label",
-        "label" : end
         },
     ]
-    allocator.free(counter)
-    allocator.free(one)
 
     return new_instruction
 
-def long_shift_right(allocator, instruction):
-    """
-    Long Shift Left (by a programable amount)
+def long_shift_right(instruction):
+
+    """Long Shift Left (by a programable amount)
     Implemented using 1 bit shifts.
     """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    start = unique()
-    end = unique()
-
-    counter = allocator.new(4, "shift_counter")
-    one = allocator.new(4, "one")
-
     new_instruction = [
         {
-        "op"  : "literal",
-        "literal" : 1,
-        "dest": one
+        "op"  : "pop_b_hi",
         },
-
         {
-        "op"  : "literal",
-        "literal" : 0x7f,
-        "dest": counter
+        "op"  : "pop_b_lo",
         },
-
         {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
+        "op"  : "pop_a_hi",
         },
-
         {
-        "op"  : "move",
-        "src" : src + 1,
-        "dest": dest + 1
+        "op"  : "pop_a_lo",
         },
 
+        #shift high
         {
-        "op"  : "and",
-        "src" : srcb,
-        "srcb" : counter,
-        "dest": counter
+        "op"  : "push_a_hi",
         },
-
         {
-        "op"    : "label",
-        "label" : start
+        "op"  : "push_b_lo",
         },
-
-
-        {
-        "op"    : "jmp_if_false",
-        "src"   : counter,
-        "label" : end
-        },
-
         {
         "op"  : "shift_right",
-        "src" : dest + 1,
-        "dest": dest + 1
         },
 
+        #shift low
+        {
+        "op"  : "push_a_lo",
+        },
+        {
+        "op"  : "push_b_lo",
+        },
         {
         "op"  : "shift_right_with_carry",
-        "src" : dest,
-        "dest": dest
-        },
-
-        {
-        "op"   : "subtract",
-        "src"  : counter,
-        "srcb" : one,
-        "dest" : counter
-        },
-
-        {
-        "op"    : "goto",
-        "label" : start
-        },
-
-
-        {
-        "op"    : "label",
-        "label" : end
         },
     ]
-    allocator.free(counter)
-    allocator.free(one)
 
     return new_instruction
 
@@ -651,36 +572,56 @@ def long_equal(instruction):
     ]
     return new_instruction
 
-def long_not_equal(allocator, instruction):
+def long_not_equal(instruction):
+
     """ perform not_equal function on long numbers """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-    temp = allocator.new(4, "macro_temp")
     new_instruction = [
         {
-        "op"  : "not_equal",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+
+        {
+        "op"  : "pop_b_lo",
+        },
+
+        {
+        "op"  : "pop_a_hi",
+        },
+
+        {
+        "op"  : "pop_a_lo",
+        },
+
+        {
+        "op"  : "push_a_hi",
+        },
+
+        {
+        "op"  : "push_b_hi",
         },
 
         {
         "op"  : "not_equal",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": temp
+        },
+
+        {
+        "op"  : "push_a_lo",
+        },
+
+        {
+        "op"  : "push_b_lo",
+        },
+
+        {
+        "op"  : "not_equal",
         },
 
         {
         "op"   : "or",
-        "src"  : temp,
-        "srcb" : dest,
-        "dest" : dest
         },
     ]
-    allocator.free(temp)
+
     return new_instruction
 
 def long_greater(instruction):
@@ -731,7 +672,7 @@ def long_greater(instruction):
         "op"  : "push_b_lo",
         },
         {
-        "op"  : "greater",
+        "op"  : "unsigned_greater",
         },
 
         {
@@ -744,265 +685,335 @@ def long_greater(instruction):
     ]
     return new_instruction
 
-def unsigned_long_greater(allocator, instruction):
+def unsigned_long_greater(instruction):
 
     """ perform greater function on long unsigned numbers """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    end = unique()
-
     new_instruction = [
-        #msb greater?
         {
-        "op"  : "unsigned_greater",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
         },
 
-        #return true
+        #msb greater?
         {
-        "op"  : "jmp_if_true",
-        "src" : dest,
-        "label": end
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "unsigned_greater",
         },
 
         #msb equal?
         {
-        "op"  : "equal",
-        "src" : srcb + 1,
-        "srcb" : src + 1,
-        "dest": dest
+        "op"  : "push_a_hi",
         },
-
-        #return flase if not
         {
-        "op"  : "jmp_if_false",
-        "src" : dest,
-        "label":end
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "equal",
         },
 
         #lsb greater?
         {
-        "op"  : "unsigned_greater",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "push_a_lo",
         },
-
-        #end
         {
-        "op"   : "label",
-        "label" : end
+        "op"  : "push_b_lo",
+        },
+        {
+        "op"  : "unsigned_greater",
+        },
+        {
+        "op"  : "and",
+        },
+        {
+        "op"  : "or",
         },
 
     ]
     return new_instruction
 
-def long_greater_equal(allocator, instruction):
+def long_greater_equal(instruction):
+
     """ perform greater function on long numbers """
 
-
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    end = unique()
-
     new_instruction = [
+        {
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
+        },
+
         #msb greater?
+        {
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
         {
         "op"  : "greater",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": dest
-        },
-
-        #return true
-        {
-        "op"  : "jmp_if_true",
-        "src" : dest,
-        "label": end
         },
 
         #msb equal?
         {
-        "op"  : "equal",
-        "src" : srcb + 1,
-        "srcb" : src + 1,
-        "dest": dest
+        "op"  : "push_a_hi",
         },
-
-        #return flase if not
         {
-        "op"  : "jmp_if_false",
-        "src" : dest,
-        "label":end
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "equal",
         },
 
         #lsb greater?
         {
-        "op"  : "unsigned_greater_equal",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "push_a_lo",
         },
-
-        #end
         {
-        "op"   : "label",
-        "label" : end
+        "op"  : "push_b_lo",
+        },
+        {
+        "op"  : "unsigned_greater_equal",
+        },
+        {
+        "op"  : "and",
+        },
+        {
+        "op"  : "or",
         },
 
     ]
+
     return new_instruction
 
-def unsigned_long_greater_equal(allocator, instruction):
+def unsigned_long_greater_equal(instruction):
+
     """ perform greater equal function on long unsigned numbers """
 
-
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    end = unique()
-
     new_instruction = [
-        #msb greater?
         {
-        "op"  : "unsigned_greater",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
         },
 
-        #return true
+        #msb greater?
         {
-        "op"  : "jmp_if_true",
-        "src" : dest,
-        "label": end
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "unsigned_greater",
         },
 
         #msb equal?
         {
-        "op"  : "equal",
-        "src" : srcb + 1,
-        "srcb" : src + 1,
-        "dest": dest
+        "op"  : "push_a_hi",
         },
-
-        #return flase if not
         {
-        "op"  : "jmp_if_false",
-        "src" : dest,
-        "label":end
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "equal",
         },
 
         #lsb greater?
         {
-        "op"  : "unsigned_greater_equal",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "push_a_lo",
         },
-
-        #end
         {
-        "op"   : "label",
-        "label" : end
+        "op"  : "push_b_lo",
+        },
+        {
+        "op"  : "unsigned_greater_equal",
+        },
+        {
+        "op"  : "and",
+        },
+        {
+        "op"  : "or",
         },
 
     ]
     return new_instruction
 
-def long_and(allocator, instruction):
+def long_and(instruction):
+
     """ perform and function on long numbers """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
     new_instruction = [
         {
-        "op"  : "and",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
         },
 
+        #msb
+        {
+        "op"  : "push_a_lo",
+        },
+        {
+        "op"  : "push_b_lo",
+        },
         {
         "op"  : "and",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": dest + 1
+        },
+
+        #lsb
+        {
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "and",
         },
     ]
     return new_instruction
 
-def long_or(allocator, instruction):
+def long_or(instruction):
+
     """ perform or function on long numbers """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
     new_instruction = [
         {
-        "op"  : "or",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
         },
 
+        #msb
+        {
+        "op"  : "push_a_lo",
+        },
+        {
+        "op"  : "push_b_lo",
+        },
         {
         "op"  : "or",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": dest + 1
+        },
+
+        #lsb
+        {
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "or",
         },
     ]
+
     return new_instruction
 
-def long_xor(allocator, instruction):
+def long_xor(instruction):
     """ perform xor function on long numbers """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
     new_instruction = [
         {
-        "op"  : "xor",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
         },
 
+        #msb
+        {
+        "op"  : "push_a_lo",
+        },
+        {
+        "op"  : "push_b_lo",
+        },
         {
         "op"  : "xor",
-        "src" : src + 1,
-        "srcb" : srcb + 1,
-        "dest": dest + 1
+        },
+
+        #lsb
+        {
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "xor",
         },
     ]
+
     return new_instruction
 
-def long_not(allocator, instruction):
+def long_not(instruction):
     """ perform not function on long numbers """
 
-    src = instruction["src"]
-    dest = instruction["dest"]
     new_instruction = [
         {
-        "op"  : "not",
-        "src" : src,
-        "dest": dest
+        "op"  : "pop_a_hi",
         },
-
+        {
+        "op"  : "pop_a_lo",
+        },
+        {
+        "op"  : "push_a_hi",
+        },
         {
         "op"  : "not",
-        "src" : src + 1,
-        "dest": dest + 1
+        },
+        {
+        "op"  : "push_a_lo",
+        },
+        {
+        "op"  : "not",
         },
     ]
     return new_instruction
@@ -1092,60 +1103,68 @@ def long_subtract(instruction):
     ]
     return new_instruction
 
-def long_multiply(allocator, instruction):
+def long_multiply(instruction):
+
     """ perform multiply function on long numbers """
 
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    temp = allocator.new(4, "result_hi")
-
     new_instruction = [
-
         {
-        "op"  : "multiply",
-        "src" : src,
-        "srcb" : srcb,
-        "dest": dest
+        "op"  : "pop_b_hi",
+        },
+        {
+        "op"  : "pop_b_lo",
+        },
+        {
+        "op"  : "pop_a_hi",
+        },
+        {
+        "op"  : "pop_a_lo",
         },
 
+        #
         {
-        "op"  : "result_hi",
-        "dest": dest + 1
+        "op"  : "push_a_lo",
         },
-
+        {
+        "op"  : "push_b_lo",
+        },
         {
         "op"  : "multiply",
-        "src" : src,
-        "srcb" : srcb + 1,
-        "dest": temp
+        },
+        {
+        "op"  : "carry",
+        },
+
+        #
+        {
+        "op"  : "push_a_lo",
+        },
+        {
+        "op"  : "push_b_hi",
+        },
+        {
+        "op"  : "multiply",
+        },
+
+        #
+        {
+        "op"  : "push_a_hi",
+        },
+        {
+        "op"  : "push_b_lo",
+        },
+        {
+        "op"  : "multiply",
         },
 
         {
         "op"  : "add",
-        "src" : dest + 1,
-        "srcb" : temp,
-        "dest": dest + 1
         },
-
-        {
-        "op"  : "multiply",
-        "src" : src + 1,
-        "srcb" : srcb,
-        "dest": temp
-        },
-
         {
         "op"  : "add",
-        "src" : dest + 1,
-        "srcb" : temp,
-        "dest": dest + 1
         },
 
     ]
-
-    allocator.free(temp);
 
     return new_instruction
 

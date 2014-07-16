@@ -264,7 +264,9 @@ class PythonModel:
            self.tos += 1;
 
         elif instruction["op"] == "not":
-           self.registers[dest] = int32(~self.registers[src])
+           self.tos -= 1;
+           self.memory[self.tos] = int32(~self.memory.get(self.tos, 0))
+           self.tos += 1;
 
         elif instruction["op"] == "int_to_long":
            self.tos -= 1
@@ -346,14 +348,16 @@ class PythonModel:
            self.tos += 1
 
         elif instruction["op"] == "multiply":
-           #tos   => a
-           #tos-1 => b
            self.tos -= 1
            b = self.memory[self.tos]
            self.tos -= 1
            a = self.memory[self.tos]
            lw = int(uint32(a)) * int(uint32(b))
-           self.register_hi, self.memory[self.tos] = split_word(lw)
+           self.carry, self.memory[self.tos] = split_word(lw)
+           self.tos += 1
+
+        elif instruction["op"] == "carry":
+           self.memory[self.tos] = self.carry
            self.tos += 1
 
         elif instruction["op"] == "or":
@@ -428,7 +432,7 @@ class PythonModel:
            a = self.memory.get(self.tos, 0)
            b &= 0x3f
            carry_in = self.carry
-           self.carry = unit32(a << (32 - b))
+           self.carry = uint32(a << (32 - b))
            self.memory[self.tos] = uint32(a) >> b | carry_in
            self.tos += 1
 
@@ -473,7 +477,12 @@ class PythonModel:
            self.tos += 1
 
         elif instruction["op"] == "not_equal":
-           self.registers[dest] = int32(int32(self.registers[src]) != int32(self.registers[srcb]))
+           self.tos -= 1
+           b = self.memory.get(self.tos, 0)
+           self.tos -= 1
+           a = self.memory.get(self.tos, 0)
+           self.memory[self.tos] = int32(int32(a) != int32(b))
+           self.tos += 1
 
         elif instruction["op"] == "float_add":
            float_ = bits_to_float(self.a_lo)
@@ -525,7 +534,7 @@ class PythonModel:
 
         elif instruction["op"] == "jmp_if_false":
             self.tos -= 1
-            if self.memory[self.tos] == 0:
+            if self.memory.get(self.tos, 0) == 0:
                 self.program_counter = literal
 
         elif instruction["op"] == "jmp_if_true":
@@ -562,14 +571,10 @@ class PythonModel:
             self.output_files[instruction["file_name"]].write("%f\n"%long_word)
 
         elif instruction["op"] == "read":
-
-
-            if self.registers[src] not in self.inputs:
-
-                self.registers[dest] = 0
-
+            self.tos -= 1
+            if self.memory.get(self.tos, 0) not in self.inputs:
+                self.memory[self.tos-1] = 0
             else:
-
                 input_ = self.inputs[self.registers[src]]
                 self.program_counter = this_instruction
 
@@ -577,7 +582,7 @@ class PythonModel:
                     if input_.stb:
                         input_.ack = True
                         self.read_state = "wait_nstb"
-                        self.registers[dest] = input_.data
+                        self.memory[self.tos-1] = input_.data
                 elif self.read_state == "wait_nstb":
                     if not input_.stb:
                         input_.ack = False
@@ -585,22 +590,25 @@ class PythonModel:
                         self.program_counter += 1
 
         elif instruction["op"] == "ready":
-            if self.registers[src] not in self.inputs:
-                self.registers[dest] = 0
+            self.tos -= 1
+            if self.memory.get(self.tos, 0) not in self.inputs:
+                self.memory[self.tos-1]= 0
             else:
                 input_ = self.inputs[self.registers[src]]
-                self.registers[dest] = int32(int(input_.stb))
+                self.memory[self.tos-1] = int32(int(input_.stb))
 
         elif instruction["op"] == "write":
 
-            if self.registers[src] not in self.outputs:
+            self.tos -= 1
+            if self.memory.get(self.tos, 0) not in self.outputs:
 
                 pass
 
             else:
 
-                output = self.outputs[self.registers[src]]
-                output.data = self.registers[srcb]
+                output = self.outputs[self.memory.get(self.tos, 0)]
+                self.tos -= 1
+                output.data = self.memory.get(self.tos, 0)
                 self.program_counter = this_instruction
 
                 if self.write_state == "wait_ack":
@@ -612,13 +620,6 @@ class PythonModel:
                     if not output.ack:
                         self.write_state = "wait_ack"
                         self.program_counter += 1
-
-        elif instruction["op"] == "memory_read":
-            self.address = self.registers[src]
-            self.registers[dest] = int32(self.memory.get(self.address, 0))
-
-        elif instruction["op"] == "memory_write":
-            self.memory[self.registers[src]] = int32(self.registers[srcb])
 
         elif instruction["op"] == "assert":
             if self.a_lo == 0:
@@ -678,7 +679,7 @@ class PythonModel:
             raise StopSim
         else:
             print "Unknown machine instruction", instruction["op"]
-            sys.exit(0)
+            sys.exit(-1)
 
 def float_to_bits(f):
     
