@@ -137,23 +137,30 @@ class Parser:
                         signed,
                         const)
         instance = declaration.argument_instance(self.function)
+        print instance, self.function
         self.scope[argument] = instance
         return instance.reference()
 
     def parse_function(self):
+
+        #Check the type specification
+        #
         type_, size, signed, const = self.parse_type_specifier()
         name = self.tokens.get()
 
-        #check if it is a global declaration
+        #At this point we don;t know whether this is a function or a variable
+        #check for a ( and make a decision.
+        #
         if self.tokens.peek() != "(":
             return self.parse_global_declaration(type_, size, signed, const, name)
 
-        #otherwise continue parsing a function
+        #parse the function argument list
+        #
         self.tokens.expect("(")
+        #store the scope so that we can put it back when we are done
         stored_scope = copy(self.scope)
         function = Function(name, type_, size, signed)
         self.function = function
-
         function.arguments = []
         while self.tokens.peek() != ")":
             function.arguments.append(self.parse_argument())
@@ -161,19 +168,21 @@ class Parser:
                 self.tokens.expect(",")
             else:
                 break
-
         self.tokens.expect(")")
         function.statement = self.parse_statement()
-
+        
         if type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Non-void function must have a return statement")
 
+        #Put back the scope as it was
+        #
         self.function = self.global_scope
         self.scope = stored_scope
+        #remember to add the funcion we have just defined to the global scope
         self.scope[function.name] = function
-
-        #main thread is last function
+        #the last function to be compiled is considered the main function
         self.main = function
+
         return function
 
     def parse_break(self):
@@ -978,6 +987,7 @@ class Parser:
     def parse_function_call(self, name):
 
         #First filter out built-in "functions"
+        #
         if name == "input":
             return self.parse_input()
         if name == "output":
@@ -1178,31 +1188,37 @@ class Parser:
 
     def parse_variable_array_struct(self, instance):
 
+        #Store inside the current function any globals that get referenced
+        #if a global isn't referenced it doesn't get compiled.
+        #
         if not instance.local:
             self.function.referenced_globals.append(instance)
 
+        #Parse simple numeric variables
+        #
         if instance.type_() in numeric_types:
-
             if not hasattr(instance, "reference"):
-
                 self.tokens.error(
                     "Not an expression")
-
             return Variable(instance)
+
+        #Parse Arrays
+        #
         elif instance.type_().endswith("[]"):
-            array = Array(instance)
+            array = instance.reference()
             if self.tokens.peek() == "[":
                 self.tokens.expect("[")
                 index_expression = self.parse_expression()
                 self.tokens.expect("]")
                 if index_expression.type_() not in ["int"]:
-
                     self.tokens.error(
                         "Array indices must be an integer like expression")
-
                 return ArrayIndex(array, index_expression)
             else:
                 return array
+
+        #Parse structs
+        #
         elif instance.type_().startswith("struct"):
             if self.tokens.peek() == ".":
                 self.tokens.expect(".")

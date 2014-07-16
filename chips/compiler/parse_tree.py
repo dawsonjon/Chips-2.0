@@ -585,31 +585,33 @@ class ArrayArgumentInstance:
         self.element_signed = element_signed
         self.initializer = initializer
 
-    def generate(self):
-        assert self.local
-        instructions = []
-        instructions.append({
-            "op":"local",
-            "literal":self.offset
-        })
-        instructions.append({
-            "op":"push",
-            "literal":1
-        })
-        return instructions
+    #def generate(self):
+        #print "array argument"
+        #assert self.local
+        #instructions = []
+        #instructions.append({
+            #"op":"local",
+            #"literal":self.offset
+        #})
+        #instructions.append({
+            #"op":"push",
+            #"literal":1
+        #})
+        #return instructions
 
-    def copy(self):
-        assert self.local
-        instructions = []
-        instructions.append({
-            "op":"local",
-            "literal":self.offset
-        })
-        instructions.append({
-            "op":"pop",
-            "literal":1
-        })
-        return instructions
+    #def copy(self):
+        #print "array argument"
+        #assert self.local
+        #instructions = []
+        #instructions.append({
+            #"op":"local",
+            #"literal":self.offset
+        #})
+        #instructions.append({
+            #"op":"pop",
+            #"literal":1
+        #})
+        #return instructions
 
     def reference(self):
         return ArrayArgument(self)
@@ -1487,6 +1489,7 @@ class ArrayArgument(Object):
 
     def generate(self):
         #leave the address of the first element on the stack
+        print "generating array argument"
         instructions = []
         instructions.append({
             "op" : "local",
@@ -1499,24 +1502,24 @@ class ArrayArgument(Object):
 
         return instructions
 
-    def copy(self, expression, leave_on_stack=True):
-        instructions = expression.generate()
-        if self.instance.local:
-            instructions.append({
-                "op" : "local",
-                "literal" : self.instance.offset,
-            })
-        else:
-            instructions.append({
-                "op" : "global",
-                "literal" : self.instance.offset,
-            })
-        instructions.append({
-            "op" : "pop",
-            "literal" : 1,
-        })
+    #def copy(self, expression, leave_on_stack=True):
+        #instructions = expression.generate()
+        #if self.instance.local:
+            #instructions.append({
+                #"op" : "local",
+                #"literal" : self.instance.offset,
+            #})
+        #else:
+            #instructions.append({
+                #"op" : "global",
+                #"literal" : self.instance.offset,
+            #})
+        #instructions.append({
+            #"op" : "pop",
+            #"literal" : 1,
+        #})
 
-        return instructions
+        #return instructions
 
 
 class Array(Object):
