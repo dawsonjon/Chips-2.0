@@ -157,6 +157,7 @@ class Assert:
 
         instructions.append({
             "op":"pop_a_lo",
+            "pop":True,
         })
 
         instructions.append({
@@ -195,6 +196,7 @@ class Report:
         if self.expression.size() == 4:
             instructions.append({
                 "op":"pop_a_lo",
+                "pop":True,
             })
             if self.expression.type_() == "float":
                 instructions.append({
@@ -220,9 +222,11 @@ class Report:
 
             instructions.append({
                 "op":"pop_a_hi",
+                "pop":True,
             })
             instructions.append({
                 "op":"pop_a_lo",
+                "pop":True,
             })
             if self.expression.type_() == "float":
                 instructions.append({
@@ -251,7 +255,10 @@ class WaitClocks:
 
     def generate(self):
         instructions = self.expression.generate()
-        instructions.append({"op":"wait_clocks"})
+        instructions.append({
+            "op":"wait_clocks",
+            "pop":True,
+        })
         return instructions
 
 
@@ -272,11 +279,13 @@ class If:
             instructions.extend(self.expression.generate())
             if self.expression.size() == 8:
                 instructions.append({
-                    "op"    : "or",
+                    "op":"or",
+                    "pop":True,
                 })
             instructions.append({
                 "op"    : "jmp_if_false",
-                "label" : "else_%s"%id(self)
+                "pop"   : True,
+                "label" : "else_%s"%id(self),
             })
             instructions.extend(self.true_statement.generate())
             instructions.append({"op":"goto", "label":"end_%s"%id(self)})
@@ -295,23 +304,28 @@ class Switch:
 
             if self.expression.size() == 4:
                 instructions.append({
-                    "op":"push_literal",
-                    "literal":value & 0xffffffff,
+                    "op"      : "push_literal",
+                    "push"    : True,
+                    "literal" : value & 0xffffffff,
                 })
                 instructions.append({
                     "op":"equal",
+                    "pop":True,
                 })
             else:
                 instructions.append({
                     "op":"push_long_literal",
+                    "push"    : True,
                     "literal":(value >> 32) & 0xffffffff
                 })
                 instructions.append({
                     "op":"long_equal",
+                    "pop":True,
                 })
             instructions.append({
                 "op":"jmp_if_true",
-                "label":"case_%s"%id(case)
+                "label":"case_%s"%id(case),
+                "pop":True,
             })
 
         if hasattr(self, "default"):
@@ -361,11 +375,13 @@ class For:
 
             if self.expression.size() == 8:
                 instructions.append({
-                    "op"    : "or",
+                    "op":"or",
+                    "pop":True,
                     })
 
             instructions.append({
                 "op":"jmp_if_false",
+                "pop":True,
                 "label":"end_%s"%id(self)
                 })
 
@@ -657,6 +673,7 @@ class ArrayInstance:
             for value in self.initializer:
                 instructions.append({
                     "op":"push_literal",
+                    "push":True,
                     "literal":value,
                 })
             instructions.append({
@@ -676,6 +693,7 @@ class ArrayInstance:
             for value in self.initializer:
                 instructions.append({
                     "op":"push_literal",
+                    "push":True,
                     "literal":value,
                 })
             instructions.append({
@@ -894,40 +912,51 @@ class ANDOR(Expression):
         if self.left.size() == 8:
             instructions.append({
                 "op" : "pop_a_hi",
+                "pop":True,
             })
             instructions.append({
                 "op" : "pop_a_lo",
+                "pop":True,
             })
             instructions.append({
                 "op" : "push_a_lo",
+                "push":True,
             })
             instructions.append({
                 "op" : "push_a_hi",
+                "push":True,
             })
             instructions.append({
                 "op" : "or",
+                "pop":True,
             })
         elif self.left.size() == 4:
             instructions.append({
                 "op" : "pop_a_lo",
+                "pop":True,
             })
             instructions.append({
                 "op" : "push_a_lo",
+                "push":True,
             })
         instructions.append({
             "op":self.op, 
+            "pop":True,
             "label":"alternate_%s"%id(self),
         })
         if self.left.size() == 8:
             instructions.append({
                 "op" : "push_a_lo",
+                "push":True,
             })
             instructions.append({
                 "op" : "push_a_hi",
+                "push":True,
             })
         elif self.left.size() == 4:
             instructions.append({
                 "op" : "push_a_lo",
+                "push":True,
             })
         instructions.append({
             "op":"goto", 
@@ -1008,6 +1037,7 @@ class Binary(Expression):
             instructions.extend(self.left.generate())
             instructions.append({
                 "op"  :operation,
+                "pop":True,
             })
 
         else:
@@ -1015,6 +1045,7 @@ class Binary(Expression):
             instructions.extend(self.right.generate())
             instructions.append({
                 "op"  :operation,
+                "pop":True,
             })
 
         return instructions
@@ -1108,10 +1139,12 @@ class IntToLong(Expression):
         if self.expression.signed():
             instructions.append({
                 "op"   : "int_to_long",
+                "push":True,
             })
         else:
             instructions.append({
                 "op"   : "push_literal",
+                "push":True,
                 "literal":0,
             })
 
@@ -1150,12 +1183,14 @@ class IntToFloat(Expression):
 
         instructions.append({
             "op"   : "pop_a_lo",
+            "pop":True,
         })
         instructions.append({
             "op"   : "int_to_float",
         })
         instructions.append({
             "op"   : "push_a_lo",
+            "push":True,
         })
 
         return instructions
@@ -1176,12 +1211,14 @@ class FloatToInt(Expression):
 
         instructions.append({
             "op"   : "pop_a_lo",
+            "pop":True,
         })
         instructions.append({
             "op"   : "float_to_int",
         })
         instructions.append({
             "op"   : "push_a_lo",
+            "push":True,
         })
 
         return instructions
@@ -1201,18 +1238,22 @@ class DoubleToLong(Expression):
 
         instructions.append({
             "op"   : "pop_a_hi",
+            "pop":True,
         })
         instructions.append({
             "op"   : "pop_a_lo",
+            "pop":True,
         })
         instructions.append({
             "op"   : "double_to_long",
         })
         instructions.append({
             "op"   : "push_a_lo",
+            "push":True,
         })
         instructions.append({
             "op"   : "push_a_hi",
+            "push":True,
         })
 
         return instructions
@@ -1232,18 +1273,22 @@ class LongToDouble(Expression):
 
         instructions.append({
             "op"   : "pop_a_hi",
+            "pop":True,
         })
         instructions.append({
             "op"   : "pop_a_lo",
+            "pop":True,
         })
         instructions.append({
             "op"   : "long_to_double",
         })
         instructions.append({
             "op"   : "push_a_lo",
+            "push":True,
         })
         instructions.append({
             "op"   : "push_a_hi",
+            "push":True,
         })
 
         return instructions
@@ -1263,15 +1308,18 @@ class DoubleToFloat(Expression):
 
         instructions.append({
             "op"   : "pop_a_hi",
+            "pop":True,
         })
         instructions.append({
             "op"   : "pop_a_lo",
+            "pop":True,
         })
         instructions.append({
             "op"   : "double_to_float",
         })
         instructions.append({
             "op"   : "push_a_lo",
+            "push":True,
         })
 
         return instructions
@@ -1291,15 +1339,18 @@ class FloatToDouble(Expression):
 
         instructions.append({
             "op"   : "pop_a_lo",
+            "pop":True,
         })
         instructions.append({
             "op"   : "float_to_double",
         })
         instructions.append({
             "op"   : "push_a_lo",
+            "push":True,
         })
         instructions.append({
             "op"   : "push_a_hi",
+            "push":True,
         })
 
         return instructions
@@ -1391,6 +1442,11 @@ class Output(Expression):
 
         instructions.append({
             "op"   : "write",
+            "pop":True,
+        })
+        instructions.append({
+            "op"   : "free",
+            "pop":1,
         })
 
         return instructions
@@ -1413,9 +1469,11 @@ class FileWrite(Expression):
         if self.expression.type_() == "float" and self.expression.size() == 8:
             instructions.append({
                 "op"        : "pop_a_hi",
+                "pop":True,
             })
             instructions.append({
                 "op"        : "pop_a_lo",
+                "pop":True,
             })
             instructions.append({
                 "op"        : "long_float_file_write",
@@ -1424,14 +1482,17 @@ class FileWrite(Expression):
         elif self.expression.type_() == "float" and self.expression.size() == 4:
             instructions.append({
                 "op"        : "float_file_write",
+                "pop":True,
                 "file_name" : self.name,
                 })
         elif self.expression.type_() == "int" and self.expression.size() == 8:
             instructions.append({
                 "op"        : "pop_a_hi",
+                "pop":True,
             })
             instructions.append({
                 "op"        : "pop_a_lo",
+                "pop":True,
             })
             instructions.append({
                 "op"        : "long_file_write",
@@ -1440,6 +1501,7 @@ class FileWrite(Expression):
         else:
             instructions.append({
                 "op"        : "file_write",
+                "pop":True,
                 "file_name" : self.name,
                 })
 
@@ -1457,7 +1519,7 @@ class Input(Expression):
 
         instructions.append({
             "op"   : "read",
-            })
+        })
 
         return instructions
 
@@ -1469,7 +1531,10 @@ class FileRead(Expression):
         Expression.__init__(self, "int", 4, True)
 
     def generate(self):
-        return [{"op"   :"file_read", "file_name":self.name}]
+        return [{
+            "op"   :"file_read", 
+            "file_name":self.name
+        }]
 
 
 class Ready(Expression):
@@ -1586,6 +1651,7 @@ class Array(Object):
         instructions = []
         instructions.append({
             "op" : "push_literal",
+            "push":True,
             "literal" : self.instance.offset,
         })
         if self.instance.local:
@@ -1616,19 +1682,23 @@ class ArrayIndex(Object):
 
         instructions.append({
             "op":"push_literal",
+            "push":True,
             "literal":self.array.instance.element_size//4,
         })
 
         instructions.append({
             "op":"multiply",
+            "pop":True,
         })
 
         instructions.append({
             "op":"add",
+            "pop":True,
         })
 
         instructions.append({
             "op":"pop_global",
+            "pop":True,
         })
 
         instructions.append({
@@ -1654,19 +1724,23 @@ class ArrayIndex(Object):
         #Scale by stack size
         instructions.append({
             "op":"push_literal",
+            "push":True,
             "literal":self.array.instance.element_size//4,
         })
 
         instructions.append({
             "op":"multiply",
+            "pop":True,
         })
 
         instructions.append({
             "op":"add",
+            "pop":True,
         })
 
         instructions.append({
             "op":"pop_global",
+            "pop":True,
         })
 
         instructions.append({
@@ -1770,19 +1844,18 @@ class PostIncrement(Expression):
             "op":"pop_a_lo",
         })
         instructions.append({
-            "op":"push_a_lo",
-        })
-        instructions.append({
             "op":"push_literal",
             "literal":1,
         })
         if self.operator.startswith("+"):
             instructions.append({
-                 "op":"add",
+                "op":"add",
+                "pop":True,
             })
         else:
             instructions.append({
-                 "op":"subtract",
+                "op":"subtract",
+                "pop":True,
             })
         instructions.append({
             "op":"pop",
@@ -1790,6 +1863,7 @@ class PostIncrement(Expression):
         })
         instructions.append({
             "op":"push_a_lo",
+            "pop":True,
         })
 
         return instructions
@@ -1818,6 +1892,7 @@ class Constant(Expression):
 
         instructions = [{
             "op":"push_literal",
+            "push":True,
             "comment":"const",
             "literal":int_value & 0xffffffff}]
 
@@ -1825,6 +1900,7 @@ class Constant(Expression):
 
             instructions.append({
                 "op":"push_literal",
+                "push":True,
                 "comment":"const",
                 "literal":(int_value >> 32) & 0xffffffff})
 

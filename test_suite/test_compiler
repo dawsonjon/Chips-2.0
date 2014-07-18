@@ -5,6 +5,8 @@ import subprocess
 from random import randint
 from numpy import uint64, int64
 
+thoroughness = 100
+
 def test(test, code, no_init=False, check_output=""):
 
   #run only selected tests
@@ -101,6 +103,137 @@ def test_fails(test, code, no_init=False):
     sys.exit(0)
   else:
     print test, "...pass"
+
+
+class InvalidStimulus:
+    pass
+
+def long_function(type_, operator, a, b):
+    if operator == "*":
+        return int64(a) * int64(b)
+    if operator == "+":
+        return uint64((int(a) + int(b)) & 0xffffffffffffffff)
+    if operator == "-":
+        return uint64((int(a) - int(b)) & 0xffffffffffffffff)
+    if operator == "|":
+        return int64(a) | int64(b)
+    if operator == "&":
+        return int64(a) & int64(b)
+    if operator == "^":
+        return int64(a) ^ int64(b)
+    if operator == ">":
+        if type_.startswith("unsigned"):
+            return uint64(a) > uint64(b)
+        else:
+            return int64(a) > int64(b)
+    if operator == ">=":
+        if type_.startswith("unsigned"):
+            return uint64(a) >= uint64(b)
+        else:
+            return int64(a) >= int64(b)
+    if operator == "==":
+        return int64(a) == int64(b)
+    if operator == "!=":
+        return int64(a) != int64(b)
+    if operator == "<":
+        if type_.startswith("unsigned"):
+            return uint64(a) < uint64(b)
+        else:
+            return int64(a) < int64(b)
+    if operator == "<=":
+        if type_.startswith("unsigned"):
+            return uint64(a) <= uint64(b)
+        else:
+            return int64(a) <= int64(b)
+    if operator == "<<":
+        if b >= 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        return int64(a) << int64(b)
+    if operator == ">>":
+        if b >= 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) >> uint64(b)
+        else:
+            return int64(a) >> int64(b)
+    if operator == "/":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a)//uint64(b)
+        else:
+            negative = (a < 0) ^ (b < 0)
+            value = abs(a) // abs(b)
+            return -int64(value) if negative else int64(value)
+    if operator == "%":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) % uint64(b)
+        else:
+            negative = (a < 0)
+            value = abs(a) % abs(b)
+            return -int64(value) if negative else int64(value)
+
+
+def test_corner_cases(operator, type_):
+    n = 0
+    for a in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
+        for b in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
+            try:
+                test("long %s %i"%(operator, n),
+                """
+                void main(){
+                    %s i = 0x%xul;
+                    %s j = 0x%xul;
+                    assert((i %s j) == %su);
+                }
+                """%(type_, uint64(a), 
+                     type_, uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator,a,b)))
+                )
+                n+=1
+            except InvalidStimulus:
+                continue
+
+            if n == thoroughness:
+                return
+
+def test_random(operator, type_):
+    n = 0
+    a = randint(-(2**63), (2**63)-1)
+    b = randint(-(2**63), (2**63)-1)
+    while n < thoroughness:
+        try:
+            test("random long %s %i"%(operator, n),
+            """
+            void main(){
+                %s i = 0x%xul;
+                %s j = 0x%xul;
+                assert((i %s j) == %su);
+            }
+            """%(type_, uint64(a), 
+                 type_, uint64(b), 
+                 operator,
+                 hex(long_function(type_, operator, a, b)))
+            )
+        except InvalidStimulus:
+            pass
+        n+=1
+
+
+def test_long_arithmetic():
+    for type_ in ["long int", "unsigned long int"]:
+        for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
+            test_corner_cases(operator, type_)
+            test_random(operator, type_)
+
+#test_long_arithmetic()
 
 
 test("double_to_bits 1",
@@ -4415,130 +4548,3 @@ void main()
 }
 """)
 
-thoroughness = 100
-
-class InvalidStimulus:
-    pass
-
-def long_function(type_, operator, a, b):
-    if operator == "*":
-        return int64(a) * int64(b)
-    if operator == "+":
-        return uint64((int(a) + int(b)) & 0xffffffffffffffff)
-    if operator == "-":
-        return uint64((int(a) - int(b)) & 0xffffffffffffffff)
-    if operator == "|":
-        return int64(a) | int64(b)
-    if operator == "&":
-        return int64(a) & int64(b)
-    if operator == "^":
-        return int64(a) ^ int64(b)
-    if operator == ">":
-        if type_.startswith("unsigned"):
-            return uint64(a) > uint64(b)
-        else:
-            return int64(a) > int64(b)
-    if operator == ">=":
-        if type_.startswith("unsigned"):
-            return uint64(a) >= uint64(b)
-        else:
-            return int64(a) >= int64(b)
-    if operator == "==":
-        return int64(a) == int64(b)
-    if operator == "!=":
-        return int64(a) != int64(b)
-    if operator == "<":
-        if type_.startswith("unsigned"):
-            return uint64(a) < uint64(b)
-        else:
-            return int64(a) < int64(b)
-    if operator == "<=":
-        if type_.startswith("unsigned"):
-            return uint64(a) <= uint64(b)
-        else:
-            return int64(a) <= int64(b)
-    if operator == "<<":
-        if b > 64:
-            raise InvalidStimulus
-        if b < 0:
-            raise InvalidStimulus
-        return int64(a) << int64(b)
-    if operator == ">>":
-        if b > 64:
-            raise InvalidStimulus
-        if b < 0:
-            raise InvalidStimulus
-        if type_.startswith("unsigned"):
-            return uint64(a) >> uint64(b)
-        else:
-            return int64(a) >> int64(b)
-    if operator == "/":
-        if b == 0:
-            raise InvalidStimulus
-        if type_.startswith("unsigned"):
-            return uint64(a)//uint64(b)
-        else:
-            negative = (a < 0) ^ (b < 0)
-            value = abs(a) // abs(b)
-            return -int64(value) if negative else int64(value)
-    if operator == "%":
-        if b == 0:
-            raise InvalidStimulus
-        if type_.startswith("unsigned"):
-            return uint64(a) % uint64(b)
-        else:
-            negative = (a < 0)
-            value = abs(a) % abs(b)
-            return -int64(value) if negative else int64(value)
-
-
-def test_corner_cases(operator, type_):
-    n = 0
-    for a in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
-        for b in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
-            try:
-                test("long %s %i"%(operator, n),
-                """
-                void main(){
-                    %s i = 0x%xul;
-                    %s j = 0x%xul;
-                    assert((i %s j) == %su);
-                }
-                """%(type_, uint64(a), 
-                     type_, uint64(b), 
-                     operator,
-                     hex(long_function(type_, operator,a,b)))
-                )
-                n+=1
-            except InvalidStimulus:
-                continue
-
-            if n == thoroughness:
-                return
-
-def test_random(operator, type_):
-    n = 0
-    a = randint(-(2**63), (2**63)-1)
-    b = randint(-(2**63), (2**63)-1)
-    while n < thoroughness:
-        try:
-            test("random long %s %i"%(operator, n),
-            """
-            void main(){
-                %s i = 0x%xul;
-                %s j = 0x%xul;
-                assert((i %s j) == %su);
-            }
-            """%(type_, uint64(a), 
-                 type_, uint64(b), 
-                 operator,
-                 hex(long_function(type_, operator, a, b)))
-            )
-        except InvalidStimulus:
-            pass
-        n+=1
-
-for type_ in ["long int", "unsigned long int"]:
-    for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
-        test_corner_cases(operator, type_)
-        test_random(operator, type_)

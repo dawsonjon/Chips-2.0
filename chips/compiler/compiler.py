@@ -83,13 +83,11 @@ def compile_python_model(
         outputs = {}
         ):
 
-    reuse = "no_reuse" not in options
-    initialize_memory = "no_initialize_memory" not in options
     generate_library()
 
     try:
             #Optimize for area
-            parser = Parser(input_file, reuse, initialize_memory, parameters)
+            parser = Parser(input_file, False, False, parameters)
             process = parser.parse_process()
             name = process.main.name + dict_to_hash(parameters)
             instructions = process.generate()
@@ -98,7 +96,9 @@ def compile_python_model(
                 for i in instructions:
                     print i
 
+            debug = "debug" in options
             model = generate_python_model(
+                    debug,
                     input_file,
                     name,
                     instructions,

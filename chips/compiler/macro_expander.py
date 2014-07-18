@@ -36,6 +36,8 @@ def expand_macros(instructions, allocator):
             new_instructions.extend(long_shift_left(instruction))
         elif instruction["op"] == "long_shift_right":
             new_instructions.extend(long_shift_right(instruction))
+        elif instruction["op"] == "unsigned_long_shift_right":
+            new_instructions.extend(unsigned_long_shift_right(instruction))
         elif instruction["op"] == "long_not":
             new_instructions.extend(long_not(instruction))
         elif instruction["op"] == "long_float_add":
@@ -59,286 +61,290 @@ def expand_macros(instructions, allocator):
 
     return new_instructions
 
-def shift_left(allocator, instruction):
-    """
-    Shift Left (by a programable amount)
-    Implemented using 1 bit shifts.
-    """
-
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    start = unique()
-    end = unique()
-
-    counter = allocator.new(4, "shift_counter")
-    one = allocator.new(4, "one")
-
-    new_instruction = [
-        {
-        "op"  : "literal",
-        "literal" : 1,
-        "dest": one
-        },
-
-        {
-        "op"  : "literal",
-        "literal" : 0x3f,
-        "dest": counter
-        },
-
-        {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
-        },
-
-        {
-        "op"  : "and",
-        "src" : srcb,
-        "srcb" : counter,
-        "dest": counter
-        },
-
-        {
-        "op"    : "label",
-        "label" : start
-        },
-
-
-        {
-        "op"    : "jmp_if_false",
-        "src"   : counter,
-        "label" : end
-        },
-
-        {
-        "op"  : "shift_left",
-        "src" : dest,
-        "dest": dest
-        },
-
-        {
-        "op"   : "subtract",
-        "src"  : counter,
-        "srcb" : one,
-        "dest" : counter
-        },
-
-
-        {
-        "op"    : "goto",
-        "label" : start
-        },
-
-
-        {
-        "op"    : "label",
-        "label" : end
-        },
-    ]
-    allocator.free(counter)
-    allocator.free(one)
-
-    return new_instruction
-
-def shift_right(allocator, instruction):
-    """
-    Shift Right (by a programable amount)
-    Implemented using 1 bit shifts.
-    """
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-    start = unique()
-    end = unique()
-    counter = allocator.new(4, "shift_counter")
-    one = allocator.new(4, "one")
-    new_instruction = [
-        {
-        "op"  : "literal",
-        "literal" : 1,
-        "dest": one
-        },
-
-        {
-        "op"  : "literal",
-        "literal" : 0x3f,
-        "dest": counter
-        },
-
-        {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
-        },
-
-        {
-        "op"  : "and",
-        "src" : srcb,
-        "srcb" : counter,
-        "dest": counter
-        },
-
-        {
-        "op"    : "label",
-        "label" : start
-        },
-
-        {
-        "op"    : "jmp_if_false",
-        "src"   : counter,
-        "label" : end
-        },
-
-        {
-        "op"  : "shift_right",
-        "src" : dest,
-        "dest": dest
-        },
-
-        {
-        "op"   : "subtract",
-        "src"  : counter,
-        "srcb" : one,
-        "dest" : counter
-        },
-
-
-        {
-        "op"    : "goto",
-        "label" : start
-        },
-
-        {
-        "op"    : "label",
-        "label" : end
-        },
-    ]
-    allocator.free(counter)
-    allocator.free(one)
-
-    return new_instruction
-
-def unsigned_shift_right(allocator, instruction):
-    """
-    Shift Right (by a programable amount)
-    Implemented using 1 bit shifts.
-    """
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-    start = unique()
-    end = unique()
-    counter = allocator.new(4, "shift_counter")
-    one = allocator.new(4, "one")
-    new_instruction = [
-        {
-        "op"  : "literal",
-        "literal" : 1,
-        "dest": one
-        },
-
-        {
-        "op"  : "literal",
-        "literal" : 0x3f,
-        "dest": counter
-        },
-
-        {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
-        },
-
-        {
-        "op"  : "and",
-        "src" : srcb,
-        "srcb" : counter,
-        "dest": counter
-        },
-
-        {
-        "op"    : "label",
-        "label" : start
-        },
-
-        {
-        "op"    : "jmp_if_false",
-        "src"   : counter,
-        "label" : end
-        },
-
-        {
-        "op"  : "unsigned_shift_right",
-        "src" : dest,
-        "dest": dest
-        },
-
-        {
-        "op"   : "subtract",
-        "src"  : counter,
-        "srcb" : one,
-        "dest" : counter
-        },
-
-
-        {
-        "op"    : "goto",
-        "label" : start
-        },
-
-        {
-        "op"    : "label",
-        "label" : end
-        },
-    ]
-    allocator.free(counter)
-    allocator.free(one)
-
-    return new_instruction
-
 def long_shift_left(instruction):
 
     """Long Shift Left (by a programable amount)
     Implemented using 1 bit shifts.
     """
 
+    end = unique()
+
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
-        #shift low
+
+        #shift msb and lsb by up to 32
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "shift_left",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_hi",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_left_with_carry",
+        "pop":True,
+        },
+
+        #if shift amount is less than or equal to 32
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_literal",
+        "push":True,
+        "literal":32,
+        },
+        {
+        "op"  : "greater",
+        "pop":True,
+        "literal":32,
+        },
+        {
+        "op"  : "jmp_if_false",
+        "label":end,
+        "pop":True,
+        },
+
+        #reduce shift amount by 32
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_literal",
+        "push":True,
+        "literal": 32,
+        },
+        {
+        "op"  : "subtract",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_b_lo",
+        "pop":True,
+        },
+
+        #shift msb and lsb again by up to 32
+        {
+        "op"  : "pop_a_hi",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_lo",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_left",
+        "pop":True,
         },
 
         #shift high
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "shift_left_with_carry",
+        "pop":True,
+        },
+
+        {
+        "op"  : "label",
+        "label":end,
+        },
+    ]
+
+    return new_instruction
+
+def unsigned_long_shift_right(instruction):
+
+    """Long Shift Left (by a programable amount)
+    Implemented using 1 bit shifts.
+    """
+    end = unique()
+
+    new_instruction = [
+        {
+        "op"  : "pop_b_hi",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_b_lo",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_hi",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_lo",
+        "pop":True,
+        },
+
+
+        #shift msb and lsb by up to 32
+        {
+        "op"  : "push_a_hi",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "unsigned_shift_right",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_right_with_carry",
+        "pop":True,
+        },
+
+        #if shift amount is less than or equal to 32
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_literal",
+        "push":True,
+        "literal":32,
+        },
+        {
+        "op"  : "greater",
+        "pop":True,
+        "literal":32,
+        },
+        {
+        "op"  : "jmp_if_false",
+        "label":end,
+        "pop":True,
+        },
+
+        #reduce shift amount by 32
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_literal",
+        "push":True,
+        "literal": 32,
+        },
+        {
+        "op"  : "subtract",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_b_lo",
+        "pop":True,
+        },
+
+        #shift msb and lsb again by up to 32
+        {
+        "op"  : "pop_a_lo",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_hi",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_hi",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "unsigned_shift_right",
+        "pop":True,
+        },
+
+        #shift high
+        {
+        "op"  : "push_a_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_right_with_carry",
+        "pop":True,
+        },
+
+        {
+        "op"  : "label",
+        "label":end,
+        },
+        {
+        "op"  : "pop_a_lo",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_hi",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_a_hi",
+        "push":True,
         },
     ]
 
@@ -349,225 +355,211 @@ def long_shift_right(instruction):
     """Long Shift Left (by a programable amount)
     Implemented using 1 bit shifts.
     """
+    end = unique()
 
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
+        },
+
+
+        #shift msb and lsb by up to 32
+        {
+        "op"  : "push_a_hi",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_right",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_right_with_carry",
+        "pop":True,
+        },
+
+        #if shift amount is less than or equal to 32
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_literal",
+        "push":True,
+        "literal":32,
+        },
+        {
+        "op"  : "greater",
+        "pop":True,
+        "literal":32,
+        },
+        {
+        "op"  : "jmp_if_false",
+        "label":end,
+        "pop":True,
+        },
+
+        #reduce shift amount by 32
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "push_literal",
+        "push":True,
+        "literal": 32,
+        },
+        {
+        "op"  : "subtract",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_b_lo",
+        "pop":True,
+        },
+
+        #shift msb and lsb again by up to 32
+        {
+        "op"  : "pop_a_lo",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_hi",
+        "pop":True,
+        },
+        {
+        "op"  : "push_a_hi",
+        "push":True,
+        },
+        {
+        "op"  : "push_b_lo",
+        "push":True,
+        },
+        {
+        "op"  : "shift_right",
+        "pop":True,
         },
 
         #shift high
         {
-        "op"  : "push_a_hi",
+        "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
-        "op"  : "shift_right",
+        "op"  : "shift_right_with_carry",
+        "pop":True,
         },
 
-        #shift low
+        {
+        "op"  : "label",
+        "label":end,
+        },
+        {
+        "op"  : "pop_a_lo",
+        "pop":True,
+        },
+        {
+        "op"  : "pop_a_hi",
+        "pop":True,
+        },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
-        "op"  : "push_b_lo",
-        },
-        {
-        "op"  : "shift_right_with_carry",
-        },
-    ]
-
-    return new_instruction
-
-def unsigned_long_shift_right(allocator, instruction):
-    """
-    Unsigned Long Shift Left (by a programable amount)
-    Implemented using 1 bit shifts.
-    """
-
-    src = instruction["src"]
-    srcb = instruction["srcb"]
-    dest = instruction["dest"]
-
-    start = unique()
-    end = unique()
-
-    counter = allocator.new(4, "shift_counter")
-    one = allocator.new(4, "one")
-
-    new_instruction = [
-        {
-        "op"  : "literal",
-        "literal" : 1,
-        "dest": one
-        },
-
-        {
-        "op"  : "literal",
-        "literal" : 0x7f,
-        "dest": counter
-        },
-
-        {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
-        },
-
-        {
-        "op"  : "move",
-        "src" : src + 1,
-        "dest": dest + 1
-        },
-
-        {
-        "op"  : "and",
-        "src" : srcb,
-        "srcb" : counter,
-        "dest": counter
-        },
-
-        {
-        "op"    : "label",
-        "label" : start
-        },
-
-
-        {
-        "op"    : "jmp_if_false",
-        "src"   : counter,
-        "label" : end
-        },
-
-        {
-        "op"  : "unsigned_shift_right",
-        "src" : dest + 1,
-        "dest": dest + 1
-        },
-
-        {
-        "op"  : "shift_right_with_carry",
-        "src" : dest,
-        "dest": dest
-        },
-
-        {
-        "op"   : "subtract",
-        "src"  : counter,
-        "srcb" : one,
-        "dest" : counter
-        },
-
-        {
-        "op"    : "goto",
-        "label" : start
-        },
-
-
-        {
-        "op"    : "label",
-        "label" : end
-        },
-    ]
-    allocator.free(counter)
-    allocator.free(one)
-
-    return new_instruction
-
-def long_report(allocator, instruction):
-
-    src = instruction["src"]
-
-    new_instruction = [
-        {
-        "op"  : "load_hi",
-        "src" : src + 1,
-        "srcb": src + 1,
-        },
-        instruction,
-    ]
-
-    return new_instruction
-
-def unsigned_short_to_long(allocator, instruction):
-    """
-    Convert a short data type to a long data type
-    """
-
-    src = instruction["src"]
-    dest = instruction["dest"]
-    new_instruction = [
-        {
-        "op"  : "literal",
-        "literal" : 0,
-        "dest": dest + 1
-        },
-
-        {
-        "op"  : "move",
-        "src" : src,
-        "dest": dest
+        "op"  : "push_a_hi",
+        "push":True,
         },
     ]
 
     return new_instruction
 
 def long_equal(instruction):
+
     """ perform equal function on long numbers """
 
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
 
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
 
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
 
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
 
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
 
         {
         "op"  : "equal",
+        "pop":True,
         },
 
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
 
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
 
         {
         "op"  : "equal",
+        "pop":True,
         },
 
         {
         "op"   : "and",
+        "pop":True,
         },
     ]
     return new_instruction
@@ -579,46 +571,57 @@ def long_not_equal(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
 
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
 
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
 
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
 
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
 
         {
         "op"  : "not_equal",
+        "pop":True,
         },
 
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
 
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
 
         {
         "op"  : "not_equal",
+        "pop":True,
         },
 
         {
         "op"   : "or",
+        "pop":True,
         },
     ]
 
@@ -631,55 +634,70 @@ def long_greater(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb greater?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "greater",
+        "pop":True,
         },
 
         #msb equal?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "equal",
+        "pop":True,
         },
 
         #lsb greater?
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "unsigned_greater",
+        "pop":True,
         },
 
         {
         "op"  : "and",
+        "pop":True,
         },
         {
         "op"  : "or",
+        "pop":True,
         },
 
     ]
@@ -692,54 +710,69 @@ def unsigned_long_greater(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb greater?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "unsigned_greater",
+        "push":True,
         },
 
         #msb equal?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "equal",
+        "pop":True,
         },
 
         #lsb greater?
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "unsigned_greater",
+        "push":True,
         },
         {
         "op"  : "and",
+        "pop":True,
         },
         {
         "op"  : "or",
+        "pop":True,
         },
 
     ]
@@ -752,54 +785,69 @@ def long_greater_equal(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb greater?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "greater",
+        "pop":True,
         },
 
         #msb equal?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "equal",
+        "pop":True,
         },
 
         #lsb greater?
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "unsigned_greater_equal",
+        "pop":True,
         },
         {
         "op"  : "and",
+        "pop":True,
         },
         {
         "op"  : "or",
+        "pop":True,
         },
 
     ]
@@ -813,54 +861,69 @@ def unsigned_long_greater_equal(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb greater?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "unsigned_greater",
+        "pop":True,
         },
 
         #msb equal?
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "equal",
+        "pop":True,
         },
 
         #lsb greater?
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "unsigned_greater_equal",
+        "pop":True,
         },
         {
         "op"  : "and",
+        "pop":True,
         },
         {
         "op"  : "or",
+        "pop":True,
         },
 
     ]
@@ -873,37 +936,47 @@ def long_and(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "and",
+        "pop":True,
         },
 
         #lsb
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "and",
+        "pop":True,
         },
     ]
     return new_instruction
@@ -915,37 +988,47 @@ def long_or(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "or",
+        "pop":True,
         },
 
         #lsb
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "or",
+        "pop":True,
         },
     ]
 
@@ -957,37 +1040,47 @@ def long_xor(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #msb
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "xor",
+        "pop":True,
         },
 
         #lsb
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "xor",
+        "pop":True,
         },
     ]
 
@@ -999,21 +1092,27 @@ def long_not(instruction):
     new_instruction = [
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "not",
+        "pop":True,
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "not",
+        "pop":True,
         },
     ]
     return new_instruction
@@ -1024,37 +1123,47 @@ def long_add(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #add
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "add",
+        "pop":True,
         },
 
         #add_with_carry
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "add_with_carry",
+        "pop":True,
         },
 
     ]
@@ -1067,37 +1176,47 @@ def long_subtract(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #add
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "subtract",
+        "pop":True,
         },
 
         #add_with_carry
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "subtract_with_carry",
+        "pop":True,
         },
 
     ]
@@ -1110,58 +1229,74 @@ def long_multiply(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
 
         #
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "multiply",
+        "pop":True,
         },
         {
         "op"  : "carry",
+        "push":True,
         },
 
         #
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_b_hi",
+        "push":True,
         },
         {
         "op"  : "multiply",
+        "pop":True,
         },
 
         #
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
         {
         "op"  : "push_b_lo",
+        "push":True,
         },
         {
         "op"  : "multiply",
+        "pop":True,
         },
 
         {
         "op"  : "add",
+        "pop":True,
         },
         {
         "op"  : "add",
+        "pop":True,
         },
 
     ]
@@ -1173,24 +1308,30 @@ def long_float_add(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "long_float_add",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
 
     ]
@@ -1201,24 +1342,30 @@ def long_float_subtract(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "long_float_subtract",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
 
     ]
@@ -1229,24 +1376,30 @@ def long_float_multiply(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "long_float_multiply",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
     ]
     return new_instruction
@@ -1256,24 +1409,30 @@ def long_float_divide(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_hi",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "long_float_divide",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
         {
         "op"  : "push_a_hi",
+        "push":True,
         },
     ]
     return new_instruction
@@ -1283,15 +1442,18 @@ def float_add(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "float_add",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
 
     ]
@@ -1302,15 +1464,18 @@ def float_subtract(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "float_subtract",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
 
     ]
@@ -1321,15 +1486,18 @@ def float_multiply(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "float_multiply",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
     ]
     return new_instruction
@@ -1339,15 +1507,18 @@ def float_divide(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_lo",
+        "pop":True,
         },
         {
         "op"  : "pop_a_lo",
+        "pop":True,
         },
         {
         "op"  : "float_divide",
         },
         {
         "op"  : "push_a_lo",
+        "push":True,
         },
     ]
 
