@@ -58,48 +58,22 @@ possible to implement the function using an explicitly created stack.
     
      
     /* recursive sort */
-    void quick_sort(int array[]){
-     
-        /* reccursive functions are not supported */
-        /* implement a stack explicitly */
-        unsigned left, right, pivot;
-        unsigned lefts[length];
-        unsigned rights[length];
-        unsigned stack_pointer = 1;
+    void quick_sort(int array[], unsigned left, unsigned right){
+        unsigned pivot;
     
-        /* initialy push whole array onto stack */
-        lefts[0] = 0;
-        rights[0] = length-1;
+        /* if the subarray has two or more elements */
+        if (left < right){
     
-        while(stack_pointer){
+            /* partition sub array into two further sub arrays */
+            pivot = (left + right) >> 1;
+            pivot = partition(array, left, right, pivot);
     
-    
-            /* pop a sub-array from stack */
-            stack_pointer--;
-            left = lefts[stack_pointer];
-            right = rights[stack_pointer];
-    
-    
-            /* if the subarray has two or more elements */
-            if (left < right){
-    
-                /* partition sub array into two further sub arrays */
-                pivot = (left + right) >> 1;
-                pivot = partition(array, left, right, pivot);
-    
-                /* push both subarrays onto stack */
-                lefts[stack_pointer] = left;
-                rights[stack_pointer] = pivot - 1;
-                stack_pointer++;
-                lefts[stack_pointer] = pivot + 1;
-                rights[stack_pointer] = right;
-                stack_pointer++;
-            }
-    
+            /* push both subarrays onto stack */
+            quick_sort(array, left, pivot-1);
+            quick_sort(array, pivot+1, right);
         }
     
     }
-    
     
     void main(){
         int array[length];
@@ -129,7 +103,7 @@ possible to implement the function using an explicitly created stack.
         array[15] = 1;
     
         /* Sort the array */
-        quick_sort(array);
+        quick_sort(array, 0, length-1);
     
         for(i=0; i<length; i++){
             report(array[i]);
@@ -139,36 +113,36 @@ possible to implement the function using an explicitly created stack.
 
 The algorithm is tested using an array containing out of order values. The program correctly sorts the array::
 
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         0 (report at line: 122 in file: sort.c)
-         1 (report at line: 122 in file: sort.c)
-         2 (report at line: 122 in file: sort.c)
-         3 (report at line: 122 in file: sort.c)
-         4 (report at line: 122 in file: sort.c)
-         5 (report at line: 122 in file: sort.c)
-         6 (report at line: 122 in file: sort.c)
-         7 (report at line: 122 in file: sort.c)
-         8 (report at line: 122 in file: sort.c)
-         9 (report at line: 122 in file: sort.c)
-        10 (report at line: 122 in file: sort.c)
-        11 (report at line: 122 in file: sort.c)
-        12 (report at line: 122 in file: sort.c)
-        13 (report at line: 122 in file: sort.c)
-        14 (report at line: 122 in file: sort.c)
-        15 (report at line: 122 in file: sort.c)
-        16 (report at line: 122 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         0 (report at line: 96 in file: sort.c)
+         1 (report at line: 96 in file: sort.c)
+         2 (report at line: 96 in file: sort.c)
+         3 (report at line: 96 in file: sort.c)
+         4 (report at line: 96 in file: sort.c)
+         5 (report at line: 96 in file: sort.c)
+         6 (report at line: 96 in file: sort.c)
+         7 (report at line: 96 in file: sort.c)
+         8 (report at line: 96 in file: sort.c)
+         9 (report at line: 96 in file: sort.c)
+        10 (report at line: 96 in file: sort.c)
+        11 (report at line: 96 in file: sort.c)
+        12 (report at line: 96 in file: sort.c)
+        13 (report at line: 96 in file: sort.c)
+        14 (report at line: 96 in file: sort.c)
+        15 (report at line: 96 in file: sort.c)
+        16 (report at line: 96 in file: sort.c)
 

@@ -18,7 +18,7 @@ double sqrt(double n){
     double square, x, old;
     x = n;
     old = 0.0;
-    while(old != x){
+    while(fabs(old - x) > 0.00001){
         old = x;
         x = (x + n/x)*0.5;
     }

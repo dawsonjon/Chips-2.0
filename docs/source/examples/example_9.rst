@@ -91,6 +91,7 @@ is referred to as the window.
                     new_size += 9;
                 }
     
+                report(pointer);
             }
             /*report the compression ratio of this block in simulation*/
             report(new_size / (8.0*N));

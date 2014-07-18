@@ -176,11 +176,11 @@ class Return:
         if hasattr(self, "expression"):
             instructions.extend(self.expression.generate())
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.function.return_pointer,
             })
             instructions.append({
-                "op":"pop",
+                "op":"*tos->*pointer",
                 "literal":self.function.size()//4,
             })
         instructions.append({"op":"return"})
@@ -299,12 +299,30 @@ class If:
 class Switch:
 
     def generate(self):
-        instructions = self.expression.generate()
+        instructions = []
+        instructions.extend(self.expression.generate())
+        if self.expression.size() == 4:
+            instructions.append({
+                "op":"*tos->temp1",
+                "pop":True,
+            })
+        else:
+            instructions.append({
+                "op":"*tos->temp2",
+                "pop":True,
+            })
+            instructions.append({
+                "op": "*tos->temp1",
+                "pop":True,
+            })
         for value, case in self.cases.iteritems():
-
             if self.expression.size() == 4:
                 instructions.append({
-                    "op"      : "push_literal",
+                    "op"      : "temp1->*tos",
+                    "push":True,
+                })
+                instructions.append({
+                    "op"      : "literal->*tos",
                     "push"    : True,
                     "literal" : value & 0xffffffff,
                 })
@@ -314,13 +332,25 @@ class Switch:
                 })
             else:
                 instructions.append({
-                    "op":"push_long_literal",
+                    "op"      : "temp1->*tos",
+                    "push":True,
+                })
+                instructions.append({
+                    "op"      : "temp2->*tos",
+                    "push":True,
+                })
+                instructions.append({
+                    "op":"literal->*tos",
+                    "push"    : True,
+                    "literal":(value & 0xffffffff)
+                })
+                instructions.append({
+                    "op":"literal->*tos",
                     "push"    : True,
                     "literal":(value >> 32) & 0xffffffff
                 })
                 instructions.append({
                     "op":"long_equal",
-                    "pop":True,
                 })
             instructions.append({
                 "op":"jmp_if_true",
@@ -334,6 +364,10 @@ class Switch:
                 "op":"goto",
                 "label":"case_%s"%id(self.default)
             })
+        instructions.append({
+            "op":"goto",
+            "label":"break_%s"%id(self),
+        })
 
         instructions.extend(self.statement.generate())
         instructions.append({"op":"label", "label":"break_%s"%id(self)})
@@ -343,7 +377,16 @@ class Switch:
 class Case:
 
     def generate(self):
-        return [{"op":"label", "label":"case_%s"%id(self)}]
+        instructions = []
+        instructions.append({
+            "op":"label",
+            "label":"case_%s"%id(self),
+        })
+        instructions.append({
+            "op":"free",
+            "literal":1,
+        })
+        return instructions
 
 
 class Default:
@@ -479,11 +522,11 @@ class VariableInstance:
         instructions = []
         instructions.extend(self.initializer.generate())
         instructions.append({
-            "op":"global",
+            "op":"literal->pointer",
             "literal":self.offset,
         })
         instructions.append({
-            "op":"pop",
+            "op":"*tos->*pointer",
             "literal":self.size()//4,
         })
         return instructions
@@ -494,11 +537,11 @@ class VariableInstance:
         instructions = []
         instructions.extend(self.initializer.generate())
         instructions.append({
-            "op":"local",
+            "op":"literal+frame->pointer",
             "literal":self.offset,
         })
         instructions.append({
-            "op":"pop",
+            "op":"*tos->*pointer",
             "literal":self.size()//4,
         })
         return instructions
@@ -560,7 +603,7 @@ class ArrayDeclaration:
     def argument_instance(self, function):
         local = True
         offset = function.offset
-        function.offset += 4
+        function.offset += 1
         return ArrayArgumentInstance(
             offset,
             4,
@@ -601,34 +644,6 @@ class ArrayArgumentInstance:
         self.element_size = element_size
         self.element_signed = element_signed
         self.initializer = initializer
-
-    #def generate(self):
-        #print "array argument"
-        #assert self.local
-        #instructions = []
-        #instructions.append({
-            #"op":"local",
-            #"literal":self.offset
-        #})
-        #instructions.append({
-            #"op":"push",
-            #"literal":1
-        #})
-        #return instructions
-
-    #def copy(self):
-        #print "array argument"
-        #assert self.local
-        #instructions = []
-        #instructions.append({
-            #"op":"local",
-            #"literal":self.offset
-        #})
-        #instructions.append({
-            #"op":"pop",
-            #"literal":1
-        #})
-        #return instructions
 
     def reference(self):
         return ArrayArgument(self)
@@ -672,16 +687,16 @@ class ArrayInstance:
         if self.initializer:
             for value in self.initializer:
                 instructions.append({
-                    "op":"push_literal",
+                    "op":"literal->*tos",
                     "push":True,
                     "literal":value,
                 })
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.offset,
             })
             instructions.append({
-                "op":"pop",
+                "op":"*tos->*pointer",
                 "literal":self.size()//4,
             })
         return instructions
@@ -692,16 +707,16 @@ class ArrayInstance:
         if self.initializer:
             for value in self.initializer:
                 instructions.append({
-                    "op":"push_literal",
+                    "op":"literal->*tos",
                     "push":True,
                     "literal":value,
                 })
             instructions.append({
-                "op":"local",
+                "op":"literal+frame->pointer",
                 "literal":self.offset,
             })
             instructions.append({
-                "op":"pop",
+                "op":"*tos->*pointer",
                 "literal":self.size()//4,
             })
         return instructions
@@ -893,6 +908,27 @@ def AND(left, right):
 def OR(left, right):
     return ANDOR(left, right, "jmp_if_false")
 
+class MultiExpression(Expression):
+
+    def __init__(self, first, others):
+        self.first = constant_fold(first)
+        self.others = [constant_fold(i) for i in others]
+        Expression.__init__(
+            self,
+            first.type_(),
+            first.size(),
+            first.signed())
+
+    def generate(self):
+        instructions = []
+        instructions.extend(self.first.generate())
+        for expression in self.others:
+            instructions.extend(expression.generate())
+            instructions.append({
+                "op":"free",
+                "literal":expression.size()//4,
+            })
+        return instructions
 
 class ANDOR(Expression):
 
@@ -1143,7 +1179,7 @@ class IntToLong(Expression):
             })
         else:
             instructions.append({
-                "op"   : "push_literal",
+                "op"   : "literal->*tos",
                 "push":True,
                 "literal":0,
             })
@@ -1418,11 +1454,11 @@ class FunctionCall(Expression):
         instructions.append({"op":"epilogue"})
         if self.function.type_ != "void":
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.function.return_pointer
             })
             instructions.append({
-                "op":"push",
+                "op":"*pointer->*tos",
                 "literal":self.function.size()//4
             })
 
@@ -1434,7 +1470,7 @@ class Output(Expression):
     def __init__(self, handle, expression):
         self.handle = handle
         self.expression = expression
-        Expression.__init__(self, "int", 4, False)
+        Expression.__init__(self, "void", 0, False)
 
     def generate(self):
         instructions = self.handle.generate()
@@ -1446,7 +1482,7 @@ class Output(Expression):
         })
         instructions.append({
             "op"   : "free",
-            "pop":1,
+            "literal":1,
         })
 
         return instructions
@@ -1459,9 +1495,9 @@ class FileWrite(Expression):
         self.expression = expression
         Expression.__init__(
             self,
-            expression.type_(),
-            expression.size(),
-            expression.signed())
+            "void",
+            0,
+            False)
 
     def generate(self):
         instructions = self.expression.generate()
@@ -1561,16 +1597,16 @@ class Struct(Object):
         instructions = []
         if self.instance.local:
             instructions.append({
-                "op":"local",
+                "op":"literal+frame->pointer",
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.instance.offset,
             })
         instructions.append({
-            "op":"push",
+            "op":"*pointer->*tos",
             "literal":self.instance.size()//4,
         })
         return instructions
@@ -1579,17 +1615,17 @@ class Struct(Object):
         instructions = []
         if self.instance.local:
             instructions.append({
-                "op":"local",
+                "op":"literal+frame->pointer",
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.instance.offset,
             })
         if leave_on_stack:
             instructions.append({
-                "op":"push",
+                "op":"*pointer->*tos",
                 "literal":self.instance.size()//4,
             })
 
@@ -1605,37 +1641,17 @@ class ArrayArgument(Object):
 
     def generate(self):
         #leave the address of the first element on the stack
-        print "generating array argument"
         instructions = []
         instructions.append({
-            "op" : "local",
+            "op" : "literal+frame->pointer",
             "literal" : self.instance.offset,
         })
         instructions.append({
-            "op" : "push",
+            "op" : "*pointer->*tos",
             "literal" : 1,
         })
 
         return instructions
-
-    #def copy(self, expression, leave_on_stack=True):
-        #instructions = expression.generate()
-        #if self.instance.local:
-            #instructions.append({
-                #"op" : "local",
-                #"literal" : self.instance.offset,
-            #})
-        #else:
-            #instructions.append({
-                #"op" : "global",
-                #"literal" : self.instance.offset,
-            #})
-        #instructions.append({
-            #"op" : "pop",
-            #"literal" : 1,
-        #})
-
-        #return instructions
 
 
 class Array(Object):
@@ -1650,7 +1666,7 @@ class Array(Object):
         #leave the address of the first element on the stack
         instructions = []
         instructions.append({
-            "op" : "push_literal",
+            "op" : "literal->*tos",
             "push":True,
             "literal" : self.instance.offset,
         })
@@ -1681,7 +1697,7 @@ class ArrayIndex(Object):
         instructions.extend(self.index_expression.generate())
 
         instructions.append({
-            "op":"push_literal",
+            "op":"literal->*tos",
             "push":True,
             "literal":self.array.instance.element_size//4,
         })
@@ -1697,12 +1713,12 @@ class ArrayIndex(Object):
         })
 
         instructions.append({
-            "op":"pop_global",
+            "op":"*tos->pointer",
             "pop":True,
         })
 
         instructions.append({
-            "op":"push",
+            "op":"*pointer->*tos",
             "literal":self.array.instance.element_size//4,
         })
 
@@ -1723,7 +1739,7 @@ class ArrayIndex(Object):
 
         #Scale by stack size
         instructions.append({
-            "op":"push_literal",
+            "op":"literal->*tos",
             "push":True,
             "literal":self.array.instance.element_size//4,
         })
@@ -1739,18 +1755,18 @@ class ArrayIndex(Object):
         })
 
         instructions.append({
-            "op":"pop_global",
+            "op":"*tos->pointer",
             "pop":True,
         })
 
         instructions.append({
-            "op":"pop",
+            "op":"*tos->*pointer",
             "literal":self.array.instance.element_size//4,
         })
 
         if leave_on_stack:
             instructions.append({
-                "op":"push",
+                "op":"*pointer->*tos",
                 "literal":self.array.instance.element_size//4,
             })
 
@@ -1767,16 +1783,16 @@ class Variable(Object):
 
         if self.instance.local:
             instructions.append({
-                "op":"local",
+                "op":"literal+frame->pointer",
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.instance.offset,
             })
         instructions.append({
-            "op":"push",
+            "op":"*pointer->*tos",
             "literal":self.size()//4,
         })
 
@@ -1791,21 +1807,21 @@ class Variable(Object):
 
         if self.instance.local:
             instructions.append({
-                "op":"local",
+                "op":"literal+frame->pointer",
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
-                "op":"global",
+                "op":"literal->pointer",
                 "literal":self.instance.offset,
             })
         instructions.append({
-            "op":"pop",
+            "op":"*tos->*pointer",
             "literal":self.size()//4,
         })
         if leave_on_stack:
             instructions.append({
-                "op":"push",
+                "op":"*pointer->*tos",
                 "literal":self.size()//4,
             })
 
@@ -1821,54 +1837,6 @@ class Variable(Object):
             raise NotConstant
 
 
-class PostIncrement(Expression):
-
-    def  __init__(self, operator, lvalue):
-        self.operator = operator
-        self.lvalue = lvalue
-        Expression.__init__(self, lvalue.type_(), lvalue.size(), lvalue.signed())
-
-    def generate(self):
-
-        instructions = []
-
-        instructions.append({
-            "op":"local",
-            "literal":self.lvalue.instance.offset,
-        })
-        instructions.append({
-            "op":"push",
-            "literal":1,
-        })
-        instructions.append({
-            "op":"pop_a_lo",
-        })
-        instructions.append({
-            "op":"push_literal",
-            "literal":1,
-        })
-        if self.operator.startswith("+"):
-            instructions.append({
-                "op":"add",
-                "pop":True,
-            })
-        else:
-            instructions.append({
-                "op":"subtract",
-                "pop":True,
-            })
-        instructions.append({
-            "op":"pop",
-            "literal":1,
-        })
-        instructions.append({
-            "op":"push_a_lo",
-            "pop":True,
-        })
-
-        return instructions
-
-
 class Assignment(Expression):
 
     def __init__(self, lvalue, expression):
@@ -1878,7 +1846,6 @@ class Assignment(Expression):
 
     def generate(self, leave_on_stack=True):
         return self.lvalue.copy(self.expression, leave_on_stack)
-
 
 class Constant(Expression):
 
@@ -1891,7 +1858,7 @@ class Constant(Expression):
         int_value = self.int_value()
 
         instructions = [{
-            "op":"push_literal",
+            "op":"literal->*tos",
             "push":True,
             "comment":"const",
             "literal":int_value & 0xffffffff}]
@@ -1899,7 +1866,7 @@ class Constant(Expression):
         if self.size() == 8:
 
             instructions.append({
-                "op":"push_literal",
+                "op":"literal->*tos",
                 "push":True,
                 "comment":"const",
                 "literal":(int_value >> 32) & 0xffffffff})

@@ -17,6 +17,7 @@ class GlobalScope:
     def __init__(self):
         self.offset = 0
         self.is_global = True
+        self.referenced_globals = []
 
 
 class Parser:
@@ -307,20 +308,26 @@ class Parser:
         ]
         lvalue = self.parse_ternary_expression()
         if self.tokens.peek() in assignment_operators:
+            
+            #Check that lvalue is modifiable
+            #
             if lvalue.const():
                 self.tokens.error(
                     "left hand operand of assignment is not modifiable")
+            if not hasattr(lvalue, "copy"):
+                self.tokens.error("lvalue is not modifiable in assignment")
 
+            #Create the expression and the lvalue
+            #
             operator = self.tokens.get()
             if operator == "=":
                 expression = self.parse_ternary_expression()
             else:
                 expression = self.parse_ternary_expression()
-                left = lvalue
-                left, expression = self.coerce_types(left, expression)
-                expression = Binary(operator[:-1], left, expression)
-                expression = self.substitute_function(expression)
+                expression = self.binary(operator[:-1], lvalue, expression)
 
+            #Promote numberic types
+            #
             if is_double(lvalue):
                 expression = self.to_double(expression)
             elif is_float(lvalue):
@@ -339,9 +346,6 @@ class Parser:
                     "size mismatch in assignment expected: %s actual: %s"%(
                         lvalue.size(),
                         expression.size()))
-
-            if not hasattr(lvalue, "copy"):
-                self.tokens.error("lvalue is not modifiable in assignment")
 
             return Assignment(lvalue, expression)
         else:
@@ -799,9 +803,7 @@ class Parser:
             while self.tokens.peek() in operators:
                 operator = self.tokens.get()
                 right = self.parse_unary_expression()
-                left, right = self.coerce_types(left, right)
-                left = Binary(operator, left, right)
-                left = self.substitute_function(left)
+                left = self.binary(operator, left, right)
             return left
         else:
             next_operators = operator_precedence[operators[0]]
@@ -809,9 +811,7 @@ class Parser:
             while self.tokens.peek() in operators:
                 operator = self.tokens.get()
                 right = self.parse_binary_expression(next_operators)
-                left, right = self.coerce_types(left, right)
-                left = Binary(operator, left, right)
-                left = self.substitute_function(left)
+                left = self.binary(operator, left, right)
             return left
 
     def parse_unary_expression(self):
@@ -885,9 +885,21 @@ class Parser:
         expression = self.parse_paren_expression()
         while self.tokens.peek() in ["++", "--"]:
             operator = self.tokens.get()
-            expression = PostIncrement(
-                operator[:-1],
+            expression = MultiExpression(
                 expression,
+                [Assignment(
+                    expression,
+                    Binary(
+                        operator[0],
+                        expression,
+                        Constant(
+                            1, 
+                            expression.type_(),
+                            expression.size(), 
+                            expression.signed()
+                        ),
+                    ),
+                )],
             )
         return expression
 
@@ -1290,6 +1302,12 @@ class Parser:
             return expression
         else:
             self.tokens.error("cannot convert expression with type %s to int"%expression.type_())
+
+    def binary(self, operator, left, right):
+        left, right = self.coerce_types(left, right)
+        expression = Binary(operator, left, right)
+        expression = self.substitute_function(expression)
+        return expression
 
 def compatible(left, right):
     return left.type_() == right.type_() and left.size() == right.size()

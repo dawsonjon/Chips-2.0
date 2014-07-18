@@ -233,7 +233,6 @@ def test_long_arithmetic():
             test_corner_cases(operator, type_)
             test_random(operator, type_)
 
-#test_long_arithmetic()
 
 
 test("double_to_bits 1",
@@ -3351,6 +3350,45 @@ int main(){
 
 """
 )
+test("array passing 2",
+"""
+
+int test(int a[], int b, int c){
+    assert(a[0] == 0);
+    assert(a[1] == 1);
+    assert(a[2] == 2);
+    assert(a[3] == 3);
+    assert(b == 4);
+    assert(c == 5);
+    a[0] = 4;
+    a[1] = 5;
+    a[2] = 6;
+    a[3] = 7;
+    b = 8;
+    c = 9;
+    return 0;
+}
+
+int main(){
+  int a[4];
+  int b, c;
+  a[0] = 0;
+  a[1] = 1;
+  a[2] = 2;
+  a[3] = 3;
+  b=4;c=5;
+  test(a, b, c);
+  assert(a[0] == 4);
+  assert(a[1] == 5);
+  assert(a[2] == 6);
+  assert(a[3] == 7);
+  assert(b == 4);
+  assert(c == 5);
+  return 0;
+}
+
+"""
+)
 
 test("struct 1",
 """
@@ -3534,6 +3572,51 @@ test("switch 8",
      """
 )
 test("switch 9",
+"""int test(int a, int b)
+{
+   int value = 0;
+   switch(a) {
+
+      case 10:
+         value = 5;
+         switch(b) {
+            case 10:
+             value = 1;
+             break;
+            case 20:
+             value = 2;
+             break;
+         }
+         break;
+
+      case 20:
+         value = 6;
+         switch(b) {
+            case 10:
+            value = 3;
+            break;
+            case 20:
+            value = 4;
+            break;
+         }
+         break;
+
+   }
+   return value;
+}
+
+void main(){
+    assert(test(0,0)==0);
+    assert(test(10,0)==5);
+    assert(test(10,10)==1);
+    assert(test(10,20)==2);
+    assert(test(20,0)==6);
+    assert(test(20,10)==3);
+    assert(test(20,20)==4);
+}
+"""
+)
+test("switch 9",
 """int main(){
 int a = 1;
 switch(9){
@@ -3546,7 +3629,7 @@ return a;
 }
 """
 )
-test("long switch 10",
+test("long switch 1",
 """void main(){
 long int a = 0x1000000000l;
 int b = 123;
@@ -3556,6 +3639,51 @@ switch(a){
     default: break; break;
 }
 assert(b == 321);
+}
+"""
+)
+test("long switch 2",
+"""int test(long a, long b)
+{
+   int value = 0;
+   switch(a) {
+
+      case 10:
+         value = 5;
+         switch(b) {
+            case 10:
+             value = 1;
+             break;
+            case 0x1000000000l:
+             value = 2;
+             break;
+         }
+         break;
+
+      case 0x1000000000l:
+         value = 6;
+         switch(b) {
+            case 10:
+            value = 3;
+            break;
+            case 0x1000000000l:
+            value = 4;
+            break;
+         }
+         break;
+
+   }
+   return value;
+}
+
+void main(){
+    assert(test(0,0)==0);
+    assert(test(10,0)==5);
+    assert(test(10,10)==1);
+    assert(test(10,0x1000000000l)==2);
+    assert(test(0x1000000000l,0)==6);
+    assert(test(0x1000000000l,10)==3);
+    assert(test(0x1000000000l,0x1000000000l)==4);
 }
 """
 )
@@ -4548,3 +4676,4 @@ void main()
 }
 """)
 
+test_long_arithmetic()

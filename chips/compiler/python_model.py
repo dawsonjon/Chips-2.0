@@ -208,7 +208,7 @@ class PythonModel:
         #move n items from the stack to the pointer
         #the literal determines n
         #arrange memory so that the top of the stack goes into a higher numbered address
-        elif instruction["op"] == "pop":
+        elif instruction["op"] == "*tos->*pointer":
            for i in reversed(range(literal)):
                self.tos -= 1;
                self.memory[self.pointer + i] = self.memory.get(self.tos, 0)
@@ -216,12 +216,10 @@ class PythonModel:
         #move n items from the pointer to the stack
         #the literal determines n
         #arrange items so that the higher numbered address ends up on top of the stack
-        elif instruction["op"] == "push":
+        elif instruction["op"] == "*pointer->*tos":
            for i in range(literal):
                self.memory[self.tos] = self.memory.get(self.pointer+i, 0)
                self.tos += 1;
-
-
         else:
 
             #read operands
@@ -235,18 +233,31 @@ class PythonModel:
             result = None
             if instruction["op"] == "local_to_global":
                result = uint32(tos + self.frame)
-            elif instruction["op"] == "pop_global":
-               pointer = tos
-            elif instruction["op"] == "local":
+            elif instruction["op"] == "*tos->pointer":
+               self.pointer = tos
+            elif instruction["op"] == "tos->pointer":
+               self.pointer = self.tos
+            elif instruction["op"] == "literal+frame->pointer":
                self.pointer = literal + self.frame
-            elif instruction["op"] == "global":
+            elif instruction["op"] == "literal->pointer":
                self.pointer = literal
-            elif instruction["op"] == "push_literal":
+            elif instruction["op"] == "literal->*tos":
                result = uint32(literal)
+            elif instruction["op"] == "*tos->temp1":
+               self.temp1=tos
+            elif instruction["op"] == "*tos->temp2":
+               self.temp2=tos
+            elif instruction["op"] == "temp1->*tos":
+               result = self.temp1
+            elif instruction["op"] == "temp2->*tos":
+               result = self.temp2
+            elif instruction["op"] == "pop_b_lo":
+               self.b_lo=tos
             elif instruction["op"] == "pop_a_lo":
                self.a_lo=tos
             elif instruction["op"] == "pop_b_lo":
                self.b_lo=tos
+
             elif instruction["op"] == "pop_a_hi":
                self.a_hi=tos
             elif instruction["op"] == "pop_b_hi":
@@ -268,7 +279,7 @@ class PythonModel:
                    result = uint32(0x00000000)
             elif instruction["op"] == "int_to_float":
                f = float(self.a_lo)
-               self.a_lo = int32(float_to_bits(f))
+               self.a_lo = float_to_bits(f)
             elif instruction["op"] == "float_to_int":
                i = bits_to_float(self.a_lo)
                self.a_lo = int32(i)
@@ -284,7 +295,7 @@ class PythonModel:
                self.a_hi, self.a_lo = split_word(bits)
             elif instruction["op"] == "double_to_float":
                f = bits_to_double(join_words(self.a_hi, self.a_lo))
-               bits = float_to_bits(f)
+               self.a_lo = float_to_bits(f)
             elif instruction["op"] == "add":
                a = tos_1
                b = tos
@@ -349,30 +360,21 @@ class PythonModel:
                a = tos_1
                b = int(tos)
                b = b if b <= 32 else 32
-               print a, b
                self.carry = uint32(a << (32 - b))
-               print self.carry
                result = uint32(int32(a) >> b)
-               print result
             elif instruction["op"] == "unsigned_shift_right":
                a = tos_1
                b = int(tos)
                b = b if b <= 32 else 32
-               print a, b
                self.carry = uint32(a << (32 - b))
-               print self.carry
                result = uint32(a >> b)
-               print result
             elif instruction["op"] == "shift_right_with_carry":
                a = tos_1
                b = int(tos)
                b = b if b <= 32 else 32
-               print a, b
                carry_in = self.carry
                self.carry = uint32(a << (32 - b))
-               print self.carry
                result = uint32(a) >> b | carry_in
-               print result
             elif instruction["op"] == "greater":
                a = tos_1
                b = tos
@@ -456,39 +458,35 @@ class PythonModel:
             elif instruction["op"] == "float_add":
                float_ = bits_to_float(self.a_lo)
                floatb = bits_to_float(self.b_lo)
-               result = float_ + floatb
-               self.a_lo = float_to_bits(result)
+               self.a_lo = float_to_bits(float_ + floatb)
             elif instruction["op"] == "float_subtract":
                float_ = bits_to_float(self.a_lo)
                floatb = bits_to_float(self.b_lo)
-               result = float_ - floatb
-               self.a_lo = float_to_bits(result)
+               self.a_lo = float_to_bits(float_ - floatb)
             elif instruction["op"] == "float_multiply":
                float_ = bits_to_float(self.a_lo)
                floatb = bits_to_float(self.b_lo)
-               result = float_ * floatb
-               self.a_lo = float_to_bits(result)
+               self.a_lo = float_to_bits(float_ * floatb)
             elif instruction["op"] == "float_divide":
                float_ = bits_to_float(self.a_lo)
                floatb = bits_to_float(self.b_lo)
-               result = float_ / floatb
-               self.a_lo = float_to_bits(result)
+               self.a_lo = float_to_bits(float_ / floatb)
             elif instruction["op"] == "long_float_add":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
                doubleb = bits_to_double(join_words(self.b_hi, self.a_lo))
-               self.a_hi, self.a_lo = split_word(double_to_bits(double + double_b))
+               self.a_hi, self.a_lo = split_word(double_to_bits(double + doubleb))
             elif instruction["op"] == "long_float_subtract":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
                doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-               self.a_hi, self.a_lo = split_word(double_to_bits(double - double_b))
+               self.a_hi, self.a_lo = split_word(double_to_bits(double - doubleb))
             elif instruction["op"] == "long_float_multiply":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
                doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-               self.a_hi, self.a_lo = split_word(double_to_bits(double * double_b))
+               self.a_hi, self.a_lo = split_word(double_to_bits(double * doubleb))
             elif instruction["op"] == "long_float_divide":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
                doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-               self.a_hi, self.a_lo = split_word(double_to_bits(double / double_b))
+               self.a_hi, self.a_lo = split_word(double_to_bits(double / doubleb))
             elif instruction["op"] == "long_float_file_write":
                 long_word = join_words(self.a_hi, self.a_lo)
                 self.output_files[instruction["file_name"]].write("%f\n"%bits_to_double(long_word))
@@ -544,6 +542,8 @@ class PythonModel:
                 for file_ in self.output_files.values():
                     file_.close()
                 raise StopSim
+            elif instruction["op"] == "wait_clocks":
+                pass
 
             else:
                 print "Unknown machine instruction", instruction["op"]
@@ -569,7 +569,7 @@ def float_to_bits(f):
     for byte in struct.pack(">f", f):
          value <<= 8
          value |= ord(byte)
-    return int32(value)
+    return uint32(value)
 
 def double_to_bits(f):
 
@@ -614,7 +614,7 @@ def join_words(hi, lo):
 
     """join two 32 bit words into a 64 bit word"""
 
-    return uint64(((int(hi) & 0xffffffff) << 32) | (int(lo) & 0xffffffff))
+    return uint64((int(hi) << 32) | (int(lo) & 0xffffffff))
 
 def split_word(lw):
 

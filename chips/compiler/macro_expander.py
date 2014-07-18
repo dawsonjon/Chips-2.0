@@ -120,7 +120,7 @@ def long_shift_left(instruction):
         "push":True,
         },
         {
-        "op"  : "push_literal",
+        "op"  : "literal->*tos",
         "push":True,
         "literal":32,
         },
@@ -141,7 +141,7 @@ def long_shift_left(instruction):
         "push":True,
         },
         {
-        "op"  : "push_literal",
+        "op"  : "literal->*tos",
         "push":True,
         "literal": 32,
         },
@@ -256,7 +256,7 @@ def unsigned_long_shift_right(instruction):
         "push":True,
         },
         {
-        "op"  : "push_literal",
+        "op"  : "literal->*tos",
         "push":True,
         "literal":32,
         },
@@ -277,7 +277,7 @@ def unsigned_long_shift_right(instruction):
         "push":True,
         },
         {
-        "op"  : "push_literal",
+        "op"  : "literal->*tos",
         "push":True,
         "literal": 32,
         },
@@ -408,7 +408,7 @@ def long_shift_right(instruction):
         "push":True,
         },
         {
-        "op"  : "push_literal",
+        "op"  : "literal->*tos",
         "push":True,
         "literal":32,
         },
@@ -429,7 +429,7 @@ def long_shift_right(instruction):
         "push":True,
         },
         {
-        "op"  : "push_literal",
+        "op"  : "literal->*tos",
         "push":True,
         "literal": 32,
         },
@@ -704,8 +704,8 @@ def long_greater(instruction):
     return new_instruction
 
 def unsigned_long_greater(instruction):
+    """ perform greater function on long numbers """
 
-    """ perform greater function on long unsigned numbers """
 
     new_instruction = [
         {
@@ -736,7 +736,7 @@ def unsigned_long_greater(instruction):
         },
         {
         "op"  : "unsigned_greater",
-        "push":True,
+        "pop":True,
         },
 
         #msb equal?
@@ -764,8 +764,9 @@ def unsigned_long_greater(instruction):
         },
         {
         "op"  : "unsigned_greater",
-        "push":True,
+        "pop":True,
         },
+
         {
         "op"  : "and",
         "pop":True,
@@ -1095,8 +1096,7 @@ def long_not(instruction):
         "pop":True,
         },
         {
-        "op"  : "pop_a_lo",
-        "pop":True,
+        "op"  : "not",
         },
         {
         "op"  : "push_a_hi",
@@ -1104,15 +1104,6 @@ def long_not(instruction):
         },
         {
         "op"  : "not",
-        "pop":True,
-        },
-        {
-        "op"  : "push_a_lo",
-        "push":True,
-        },
-        {
-        "op"  : "not",
-        "pop":True,
         },
     ]
     return new_instruction

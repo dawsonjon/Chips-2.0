@@ -46,13 +46,8 @@ def comp(input_file, options=[], parameters={}):
             process = parser.parse_process()
             name = process.main.name + dict_to_hash(parameters)
             instructions = process.generate()
-            if "dump_raw" in options:
-                for i in instructions:
-                    print i
             instructions = expand_macros(instructions, parser.allocator)
-            instructions = cleanup_functions(instructions)
-            instructions, registers = cleanup_registers(instructions, parser.allocator.all_registers)
-            if "dump_optimised" in options:
+            if "dump" in options:
                 for i in instructions:
                     print i
             output_file = name + ".v"
