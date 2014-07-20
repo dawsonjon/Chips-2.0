@@ -4,6 +4,7 @@ __version__ = "0.1"
 
 import struct
 from copy import copy
+from operator import mul
 
 from parse_tree import *
 from tokens import Tokens
@@ -74,7 +75,7 @@ class Parser:
         for i in type_specifiers:
             if i in self.structs:
                 type_ = i
-                size = 4
+                size = self.scope[i].size()
                 signed = False
 
         if "float" in type_specifiers:
@@ -120,10 +121,30 @@ class Parser:
                 declaration = self.scope[type_]
             else:
                 if self.tokens.peek() == "[":
-                    self.tokens.expect("[")
-                    self.tokens.expect("]")
+                    #get array dimensions
+                    dimensions = []
+                    first_dimension = True
+                    while self.tokens.peek() == "[":
+                        self.tokens.expect("[")
+                        dimension = None
+                        if self.tokens.peek() == "]":
+                            if not first_dimension:
+                                self.tokens.error("Only the first dimension may be ommited in multi-dimensional arrays")
+                            dimensions.append(None)
+                        else:
+                            size_expression = self.parse_ternary_expression()
+                            if size_expression.type_() != "int":
+                                self.tokens.error("Array size must be an integer like expression")
+                            try:
+                                dimension = size_expression.value()
+                            except NotConstant:
+                                self.tokens.error("Array size must be constant")
+                            dimensions.append(dimension)
+                        first_dimension = False
+                        self.tokens.expect("]")
                     declaration = ArrayDeclaration(
                         size = 4,
+                        dimensions = dimensions,
                         type_ = type_+"[]",
                         element_type = type_,
                         element_size = size,
@@ -222,7 +243,7 @@ class Parser:
                         expression.type_()))
             elif self.function.size() != expression.size():
                 self.tokens.error(
-                    "type mismatch in return statement expected: %s actual: %s"%(
+                    "size mismatch in return statement expected: %s actual: %s"%(
                         self.function.size(),
                         expression.size()))
 
@@ -504,6 +525,7 @@ class Parser:
         self.tokens.expect("struct")
         declaration = StructDeclaration(self.parse_struct_body())
         name = self.tokens.get()
+        declaration._type= name
         self.tokens.expect(";")
         self.scope[name] = declaration
         self.structs.append(name)
@@ -512,6 +534,7 @@ class Parser:
         self.tokens.expect("struct")
         name = self.tokens.get()
         declaration = StructDeclaration(self.parse_struct_body())
+        declaration._type="struct_"+str(id(declaration))
         self.tokens.expect(";")
         self.scope[name] = declaration
 
@@ -569,38 +592,81 @@ class Parser:
         return CompoundDeclaration(instances)
 
     def parse_declaration(self, type_, size, signed, const, name):
-        #struct declaration
+
+        #array declaration
+        #
         if type_ in self.structs:
             declaration = self.scope[type_]
-        elif type_ in ["int", "float"]:
-            #array declaration
-            if self.tokens.peek() == "[":
-                array_size = None
-                self.tokens.expect("[")
-                if self.tokens.peek() != "]":
-                    size_expression = self.parse_ternary_expression()
-                    if size_expression.type_() != "int":
-                        self.tokens.error("Array size must be an integer like expression")
-                    try:
-                        array_size = size_expression.value()
-                    except NotConstant:
-                        self.tokens.error("Array size must be constant")
 
-                self.tokens.expect("]")
+        #array or numeric
+        #
+        elif type_ in ["int", "float"]:
+
+            #array 
+            if self.tokens.peek() == "[":
+
+                #get array dimensions
+                dimensions = []
+                first_dimension = True
+                while self.tokens.peek() == "[":
+                    self.tokens.expect("[")
+                    dimension = None
+                    if self.tokens.peek() == "]":
+                        if not first_dimension:
+                            self.tokens.error("Only the first dimension may be ommited in multi-dimensional arrays")
+                        dimensions.append(None)
+                    else:
+                        size_expression = self.parse_ternary_expression()
+                        if size_expression.type_() != "int":
+                            self.tokens.error("Array size must be an integer like expression")
+                        try:
+                            dimension = size_expression.value()
+                        except NotConstant:
+                            self.tokens.error("Array size must be constant")
+                        dimensions.append(dimension)
+                    self.tokens.expect("]")
+                    first_dimension = False
+
+                #Array Initialiser
                 initializer = None
                 if self.tokens.peek() == "=":
                     self.tokens.expect("=")
-                    initializer = self.tokens.get()
-                    initializer = [ord(i) for i in initializer.strip('"').decode("string_escape")] + [0]
-                    array_size = len(initializer)
-                if array_size is None:
 
+                    #initialize as a string
+                    if self.tokens.peek().startswith('"'):
+                        initializer = self.tokens.get()
+                        initializer = [ord(i) for i in initializer.strip('"').decode("string_escape")] + [0]
+                    else:
+                        #use recursion to parse array initializer
+                        def parse_array_initializer():
+                            self.tokens.expect("{")
+                            i=[]
+                            while 1:
+                                if self.tokens.peek() == "{":
+                                    i.append(parse_array_initializer())
+                                else:
+                                    i.append(self.tokens.get())
+                                if self.tokens.peek() == "}": break
+                                self.tokens.expect(",")
+                            self.tokens.expect("}")
+                            return i
+                        initializer = parse_array_initializer()
+
+                    #Determine outer array dimension from initializer if necassary
+                    if dimensions[0] is None:
+                        dimensions[0] = len(initializer)
+                    elif dimensions[0] != len(initializer):
+                        self.tokens.error(
+                            "Array initializer does not match array dimensions")
+
+                if dimensions[0] is None:
                     self.tokens.error(
-                        "array size must be specified if not initialized")
+                        "Array size must be specified if not initialized")
 
                 array_type=type_+"[]"
                 declaration = ArrayDeclaration(
-                    size = array_size,
+                    size = reduce(mul, dimensions, size),
+                    dimensions = dimensions,
                     type_ = array_type,
                     element_type = type_,
                     element_size = size,
@@ -1129,10 +1195,10 @@ class Parser:
         signed = True
         try:
             initializer = [ord(i) for i in token.strip('"').decode("string_escape")] + [0]
-            size = len(initializer)
             initialize_memory = self.initialize_memory
             declaration = ArrayDeclaration(
-                size = size,
+                dimensions = [len(initializer)],
+                size = len(initializer)*4,
                 type_ = "int[]",
                 element_type = "int",
                 element_size = 4,
@@ -1232,19 +1298,22 @@ class Parser:
         elif instance.type_().endswith("[]"):
             array = instance.reference()
             if self.tokens.peek() == "[":
-                self.tokens.expect("[")
-                index_expression = self.parse_expression()
-                self.tokens.expect("]")
-                if index_expression.type_() not in ["int"]:
-                    self.tokens.error(
-                        "Array indices must be an integer like expression")
-                return ArrayIndex(array, index_expression)
+                indices = []
+                while self.tokens.peek() == "[":
+                    self.tokens.expect("[")
+                    index_expression = self.parse_expression()
+                    self.tokens.expect("]")
+                    if index_expression.type_() not in ["int"]:
+                        self.tokens.error(
+                            "Array indices must be an integer like expression")
+                    indices.append(index_expression)
+                return ArrayIndex(array, indices)
             else:
                 return array
 
         #parse structs
         #
-        elif instance.type_().startswith("struct"):
+        elif instance.type_().startswith("struct") or instance.type_() in self.structs:
             if self.tokens.peek() == ".":
                 self.tokens.expect(".")
                 member = self.tokens.get()
@@ -1308,6 +1377,7 @@ class Parser:
         expression = Binary(operator, left, right)
         expression = self.substitute_function(expression)
         return expression
+
 
 def compatible(left, right):
     return left.type_() == right.type_() and left.size() == right.size()

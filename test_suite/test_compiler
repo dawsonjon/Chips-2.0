@@ -2063,26 +2063,26 @@ void main(){
 """
 )
 
-#test("struct_return 1",
-#"""
-#
-#typedef struct {long int a; int b;} struct_1;
-#
-#struct_1 test(){
-    #struct_1 my;
-    #my.a = 1;
-    #my.b = 2;
-    #return my;
-#}
-#
-#void main(){
-    #struct_1 blah;
-    #blah = test();
-    #assert(blah.a == 1);
-    #assert(blah.b == 2);
-#}
-#"""
-#)
+test("struct_return 1",
+"""
+
+typedef struct {long int a; int b;} struct_1;
+
+struct_1 test(){
+    struct_1 my;
+    my.a = 1;
+    my.b = 2;
+    return my;
+}
+
+void main(){
+    struct_1 blah;
+    blah = test();
+    assert(blah.a == 1);
+    assert(blah.b == 2);
+}
+"""
+)
 
 test("unsigned divide 1",
 """
@@ -3390,6 +3390,37 @@ int main(){
 """
 )
 
+test("array passing 3",
+"""void test(int grid[][3]){
+    int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid[j][i] == n++);
+        }
+    }
+
+}
+void test1(int grid[3][3]){
+    int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid[j][i] == n++);
+        }
+    }
+
+}
+void main(){
+    int grid[3][3] = {{1, 2, 3},{4, 5, 6}, {7, 8, 9}};
+    test(grid);
+}
+
+"""
+)
+
 test("struct 1",
 """
 struct blah {int a; int b; int c;};
@@ -4441,6 +4472,82 @@ int main(){
   assert(a[3] == 50);
   assert(b[3] == 60);
   return 0;
+}
+
+""")
+
+test("array 2",
+"""void main(){ 
+    int grid[10][20]; 
+    int grid2[10][20]; 
+    int i, j, n; 
+ 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            grid[i][j] = n++; 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            grid2[i][j] = n++; 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            assert(grid[i][j]==n++); 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            assert(grid2[i][j]==n++); 
+        } 
+    } 
+ 
+    assert((sizeof grid) == 800); 
+    assert((sizeof grid2) == 800); 
+}
+
+""")
+
+test("array 3",
+"""int grid2[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+int grid3[][3]  = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+void main(){
+    int grid[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    int grid1[][3]  = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid[j][i] == n++);
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid1[j][i] == n++);
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid2[j][i] == n++);
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid3[j][i] == n++);
+        }
+    }
 }
 
 """)
