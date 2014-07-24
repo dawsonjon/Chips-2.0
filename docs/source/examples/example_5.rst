@@ -34,10 +34,9 @@ The example shows a practical method of calculating the FFT using the
     
     /*calculate twiddle factors and store them*/
     void calculate_twiddles(){
-        unsigned stage, subdft_size, span;
-        for(stage=1; stage<=m; stage++){
-            subdft_size = 1 << stage;
-            span = subdft_size >> 1;
+        unsigned stage, span;
+        for(stage=0; stage<m; stage++){
+            span = 1 << stage;
             twiddle_step_real[stage] = cos(M_PI/span);
             twiddle_step_imaginary[stage] = -sin(M_PI/span);
         }
@@ -76,8 +75,8 @@ The example shows a practical method of calculating the FFT using the
         }
     
         //butterfly multiplies
-        for(stage=1; stage<=m; stage++){
-            subdft_size = 1 << stage;
+        for(stage=0; stage<m; stage++){
+            subdft_size = 2 << stage;
             span = subdft_size >> 1;
     
             //initialize trigonometric recurrence
@@ -87,8 +86,6 @@ The example shows a practical method of calculating the FFT using the
     
             sr = twiddle_step_real[stage];
             si = twiddle_step_imaginary[stage];
-    
-    
     
             report(stage);
             for(j=0; j<span; j++){
@@ -116,9 +113,9 @@ The example shows a practical method of calculating the FFT using the
     }
     
     void main(){
+        unsigned i;
         double reals[n];
         double imaginaries[n];
-        unsigned i;
     
         /* pre-calculate sine and cosine*/
         calculate_twiddles();

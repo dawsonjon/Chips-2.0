@@ -69,7 +69,7 @@ long unsigned long_unsigned_divide_xxxx(long unsigned dividend, long unsigned di
     unsigned i = 0;
 
     while(1){
-        if( (dividend & 0x8000000000000000ul) != 0){
+        if(dividend & 0x8000000000000000ul){
             remainder |= 1;
         }
         if( remainder >= divisor ){

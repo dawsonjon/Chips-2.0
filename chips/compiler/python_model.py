@@ -224,8 +224,13 @@ class PythonModel:
 
             #read operands
             #
-            tos = self.memory.get(self.tos-1, 0) 
-            tos_1 = self.memory.get(self.tos-2, 0)
+            a = instruction["a"]
+            b = instruction["b"]
+            c = instruction["c"]
+            d = instruction["d"]
+
+            tos = self.memory.get(self.tos-1 + b, 0) 
+            tos_1 = self.memory.get(self.tos-1 + a, 0)
 
 
             #execute instrcution
@@ -456,24 +461,32 @@ class PythonModel:
                             self.write_state = "wait_ack"
                             self.program_counter += 1
             elif instruction["op"] == "float_add":
-               float_ = bits_to_float(self.a_lo)
-               floatb = bits_to_float(self.b_lo)
-               self.a_lo = float_to_bits(float_ + floatb)
+               a = tos_1
+               b = tos
+               float_ = bits_to_float(a)
+               floatb = bits_to_float(b)
+               result = float_to_bits(float_ + floatb)
             elif instruction["op"] == "float_subtract":
-               float_ = bits_to_float(self.a_lo)
-               floatb = bits_to_float(self.b_lo)
-               self.a_lo = float_to_bits(float_ - floatb)
+               a = tos_1
+               b = tos
+               float_ = bits_to_float(a)
+               floatb = bits_to_float(b)
+               result = float_to_bits(float_ - floatb)
             elif instruction["op"] == "float_multiply":
-               float_ = bits_to_float(self.a_lo)
-               floatb = bits_to_float(self.b_lo)
-               self.a_lo = float_to_bits(float_ * floatb)
+               a = tos_1
+               b = tos
+               float_ = bits_to_float(a)
+               floatb = bits_to_float(b)
+               result = float_to_bits(float_ * floatb)
             elif instruction["op"] == "float_divide":
-               float_ = bits_to_float(self.a_lo)
-               floatb = bits_to_float(self.b_lo)
-               self.a_lo = float_to_bits(float_ / floatb)
+               a = tos_1
+               b = tos
+               float_ = bits_to_float(a)
+               floatb = bits_to_float(b)
+               result = float_to_bits(float_ / floatb)
             elif instruction["op"] == "long_float_add":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
-               doubleb = bits_to_double(join_words(self.b_hi, self.a_lo))
+               doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
                self.a_hi, self.a_lo = split_word(double_to_bits(double + doubleb))
             elif instruction["op"] == "long_float_subtract":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
@@ -494,7 +507,7 @@ class PythonModel:
                 long_word = join_words(self.a_hi, self.a_lo)
                 self.output_files[instruction["file_name"]].write("%f\n"%long_word)
             elif instruction["op"] == "assert":
-                if self.a_lo == 0:
+                if tos == 0:
                     print "(assertion failed at line: %s in file: %s)"%(
                     instruction["line"],
                     instruction["file"])
@@ -549,16 +562,13 @@ class PythonModel:
                 print "Unknown machine instruction", instruction["op"]
                 sys.exit(-1)
 
-            #manipulate stack pointer
-            if "pop" in instruction:
-                self.tos -= 1
-            if "push" in instruction:
-                self.tos += 1
-
             #Write data back
             #
             if result is not None:
-                self.memory[self.tos-1] = result
+                self.memory[self.tos-1+c] = result
+
+            #manipulate stack pointer
+            self.tos += d
             
 
 def float_to_bits(f):
