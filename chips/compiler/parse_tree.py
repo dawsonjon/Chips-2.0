@@ -459,8 +459,8 @@ class Switch:
         instructions.extend(self.statement.generate())
         instructions.append({"op":"label", "label":"break_%s"%id(self)})
         instructions.append({
-            "op":"free",
-            "literal":self.expression.size()//4,
+            "op":"new",
+            "literal":-self.expression.size()//4,
         })
         return instructions
 
@@ -474,8 +474,8 @@ class Case:
             "label":"case_%s"%id(self),
         })
         instructions.append({
-            "op":"free",
-            "literal":1,
+            "op":"new",
+            "literal":-1,
         })
         return instructions
 
@@ -976,8 +976,8 @@ class DiscardExpression:
         instructions = self.expression.generate()
         if self.expression.size():
             instructions.append({
-                "op":"free",
-                "literal":self.expression.size()//4,
+                "op":"new",
+                "literal":-self.expression.size()//4,
             })
         return instructions
 
@@ -1065,8 +1065,8 @@ class MultiExpression(Expression):
         for expression in self.others:
             instructions.extend(expression.generate())
             instructions.append({
-                "op":"free",
-                "literal":expression.size()//4,
+                "op":"new",
+                "literal":-expression.size()//4,
             })
         return instructions
 
@@ -1111,8 +1111,8 @@ class ANDOR(Expression):
                 "label":"end_%s"%id(self),
             })
         instructions.append({
-            "op" : "free",
-            "literal":self.size()//4,
+            "op" : "new",
+            "literal":-self.size()//4,
         })
         instructions.extend(self.right.generate())
         instructions.append({
@@ -1315,8 +1315,8 @@ class LongToInt(Expression):
     def generate(self):
         instructions = self.expression.generate()
         instructions.append({
-            "op"   : "free",
-            "literal":1,
+            "op"   : "new",
+            "literal":-1,
         })
         return instructions
 
@@ -1665,8 +1665,8 @@ class FunctionCall(Expression):
 
         #take the arguments off again
         instructions.append({
-            "op"   :"free",
-            "literal":sum([i.size()//4 for i in self.function.arguments])
+            "op"   :"new",
+            "literal":-sum([i.size()//4 for i in self.function.arguments])
         })
 
         #reload non-volatile registers

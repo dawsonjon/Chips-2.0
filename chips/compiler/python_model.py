@@ -161,10 +161,6 @@ class PythonModel:
         if instruction["op"] == "new":
            self.tos += literal
 
-        #free memory on the stack
-        elif instruction["op"] == "free":
-           self.tos -= literal
-
         #save return address and current frame in non-volatile registers
         #setting the stack frame to point at the first argument
         #call the new function
@@ -197,6 +193,7 @@ class PythonModel:
            for i in range(literal):
                self.memory[self.tos] = self.memory.get(self.pointer+i, 0)
                self.tos += 1;
+
         else:
 
             #read operands
