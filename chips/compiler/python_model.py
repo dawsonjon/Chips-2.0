@@ -145,7 +145,7 @@ class PythonModel:
             print "pointer:", self.pointer,
             print "frame:", self.frame
             for i in range(self.frame, self.tos + 3):
-                print i, self.tos - i, self.memory.get(i, 0)
+                print i, i - self.tos, self.memory.get(i, 0)
 
         if "literal" in instruction:
             literal = instruction["literal"]
@@ -165,45 +165,22 @@ class PythonModel:
         elif instruction["op"] == "free":
            self.tos -= literal
 
-        #save the non-volatile pointers
-        #remember where the stack frame of the callee function starts
-        #push arguments to stack in between this and a call
-        elif instruction["op"] == "prologue":
-           self.memory[self.tos] = self.new_frame
-           self.tos += 1
-           self.memory[self.tos] = self.return_frame
-           self.tos += 1
-           self.memory[self.tos] = self.return_address
-           self.tos += 1
-           self.new_frame = self.tos
-
-        #restore the non-volatile pointers
-        elif instruction["op"] == "epilogue":
-           self.tos -= 1
-           self.return_address = self.memory.get(self.tos, 0)
-           self.tos -= 1
-           self.return_frame = self.memory.get(self.tos, 0)
-           self.tos -= 1
-           self.new_frame = self.memory.get(self.tos, 0)
-
         #save return address and current frame in non-volatile registers
         #setting the stack frame to point at the first argument
         #call the new function
         elif instruction["op"] == "call":
-           self.return_frame = self.frame
            self.return_address = self.program_counter
-           self.frame = self.new_frame
+           self.return_frame = self.frame
+           self.frame = self.tos
            self.program_counter = literal
 
         #return to the calling function
         #reset the stack pointer to the frame pointer
         #this effectively deletes the callee stack frame
         elif instruction["op"] == "return":
+           self.program_counter = self.return_address
            self.tos = self.frame
            self.frame = self.return_frame
-           self.program_counter = self.return_address
-
-
 
         #move n items from the stack to the pointer
         #the literal determines n
@@ -240,6 +217,14 @@ class PythonModel:
                result = uint32(tos + self.frame)
             elif instruction["op"] == "*tos->pointer":
                self.pointer = tos
+            elif instruction["op"] == "*tos->return_frame":
+               self.return_frame = tos
+            elif instruction["op"] == "*tos->return_address":
+               self.return_address = tos
+            elif instruction["op"] == "return_address->*tos":
+               result = self.return_address
+            elif instruction["op"] == "return_frame->*tos":
+               result = self.return_frame
             elif instruction["op"] == "tos->pointer":
                self.pointer = self.tos
             elif instruction["op"] == "literal+frame->pointer":
@@ -262,7 +247,6 @@ class PythonModel:
                self.a_lo=tos
             elif instruction["op"] == "pop_b_lo":
                self.b_lo=tos
-
             elif instruction["op"] == "pop_a_hi":
                self.a_hi=tos
             elif instruction["op"] == "pop_b_hi":

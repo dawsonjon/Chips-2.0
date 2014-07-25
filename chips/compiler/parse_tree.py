@@ -88,9 +88,6 @@ class Process:
 
         #start with a call to main
         instructions.append({
-            "op"   :"prologue",
-        })
-        instructions.append({
             "op"   :"call",
             "label":"function_%s"%id(self.main)
         })
@@ -207,7 +204,9 @@ class Return:
                 "op":"*tos->*pointer",
                 "literal":self.function.size()//4,
             })
-        instructions.append({"op":"return"})
+        instructions.append({
+            "op":"return",
+        })
 
         return instructions
 
@@ -975,10 +974,11 @@ class DiscardExpression:
 
     def generate(self):
         instructions = self.expression.generate()
-        instructions.append({
-            "op":"free",
-            "literal":self.expression.size()//4,
-        })
+        if self.expression.size():
+            instructions.append({
+                "op":"free",
+                "literal":self.expression.size()//4,
+            })
         return instructions
 
 
@@ -1637,19 +1637,55 @@ class FunctionCall(Expression):
     def generate(self):
         instructions = []
 
-        instructions.append({"op":"prologue"})
+        #save non-volatile registers
+        instructions.append({
+            "op":"return_address->*tos",
+            "a":0,
+            "b":0,
+            "c":0,
+            "d":1,
+        })
+        instructions.append({
+            "op":"return_frame->*tos",
+            "a":0,
+            "b":0,
+            "c":0,
+            "d":1,
+        })
 
-        #place arguments on stack
+        #put arguments on stack
         for expression in self.arguments:
             instructions.extend(expression.generate())
 
-        #call function
+        #call the function
         instructions.append({
             "op"   :"call",
             "label":"function_%s"%id(self.function)
         })
 
-        instructions.append({"op":"epilogue"})
+        #take the arguments off again
+        instructions.append({
+            "op"   :"free",
+            "literal":sum([i.size()//4 for i in self.function.arguments])
+        })
+
+        #reload non-volatile registers
+        instructions.append({
+            "op":"*tos->return_frame",
+            "a":-1,
+            "b":-1,
+            "c":0,
+            "d":-1,
+        })
+        instructions.append({
+            "op":"*tos->return_address",
+            "a":-1,
+            "b":-1,
+            "c":0,
+            "d":-1,
+        })
+
+        #retrieve the return value and place on the stack
         if self.function.type_ != "void":
             instructions.append({
                 "op":"literal->pointer",

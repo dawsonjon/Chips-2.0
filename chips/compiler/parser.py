@@ -158,9 +158,8 @@ class Parser:
                         size,
                         signed,
                         const)
-        instance = declaration.argument_instance(self.function)
-        self.scope[argument] = instance
-        return instance.reference()
+
+        return argument, declaration
 
     def parse_function(self):
 
@@ -184,14 +183,21 @@ class Parser:
         #store the scope so that we can put it back when we are done
         stored_scope = copy(self.scope)
         self.function = function
-        function.arguments = []
+        arguments = []
         while self.tokens.peek() != ")":
-            function.arguments.append(self.parse_argument())
+            arguments.append(self.parse_argument())
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
             else:
                 break
         self.tokens.expect(")")
+        for argument, declaration in arguments:
+            function.offset -= declaration.size()//4
+        function.arguments = []
+        for argument, declaration in arguments:
+            instance = declaration.argument_instance(self.function)
+            self.scope[argument] = instance
+            function.arguments.append(instance.reference())
         function.statement = self.parse_statement()
         if type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Non-void function must have a return statement")
