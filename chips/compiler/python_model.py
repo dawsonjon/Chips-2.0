@@ -144,8 +144,8 @@ class PythonModel:
             print "tos:", self.tos,
             print "pointer:", self.pointer,
             print "frame:", self.frame
-            for i in range(self.frame, self.tos):
-                print i, self.memory.get(i, 0)
+            for i in range(self.frame, self.tos + 3):
+                print i, self.tos - i, self.memory.get(i, 0)
 
         if "literal" in instruction:
             literal = instruction["literal"]
@@ -229,8 +229,8 @@ class PythonModel:
             c = instruction["c"]
             d = instruction["d"]
 
-            tos = self.memory.get(self.tos-1 + b, 0) 
-            tos_1 = self.memory.get(self.tos-1 + a, 0)
+            tos = self.memory.get(self.tos + b, 0) 
+            tos_1 = self.memory.get(self.tos + a, 0)
 
 
             #execute instrcution
@@ -565,7 +565,7 @@ class PythonModel:
             #Write data back
             #
             if result is not None:
-                self.memory[self.tos-1+c] = result
+                self.memory[self.tos+c] = result
 
             #manipulate stack pointer
             self.tos += d

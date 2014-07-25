@@ -5,10 +5,10 @@ def unique():
     sn += 1
     return label
 
-b_hi = 0
-b_lo = -1
-a_hi = -2
-a_lo = -3
+b_hi = -1
+b_lo = -2
+a_hi = -3
+a_lo = -4
 
 def expand_macros(instructions, allocator):
     new_instructions = []
@@ -66,8 +66,8 @@ def long_shift_left(instruction):
 
     end = unique()
 
-    thirty_two = 0
-    greater_than_32 = 1
+    thirty_two =-1 
+    greater_than_32 = 0
 
     new_instruction = [
 
@@ -128,7 +128,7 @@ def long_shift_left(instruction):
         "a":a_lo,
         "b":b_lo,
         "c":a_lo,
-        "d":b_hi,
+        "d":0,
         },
         {
         "op"  : "shift_left_with_carry",
@@ -143,9 +143,9 @@ def long_shift_left(instruction):
         },
         {
         "op"  : "or",
-        "a":1,
-        "b":1,
-        "c":1,
+        "a":0,
+        "b":0,
+        "c":0,
         "d":-2,
         },
 
@@ -160,8 +160,8 @@ def unsigned_long_shift_right(instruction):
     """
     end = unique()
 
-    thirty_two = 0
-    greater_than_32 = 1
+    thirty_two = -1
+    greater_than_32 = 0
 
     new_instruction = [
 
@@ -184,8 +184,8 @@ def unsigned_long_shift_right(instruction):
         #if shift amount is less than or equal to 32
         {
         "op"  : "literal->*tos",
-        "a":0,
-        "b":0,
+        "a":-1,
+        "b":-1,
         "c":thirty_two,
         "d":0,
         "literal":32,
@@ -202,7 +202,7 @@ def unsigned_long_shift_right(instruction):
         "op"  : "jmp_if_false",
         "a":greater_than_32,
         "b":greater_than_32,
-        "c":0,
+        "c":-1,
         "d":0,
         "label":end,
         },
@@ -239,7 +239,7 @@ def unsigned_long_shift_right(instruction):
         "op"  : "or",
         "a":0,
         "b":0,
-        "c":0,
+        "c":-1,
         "d":-2,
         },
     ]
@@ -253,8 +253,8 @@ def long_shift_right(instruction):
     """
     end = unique()
 
-    thirty_two = 0
-    greater_than_32 = 1
+    thirty_two = -1
+    greater_than_32 = 0
 
     new_instruction = [
 
@@ -277,8 +277,8 @@ def long_shift_right(instruction):
         #if shift amount is less than or equal to 32
         {
         "op"  : "literal->*tos",
-        "a":0,
-        "b":0,
+        "a":-1,
+        "b":-1,
         "c":thirty_two,
         "d":0,
         "literal":32,
@@ -295,7 +295,7 @@ def long_shift_right(instruction):
         "op"  : "jmp_if_false",
         "a":greater_than_32,
         "b":greater_than_32,
-        "c":0,
+        "c":-1,
         "d":0,
         "label":end,
         },
@@ -330,9 +330,9 @@ def long_shift_right(instruction):
         },
         {
         "op"  : "or",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-2,
         },
     ]
@@ -590,7 +590,7 @@ def long_and(instruction):
         "a":a_lo,
         "b":b_lo,
         "c":a_lo,
-        "d":a_hi,
+        "d":-2,
         },
     ]
     return new_instruction
@@ -615,7 +615,7 @@ def long_or(instruction):
         "a":a_lo,
         "b":b_lo,
         "c":a_lo,
-        "d":a_hi,
+        "d":-2,
         },
     ]
 
@@ -687,7 +687,7 @@ def long_add(instruction):
         "a":a_hi,
         "b":b_hi,
         "c":a_hi,
-        "d":a_hi,
+        "d":-2,
         "pop":True,
         },
 
@@ -713,7 +713,7 @@ def long_subtract(instruction):
         "a":a_hi,
         "b":b_hi,
         "c":a_hi,
-        "d":a_hi,
+        "d":-2,
         },
 
     ]
@@ -764,7 +764,7 @@ def long_multiply(instruction):
         "a":a_hi,
         "b":b_lo,
         "c":a_hi,
-        "d":a_hi,
+        "d":-2,
         },
     ]
 
@@ -775,51 +775,51 @@ def long_float_add(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_b_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "long_float_add",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":0,
         },
         {
         "op"  : "push_a_lo",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
         {
         "op"  : "push_a_hi",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
 
@@ -831,51 +831,51 @@ def long_float_subtract(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_b_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "long_float_subtract",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":0,
         },
         {
         "op"  : "push_a_lo",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
         {
         "op"  : "push_a_hi",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
 
@@ -887,51 +887,51 @@ def long_float_multiply(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_b_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "long_float_multiply",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":0,
         },
         {
         "op"  : "push_a_lo",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
         {
         "op"  : "push_a_hi",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
     ]
@@ -942,51 +942,51 @@ def long_float_divide(instruction):
     new_instruction = [
         {
         "op"  : "pop_b_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_b_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_hi",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "pop_a_lo",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":-1,
         },
         {
         "op"  : "long_float_divide",
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":0,
         },
         {
         "op"  : "push_a_lo",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
         {
         "op"  : "push_a_hi",
-        "a":0,
-        "b":0,
-        "c":1,
+        "a":-1,
+        "b":-1,
+        "c":0,
         "d":1,
         },
     ]

@@ -151,9 +151,9 @@ class Break:
 
     def generate(self): return [{
         "op":"goto", 
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":0,
         "label":"break_%s"%id(self.loop)
     }]
@@ -163,9 +163,9 @@ class Continue:
 
     def generate(self): return [{
         "op":"goto", 
-        "a":0,
-        "b":0,
-        "c":0,
+        "a":-1,
+        "b":-1,
+        "c":-1,
         "d":0,
         "label":"continue_%s"%id(self.loop)
      }]
@@ -178,9 +178,9 @@ class Assert:
 
         instructions.append({
             "op":"assert",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
             "line":self.line,
             "file":self.filename,
@@ -197,9 +197,9 @@ class Return:
             instructions.extend(self.expression.generate())
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.function.return_pointer,
             })
@@ -220,17 +220,17 @@ class Report:
         if self.expression.size() == 4:
             instructions.append({
                 "op":"pop_a_lo",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             if self.expression.type_() == "float":
                 instructions.append({
                     "op":"float_report",
-                    "a":0,
-                    "b":0,
-                    "c":0,
+                    "a":-1,
+                    "b":-1,
+                    "c":-1,
                     "d":0,
                     "line":self.line,
                     "file":self.filename
@@ -239,9 +239,9 @@ class Report:
                 if self.expression.signed():
                     instructions.append({
                         "op":"report",
-                        "a":0,
-                        "b":0,
-                        "c":0,
+                        "a":-1,
+                        "b":-1,
+                        "c":-1,
                         "d":0,
                         "line":self.line,
                         "file":self.filename,
@@ -249,9 +249,9 @@ class Report:
                 else:
                     instructions.append({
                         "op":"unsigned_report",
-                        "a":0,
-                        "b":0,
-                        "c":0,
+                        "a":-1,
+                        "b":-1,
+                        "c":-1,
                         "d":0,
                         "line":self.line,
                         "file":self.filename,
@@ -261,24 +261,24 @@ class Report:
 
             instructions.append({
                 "op":"pop_a_hi",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             instructions.append({
                 "op":"pop_a_lo",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             if self.expression.type_() == "float":
                 instructions.append({
                     "op":"long_float_report",
-                    "a":0,
-                    "b":0,
-                    "c":0,
+                    "a":-1,
+                    "b":-1,
+                    "c":-1,
                     "d":0,
                     "line":self.line,
                     "file":self.filename,
@@ -287,9 +287,9 @@ class Report:
                 if self.expression.signed():
                     instructions.append({
                         "op":"long_report",
-                        "a":0,
-                        "b":0,
-                        "c":0,
+                        "a":-1,
+                        "b":-1,
+                        "c":-1,
                         "d":0,
                         "line":self.line,
                         "file":self.filename,
@@ -297,9 +297,9 @@ class Report:
                 else:
                     instructions.append({
                         "op":"long_unsigned_report",
-                        "a":0,
-                        "b":0,
-                        "c":0,
+                        "a":-1,
+                        "b":-1,
+                        "c":-1,
                         "d":0,
                         "line":self.line,
                         "file":self.filename,
@@ -314,9 +314,9 @@ class WaitClocks:
         instructions = self.expression.generate()
         instructions.append({
             "op":"wait_clocks",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         return instructions
@@ -340,25 +340,25 @@ class If:
             if self.expression.size() == 8:
                 instructions.append({
                     "op":"or",
-                    "a":-1,
-                    "b":0,
-                    "c":-1,
+                    "a":-2,
+                    "b":-1,
+                    "c":-2,
                     "d":-1,
                 })
             instructions.append({
                 "op"    : "jmp_if_false",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
                 "label" : "else_%s"%id(self),
             })
             instructions.extend(self.true_statement.generate())
             instructions.append({
                 "op":"goto", 
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "label":"end_%s"%id(self)
             })
@@ -378,35 +378,42 @@ class Switch:
             if self.expression.size() == 4:
                 instructions.append({
                     "op":"literal->*tos",
-                    "a":1,
-                    "b":1,
-                    "c":1,
+                    "a":-1,
+                    "b":-1,
+                    "c":0,
                     "d":0,
                     "literal" : value & 0xffffffff,
                 })
                 instructions.append({
                     "op":"equal",
-                    "a":1,
-                    "b":0,
-                    "c":1,
+                    "a":0,
+                    "b":-1,
+                    "c":0,
                     "d":0,
                 })
             else:
+                instructions.append({
+                    "op":"literal->*tos",
+                    "a":0,
+                    "b":0,
+                    "c":0,
+                    "d":0,
+                    "literal":(value & 0xffffffff)
+                })
                 instructions.append({
                     "op":"literal->*tos",
                     "a":1,
                     "b":1,
                     "c":1,
                     "d":0,
-                    "literal":(value & 0xffffffff)
+                    "literal":(value >> 32) & 0xffffffff
                 })
                 instructions.append({
-                    "op":"literal->*tos",
-                    "a":2,
-                    "b":2,
-                    "c":2,
+                    "op":"equal",
+                    "a":0,
+                    "b":-2,
+                    "c":0,
                     "d":0,
-                    "literal":(value >> 32) & 0xffffffff
                 })
                 instructions.append({
                     "op":"equal",
@@ -416,25 +423,18 @@ class Switch:
                     "d":0,
                 })
                 instructions.append({
-                    "op":"equal",
-                    "a":2,
-                    "b":0,
-                    "c":2,
-                    "d":0,
-                })
-                instructions.append({
                     "op":"and",
-                    "a":1,
-                    "b":2,
-                    "c":1,
+                    "a":0,
+                    "b":1,
+                    "c":0,
                     "d":0,
                 })
             instructions.append({
                 "op":"jmp_if_true",
                 "label":"case_%s"%id(case),
-                "a":1,
-                "b":1,
-                "c":0,
+                "a":0,
+                "b":0,
+                "c":-1,
                 "d":0,
             })
 
@@ -442,17 +442,17 @@ class Switch:
 
             instructions.append({
                 "op":"goto",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "label":"case_%s"%id(self.default)
             })
         instructions.append({
             "op":"goto",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
             "label":"break_%s"%id(self),
         })
@@ -495,9 +495,9 @@ class Loop:
         instructions.extend(self.statement.generate())
         instructions.append({
             "op":"goto", 
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
             "label":"begin_%s"%id(self)
         })
@@ -518,17 +518,17 @@ class For:
             if self.expression.size() == 8:
                 instructions.append({
                     "op":"or",
-                    "a":0,
-                    "b":-1,
-                    "c":0,
+                    "a":-1,
+                    "b":-2,
+                    "c":-1,
                     "d":-1,
                     })
 
             instructions.append({
                 "op":"jmp_if_false",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
                 "label":"end_%s"%id(self)
                 })
@@ -539,9 +539,9 @@ class For:
             instructions.extend(self.statement2.generate())
         instructions.append({
             "op":"goto", 
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
             "label":"begin_%s"%id(self)
         })
@@ -635,9 +635,9 @@ class VariableInstance:
         instructions.extend(self.initializer.generate())
         instructions.append({
             "op":"literal->pointer",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
             "literal":self.offset,
         })
@@ -654,9 +654,9 @@ class VariableInstance:
         instructions.extend(self.initializer.generate())
         instructions.append({
             "op":"literal+frame->pointer",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
             "literal":self.offset,
         })
@@ -816,17 +816,17 @@ class ArrayInstance:
             for i in flatten(self.initializer):
                 instructions.append({
                     "op":"literal->*tos",
-                    "a":0,
-                    "b":0,
-                    "c":1,
+                    "a":-1,
+                    "b":-1,
+                    "c":0,
                     "d":1,
                     "literal":i,
                 })
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.offset,
             })
@@ -843,17 +843,17 @@ class ArrayInstance:
             for i in flatten(self.initializer):
                 instructions.append({
                     "op":"literal->*tos",
-                    "a":0,
-                    "b":0,
-                    "c":1,
+                    "a":-1,
+                    "b":-1,
+                    "c":0,
                     "d":1,
                     "literal":i,
                 })
             instructions.append({
                 "op":"literal+frame->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.offset,
             })
@@ -1088,25 +1088,25 @@ class ANDOR(Expression):
         if self.left.size() == 8:
             instructions.append({
                 "op" : "or",
-                "a":0,
-                "b":-1,
-                "c":1,
+                "a":-1,
+                "b":-2,
+                "c":0,
                 "d":0,
             })
             instructions.append({
                 "op":self.op, 
-                "a":1,
-                "b":1,
-                "c":1,
+                "a":0,
+                "b":0,
+                "c":0,
                 "d":0,
                 "label":"end_%s"%id(self),
             })
         elif self.left.size() == 4:
             instructions.append({
                 "op":self.op, 
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "label":"end_%s"%id(self),
             })
@@ -1188,9 +1188,9 @@ class Binary(Expression):
             instructions.extend(self.right.generate())
         instructions.append({
             "op"  :operation,
-            "a":-1,
-            "b":0,
-            "c":-1,
+            "a":-2,
+            "b":-1,
+            "c":-2,
             "d":-1,
         })
 
@@ -1285,9 +1285,9 @@ class IntToLong(Expression):
         if self.expression.signed():
             instructions.append({
                 "op"   : "int_to_long",
-                "a":0,
-                "b":0,
-                "c":1,
+                "a":-1,
+                "b":-1,
+                "c":0,
                 "d":1,
             })
         else:
@@ -1295,7 +1295,7 @@ class IntToLong(Expression):
                 "op"   : "literal->*tos",
                 "a":0,
                 "b":0,
-                "c":1,
+                "c":0,
                 "d":1,
                 "literal":0,
             })
@@ -1335,23 +1335,23 @@ class IntToFloat(Expression):
 
         instructions.append({
             "op"   : "pop_a_lo",
-            "a":0,
-            "b":0,
-            "c":-1,
+            "a":-1,
+            "b":-1,
+            "c":-2,
             "d":-1,
         })
         instructions.append({
             "op"   : "int_to_float",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
         })
         instructions.append({
             "op"   : "push_a_lo",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1373,23 +1373,23 @@ class FloatToInt(Expression):
 
         instructions.append({
             "op"   : "pop_a_lo",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "float_to_int",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
         instructions.append({
             "op"   : "push_a_lo",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1410,37 +1410,37 @@ class DoubleToLong(Expression):
 
         instructions.append({
             "op"   : "pop_a_hi",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "pop_a_lo",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "double_to_long",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
         })
         instructions.append({
             "op"   : "push_a_lo",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
         instructions.append({
             "op"   : "push_a_hi",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1461,37 +1461,37 @@ class LongToDouble(Expression):
 
         instructions.append({
             "op"   : "pop_a_hi",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "pop_a_lo",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "long_to_double",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
         })
         instructions.append({
             "op"   : "push_a_lo",
             "a":0,
             "b":0,
-            "c":1,
+            "c":0,
             "d":1,
         })
         instructions.append({
             "op"   : "push_a_hi",
             "a":0,
             "b":0,
-            "c":1,
+            "c":0,
             "d":1,
         })
 
@@ -1512,30 +1512,30 @@ class DoubleToFloat(Expression):
 
         instructions.append({
             "op"   : "pop_a_hi",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "pop_a_lo",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "double_to_float",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
         })
         instructions.append({
             "op"   : "push_a_lo",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1556,30 +1556,30 @@ class FloatToDouble(Expression):
 
         instructions.append({
             "op"   : "pop_a_lo",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
             "op"   : "float_to_double",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
         })
         instructions.append({
             "op"   : "push_a_lo",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
         instructions.append({
             "op"   : "push_a_hi",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1611,9 +1611,9 @@ class Unary(Expression):
         else:
             instructions.extend([{
                 "op":"not",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 }])
 
@@ -1653,9 +1653,9 @@ class FunctionCall(Expression):
         if self.function.type_ != "void":
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.function.return_pointer
             })
@@ -1680,9 +1680,9 @@ class Output(Expression):
 
         instructions.append({
             "op"   : "write",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-2,
         })
 
@@ -1706,64 +1706,64 @@ class FileWrite(Expression):
         if self.expression.type_() == "float" and self.expression.size() == 8:
             instructions.append({
                 "op"        : "pop_a_hi",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             instructions.append({
                 "op"        : "pop_a_lo",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             instructions.append({
                 "op"        : "long_float_file_write",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "file_name" : self.name,
             })
         elif self.expression.type_() == "float" and self.expression.size() == 4:
             instructions.append({
                 "op"        : "float_file_write",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
                 "file_name" : self.name,
                 })
         elif self.expression.type_() == "int" and self.expression.size() == 8:
             instructions.append({
                 "op"        : "pop_a_hi",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             instructions.append({
                 "op"        : "pop_a_lo",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
             })
             instructions.append({
                 "op"        : "long_file_write",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "file_name" : self.name,
             })
         else:
             instructions.append({
                 "op"        : "file_write",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":-1,
                 "file_name" : self.name,
                 })
@@ -1782,9 +1782,9 @@ class Input(Expression):
 
         instructions.append({
             "op"   : "read",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1800,9 +1800,9 @@ class FileRead(Expression):
     def generate(self):
         return [{
             "op"   :"file_read", 
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
             "file_name":self.name
         }]
@@ -1819,9 +1819,9 @@ class Ready(Expression):
 
         instructions.append({
             "op"   :"ready",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
         })
 
@@ -1837,18 +1837,18 @@ class Struct(Object):
         if self.instance.local:
             instructions.append({
                 "op":"literal+frame->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
@@ -1864,18 +1864,18 @@ class Struct(Object):
         if self.instance.local:
             instructions.append({
                 "op":"literal+frame->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
@@ -1904,9 +1904,9 @@ class ArrayArgument(Object):
         instructions = []
         instructions.append({
             "op" : "literal+frame->pointer",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":0,
             "literal" : self.instance.offset,
         })
@@ -1931,18 +1931,18 @@ class Array(Object):
         instructions = []
         instructions.append({
             "op" : "literal->*tos",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
             "literal" : self.instance.offset,
         })
         if self.instance.local:
             instructions.append({
                 "op" : "local_to_global",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal" : self.instance.offset,
             })
@@ -1983,33 +1983,33 @@ class ArrayIndex(Object):
             instructions.extend(index_expression.generate())
             instructions.append({
                 "op":"literal->*tos",
-                "a":0,
-                "b":0,
-                "c":1,
+                "a":-1,
+                "b":-1,
+                "c":0,
                 "d":1,
                 "literal":element_size,
             })
             instructions.append({
                 "op":"multiply",
-                "a":0,
-                "b":-1,
-                "c":-1,
+                "a":-1,
+                "b":-2,
+                "c":-2,
                 "d":-1,
             })
             instructions.append({
                 "op":"add",
-                "a":0,
-                "b":-1,
-                "c":-1,
+                "a":-1,
+                "b":-2,
+                "c":-2,
                 "d":-1,
             })
 
         #Copy item to TOS
         instructions.append({
             "op":"*tos->pointer",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
@@ -2047,24 +2047,24 @@ class ArrayIndex(Object):
             instructions.extend(index_expression.generate())
             instructions.append({
                 "op":"literal->*tos",
-                "a":0,
-                "b":0,
-                "c":1,
+                "a":-1,
+                "b":-1,
+                "c":0,
                 "d":1,
                 "literal":element_size,
             })
             instructions.append({
                 "op":"multiply",
-                "a":0,
-                "b":-1,
-                "c":-1,
+                "a":-1,
+                "b":-2,
+                "c":-2,
                 "d":-1,
             })
             instructions.append({
                 "op":"add",
-                "a":0,
-                "b":-1,
-                "c":-1,
+                "a":-1,
+                "b":-2,
+                "c":-2,
                 "d":-1,
             })
 
@@ -2072,9 +2072,9 @@ class ArrayIndex(Object):
         #
         instructions.append({
             "op":"*tos->pointer",
-            "a":0,
-            "b":0,
-            "c":0,
+            "a":-1,
+            "b":-1,
+            "c":-1,
             "d":-1,
         })
         instructions.append({
@@ -2101,18 +2101,18 @@ class Variable(Object):
         if self.instance.local:
             instructions.append({
                 "op":"literal+frame->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
@@ -2133,18 +2133,18 @@ class Variable(Object):
         if self.instance.local:
             instructions.append({
                 "op":"literal+frame->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
         else:
             instructions.append({
                 "op":"literal->pointer",
-                "a":0,
-                "b":0,
-                "c":0,
+                "a":-1,
+                "b":-1,
+                "c":-1,
                 "d":0,
                 "literal":self.instance.offset,
             })
@@ -2192,9 +2192,9 @@ class Constant(Expression):
 
         instructions = [{
             "op":"literal->*tos",
-            "a":0,
-            "b":0,
-            "c":1,
+            "a":-1,
+            "b":-1,
+            "c":0,
             "d":1,
             "comment":"const",
             "literal":int_value & 0xffffffff}]
@@ -2203,9 +2203,9 @@ class Constant(Expression):
 
             instructions.append({
                 "op":"literal->*tos",
-                "a":0,
-                "b":0,
-                "c":1,
+                "a":-1,
+                "b":-1,
+                "c":0,
                 "d":1,
                 "comment":"const",
                 "literal":(int_value >> 32) & 0xffffffff})
