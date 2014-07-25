@@ -2017,21 +2017,22 @@ class ArrayIndex(Object):
 
         for index_expression, element_size in zip(self.index_expressions, cumalative_step_sizes):
             instructions.extend(index_expression.generate())
-            instructions.append({
-                "op":"literal->*tos",
-                "a":-1,
-                "b":-1,
-                "c":0,
-                "d":1,
-                "literal":element_size,
-            })
-            instructions.append({
-                "op":"multiply",
-                "a":-1,
-                "b":-2,
-                "c":-2,
-                "d":-1,
-            })
+            if element_size > 1:
+                instructions.append({
+                    "op":"literal->*tos",
+                    "a":-1,
+                    "b":-1,
+                    "c":0,
+                    "d":1,
+                    "literal":element_size,
+                })
+                instructions.append({
+                    "op":"multiply",
+                    "a":-1,
+                    "b":-2,
+                    "c":-2,
+                    "d":-1,
+                })
             instructions.append({
                 "op":"add",
                 "a":-1,
@@ -2081,21 +2082,22 @@ class ArrayIndex(Object):
         cumalative_step_sizes.reverse()
         for index_expression, element_size in zip(self.index_expressions, cumalative_step_sizes):
             instructions.extend(index_expression.generate())
-            instructions.append({
-                "op":"literal->*tos",
-                "a":-1,
-                "b":-1,
-                "c":0,
-                "d":1,
-                "literal":element_size,
-            })
-            instructions.append({
-                "op":"multiply",
-                "a":-1,
-                "b":-2,
-                "c":-2,
-                "d":-1,
-            })
+            if element_size > 1:
+                instructions.append({
+                    "op":"literal->*tos",
+                    "a":-1,
+                    "b":-1,
+                    "c":0,
+                    "d":1,
+                    "literal":element_size,
+                })
+                instructions.append({
+                    "op":"multiply",
+                    "a":-1,
+                    "b":-2,
+                    "c":-2,
+                    "d":-1,
+                })
             instructions.append({
                 "op":"add",
                 "a":-1,
