@@ -2,6 +2,7 @@
 
 import subprocess
 import atexit
+import sys
 from math import pi
 
 try:
@@ -18,7 +19,10 @@ def cleanup():
 atexit.register(cleanup)
 
 def run_c(file_name):
-    process = subprocess.Popen(["../csim", str(file_name)])
+    if "verilog" in sys.argv:
+        process = subprocess.Popen(["../c2verilog", "run", str(file_name)])
+    else:
+        process = subprocess.Popen(["../csim", "run", str(file_name)])
     children.append(process)
     process.wait()
     children.remove(process)
