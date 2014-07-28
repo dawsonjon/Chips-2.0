@@ -192,18 +192,19 @@ class Return:
         instructions = []
         if hasattr(self, "expression"):
             instructions.extend(self.expression.generate())
-            instructions.append({
-                "op":"literal->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.function.return_pointer,
-            })
-            instructions.append({
-                "op":"*tos->*pointer",
-                "literal":self.function.size()//4,
-            })
+            if self.function.size():
+                instructions.append({
+                    "op":"literal->pointer",
+                    "a":-1,
+                    "b":-1,
+                    "c":-1,
+                    "d":0,
+                    "literal":self.function.return_pointer,
+                })
+                instructions.append({
+                    "op":"*tos->*pointer",
+                    "literal":self.function.size()//4,
+                })
         instructions.append({
             "op":"return",
         })
@@ -1686,7 +1687,7 @@ class FunctionCall(Expression):
         })
 
         #retrieve the return value and place on the stack
-        if self.function.type_ != "void":
+        if self.function.size():
             instructions.append({
                 "op":"literal->pointer",
                 "a":-1,

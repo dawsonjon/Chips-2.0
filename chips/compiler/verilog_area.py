@@ -49,9 +49,10 @@ def generate_instruction_set(instructions):
     for instruction in instructions:
         opcode = {}
         encoded_instruction = {}
-        encoded_instruction["dest"] = 0
-        encoded_instruction["src"] = 0
-        encoded_instruction["srcb"] = 0
+        encoded_instruction["d"] = 0
+        encoded_instruction["c"] = 0
+        encoded_instruction["a"] = 0
+        encoded_instruction["b"] = 0
         encoded_instruction["literal"] = 0
         opcode["op"] = instruction["op"]
         opcode["literal"] = False
@@ -71,14 +72,17 @@ def generate_instruction_set(instructions):
         if "output" in instruction:
             opcode["output"] = instruction["output"]
 
-        if "dest" in instruction:
-            encoded_instruction["dest"] = instruction["dest"]
+        if "d" in instruction:
+            encoded_instruction["d"] = instruction["d"]
 
-        if "src" in instruction:
-            encoded_instruction["src"] = instruction["src"]
+        if "c" in instruction:
+            encoded_instruction["c"] = instruction["c"]
 
-        if "srcb" in instruction:
-            encoded_instruction["srcb"] = instruction["srcb"]
+        if "a" in instruction:
+            encoded_instruction["a"] = instruction["a"]
+
+        if "b" in instruction:
+            encoded_instruction["b"] = instruction["b"]
 
         if "literal" in instruction:
             opcode["literal"] = True
@@ -155,26 +159,36 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
     #create list of signals
     signals = [
       ("timer", 16),
-      ("program_counter", log2(len(instructions))),
-      ("instruction", 32 + register_bits*2 + opcode_bits),
+      ("program_counter", 16),
+      ("instruction", 32 + 3+3+3+3+opcode_bits),
       ("opcode", opcode_bits),
-      ("dest", register_bits),
-      ("src", register_bits),
-      ("srcb", register_bits),
+
+      ("c", 3),
+      ("d", 3),
+      ("a", 3),
+      ("b", 3),
+
+      ("tos", 16),
+      ("pointer", 16),
+      ("return_address", 16),
+      ("return_frame", 16),
+      ("frame", 16),
+      ("n", 16),
+
       ("literal", 32),
       ("register", 32),
       ("registerb", 32),
-      ("register_hi", 32),
-      ("registerb_hi", 32),
+      ("a_hi", 32),
+      ("b_hi", 32),
+      ("a_lo", 32),
+      ("b_lo", 32),
       ("long_result", 64),
       ("result", 32),
-      ("result_hi", 32),
       ("write_enable", 1),
       ("address", 16),
       ("data_out", 32),
       ("data_in", 32),
-      ("carry", 1),
-      ("memory_enable", 1),
+      ("carry", 32),
     ] + [
       ("s_output_" + i + "_stb", 32) for i in outputs
     ] + [
@@ -244,7 +258,6 @@ def generate_CHIP(input_file,
                   name,
                   instructions,
                   output_file,
-                  registers,
                   allocator,
                   initialize_memory,
                   no_tb_mode=False):
@@ -253,10 +266,9 @@ def generate_CHIP(input_file,
 
     instructions = calculate_jumps(instructions)
     instruction_set, instruction_memory = generate_instruction_set(instructions)
-    register_bits = log2(len(registers));
+    register_bits = 16;
     opcode_bits = log2(len(instruction_set));
-    instruction_bits = 32 + opcode_bits + (2*register_bits)
-    assert(32 > 3*register_bits)
+    instruction_bits = 32 + 3 + 3 + 3 + 3 + opcode_bits
     declarations = generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, allocator)
     inputs, outputs, input_files, output_files, testbench, inports, outports, signals = declarations
     floating_point_arithmetic, floating_point_conversions, floating_point_debug = floating_point_enables(instruction_set)
@@ -272,15 +284,6 @@ def generate_CHIP(input_file,
     output_file.write("///%s\n"%"".join(["=" for i in name]))
     output_file.write("///\n")
     output_file.write("///Created by C2CHIP\n\n")
-
-
-    output_file.write("//////////////////////////////////////////////////////////////////////////////\n")
-    output_file.write("// Register Allocation\n")
-    output_file.write("// ===================\n")
-    output_file.write("//   %s   %s   %s  \n"%("Register".center(20), "Name".center(20), "Size".center(20)))
-    for register, definition in registers.iteritems():
-        register_name, size = definition
-        output_file.write("//   %s   %s   %s  \n"%(str(register).center(20), register_name.center(20), str(size).center(20)))
 
 
     output_file.write("module %s"%name)
@@ -334,12 +337,7 @@ def generate_CHIP(input_file,
     if floating_point_debug:
         output_file.write("  real fp_value;\n")
 
-    states = ["stop", "instruction_fetch", "instruction_decode", "opcode_fetch", "execute", "wait_state"]
-
-    memory_size = int(allocator.memory_size)
-    if memory_size:
-        states.append("read_memory_wait")
-        states.append("read_memory")
+    states = ["stop", "instruction_fetch", "instruction_decode", "opcode_fetch", "execute", "wait_state", "pointer_to_stack", "stack_to_pointer"]
 
     if inports:
         states.append("read")
@@ -395,11 +393,8 @@ def generate_CHIP(input_file,
     for name, size in signals:
         write_declaration("  reg ", name, size)
 
-    if memory_size:
-        output_file.write("  reg [31:0] memory [%i:0];\n"%(memory_size-1))
-
     output_file.write("  reg [%s:0] instructions [%i:0];\n"%(instruction_bits-1, len(instructions)-1))
-    output_file.write("  reg [31:0] registers [%i:0];\n"%(len(registers)-1))
+    output_file.write("  reg [31:0] registers [%i:0];\n"%65535)
 
 
     #generate clock and reset in testbench mode
@@ -467,22 +462,22 @@ def generate_CHIP(input_file,
 
 
     #Generate a state machine to execute the instructions
-    if initialize_memory and allocator.memory_content:
-
-        output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
-        output_file.write("  // MEMORY INITIALIZATION                                                      \n")
-        output_file.write("  //                                                                            \n")
-        output_file.write("  // In order to reduce program size, array contents have been stored into      \n")
-        output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n")
-        output_file.write("  // initialized when the FPGA configures.                                      \n")
-        output_file.write("  // Memory will not be re-initialized at reset.                                \n")
-        output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n")
-
-        output_file.write("  \n  initial\n")
-        output_file.write("  begin\n")
-        for location, content in allocator.memory_content.iteritems():
-            output_file.write("    memory[%s] = %s;\n"%(location, content))
-        output_file.write("  end\n\n")
+    #if initialize_memory and allocator.memory_content:
+#
+        #output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
+        #output_file.write("  // MEMORY INITIALIZATION                                                      \n")
+        #output_file.write("  //                                                                            \n")
+        #output_file.write("  // In order to reduce program size, array contents have been stored into      \n")
+        #output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n")
+        #output_file.write("  // initialized when the FPGA configures.                                      \n")
+        #output_file.write("  // Memory will not be re-initialized at reset.                                \n")
+        #output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n")
+#
+        #output_file.write("  \n  initial\n")
+        #output_file.write("  begin\n")
+        #for location, content in allocator.memory_content.iteritems():
+            #output_file.write("    memory[%s] = %s;\n"%(location, content))
+        #output_file.write("  end\n\n")
 
 
     output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
@@ -500,12 +495,14 @@ def generate_CHIP(input_file,
     output_file.write("  \n  initial\n")
     output_file.write("  begin\n")
     for location, instruction in enumerate(instruction_memory):
-        output_file.write("    instructions[%s] = {%s, %s, %s, %s};//%s\n"%(
+        output_file.write("    instructions[%s] = {%s, %s, %s, %s, %s, %s};//%s\n"%(
             location,
             print_verilog_literal(opcode_bits, instruction["op"]),
-            print_verilog_literal(register_bits, instruction["dest"]),
-            print_verilog_literal(register_bits, instruction["src"]),
-            print_verilog_literal(32, instruction["srcb"] | instruction["literal"]),
+            print_verilog_literal(3, instruction["a"]),
+            print_verilog_literal(3, instruction["b"]),
+            print_verilog_literal(3, instruction["c"]),
+            print_verilog_literal(3, instruction["d"]),
+            print_verilog_literal(32, instruction["literal"]),
             instruction["comment"]))
     output_file.write("  end\n\n")
 
@@ -524,19 +521,6 @@ def generate_CHIP(input_file,
             output_file.write("    %s = $fopen(\"%s\");\n"%(file_, file_name))
         output_file.write("  end\n\n")
 
-    if memory_size:
-        output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
-        output_file.write("  // DATA MEMORY\n")
-        output_file.write("  //                                                                            \n")
-        output_file.write("  \n  always @(posedge clk)\n")
-        output_file.write("  begin\n\n")
-        output_file.write("    //implement memory for 4 byte x n arrays\n")
-        output_file.write("    if (memory_enable == 1'b1) begin\n")
-        output_file.write("      memory[address] <= data_in;\n")
-        output_file.write("    end\n")
-        output_file.write("    data_out <= memory[address];\n")
-        output_file.write("  end\n\n")
-
     output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
     output_file.write("  // INSTRUCTION MEMORY\n")
     output_file.write("  //                                                                            \n")
@@ -553,9 +537,6 @@ def generate_CHIP(input_file,
 
     output_file.write("  \n  always @(posedge clk)\n")
     output_file.write("  begin\n\n")
-    #output_file.write("    $display(state);\n\n")
-    #output_file.write("    $display(program_counter);\n\n")
-    output_file.write("    memory_enable <= 1'b0;\n\n")
     output_file.write("  case(state)\n\n")
     output_file.write("    //instruction fetch\n")
     output_file.write("    instruction_fetch:\n")
@@ -570,26 +551,31 @@ def generate_CHIP(input_file,
     output_file.write("      opcode <= instruction[%s:%s];\n"%(
         instruction_bits - 1,
         instruction_bits - opcode_bits))
-    output_file.write("      dest <= instruction[%s:%s];\n"%(
-        register_bits * 2 + 32 - 1,
-        register_bits * 1 + 32))
-    output_file.write("      src <= instruction[%s:%s];\n"%(
-        register_bits * 1 + 32 - 1,
-        32))
-    output_file.write("      srcb <= instruction[%s:0];\n"%(register_bits-1))
+    output_file.write("      a <= instruction[43:41];\n")
+    output_file.write("      b <= instruction[40:38];\n")
+    output_file.write("      c <= instruction[37:35];\n")
+    output_file.write("      d <= instruction[34:32];\n")
     output_file.write("      literal <= instruction[31:0];\n")
     output_file.write("      if(write_enable) begin\n")
-    output_file.write("            registers[dest] <= result;\n")
+    output_file.write("            registers[$signed(tos) + $signed(c)] <= result;\n")
+    #output_file.write("          $display(\"write\", $signed(tos) + $signed(c));\n")
+    #output_file.write("          $display(result);\n")
     output_file.write("      end\n")
+    output_file.write("      tos <= $signed(tos)+$signed(d);\n")
     output_file.write("      state <= opcode_fetch;\n")
+    #output_file.write("      $display(\"program_counter\", program_counter);\n")
     output_file.write("      program_counter <= program_counter + 1;\n")
     output_file.write("    end\n\n")
 
     output_file.write("    //opcode fetch\n")
     output_file.write("    opcode_fetch:\n")
     output_file.write("    begin\n")
-    output_file.write("      register <= registers[src];\n")
-    output_file.write("      registerb <= registers[srcb];\n")
+    #output_file.write("      $display(\"reada\", $signed(tos) + $signed(a));\n")
+    #output_file.write("      $display(registers[$signed(tos) + $signed(a)]);\n")
+    #output_file.write("      $display(\"readb\", $signed(tos) + $signed(b));\n")
+    #output_file.write("      $display(registers[$signed(tos) + $signed(b)]);\n")
+    output_file.write("      register <= registers[$signed(tos) + $signed(a)];\n")
+    output_file.write("      registerb <= registers[$signed(tos) + $signed(b)];\n")
     output_file.write("      state <= execute;\n")
     output_file.write("    end\n\n")
 
@@ -610,78 +596,165 @@ def generate_CHIP(input_file,
         if instruction["op"] == "nop":
             pass
 
-        elif instruction["op"] == "literal":
-            output_file.write("          result <= literal;\n")
+        elif instruction["op"] == "*tos->*pointer":
+            output_file.write("          n <= literal - 1;\n")
+            output_file.write("          state <= stack_to_pointer;\n")
+
+        elif instruction["op"] == "*pointer->*tos":
+            output_file.write("          n <= 0;\n")
+            output_file.write("          state <= pointer_to_stack;\n")
+
+        elif instruction["op"] == "new":
+            output_file.write("          tos<=$signed(tos)+$signed(literal);\n")
+
+        elif instruction["op"] == "call":
+            output_file.write("          return_address <= program_counter;\n")
+            output_file.write("          return_frame <= frame;\n")
+            output_file.write("          frame <= tos;\n")
+            output_file.write("          program_counter <= literal;\n")
+            output_file.write("          state <= instruction_fetch;\n")
+
+        elif instruction["op"] == "return":
+            #output_file.write("          $display(return_address);\n")
+            output_file.write("          program_counter <= return_address;\n")
+            output_file.write("          frame <= return_frame;\n")
+            output_file.write("          tos <= frame;\n")
+            output_file.write("          state <= instruction_fetch;\n")
+
+        elif instruction["op"] == "local_to_global":
+            output_file.write("          result <= register + frame;\n")
             output_file.write("          write_enable <= 1;\n")
 
-        elif instruction["op"] == "move":
-            output_file.write("          result <= register;\n")
+        elif instruction["op"] == "*tos->pointer":
+            output_file.write("          pointer <= register;\n")
+
+        elif instruction["op"] == "*tos->return_frame":
+            output_file.write("          return_frame <= register;\n")
+
+        elif instruction["op"] == "*tos->return_address":
+            output_file.write("          return_address <= register;\n")
+
+        elif instruction["op"] == "return_frame->*tos":
+            output_file.write("          result <= return_frame;\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "return_address->*tos":
+            output_file.write("          result <= return_address;\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "tos->pointer":
+            output_file.write("          pointer <= register;\n")
+
+        elif instruction["op"] == "literal+frame->pointer":
+            output_file.write("          pointer <= $signed(literal) + $signed(frame);\n")
+
+        elif instruction["op"] == "literal->pointer":
+            output_file.write("          pointer <= literal;\n")
+
+        elif instruction["op"] == "literal->*tos":
+            output_file.write("          result <= literal;\n")
+            output_file.write("          write_enable <= 1;\n")
+            #output_file.write("          $display(\"literal\", $signed(tos) + $signed(c));\n")
+            #output_file.write("          $display(\"literal\", literal);\n")
+
+        elif instruction["op"] == "pop_a_lo":
+            output_file.write("          a_lo <= register;\n")
+            #output_file.write("          $display(register);\n")
+
+        elif instruction["op"] == "pop_b_lo":
+            output_file.write("          b_lo <= register;\n")
+
+        elif instruction["op"] == "pop_a_hi":
+            #output_file.write("          $display(register);\n")
+            output_file.write("          a_hi <= register;\n")
+
+        elif instruction["op"] == "pop_b_hi":
+            output_file.write("          b_hi <= register;\n")
+
+        elif instruction["op"] == "push_a_lo":
+            output_file.write("          result <= a_lo;\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "push_b_lo":
+            output_file.write("          result <= b_lo;\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "push_a_hi":
+            output_file.write("          result <= a_hi;\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "push_b_hi":
+            output_file.write("          result <= b_hi;\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "not":
             output_file.write("          result <= ~register;\n")
             output_file.write("          write_enable <= 1;\n")
 
+        elif instruction["op"] == "int_to_long":
+            output_file.write("          if(register[31]) begin\n")
+            output_file.write("            result <= -1;\n")
+            output_file.write("          end else begin\n")
+            output_file.write("            result <= 0;\n")
+            output_file.write("          end\n")
+            output_file.write("          write_enable <= 1;\n")
+
         elif instruction["op"] == "int_to_float":
-            output_file.write("          int_to_float_in <= register;\n")
+            output_file.write("          int_to_float_in <= a_lo;\n")
             output_file.write("          state <= int_to_float_write_a;\n")
 
         elif instruction["op"] == "float_to_int":
-            output_file.write("          float_to_int_in <= register;\n")
+            output_file.write("          float_to_int_in <= a_lo;\n")
             output_file.write("          state <= float_to_int_write_a;\n")
 
         elif instruction["op"] == "long_to_double":
-            output_file.write("          long_to_double_in <= {register_hi, register};\n")
+            output_file.write("          long_to_double_in <= {a_hi, a_lo};\n")
             output_file.write("          state <= long_to_double_write_a;\n")
 
         elif instruction["op"] == "double_to_long":
-            output_file.write("          double_to_long_in <= {register_hi, register};\n")
+            output_file.write("          double_to_long_in <= {a_hi, a_lo};\n")
             output_file.write("          state <= double_to_long_write_a;\n")
 
         elif instruction["op"] == "float_to_double":
-            output_file.write("          float_to_double_in <= {register_hi, register};\n")
+            output_file.write("          float_to_double_in <= a_lo;\n")
             output_file.write("          state <= float_to_double_write_a;\n")
 
         elif instruction["op"] == "double_to_float":
-            output_file.write("          double_to_float_in <= {register_hi, register};\n")
+            output_file.write("          double_to_float_in <= {a_hi, a_lo};\n")
             output_file.write("          state <= double_to_float_write_a;\n")
-
-        elif instruction["op"] == "load_hi":
-            output_file.write("          register_hi <= register;\n")
-            output_file.write("          registerb_hi <= registerb;\n")
 
         elif instruction["op"] == "add":
             output_file.write("          long_result = register + registerb;\n")
             output_file.write("          result <= long_result[31:0];\n")
-            output_file.write("          carry <= long_result[32];\n")
+            output_file.write("          carry[0] <= long_result[32];\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "add_with_carry":
-            output_file.write("          long_result = register + registerb + carry;\n")
+            output_file.write("          long_result = register + registerb + carry[0];\n")
             output_file.write("          result <= long_result[31:0];\n")
-            output_file.write("          carry <= long_result[32];\n")
+            output_file.write("          carry[0] <= long_result[32];\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "subtract":
             output_file.write("          long_result = register + (~registerb) + 1;\n")
             output_file.write("          result <= long_result[31:0];\n")
-            output_file.write("          carry <= ~long_result[32];\n")
+            output_file.write("          carry[0] <= ~long_result[32];\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "subtract_with_carry":
-            output_file.write("          long_result = register + (~registerb) + carry;\n")
+            output_file.write("          long_result = register + (~registerb) + carry[0];\n")
             output_file.write("          result <= long_result[31:0];\n")
-            output_file.write("          carry <= ~long_result[32];\n")
+            output_file.write("          carry[0] <= ~long_result[32];\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "multiply":
             output_file.write("          long_result = register * registerb;\n")
             output_file.write("          result <= long_result[31:0];\n")
-            output_file.write("          result_hi <= long_result[63:32];\n")
+            output_file.write("          carry <= long_result[63:32];\n")
             output_file.write("          write_enable <= 1;\n")
 
-        elif instruction["op"] == "result_hi":
-            output_file.write("          result <= result_hi;\n")
+        elif instruction["op"] == "carry":
+            output_file.write("          result <= carry;\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "or":
@@ -697,28 +770,51 @@ def generate_CHIP(input_file,
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "shift_left":
-            output_file.write("          result <= {register[30:0], 1'd0};\n")
-            output_file.write("          carry <= register[31];\n")
+            output_file.write("          if(registerb < 32) begin\n")
+            output_file.write("            result <= register << registerb;\n")
+            output_file.write("            carry <= register >> (32-registerb);\n")
+            output_file.write("          end else begin\n")
+            output_file.write("            result <= 0;\n")
+            output_file.write("            carry <= register;\n")
+            output_file.write("          end\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "shift_left_with_carry":
-            output_file.write("          result <= {register[30:0], carry};\n")
-            output_file.write("          carry <= register[31];\n")
+            output_file.write("          if(registerb < 32) begin\n")
+            output_file.write("            result <= (register << registerb) | carry;\n")
+            output_file.write("          end else begin\n")
+            output_file.write("            result <= carry;\n")
+            output_file.write("          end\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "shift_right":
-            output_file.write("          result <= {register[31], register[31:1]};\n")
-            output_file.write("          carry <= register[0];\n")
+            output_file.write("          if(registerb < 32) begin\n")
+            output_file.write("            result <= $signed(register) >>> registerb;\n")
+            output_file.write("            carry <= register << (32-registerb);\n")
+            output_file.write("          end else begin\n")
+            output_file.write("            result <= register[31]?-1:0;\n")
+            output_file.write("            carry <= register;\n")
+            output_file.write("          end\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "unsigned_shift_right":
-            output_file.write("          result <= {1'd0, register[31:1]};\n")
-            output_file.write("          carry <= register[0];\n")
+            output_file.write("          if(registerb < 32) begin\n")
+            output_file.write("            result <= register >> registerb;\n")
+            output_file.write("            carry <= register << (32-registerb);\n")
+            #output_file.write("            $display(register << (32-registerb));\n")
+            output_file.write("          end else begin\n")
+            output_file.write("            result <= 0;\n")
+            output_file.write("            carry <= register;\n")
+            output_file.write("          end\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "shift_right_with_carry":
-            output_file.write("          result = {carry, register[31:1]};\n")
-            output_file.write("          carry <= register[0];\n")
+            #output_file.write("          $display(carry);\n")
+            output_file.write("          if(registerb < 32) begin\n")
+            output_file.write("            result <= (register >> registerb) | carry;\n")
+            output_file.write("          end else begin\n")
+            output_file.write("            result <= carry;\n")
+            output_file.write("          end\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "greater":
@@ -766,23 +862,23 @@ def generate_CHIP(input_file,
             output_file.write("          state <= divider_write_a;\n")
 
         elif instruction["op"] == "long_float_add":
-            output_file.write("          double_adder_a <= {register_hi, register};\n")
-            output_file.write("          double_adder_b <= {registerb_hi, registerb};\n")
+            output_file.write("          double_adder_a <= {a_hi, a_lo};\n")
+            output_file.write("          double_adder_b <= {b_hi, b_lo};\n")
             output_file.write("          state <= double_adder_write_a;\n")
 
         elif instruction["op"] == "long_float_subtract":
-            output_file.write("          double_adder_a <= {register_hi, register};\n")
-            output_file.write("          double_adder_b <= {~registerb_hi[31], registerb_hi[30:0], registerb};\n")
+            output_file.write("          double_adder_a <= {a_hi, a_lo};\n")
+            output_file.write("          double_adder_b <= {~b_hi[31], b_hi[30:0], b_lo};\n")
             output_file.write("          state <= double_adder_write_a;\n")
 
         elif instruction["op"] == "long_float_multiply":
-            output_file.write("          double_multiplier_a <= {register_hi, register};\n")
-            output_file.write("          double_multiplier_b <= {registerb_hi, registerb};\n")
+            output_file.write("          double_multiplier_a <= {a_hi, a_lo};\n")
+            output_file.write("          double_multiplier_b <= {b_hi, b_lo};\n")
             output_file.write("          state <= double_multiplier_write_a;\n")
 
         elif instruction["op"] == "long_float_divide":
-            output_file.write("          double_divider_a <= {register_hi, register};\n")
-            output_file.write("          double_divider_b <= {registerb_hi, registerb};\n")
+            output_file.write("          double_divider_a <= {a_hi, a_lo};\n")
+            output_file.write("          double_divider_b <= {b_hi, b_lo};\n")
             output_file.write("          state <= double_divider_write_a;\n")
 
         elif instruction["op"] == "jmp_if_false":
@@ -796,16 +892,6 @@ def generate_CHIP(input_file,
             output_file.write("            program_counter <= literal;\n")
             output_file.write("            state <= instruction_fetch;\n")
             output_file.write("          end\n")
-
-        elif instruction["op"] == "jmp_and_link":
-            output_file.write("          program_counter <= literal;\n")
-            output_file.write("          state <= instruction_fetch;\n")
-            output_file.write("          result <= program_counter;\n")
-            output_file.write("          write_enable <= 1;\n")
-
-        elif instruction["op"] == "jmp_to_reg":
-            output_file.write("          program_counter <= register;\n")
-            output_file.write("          state <= instruction_fetch;\n")
 
         elif instruction["op"] == "goto":
             output_file.write("          program_counter <= literal;\n")
@@ -836,7 +922,7 @@ def generate_CHIP(input_file,
                   instruction["file_name"]]))
 
         elif instruction["op"] == "long_float_file_write":
-            output_file.write('          fp_value = $bitstoreal({register_hi, register});\n')
+            output_file.write('          fp_value = $bitstoreal({a_hi, a_lo});\n')
             output_file.write('          $fdisplay (%s, "%%g", fp_value);\n'%(
                   output_files[
                   instruction["file_name"]]))
@@ -866,15 +952,6 @@ def generate_CHIP(input_file,
         elif instruction["op"] == "write":
             output_file.write("          state <= write;\n")
 
-        elif instruction["op"] == "memory_read":
-            output_file.write("          address <= register;\n")
-            output_file.write("          state <= read_memory_wait;\n")
-
-        elif instruction["op"] == "memory_write":
-            output_file.write("          address <= register;\n")
-            output_file.write("          data_in <= registerb;\n")
-            output_file.write("          memory_enable <= 1'b1;\n")
-
         elif instruction["op"] == "assert":
             output_file.write("          if (register == 0) begin\n")
             output_file.write("            $display(\"Assertion failed at line: %s in file: %s\");\n"%(
@@ -888,25 +965,25 @@ def generate_CHIP(input_file,
             output_file.write("          state <= wait_state;\n")
 
         elif instruction["op"] == "report":
-            output_file.write('          $display ("%%d (report (int) at line: %s in file: %s)", $signed(register));\n'%(
+            output_file.write('          $display ("%%d (report (int) at line: %s in file: %s)", $signed(a_lo));\n'%(
                 instruction["line"],
                 instruction["file"],))
 
         elif instruction["op"] == "long_report":
-            output_file.write('          $display ("%%d (report (long) at line: %s in file: %s)", $signed({register_hi, register}));\n'%(
+            output_file.write('          $display ("%%d (report (long) at line: %s in file: %s)", $signed({a_hi, a_lo}));\n'%(
                 instruction["line"],
                 instruction["file"],))
 
         elif instruction["op"] == "float_report":
-           output_file.write('          long_result[63] = register[31];\n')
-           output_file.write('          if (register[30:23] == 0) begin\n')
+           output_file.write('          long_result[63] = a_lo[31];\n')
+           output_file.write('          if (a_lo[30:23] == 0) begin\n')
            output_file.write('              long_result[62:52] = 0;\n')
-           output_file.write('          end else if (register[30:23] == 255) begin\n')
+           output_file.write('          end else if (a_lo[30:23] == 255) begin\n')
            output_file.write('              long_result[62:52] = 2047;\n')
            output_file.write('          end else begin\n')
-           output_file.write('              long_result[62:52] = (register[30:23] - 127) + 1023;\n')
+           output_file.write('              long_result[62:52] = (a_lo[30:23] - 127) + 1023;\n')
            output_file.write('          end\n')
-           output_file.write('          long_result[51:29] = register[22:0];\n')
+           output_file.write('          long_result[51:29] = a_lo[22:0];\n')
            output_file.write('          long_result[28:0] = 0;\n')
            output_file.write('          fp_value = $bitstoreal(long_result);\n')
            output_file.write('          $display ("%%f (report (float) at line: %s in file: %s)", fp_value);\n'%(
@@ -914,18 +991,20 @@ def generate_CHIP(input_file,
                   instruction["file"]))
 
         elif instruction["op"] == "long_float_report":
-           output_file.write('          fp_value = $bitstoreal({register_hi, register});\n')
+           #output_file.write('          $display (a_hi);\n')
+           #output_file.write('          $display (a_lo);\n')
+           output_file.write('          fp_value = $bitstoreal({a_hi, a_lo});\n')
            output_file.write('          $display ("%%f (report (double) at line: %s in file: %s)", fp_value);\n'%(
                   instruction["line"],
                   instruction["file"]))
 
         elif instruction["op"] == "unsigned_report":
-           output_file.write('          $display ("%%d (report (unsigned) at line: %s in file: %s)", $unsigned(register));\n'%(
+           output_file.write('          $display ("%%d (report (unsigned) at line: %s in file: %s)", $unsigned(a_lo));\n'%(
 	       instruction["line"],
 	       instruction["file"]))
 
         elif instruction["op"] == "long_unsigned_report":
-           output_file.write('          $display ("%%d (report (unsigned long) at line: %s in file: %s)", $unsigned({register_hi, register}));\n'%(
+           output_file.write('          $display ("%%d (report (unsigned long) at line: %s in file: %s)", $unsigned({a_hi, a_lo}));\n'%(
 	       instruction["line"],
 	       instruction["file"]))
 
@@ -996,22 +1075,35 @@ def generate_CHIP(input_file,
     output_file.write("      end\n")
     output_file.write("    end\n\n")
 
+    output_file.write("    pointer_to_stack:\n")
+    output_file.write("    begin\n")
+    output_file.write("      if (n==literal-1) begin\n")
+    output_file.write("        state <= instruction_decode;\n")
+    output_file.write("      end else begin\n")
+    output_file.write("        n <= n+1;\n")
+    output_file.write("      end\n")
+    output_file.write("        tos <= tos+1;\n")
+    output_file.write("      registers[tos] <= registers[pointer + n];\n")
+    #output_file.write("      $display(tos, pointer + n);\n")
+    #output_file.write("      $display(registers[pointer + n]);\n")
+    output_file.write("    end\n\n")
+
+    output_file.write("    stack_to_pointer:\n")
+    output_file.write("    begin\n")
+    output_file.write("      if (!n) begin\n")
+    output_file.write("        state <= instruction_decode;\n")
+    output_file.write("      end else begin\n")
+    output_file.write("        n <= n-1;\n")
+    output_file.write("      end\n")
+    output_file.write("        tos <= tos-1;\n")
+    output_file.write("      registers[pointer + n] <= registers[tos - 1];\n")
+    #output_file.write("      $display(\"stack_to_pointer\", pointer + n, tos - 1);\n")
+    #output_file.write("      $display(registers[tos - 1]);\n")
+    output_file.write("    end\n\n")
+
     output_file.write("    stop:\n")
     output_file.write("    begin\n")
     output_file.write("    end\n\n")
-
-    if memory_size:
-        output_file.write("    read_memory_wait:\n")
-        output_file.write("    begin\n")
-        output_file.write("      state <= read_memory;\n")
-        output_file.write("    end\n\n")
-
-        output_file.write("    read_memory:\n")
-        output_file.write("    begin\n")
-        output_file.write("      result <= data_out;\n")
-        output_file.write("      write_enable <= 1;\n")
-        output_file.write("      state <= instruction_decode;\n")
-        output_file.write("    end\n\n")
 
     for i in floating_point_arithmetic:
         output_file.write("    %s_write_a:\n"%i)
@@ -1035,11 +1127,11 @@ def generate_CHIP(input_file,
         output_file.write("      %s_z_ack <= 1;\n"%i)
         output_file.write("      if (%s_z_stb && %s_z_ack) begin\n"%(i, i))
         if i.startswith("double"):
-            output_file.write("        result <= %s_z[31:0];\n"%i)
-            output_file.write("        result_hi <= %s_z[63:32];\n"%i)
+            output_file.write("        a_lo <= %s_z[31:0];\n"%i)
+            output_file.write("        a_hi <= %s_z[63:32];\n"%i)
         else:
             output_file.write("        result <= %s_z;\n"%i)
-        output_file.write("        write_enable <= 1;\n")
+            output_file.write("        write_enable <= 1;\n")
         output_file.write("        %s_z_ack <= 0;\n"%i)
         output_file.write("        state <= instruction_decode;\n")
         output_file.write("      end\n")
@@ -1059,12 +1151,12 @@ def generate_CHIP(input_file,
         output_file.write("       %s_out_ack <= 1;\n"%i)
         output_file.write("       if (%s_out_stb && %s_out_ack) begin\n"%(i,i))
         output_file.write("         %s_out_ack <= 0;\n"%i)
-        if i.startswith("double") or i.startswith("long"):
-            output_file.write("         result <= %s_out[31:0];\n"%i)
-            output_file.write("         result_hi <= %s_out[63:32];\n"%i)
+        if i.startswith("double") or i.endswith("double") or i.startswith("long"):
+            output_file.write("         a_lo <= %s_out[31:0];\n"%i)
+            output_file.write("         a_hi <= %s_out[63:32];\n"%i)
         else:
-            output_file.write("         result <= %s_out;\n"%i)
-        output_file.write("         write_enable <= 1;\n")
+            output_file.write("         a_lo <= %s_out;\n"%i)
+        #output_file.write("         write_enable <= 1;\n")
         output_file.write("         state <= instruction_decode;\n")
         output_file.write("       end\n")
         output_file.write("     end\n\n")
@@ -1075,6 +1167,14 @@ def generate_CHIP(input_file,
     output_file.write("    if (rst == 1'b1) begin\n")
     output_file.write("      timer <= 0;\n")
     output_file.write("      program_counter <= 0;\n")
+    output_file.write("      return_address <= 0;\n")
+    output_file.write("      return_frame <= 0;\n")
+    output_file.write("      frame <= 0;\n")
+    output_file.write("      tos <= 0;\n")
+    output_file.write("      a <= 0;\n")
+    output_file.write("      b <= 0;\n")
+    output_file.write("      c <= 0;\n")
+    output_file.write("      d <= 0;\n")
     output_file.write("      state <= instruction_fetch;\n")
 
     for i in inputs:

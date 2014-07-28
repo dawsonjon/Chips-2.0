@@ -22,19 +22,19 @@ def test(test, code, no_init=False, check_output=""):
       python_process = subprocess.Popen(["coverage2", "run", "-p", "../csim", "test.c"], stdout=subprocess.PIPE)
 
       #Test using c2verilog compiler
-      #if no_init:
-      #    verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
-      #else:
-      #    verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+      if no_init:
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+      else:
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
   else:
       #Test using csim compiler
       python_process = subprocess.Popen(["../csim", "test.c"], stdout=subprocess.PIPE)
 
       #Test using c2verilog compiler
-      #if no_init:
-      #    verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
-      #else:
-      #    verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+      if no_init:
+          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+      else:
+          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
 
 
   result = python_process.wait()
@@ -50,17 +50,17 @@ def test(test, code, no_init=False, check_output=""):
          print "expected", check_output, "actual", output
          quit = True
 
-  #result = verilog_process.wait()
-  #if result != 0:
-  #  print test, "verilog ...fail"
-  #  quit = True
+  result = verilog_process.wait()
+  if result != 0:
+    print test, "verilog ...fail"
+    quit = True
 
-  #if check_output:
-  #    output = verilog_process.stdout.read()
-  #    if check_output not in output:
-  #       print test, "verilog ...fail"
-  #       print "expected", check_output, "actual", output
-  #       quit = True
+  if check_output:
+      output = verilog_process.stdout.read()
+      if check_output not in output:
+         print test, "verilog ...fail"
+         print "expected", check_output, "actual", output
+         quit = True
 
   if quit:
     sys.exit(0)
@@ -3971,6 +3971,16 @@ test("while 4",
     i++;
   }
   assert(i==64);
+}
+""")
+test("do while 1",
+"""void main(){
+    int counter = 5;
+    int factorial = 1;
+    do {
+          factorial *= counter--;
+    } while (counter > 0);
+    assert(factorial==120);
 }
 """)
 test("if",

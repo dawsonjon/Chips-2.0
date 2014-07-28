@@ -230,16 +230,6 @@ class PythonModel:
                self.pointer = literal
             elif instruction["op"] == "literal->*tos":
                result = uint32(literal)
-            elif instruction["op"] == "*tos->temp1":
-               self.temp1=tos
-            elif instruction["op"] == "*tos->temp2":
-               self.temp2=tos
-            elif instruction["op"] == "temp1->*tos":
-               result = self.temp1
-            elif instruction["op"] == "temp2->*tos":
-               result = self.temp2
-            elif instruction["op"] == "pop_b_lo":
-               self.b_lo=tos
             elif instruction["op"] == "pop_a_lo":
                self.a_lo=tos
             elif instruction["op"] == "pop_b_lo":

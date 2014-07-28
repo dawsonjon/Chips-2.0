@@ -57,7 +57,6 @@ def comp(input_file, options=[], parameters={}):
                     name,
                     instructions,
                     output_file,
-                    registers,
                     parser.allocator,
                     initialize_memory)
             output_file.close()

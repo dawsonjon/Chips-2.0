@@ -299,6 +299,8 @@ class Parser:
             return self.parse_if()
         elif self.tokens.peek() == "while":
             return self.parse_while()
+        elif self.tokens.peek() == "do":
+            return self.parse_do_while()
         elif self.tokens.peek() == "for":
             return self.parse_for()
         elif self.tokens.peek() == "return":
@@ -454,7 +456,6 @@ class Parser:
         self.loop = loop
         statement = self.parse_statement()
         self.loop = stored_loop
-
         if_ = If()
         loop.statement = if_
         break_ = Break()
@@ -465,7 +466,44 @@ class Parser:
         if_.expression = expression
         if_.false_statement = break_
         if_.true_statement = statement
+        return loop
 
+    def parse_do_while(self):
+
+        #compile the loop
+        loop = Loop()
+        self.tokens.expect("do")
+        stored_loop = self.loop
+        self.loop = loop
+        self.loop = stored_loop
+        statement = self.parse_statement()
+        self.tokens.expect("while")
+        self.tokens.expect("(")
+        expression = self.parse_expression()
+        self.tokens.expect(")")
+        self.tokens.expect(";")
+
+        #construct a conditional that will break if false
+        #or continue if true
+        break_ = Break()
+        break_.loop = loop
+        continue_ = Continue()
+        continue_.loop = loop
+        if_ = If()
+        if_.expression = expression
+        if_.false_statement = break_
+        if_.true_statement = continue_
+
+        #form the body of the loop from the compiled loop
+        #followed by the conditional statement
+        block = Block()
+        block.statements = [statement, if_]
+        loop.statement = block
+
+        #check that the loop condition is like an integer
+        if expression.type_() not in ["int"]:
+            self.tokens.error(
+                "do while statement conditional must be an integer like expression")
         return loop
 
     def parse_for(self):
@@ -917,8 +955,26 @@ class Parser:
 
             return Unary("~", expression)
 
-        elif self.tokens.peek() == "sizeof":
+        elif self.tokens.peek() in ["++", "--"]:
             operator = self.tokens.get()
+            expression = self.parse_unary_expression()
+            expression = Assignment(
+                expression,
+                Binary(
+                    operator[0],
+                    expression,
+                    Constant(
+                        1, 
+                        expression.type_(),
+                        expression.size(), 
+                        expression.signed()
+                    ),
+                ),
+            )
+            return expression
+
+        elif self.tokens.peek() == "sizeof":
+            self.tokens.get()
             expression = self.parse_unary_expression()
             return SizeOf(expression)
 
