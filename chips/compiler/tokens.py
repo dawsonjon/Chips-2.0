@@ -25,7 +25,7 @@ class Tokens:
         self.tokens = []
         self.filename = None
         self.lineno = None
-        self.scan("built in", StringIO.StringIO(builtins))
+#        self.scan("built in", StringIO.StringIO(builtins))
         self.scan(filename)
 
         tokens = []

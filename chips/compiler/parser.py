@@ -145,7 +145,7 @@ class Parser:
                     declaration = ArrayDeclaration(
                         size = 4,
                         dimensions = dimensions,
-                        type_ = type_+"[]",
+                        type_ = type_+"".join(["[]" for i in dimensions]),
                         element_type = type_,
                         element_size = size,
                         element_signed = signed,
@@ -548,26 +548,29 @@ class Parser:
 
     def parse_struct_body(self):
         self.tokens.expect("{")
-        members = {}
+        member_names = []
+        member_declarations = []
         while self.tokens.peek() != "}":
             type_, size, signed, const = self.parse_type_specifier()
             name = self.tokens.get()
 
-            members[name] = self.parse_declaration(
+            member_names.append(name)
+            member_declarations.append(self.parse_declaration(
                 type_, 
                 size, 
                 signed, 
                 const,
-                name)
+                name,
+            ))
 
             self.tokens.expect(";")
         self.tokens.expect("}")
-        return members
+        return member_names, member_declarations
 
     def parse_typedef_struct(self):
         self.tokens.expect("typedef")
         self.tokens.expect("struct")
-        declaration = StructDeclaration(self.parse_struct_body())
+        declaration = StructDeclaration(*self.parse_struct_body())
         name = self.tokens.get()
         declaration._type= name
         self.tokens.expect(";")
@@ -577,7 +580,7 @@ class Parser:
     def parse_define_struct(self):
         self.tokens.expect("struct")
         name = self.tokens.get()
-        declaration = StructDeclaration(self.parse_struct_body())
+        declaration = StructDeclaration(*self.parse_struct_body())
         declaration._type="struct_"+str(id(declaration))
         self.tokens.expect(";")
         self.scope[name] = declaration
@@ -639,12 +642,12 @@ class Parser:
 
         #array declaration
         #
-        if type_ in self.structs:
-            declaration = self.scope[type_]
+        #if type_ in self.structs:
+            #declaration = self.scope[type_]
 
         #array or numeric
         #
-        elif type_ in ["int", "float"]:
+        if type_ in ["int", "float"] + self.structs:
 
             #array 
             if self.tokens.peek() == "[":
@@ -707,7 +710,7 @@ class Parser:
                     self.tokens.error(
                         "Array size must be specified if not initialized")
 
-                array_type=type_+"[]"
+                array_type = type_+"".join(["[]" for i in dimensions])
                 declaration = ArrayDeclaration(
                     size = reduce(mul, dimensions, size),
                     dimensions = dimensions,
@@ -1010,45 +1013,97 @@ class Parser:
             return self.parse_postfix_expression()
 
     def parse_postfix_expression(self):
-        expression = self.parse_paren_expression()
-        while self.tokens.peek() in ["++", "--"]:
-            operator = self.tokens.get()
-            expression = MultiExpression(
-                expression,
-                [Assignment(
+        expression = self.parse_primary_expression()
+
+        while self.tokens.peek() in ["(", "[", ".", "++", "--"]:#, "->"]
+
+            if self.tokens.peek() == "(":
+                expression = self.parse_function_call(expression)
+            elif self.tokens.peek() == "[":
+                expression = self.parse_array_index(expression)
+            elif self.tokens.peek() == ".":
+                expression = self.parse_struct_member(expression)
+            elif self.tokens.peek() in ["++", "--"]:
+                operator = self.tokens.get()
+                expression = MultiExpression(
                     expression,
-                    Binary(
-                        operator[0],
+                    [Assignment(
                         expression,
-                        Constant(
-                            1, 
-                            expression.type_(),
-                            expression.size(), 
-                            expression.signed()
+                        Binary(
+                            operator[0],
+                            expression,
+                            Constant(
+                                1, 
+                                expression.type_(),
+                                expression.size(), 
+                                expression.signed()
+                            ),
                         ),
-                    ),
-                )],
-            )
+                    )],
+                )
+
         return expression
 
-    def parse_paren_expression(self):
+    def parse_primary_expression(self):
         if self.tokens.peek() == "(":
             self.tokens.expect("(")
             expression = self.parse_expression()
             self.tokens.expect(")")
+        elif self.tokens.peek()[0].isalpha():
+            name = self.tokens.get()
+            if name == "input":
+                expression = self.parse_input()
+            elif name == "output":
+                expression = self.parse_output()
+            elif name == "fgetc":
+                expression = self.parse_fgetc()
+            elif name == "fputc":
+                expression = self.parse_fputc()
+            elif name == "ready":
+                expression = self.parse_ready()
+            elif name == "file_read":
+                expression = self.parse_file_read()
+            elif name == "file_write":
+                expression = self.parse_file_write()
+            elif name == "double_to_bits":
+                expression = self.parse_double_to_bits()
+            elif name == "float_to_bits":
+                expression = self.parse_float_to_bits()
+            elif name == "bits_to_double":
+                expression = self.parse_bits_to_double()
+            elif name == "bits_to_float":
+                expression = self.parse_bits_to_float()
+            else:
+                instance = self.scope[name]
+                #store inside the current function any globals that get referenced
+                #if a global isn't referenced it doesn't get compiled
+                if not instance.local:
+                    self.function.referenced_globals.append(instance)
+                expression = instance.reference()
         else:
-            expression = self.parse_number_or_variable()
+            expression = self.parse_literal()
+
         return expression
 
-    def parse_number_or_variable(self):
-        if self.tokens.peek()[0].isalpha():
-            name = self.tokens.get()
-            if self.tokens.peek() == "(":
-                return self.parse_function_call(name)
-            else:
-                return self.parse_variable(name)
-        else:
-            return self.parse_number()
+    def parse_array_index(self, array):
+        print array
+        self.tokens.expect("[")
+        index_expression = self.parse_expression()
+        self.tokens.expect("]")
+        if not array.type_().endswith("[]"):
+            self.tokens.error("Cannot index non-array type %s"%array.type_())
+        if index_expression.type_() not in ["int"]:
+            self.tokens.error("Array indices must be an integer like expression")
+        return ArrayIndex(array, index_expression)
+
+    def parse_struct_member(self, struct):
+        self.tokens.expect(".")
+        if not (struct.type_().startswith("struct") or struct.type_() in self.structs):
+            self.tokens.error("Cannot access member of non-struct type %s"%struct.type_())
+        member = self.tokens.get()
+        if member not in self.scope[struct.type_()].member_names:
+            self.tokens.error("%s is not a member of struct"%member)
+        return StructMember(struct, self.scope[struct.type_()], member)
 
     def parse_file_read(self):
         self.tokens.expect("(")
@@ -1122,38 +1177,11 @@ class Parser:
         self.tokens.expect(")")
         return Output(handle, expression)
 
-    def parse_function_call(self, name):
+    def parse_function_call(self, function):
 
-        #First filter out built-in "functions"
-        #
-        if name == "input":
-            return self.parse_input()
-        if name == "output":
-            return self.parse_output()
-        if name == "fgetc":
-            return self.parse_fgetc()
-        if name == "fputc":
-            return self.parse_fputc()
-        if name == "ready":
-            return self.parse_ready()
-        if name == "file_read":
-            return self.parse_file_read()
-        if name == "file_write":
-            return self.parse_file_write()
-        if name == "double_to_bits":
-            return self.parse_double_to_bits()
-        if name == "float_to_bits":
-            return self.parse_float_to_bits()
-        if name == "bits_to_double":
-            return self.parse_bits_to_double()
-        if name == "bits_to_float":
-            return self.parse_bits_to_float()
-        if name not in self.scope:
-            self.tokens.error("Unknown function: %s"%name)
 
         #Pass the function call
         #
-        function = self.scope[name]
         function_call = FunctionCall(function)
         self.function.called_functions.append(function)
         function_call.arguments = []
@@ -1226,7 +1254,7 @@ class Parser:
 
         return function_call
 
-    def parse_number(self):
+    def parse_literal(self):
         token = self.tokens.get()
         type_ = "int"
         size = 4
@@ -1339,51 +1367,6 @@ class Parser:
                 self.tokens.error("%s does not name an object"%name)
         return self.parse_variable_array_struct(instance)
 
-    def parse_variable_array_struct(self, instance):
-
-        #store inside the current function any globals that get referenced
-        #if a global isn't referenced it doesn't get compiled
-        #
-        if not instance.local:
-            self.function.referenced_globals.append(instance)
-
-        #parse simple numeric variables
-        #
-        if instance.type_() in numeric_types:
-            if not hasattr(instance, "reference"):
-                self.tokens.error(
-                    "Not an expression")
-            return Variable(instance)
-
-        #parse arrays
-        #
-        elif instance.type_().endswith("[]"):
-            array = instance.reference()
-            if self.tokens.peek() == "[":
-                indices = []
-                while self.tokens.peek() == "[":
-                    self.tokens.expect("[")
-                    index_expression = self.parse_expression()
-                    self.tokens.expect("]")
-                    if index_expression.type_() not in ["int"]:
-                        self.tokens.error(
-                            "Array indices must be an integer like expression")
-                    indices.append(index_expression)
-                return ArrayIndex(array, indices)
-            else:
-                return array
-
-        #parse structs
-        #
-        elif instance.type_().startswith("struct") or instance.type_() in self.structs:
-            if self.tokens.peek() == ".":
-                self.tokens.expect(".")
-                member = self.tokens.get()
-                return self.parse_variable_array_struct(
-                    instance.members[member],
-                )
-            else:
-                return Struct(instance)
 
     def to_double(self, expression):
         if is_double(expression):

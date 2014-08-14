@@ -108,6 +108,7 @@ class Function:
 
     def __init__(self, name, type_, size, signed):
         self.offset = 0
+        self.local = False
         self.name = name
         self._type_ = type_
         self._size = size
@@ -133,6 +134,9 @@ class Function:
     def initialise(self, offset):
         self.return_pointer = offset
         return []
+
+    def reference(self):
+        return self
 
     def size(self):
         return self._size
@@ -878,9 +882,10 @@ class ArrayInstance:
 
 class StructDeclaration:
 
-    def __init__(self, members):
-        self.members = members
-        self._size = sum([i.size() for i in members.values()])
+    def __init__(self, member_names, member_declarations):
+        self.member_names = member_names
+        self.member_declarations = member_declarations
+        self._size = sum([i.size() for i in member_declarations])
         self._signed = False
 
     def argument_instance(self, function):
@@ -893,7 +898,7 @@ class StructDeclaration:
         else:
             local = True
         offset = function.offset
-        self.member_instances = dict([(n, i.instance(function)) for n, i in self.members.iteritems()])
+        self.member_instances = (i.instance(function) for i in self.member_declarations)
 
         return StructInstance(
             local,
@@ -901,6 +906,7 @@ class StructDeclaration:
             self.type_(),
             self.size(),
             self.signed(),
+            self.member_names,
             self.member_instances,
         )
 
@@ -916,26 +922,27 @@ class StructDeclaration:
 
 class StructInstance:
 
-    def __init__(self, local, offset, type_, size, signed, members):
-        self.members = members
+    def __init__(
+        self, 
+        local, 
+        offset, 
+        type_, 
+        size, 
+        signed, 
+        member_names, 
+        member_instances
+    ):
+        self.member_names = member_names
+        self.member_instances = member_instances
         self.local = local
         self.offset = offset
         self._type = type_
         self._size = size
         self._signed = signed
 
-        self.offsets = {}
-        struct_offset = 0
-        for name, instance in self.members.iteritems():
-            self.offsets[name] = struct_offset
-            struct_offset += instance.size()//4
 
     def generate(self):
         instructions = []
-        #instructions.append({
-            #"op":"new",
-            #"literal":self.size(),
-        #})
         return instructions
 
     def initialise(self, offset):
@@ -943,16 +950,6 @@ class StructInstance:
         assert not self.local
         self.offset = offset
         instructions = []
-        #no support for initialisers yet
-        #instructions.extend(self.initializer.generate())
-        #instructions.append({
-        #    "op":"global",
-        #    "literal":self.offset,
-        #})
-        #instructions.append({
-        #    "op":"pop",
-        #    "literal":self.size()//4,
-        #})
         return instructions
 
     def reference(self):
@@ -1869,102 +1866,7 @@ class Struct(Object):
     def __init__(self, instance):
         Object.__init__(self, instance)
 
-    def generate(self):
-        instructions = []
-        if self.instance.local:
-            instructions.append({
-                "op":"literal+frame->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
-        else:
-            instructions.append({
-                "op":"literal->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
-        instructions.append({
-            "op":"*pointer->*tos",
-            "literal":self.instance.size()//4,
-        })
-        return instructions
-
-    def copy(self, expression, leave_on_stack=True):
-        instructions = []
-        instructions.extend(expression.generate())
-        if self.instance.local:
-            instructions.append({
-                "op":"literal+frame->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
-        else:
-            instructions.append({
-                "op":"literal->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
-        instructions.append({
-            "op":"*tos->*pointer",
-            "literal":self.instance.size()//4,
-        })
-        if leave_on_stack:
-            instructions.append({
-                "op":"*pointer->*tos",
-                "literal":self.instance.size()//4,
-            })
-
-        return instructions
-
-class ArrayArgument(Object):
-
-    def __init__(self, instance):
-        Object.__init__(self, instance)
-        self.element_size = instance.element_size
-        self.element_type = instance.element_size
-        self.element_signed = instance.element_signed
-
-    def generate(self):
-        #leave the address of the first element on the stack
-        instructions = []
-        instructions.append({
-            "op" : "literal+frame->pointer",
-            "a":-1,
-            "b":-1,
-            "c":-1,
-            "d":0,
-            "literal" : self.instance.offset,
-        })
-        instructions.append({
-            "op" : "*pointer->*tos",
-            "literal" : 1,
-        })
-
-        return instructions
-
-
-class Array(Object):
-
-    def __init__(self, instance):
-        Object.__init__(self, instance)
-        self.element_type = instance.element_type
-        self.element_size = instance.element_size
-        self.element_signed = instance.element_signed
-
-    def generate(self):
-        #leave the address of the first element on the stack
+    def address(self):
         instructions = []
         instructions.append({
             "op" : "literal->*tos",
@@ -1985,64 +1887,9 @@ class Array(Object):
             })
         return instructions
 
-class ArrayIndex(Object):
-
-    def __init__(self, array, index_expressions):
-        Object.__init__(self, array.instance)
-        assert self.type_var.endswith("[]")
-        self.type_var = self.type_var[:-2]
-        self.size_var = array.instance.element_size
-        self.index_expressions = index_expressions
-        self.array = array
-
     def generate(self):
         instructions = []
-
-        #Leave a pointer to first element of array on TOS
-        #
-        instructions.extend(self.array.generate())
-
-        #Leave the relative position in TOS
-        #
-        element_sizes = (
-            self.array.instance.dimensions[1:] + 
-            [self.array.instance.element_size//4]
-        )
-
-        cumalative_step_sizes = []
-        cumalative_step_size = 1
-        for element_size in reversed(element_sizes):
-            cumalative_step_size *= element_size
-            cumalative_step_sizes.append(cumalative_step_size)
-        cumalative_step_sizes.reverse()
-
-        for index_expression, element_size in zip(self.index_expressions, cumalative_step_sizes):
-            instructions.extend(index_expression.generate())
-            if element_size > 1:
-                instructions.append({
-                    "op":"literal->*tos",
-                    "a":-1,
-                    "b":-1,
-                    "c":0,
-                    "d":1,
-                    "literal":element_size,
-                })
-                instructions.append({
-                    "op":"multiply",
-                    "a":-1,
-                    "b":-2,
-                    "c":-2,
-                    "d":-1,
-                })
-            instructions.append({
-                "op":"add",
-                "a":-1,
-                "b":-2,
-                "c":-2,
-                "d":-1,
-            })
-
-        #Copy item to TOS
+        instructions.extend(self.address())
         instructions.append({
             "op":"*tos->pointer",
             "a":-1,
@@ -2052,63 +1899,14 @@ class ArrayIndex(Object):
         })
         instructions.append({
             "op":"*pointer->*tos",
-            "literal":self.array.instance.element_size//4,
+            "literal":self.size()//4,
         })
-
         return instructions
 
     def copy(self, expression, leave_on_stack=True):
-
         instructions = []
-
-        #load value into stack
-        #
         instructions.extend(expression.generate())
-
-        #Leave a pointer to first element of array on TOS
-        #
-        instructions.extend(self.array.generate())
-
-        #Leave the relative position in TOS
-        #
-        element_sizes = (
-            self.array.instance.dimensions[1:] + 
-            [self.array.instance.element_size//4]
-        )
-        cumalative_step_sizes = []
-        cumalative_step_size = 1
-        for element_size in reversed(element_sizes):
-            cumalative_step_size *= element_size
-            cumalative_step_sizes.append(cumalative_step_size)
-        cumalative_step_sizes.reverse()
-        for index_expression, element_size in zip(self.index_expressions, cumalative_step_sizes):
-            instructions.extend(index_expression.generate())
-            if element_size > 1:
-                instructions.append({
-                    "op":"literal->*tos",
-                    "a":-1,
-                    "b":-1,
-                    "c":0,
-                    "d":1,
-                    "literal":element_size,
-                })
-                instructions.append({
-                    "op":"multiply",
-                    "a":-1,
-                    "b":-2,
-                    "c":-2,
-                    "d":-1,
-                })
-            instructions.append({
-                "op":"add",
-                "a":-1,
-                "b":-2,
-                "c":-2,
-                "d":-1,
-            })
-
-        #Move value to pointed to location
-        #
+        instructions.extend(self.address())
         instructions.append({
             "op":"*tos->pointer",
             "a":-1,
@@ -2118,75 +1916,77 @@ class ArrayIndex(Object):
         })
         instructions.append({
             "op":"*tos->*pointer",
-            "literal":self.array.instance.element_size//4,
+            "literal":self.instance.size()//4,
         })
         if leave_on_stack:
             instructions.append({
                 "op":"*pointer->*tos",
-                "literal":self.array.instance.element_size//4,
+                "literal":self.instance.size()//4,
             })
-
         return instructions
 
+class StructMember(Object):
 
-class Variable(Object):
-    def __init__(self, instance):
-        Object.__init__(self, instance)
+    def __init__(self, struct, declaration, member):
+        Object.__init__(self, struct.instance)
+        member_index = declaration.member_names.index(member)
+        self.type_var = declaration.member_declarations[member_index].type_()
+        self.size_var = declaration.member_declarations[member_index].size()
+        self.struct = struct
+        self.struct_offset = 0
+        for name, instance in zip(declaration.member_names, declaration.member_declarations):
+            self.struct_offset += instance.size()//4
+            if name == member:
+                break
+            
+
+    def address(self):
+        instructions = []
+        instructions.extend(self.struct.address())
+        instructions.append({
+            "op" : "literal->*tos",
+            "a":-1,
+            "b":-1,
+            "c":0,
+            "d":1,
+            "literal" : self.struct_offset,
+        })
+        instructions.append({
+            "op":"add",
+            "a":-1,
+            "b":-2,
+            "c":-2,
+            "d":-1,
+        })
+        return instructions
 
     def generate(self):
-
         instructions = []
-
-        if self.instance.local:
-            instructions.append({
-                "op":"literal+frame->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
-        else:
-            instructions.append({
-                "op":"literal->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
+        instructions.extend(self.address())
+        instructions.append({
+            "op":"*tos->pointer",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":-1,
+        })
         instructions.append({
             "op":"*pointer->*tos",
             "literal":self.size()//4,
         })
-
         return instructions
 
     def copy(self, expression, leave_on_stack=True):
-
-
         instructions = []
-
         instructions.extend(expression.generate())
-
-        if self.instance.local:
-            instructions.append({
-                "op":"literal+frame->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
-        else:
-            instructions.append({
-                "op":"literal->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.instance.offset,
-            })
+        instructions.extend(self.address())
+        instructions.append({
+            "op":"*tos->pointer",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":-1,
+        })
         instructions.append({
             "op":"*tos->*pointer",
             "literal":self.size()//4,
@@ -2196,7 +1996,223 @@ class Variable(Object):
                 "op":"*pointer->*tos",
                 "literal":self.size()//4,
             })
+        return instructions
 
+class ArrayArgument(Object):
+
+    def __init__(self, instance):
+        Object.__init__(self, instance)
+        self.element_size = instance.element_size
+        self.element_type = instance.element_size
+        self.element_signed = instance.element_signed
+
+    def address(self):
+        instructions = []
+        instructions.append({
+            "op" : "literal->*tos",
+            "a":-1,
+            "b":-1,
+            "c":0,
+            "d":1,
+            "literal" : self.instance.offset,
+        })
+        if self.instance.local:
+            instructions.append({
+                "op" : "local_to_global",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
+        return instructions
+
+    def generate(self):
+        instructions = []
+        instructions.extend(self.address())
+        return instructions
+
+
+class Array(Object):
+
+    def __init__(self, instance):
+        Object.__init__(self, instance)
+        self.element_type = instance.element_type
+        self.element_size = instance.element_size
+        self.element_signed = instance.element_signed
+
+    def address(self):
+        instructions = []
+        instructions.append({
+            "op" : "literal->*tos",
+            "a":-1,
+            "b":-1,
+            "c":0,
+            "d":1,
+            "literal" : self.instance.offset,
+        })
+        if self.instance.local:
+            instructions.append({
+                "op" : "local_to_global",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
+        return instructions
+
+    def generate(self):
+        instructions = []
+        instructions.extend(self.address())
+        return instructions
+
+class ArrayIndex(Object):
+
+    def __init__(self, array, index_expression):
+        Object.__init__(self, array.instance)
+        assert self.type_var.endswith("[]")
+        print self.type_var
+        self.type_var = self.type_var[:-2]
+        print self.type_()
+        self.size_var = array.instance.element_size
+        self.index_expression = index_expression
+        self.array = array
+
+    def address(self):
+        instructions = []
+
+        #Leave a pointer to first element of array on TOS
+        #
+        instructions.extend(self.array.address())
+        instructions.extend(self.index_expression.generate())
+        if self.size() > 4:
+            instructions.append({
+                "op":"literal->*tos",
+                "a":-1,
+                "b":-1,
+                "c":0,
+                "d":1,
+                "literal":self.size()//4,
+            })
+            instructions.append({
+                "op":"multiply",
+                "a":-1,
+                "b":-2,
+                "c":-2,
+                "d":-1,
+            })
+        instructions.append({
+            "op":"add",
+            "a":-1,
+            "b":-2,
+            "c":-2,
+            "d":-1,
+        })
+        return instructions
+
+    def generate(self):
+        instructions = []
+        instructions.extend(self.address())
+        instructions.append({
+            "op":"*tos->pointer",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":-1,
+        })
+        instructions.append({
+            "op":"*pointer->*tos",
+            "literal":self.size()//4,
+        })
+        return instructions
+
+    def copy(self, expression, leave_on_stack=True):
+
+        instructions = []
+        instructions.extend(expression.generate())
+        instructions.extend(self.address())
+        instructions.append({
+            "op":"*tos->pointer",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":-1,
+        })
+        instructions.append({
+            "op":"*tos->*pointer",
+            "literal":self.size()//4,
+        })
+        if leave_on_stack:
+            instructions.append({
+                "op":"*pointer->*tos",
+                "literal":self.size()//4,
+            })
+        return instructions
+
+
+class Variable(Object):
+    def __init__(self, instance):
+        Object.__init__(self, instance)
+
+    def address(self):
+        instructions = []
+        instructions.append({
+            "op" : "literal->*tos",
+            "a":-1,
+            "b":-1,
+            "c":0,
+            "d":1,
+            "literal" : self.instance.offset,
+        })
+        if self.instance.local:
+            instructions.append({
+                "op" : "local_to_global",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
+        return instructions
+
+    def generate(self):
+        instructions = []
+        instructions.extend(self.address())
+        instructions.append({
+            "op":"*tos->pointer",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":-1,
+        })
+        instructions.append({
+            "op":"*pointer->*tos",
+            "literal":self.size()//4,
+        })
+        return instructions
+
+    def copy(self, expression, leave_on_stack=True):
+
+        instructions = []
+        instructions.extend(expression.generate())
+        instructions.extend(self.address())
+        instructions.append({
+            "op":"*tos->pointer",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":-1,
+        })
+        instructions.append({
+            "op":"*tos->*pointer",
+            "literal":self.size()//4,
+        })
+        if leave_on_stack:
+            instructions.append({
+                "op":"*pointer->*tos",
+                "literal":self.size()//4,
+            })
         return instructions
 
     def const(self):
