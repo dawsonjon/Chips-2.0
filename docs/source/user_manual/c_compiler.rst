@@ -1,7 +1,15 @@
-C to Verilog Compiler
-=====================
+C Compiler
+==========
 
-This section of the manual describes the subset of the C language that is available in *Chips*.
+The heart of Chips is the C compiler and simulator. The C compiler takes allows
+you to define new hardware components using the C language. Components written
+in C can be simulated, or converted automatically into Verilog components.
+These Verilog components may then be implemented in an FPGA using tools
+provided by FPGA vendors.
+
+The flavour of C used in Chips has been made as standard as possible. This
+section of the manual describes the subset of the C language that is available
+in *Chips*.
 
 Types
 -----
@@ -25,56 +33,44 @@ number. The `double` and `long double` types are implemented as IEEE 754 double
 precision floating point numbers. Round-to-zero (ties to even) is the only
 supported rounding mode.
 
-single dimensional arrays, `char[]`, `int[]`, `long[]`, `float[]` and `double[]`
-are supported, but multidimensional arrays are not yet supported.
+Any type may be used to form an array, including `struct` s and arrays. Arrays
+may be nested arbitrarily to form arrays of arrays.  `struct` s may be
+assigned, passed to and returned from functions.
 
-`struct` s are supported, you can define arrays of `struct` s, and `struct` s
-may contain arrays.
+Arrays may be passed to functions, in this case the array is not coppied, but a
+reference is passed. Any modification made to the array within the called
+function wil also be reflected within the calling function.
 
-`struct` s cannot yet be passed to a function or returned from a function.
+Missing Features
+----------------
 
-Arrays may be passed (by reference) to functions.
+Chips is getting close to supporting the whole C language. The following
+features have not been done yet.
 
-Pointers are not supported, and neither is dynamic memory allocation or
-recursion.  This is a deliberate decision with low memory FPGAs in mind, these
-features probably won't be supported in future releases.
++ Pointers
++ Function pointers
++ `union` s
++ Function Prototypes
++ `goto` statment
+
 
 Functions
 ---------
 
-Functions are supported. They may be nested, but may not be recursive. Only a
-fixed number of arguments is supported, optional arguments are not permitted.
+Reccursion is permitted, but it should be remebered that memory is at a premium
+in FPGAs. It may be better to avoid recursive functions so that the memory
+usage can be predicted at compile time.  Only a fixed number of arguments is
+supported, optional arguments are not permitted.
 
 Control Structures
 ------------------
 
-The following control structures are supported:
-
-+ if/else statements
-+ while loop
-+ for loop
-+ break/continue statements
-+ switch/case statements
+The usual control structures are supported.
 
 Operators
 ---------
 
-The following operators are supported, in order of preference:
-
-+ `()`
-+ `~` `-` `!` `sizeof` (unary operators)
-+ `*` `/` `%`
-+ `+` `-`
-+ `<<` `>>`
-+ `<` `>` `<=` `>=`
-+ `==` `!=`
-+ `&`
-+ '^`
-+ `|`
-+ `&&`
-+ `||`
-+ \`? : `
-
+The usual operators are supported.
 
 Stream I/O
 ----------
@@ -130,7 +126,7 @@ Debug and Test
 --------------
 
 The built in `report` function displays the value of an expression in the
-simulation console. This will have no effect in a synthesised design.
+simulation console. *This will have no effect in a synthesised design.*
 
 .. code-block:: c
 
@@ -140,7 +136,7 @@ simulation console. This will have no effect in a synthesised design.
 
 
 The built in function assert causes a simulation error if it is passed a zero
-value. The assert function has no effect in a synthesised design.
+value. *The assert function has no effect in a synthesised design.*
 
 .. code-block:: c
 

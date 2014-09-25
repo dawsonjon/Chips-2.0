@@ -6,9 +6,19 @@ import struct
 from itertools import chain
 
 class NotConstant(Exception):
+
+    """This expression gets raised when a non-constant ...
+    
+    expression is evaluated at compile time.
+
+    """
+
     pass
 
 def flatten(sequence):
+
+    """Turn a list containing other lists into a single list"""
+
     try:
         l = []
         for i in sequence:
@@ -22,13 +32,18 @@ def constant_fold(expression):
     """Replace an expression with a constant if possible"""
 
     try:
-        return Constant(expression.value(), expression.type_(), expression.size(), expression.signed())
+        return Constant(
+            expression.value(), 
+            expression.type_(), 
+            expression.size(), 
+            expression.signed()
+        )
     except NotConstant:
         return expression
 
 def bits_to_float(bits):
 
-    "convert integer containing the ieee 754 representation into a float"
+    """convert integer containing the ieee 754 representation into a float"""
 
     byte_string = (
         chr((bits & 0xff000000) >> 24) +
@@ -40,7 +55,7 @@ def bits_to_float(bits):
 
 def bits_to_double(bits):
 
-    "convert integer containing the ieee 754 representation into a float"
+    """convert integer containing the ieee 754 representation into a float"""
 
     bits = int(bits)
     byte_string = (
@@ -56,6 +71,12 @@ def bits_to_double(bits):
     return struct.unpack(">d", byte_string)[0]
 
 class Process:
+
+    """A process is a whole C program.
+    
+    Within a chip there may more than one process.
+    
+    """
 
     def generate(self):
 
@@ -106,6 +127,8 @@ class Process:
 
 class Function:
 
+    """A Function Object"""
+
     def __init__(self, name, type_, size, signed):
         self.offset = 0
         self.local = False
@@ -150,6 +173,8 @@ class Function:
 
 class Break:
 
+    """Exit a loop or case statement"""
+
     def generate(self): return [{
         "op":"goto", 
         "a":-1,
@@ -162,6 +187,8 @@ class Break:
 
 class Continue:
 
+    """go straight to the next loop iteration"""
+
     def generate(self): return [{
         "op":"goto", 
         "a":-1,
@@ -173,6 +200,8 @@ class Continue:
 
 
 class Assert:
+
+    """ if an expression evaluates to false, raise an error """
 
     def generate(self):
         instructions = self.expression.generate()
@@ -191,6 +220,8 @@ class Assert:
 
 
 class Return:
+
+    """ return from a function """
 
     def generate(self):
         instructions = []
@@ -217,6 +248,8 @@ class Return:
 
 
 class Report:
+
+    """ report the value of an exression - simulation only """
 
     def generate(self):
         instructions = self.expression.generate()
@@ -314,6 +347,8 @@ class Report:
 
 class WaitClocks:
 
+    """ stop execution for n clock cycles """
+
     def generate(self):
         instructions = self.expression.generate()
         instructions.append({
@@ -327,6 +362,8 @@ class WaitClocks:
 
 
 class If:
+
+    """ if statement """
 
     def generate(self):
         try:
@@ -375,8 +412,11 @@ class If:
 
 class Switch:
 
+    """ switch statment """
+
     def generate(self):
         instructions = []
+        #place 1 item on stack
         instructions.extend(self.expression.generate())
         for value, case in self.cases.iteritems():
             if self.expression.size() == 4:
@@ -463,6 +503,7 @@ class Switch:
 
         instructions.extend(self.statement.generate())
         instructions.append({"op":"label", "label":"break_%s"%id(self)})
+        #remove 1 item from stack
         instructions.append({
             "op":"new",
             "literal":-self.expression.size()//4,
@@ -472,26 +513,32 @@ class Switch:
 
 class Case:
 
+    """ case statment """
+
     def generate(self):
         instructions = []
         instructions.append({
             "op":"label",
             "label":"case_%s"%id(self),
         })
-        instructions.append({
-            "op":"new",
-            "literal":-1,
-        })
+        #instructions.append({
+        #    "op":"new",
+        #    "literal":-1,
+        #})
         return instructions
 
 
 class Default:
+
+    """ default case statment """
 
     def generate(self):
         return [{"op":"label", "label":"case_%s"%id(self)}]
 
 
 class Loop:
+
+    """ A loop while or do-while are synthesised from this """
 
     def generate(self):
         instructions = [{"op":"label", "label":"begin_%s"%id(self)}]
@@ -509,6 +556,8 @@ class Loop:
         return instructions
 
 class For:
+
+    """ A for loop """
 
     def generate(self):
         instructions = []
@@ -556,6 +605,8 @@ class For:
 
 class Block:
 
+    """ a block of statements enclosed by braces """
+
     def generate(self):
         instructions = []
         for statement in self.statements:
@@ -564,6 +615,8 @@ class Block:
 
 
 class CompoundDeclaration:
+
+    """ more than one declaration on the same line """
 
     def __init__(self, declarations):
         self.declarations = declarations
@@ -577,13 +630,15 @@ class CompoundDeclaration:
 
 class VariableDeclaration:
 
-    def __init__(self, initializer, name, type_, size, signed, const):
-        self.initializer = initializer
+    """ variable declaration """
+
+    def __init__(self, name, type_, size, signed, const):
         self._type = type_
         self._size = size
         self._signed = signed
         self._const = const
         self.name = name
+        self.initializer = Constant(0, type_, size, signed)
 
     def instance(self, function):
 
@@ -621,6 +676,8 @@ class VariableDeclaration:
 
 
 class VariableInstance:
+
+    """ instance of a variable """
 
     def __init__(self, local, offset, initializer, type_, size, signed, const):
         self.local = local
@@ -688,27 +745,27 @@ class VariableInstance:
 
 class ArrayDeclaration:
 
+    """An Array Declaration.
+
+    Use instance to create an instance of the array,
+    or array_iargument_instance if this is a function argument
+
+    """
+
     def __init__(
         self,
-        size,
-        dimensions,
-        type_,
-        element_type,
-        element_size,
-        element_signed,
-        initializer = None,
+        elements,
+        element_declaration
     ):
 
-        self.dimensions = dimensions
-        self._type = type_
-        self._signed = False
-        self.element_type = element_type
-        self.element_size = element_size
-        self.element_signed = element_signed
-        self.initializer = initializer
-        self._size = size
+        self.elements = elements
+        self.element_declaration = element_declaration
+        self.initializer = None
 
     def instance(self, function):
+
+        """Create an instance of an array"""
+
         if hasattr(function, "is_global"):
             local = False
         else:
@@ -718,141 +775,99 @@ class ArrayDeclaration:
         return ArrayInstance(
             local = local,
             offset = offset,
-            dimensions = self.dimensions,
-            size = self.size(),
-            type_ = self.type_(),
+            elements = self.elements,
+            element_declaration = self.element_declaration,
             initializer = self.initializer,
-            element_type = self.element_type,
-            element_size = self.element_size,
-            element_signed = self.element_signed,
         )
 
     def argument_instance(self, function):
+
+        """Create an instance of an array (function argument)"""
+
         local = True
         offset = function.offset
         function.offset += 1
         return ArrayArgumentInstance(
-            offset,
-            self.dimensions,
-            4,
-            self.type_(),
-            self.initializer,
-            self.element_type,
-            self.element_size,
-            self.element_signed,
+            offset = offset,
+            elements = self.elements,
+            element_declaration = self.element_declaration,
+            initializer = self.initializer,
         )
 
     def type_(self):
-        return self._type
+        return self.element_declaration.type_() + "[]"
 
     def size(self):
-        return self._size
+        return self.elements * self.element_declaration.size()
 
     def signed(self):
-        return self._signed
+        return self.element_declaration.signed()
 
 class ArrayArgumentInstance:
+
+    """An instance of an array used as a function argument
+    
+    Array arguments used as function arguments behave as references
+    and the same size as a pointer (4 bytes in this case).
+
+    """
 
     def __init__(
         self,
         offset,
-        dimensions,
-        size,
-        type_,
+        elements,
+        element_declaration,
         initializer,
-        element_type,
-        element_size,
-        element_signed,
     ):
-        self.dimensions = dimensions
         self.local = True
         self.offset = offset
-        self._type = type_
-        self._size = size
-        self._signed = False
-        self.element_type = element_type
-        self.element_size = element_size
-        self.element_signed = element_signed
+        self.elements = elements
+        self.element_declaration = element_declaration
         self.initializer = initializer
 
     def reference(self):
+
+        """Return a reference to an array argument"""
+
         return ArrayArgument(self)
 
     def type_(self):
-        return self._type
+        return self.element_declaration.type_() + "[]"
 
     def size(self):
-        return self._size
+        return 4
 
     def signed(self):
-        return self._signed
+        return self.element_declaration.signed()
 
 class ArrayInstance:
+
+    """An instance of an Array"""
 
     def __init__(
         self,
         local,
-        dimensions,
         offset,
-        size,
-        type_,
+        elements,
+        element_declaration,
         initializer,
-        element_type,
-        element_size,
-        element_signed
     ):
         self.local = local
         self.offset = offset
-        self.dimensions = dimensions
-        self._type = type_
-        self._size = size
-        self._signed = False
-        self.element_type = element_type
-        self.element_size = element_size
-        self.element_signed = element_signed
+        self.elements = elements
+        self.element_declaration = element_declaration
         self.initializer = initializer
 
     def initialise(self, offset):
+
+        """Arrays with a global scope are initialised here"""
+
         self.offset = offset
         instructions = []
         assert not self.local
         if self.initializer:
             for i in flatten(self.initializer):
-                instructions.append({
-                    "op":"literal->*tos",
-                    "a":-1,
-                    "b":-1,
-                    "c":0,
-                    "d":1,
-                    "literal":i,
-                })
-            instructions.append({
-                "op":"literal->pointer",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal":self.offset,
-            })
-            instructions.append({
-                "op":"*tos->*pointer",
-                "literal":self.size()//4,
-            })
-        return instructions
-
-    def generate(self):
-        instructions = []
-        assert self.local
-        if self.initializer:
-            for i in flatten(self.initializer):
-                instructions.append({
-                    "op":"literal->*tos",
-                    "a":-1,
-                    "b":-1,
-                    "c":0,
-                    "d":1,
-                    "literal":i,
-                })
+                instructions.extend(i.generate())
             instructions.append({
                 "op":"literal+frame->pointer",
                 "a":-1,
@@ -865,22 +880,66 @@ class ArrayInstance:
                 "op":"*tos->*pointer",
                 "literal":self.size()//4,
             })
+        instructions.append({
+            "op":"new",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":0,
+            "literal":self.size()//4,
+        })
+        return instructions
+
+    def generate(self):
+
+        """Arrays with a local scope are initialised here"""
+
+        instructions = []
+        assert self.local
+        if self.initializer:
+            for i in flatten(self.initializer):
+                instructions.extend(i.generate())
+            instructions.append({
+                "op":"literal+frame->pointer",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal":self.offset,
+            })
+            instructions.append({
+                "op":"*tos->*pointer",
+                "literal":self.size()//4,
+            })
+        instructions.append({
+            "op":"new",
+            "a":-1,
+            "b":-1,
+            "c":-1,
+            "d":0,
+            "literal":self.size()//4,
+        })
         return instructions
 
     def reference(self):
+
+        """A reference to this array instance"""
+
         return Array(self)
 
     def type_(self):
-        return self._type
+        return self.element_declaration.type_()+"[]"
 
     def size(self):
-        return self._size
+        return self.element_declaration.size()*self.elements
 
     def signed(self):
-        return self._signed
+        return self.element_declaration.signed()
 
 
 class StructDeclaration:
+
+    """ a declaration of a struct object """
 
     def __init__(self, member_names, member_declarations):
         self.member_names = member_names
@@ -893,12 +952,18 @@ class StructDeclaration:
 
     def instance(self, function):
 
+        """ create an instance of this struct """
+
         if hasattr(function, "is_global"):
             local = False
         else:
             local = True
         offset = function.offset
-        self.member_instances = (i.instance(function) for i in self.member_declarations)
+        function.offset += self.size()//4
+        self.member_instances = (
+                i.instance(function) 
+                for i in self.member_declarations
+        )
 
         return StructInstance(
             local,
@@ -908,6 +973,7 @@ class StructDeclaration:
             self.signed(),
             self.member_names,
             self.member_instances,
+            self
         )
 
     def type_(self):
@@ -922,6 +988,8 @@ class StructDeclaration:
 
 class StructInstance:
 
+    """an instance of a struct object"""
+
     def __init__(
         self, 
         local, 
@@ -930,7 +998,8 @@ class StructInstance:
         size, 
         signed, 
         member_names, 
-        member_instances
+        member_instances,
+        declaration
     ):
         self.member_names = member_names
         self.member_instances = member_instances
@@ -939,6 +1008,7 @@ class StructInstance:
         self._type = type_
         self._size = size
         self._signed = signed
+        self.declaration = declaration
 
 
     def generate(self):
@@ -946,14 +1016,13 @@ class StructInstance:
         return instructions
 
     def initialise(self, offset):
-        #initialise is used for global variables before program starts
         assert not self.local
         self.offset = offset
         instructions = []
         return instructions
 
     def reference(self):
-        return Struct(self)
+        return Struct(self, self.declaration)
 
     def type_(self):
         return self._type
@@ -982,6 +1051,17 @@ class DiscardExpression:
 
 class Expression:
 
+    """ A base class from which expressions can be derived.
+
+    All expression have a value method 
+    (but it will raise an exception if it is not a constant)
+
+    All expressions have a type and a size, they may be signed or unsigned.
+
+    Expressions have a generate method which moves their value onto the stack.
+    
+    """
+
     def __init__(self, t, size, signed):
         self.type_var=t
         self.size_var=size
@@ -997,12 +1077,30 @@ class Expression:
         return self.signed_var
 
     def value(self):
+
+        """return an representation of an expression
+
+        May be an integer or floating point value.
+
+        Used when evaluating or optimizing constant expressions
+
+        """
+
         raise NotConstant
 
     def const(self):
         return True
 
     def int_value(self):
+
+        """return an integer representation of an expression
+
+        Even if the expression is not an integer.
+
+        Used mainly in code generation.
+
+        """
+
         if self.type_() == "float":
             if self.size() == 8:
                 byte_value = struct.pack(">d", self.value())
@@ -1028,6 +1126,17 @@ class Expression:
 
 class Object(Expression):
 
+    """A base class from which other objects can be derived.
+
+    Variables, structs, pointers and arrays are all objects
+
+    All objects are expressions, but may also be assigned to.
+
+    Objects tend to offer a copy method to generate code to move
+    data into them from the stack.
+
+    """
+
     def __init__(self, instance):
         Expression.__init__(self, instance.type_(), instance.size(), instance.signed())
         self.instance = instance
@@ -1040,13 +1149,25 @@ class Object(Expression):
 
 
 def AND(left, right):
+
+    """Psuedo class, to represent a logical and function"""
+
     return ANDOR(left, right, "jmp_if_false")
 
 
 def OR(left, right):
+
+    """Psuedo class, to represent a logical or function"""
+
     return ANDOR(left, right, "jmp_if_true")
 
 class MultiExpression(Expression):
+
+    """Mainly used in for loops using comma operator.
+    
+    The value of first expression is used, other expressions are just discarded.
+
+    """
 
     def __init__(self, first, others):
         self.first = constant_fold(first)
@@ -1069,6 +1190,12 @@ class MultiExpression(Expression):
         return instructions
 
 class ANDOR(Expression):
+
+    """The actual class used to implement AND and OR.
+    
+    A common class is used to save code.
+
+    """
 
     def __init__(self, left, right, op):
         self.left = constant_fold(left)
@@ -1154,6 +1281,8 @@ def get_binary_type(left, right, operator):
 
 class Binary(Expression):
 
+    """A binary expression such as +-/*%&|^ ... """
+
     def __init__(self, operator, left, right):
         self.left = constant_fold(left)
         self.right = constant_fold(right)
@@ -1212,9 +1341,22 @@ class Binary(Expression):
 
 
 def SizeOf(expression):
+
+    """Instead of creating an expression class for sizeof operator...
+
+    ... Just return a constant object
+
+    """
+
     return Constant(expression.size())
 
 class DoubleToBits(Expression):
+
+    """Replace a Double precision floating point number with its integer representation
+
+    Doesn't actually "do anything" just changes the type.
+
+    """
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -1230,6 +1372,12 @@ class DoubleToBits(Expression):
 
 class FloatToBits(Expression):
 
+    """Replace a floating point number with its integer representation
+
+    Doesn't actually "do anything" just changes the type.
+
+    """
+
     def __init__(self, expression):
         self.expression = constant_fold(expression)
 
@@ -1243,6 +1391,12 @@ class FloatToBits(Expression):
         return self.expression.int_value()
 
 class BitsToDouble(Expression):
+
+    """Replace a long integer with the floating point number it represents
+
+    Doesn't actually "do anything" just changes the type.
+
+    """
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -1258,6 +1412,12 @@ class BitsToDouble(Expression):
 
 class BitsToFloat(Expression):
 
+    """Replace a long integer with the floating point number it represents
+
+    Doesn't actually "do anything" just changes the type.
+
+    """
+
     def __init__(self, expression):
         self.expression = constant_fold(expression)
 
@@ -1271,6 +1431,8 @@ class BitsToFloat(Expression):
         return bits_to_float(self.expression.value())
 
 class IntToLong(Expression):
+
+    """Extend an integer into a long one"""
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -1305,6 +1467,8 @@ class IntToLong(Expression):
 
 class LongToInt(Expression):
 
+    """truncate a long integer into a normal one"""
+
     def __init__(self, expression):
         self.expression = constant_fold(expression)
 
@@ -1322,6 +1486,12 @@ class LongToInt(Expression):
         return self.expression.value()
 
 class IntToFloat(Expression):
+
+    """Turn an integer into a floating point number with the same value
+    
+    Used in casting and implicit type conversions
+    
+    """
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -1361,6 +1531,12 @@ class IntToFloat(Expression):
 
 class FloatToInt(Expression):
 
+    """Turn an floating point number into an integer with the same value
+    
+    Used in casting and implicit type conversions
+    
+    """
+
     def __init__(self, expression):
         self.expression = constant_fold(expression)
 
@@ -1397,6 +1573,12 @@ class FloatToInt(Expression):
         return int(self.expression.value())
 
 class DoubleToLong(Expression):
+
+    """Turn an double into an integer with the same value
+    
+    Used in casting and implicit type conversions
+    
+    """
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -1449,6 +1631,12 @@ class DoubleToLong(Expression):
 
 class LongToDouble(Expression):
 
+    """Turn an integer into a double with the same value
+    
+    Used in casting and implicit type conversions
+    
+    """
+
     def __init__(self, expression):
         self.expression = constant_fold(expression)
 
@@ -1500,6 +1688,12 @@ class LongToDouble(Expression):
 
 class DoubleToFloat(Expression):
 
+    """Turn a double into a float with the same value
+    
+    Used in casting and implicit type conversions
+    
+    """
+
     def __init__(self, expression):
         self.expression = constant_fold(expression)
 
@@ -1543,6 +1737,12 @@ class DoubleToFloat(Expression):
         return float(self.expression.value())
 
 class FloatToDouble(Expression):
+
+    """Turn a float into a double with the same value
+    
+    Used in casting and implicit type conversions
+    
+    """
 
     def __init__(self, expression):
         self.expression = constant_fold(expression)
@@ -1589,6 +1789,8 @@ class FloatToDouble(Expression):
 
 class Unary(Expression):
 
+    """Unary oprerator such as ~!- ... """
+
     def __init__(self, operator, expression):
         self.expression = constant_fold(expression)
         self.operator = operator
@@ -1622,6 +1824,8 @@ class Unary(Expression):
 
 
 class FunctionCall(Expression):
+
+    """ A function call (which is an expression) """
 
     def __init__(self, function):
         self.function = function
@@ -1702,6 +1906,8 @@ class FunctionCall(Expression):
 
 
 class Output(Expression):
+
+    """ Create an output (and return an integer "file handle" """
 
     def __init__(self, handle, expression):
         self.handle = handle
@@ -1863,8 +2069,9 @@ class Ready(Expression):
 
 class Struct(Object):
 
-    def __init__(self, instance):
+    def __init__(self, instance, declaration):
         Object.__init__(self, instance)
+        self.declaration = declaration
 
     def address(self):
         instructions = []
@@ -1927,17 +2134,21 @@ class Struct(Object):
 
 class StructMember(Object):
 
-    def __init__(self, struct, declaration, member):
-        Object.__init__(self, struct.instance)
+    def __init__(self, struct, member):
+        Object.__init__(self, struct)
+        declaration = struct.declaration
         member_index = declaration.member_names.index(member)
-        self.type_var = declaration.member_declarations[member_index].type_()
-        self.size_var = declaration.member_declarations[member_index].size()
+        self.declaration = declaration.member_declarations[member_index]
+        self.type_var = self.declaration.type_()
+        self.size_var = self.declaration.size()
+        if self.type_().endswith("[]"):
+            self.element_declaration = declaration.member_declarations[member_index].element_declaration
         self.struct = struct
         self.struct_offset = 0
         for name, instance in zip(declaration.member_names, declaration.member_declarations):
-            self.struct_offset += instance.size()//4
             if name == member:
                 break
+            self.struct_offset += instance.size()//4
             
 
     def address(self):
@@ -2002,29 +2213,23 @@ class ArrayArgument(Object):
 
     def __init__(self, instance):
         Object.__init__(self, instance)
-        self.element_size = instance.element_size
-        self.element_type = instance.element_size
-        self.element_signed = instance.element_signed
+        self.elements = instance.elements
+        self.element_declaration = instance.element_declaration
 
     def address(self):
         instructions = []
         instructions.append({
-            "op" : "literal->*tos",
+            "op":"literal+frame->pointer",
             "a":-1,
             "b":-1,
-            "c":0,
-            "d":1,
-            "literal" : self.instance.offset,
+            "c":-1,
+            "d":0,
+            "literal":self.instance.offset,
         })
-        if self.instance.local:
-            instructions.append({
-                "op" : "local_to_global",
-                "a":-1,
-                "b":-1,
-                "c":-1,
-                "d":0,
-                "literal" : self.instance.offset,
-            })
+        instructions.append({
+            "op":"*pointer->*tos",
+            "literal":1,
+        })
         return instructions
 
     def generate(self):
@@ -2037,9 +2242,8 @@ class Array(Object):
 
     def __init__(self, instance):
         Object.__init__(self, instance)
-        self.element_type = instance.element_type
-        self.element_size = instance.element_size
-        self.element_signed = instance.element_signed
+        self.elements = instance.elements
+        self.element_declaration = instance.element_declaration
 
     def address(self):
         instructions = []
@@ -2058,7 +2262,6 @@ class Array(Object):
                 "b":-1,
                 "c":-1,
                 "d":0,
-                "literal" : self.instance.offset,
             })
         return instructions
 
@@ -2070,14 +2273,10 @@ class Array(Object):
 class ArrayIndex(Object):
 
     def __init__(self, array, index_expression):
-        Object.__init__(self, array.instance)
-        assert self.type_var.endswith("[]")
-        print self.type_var
-        self.type_var = self.type_var[:-2]
-        print self.type_()
-        self.size_var = array.instance.element_size
-        self.index_expression = index_expression
         self.array = array
+        if array.element_declaration.type_().endswith("[]"):
+            self.element_declaration = array.element_declaration.element_declaration
+        self.index_expression = index_expression
 
     def address(self):
         instructions = []
@@ -2128,7 +2327,6 @@ class ArrayIndex(Object):
         return instructions
 
     def copy(self, expression, leave_on_stack=True):
-
         instructions = []
         instructions.extend(expression.generate())
         instructions.extend(self.address())
@@ -2149,6 +2347,15 @@ class ArrayIndex(Object):
                 "literal":self.size()//4,
             })
         return instructions
+
+    def size(self):
+        return self.array.element_declaration.size()
+
+    def type_(self):
+        return self.array.element_declaration.type_()
+
+    def signed(self):
+        return self.array.element_declaration.signed()
 
 
 class Variable(Object):

@@ -3436,6 +3436,13 @@ test("array passing 3",
     n = 1;
     for(j=0; j<3; j++){
         for(i=0; i<3; i++){
+            grid[j][i] = n++;
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
             assert(grid[j][i] == n++);
         }
     }
@@ -3443,6 +3450,13 @@ test("array passing 3",
 }
 void test1(int grid[3][3]){
     int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            grid[j][i] = n++;
+        }
+    }
 
     n = 1;
     for(j=0; j<3; j++){
@@ -3455,6 +3469,7 @@ void test1(int grid[3][3]){
 void main(){
     int grid[3][3] = {{1, 2, 3},{4, 5, 6}, {7, 8, 9}};
     test(grid);
+    test1(grid);
 }
 
 """

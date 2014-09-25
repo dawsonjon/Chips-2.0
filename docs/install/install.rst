@@ -21,8 +21,10 @@ Install
     ~$ cd Chips-2.0
     ~$ python setup.py install
 
-Icarus Verilog
-==============
+..
 
-Chips can automatically simulate the verilog it generates, to simulate verilog you will need the `Icarus Verilog <http://iverilog.icarus.com/>`_
-simulator. This will need to be installed in your command path.
+        Icarus Verilog
+        ==============
+
+        Chips can automatically simulate the verilog it generates, to simulate verilog you will need the `Icarus Verilog <http://iverilog.icarus.com/>`_
+        simulator. This will need to be installed in your command path.
