@@ -668,6 +668,9 @@ class VariableDeclaration:
     def size(self):
         return self._size
 
+    def argument_size(self):
+        return self._size
+
     def signed(self):
         return self._signed
 
@@ -799,6 +802,9 @@ class ArrayDeclaration:
 
     def size(self):
         return self.elements * self.element_declaration.size()
+
+    def argument_size(self):
+        return 4
 
     def signed(self):
         return self.element_declaration.signed()
@@ -980,6 +986,9 @@ class StructDeclaration:
         return self._type
 
     def size(self):
+        return self._size
+
+    def argument_size(self):
         return self._size
 
     def signed(self):
@@ -2274,6 +2283,7 @@ class ArrayIndex(Object):
 
     def __init__(self, array, index_expression):
         self.array = array
+        self.declaration = array.element_declaration
         if array.element_declaration.type_().endswith("[]"):
             self.element_declaration = array.element_declaration.element_declaration
         self.index_expression = index_expression

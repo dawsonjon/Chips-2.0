@@ -23,23 +23,23 @@ void main(){
     b[1][0].b = 180;
     b[1][0].c = 190;
 
-    report(a[0][0].a);
-    report(a[0][0].b);
-    report(a[0][0].c);
-    report(a[0][1].a);
-    report(a[0][1].b);
-    report(a[0][1].c);
-    report(a[1][0].a);
-    report(a[1][0].b);
-    report(a[1][0].c);
-    report(b[0][0].a);
-    report(b[0][0].b);
-    report(b[0][0].c);
-    report(b[0][1].a);
-    report(b[0][1].b);
-    report(b[0][1].c);
-    report(b[1][0].a);
-    report(b[1][0].b);
-    report(b[1][0].c);
+    assert(a[0][0].a == 10);
+    assert(a[0][0].b == 20);
+    assert(a[0][0].c == 30);
+    assert(a[0][1].a == 40);
+    assert(a[0][1].b == 50);
+    assert(a[0][1].c == 60);
+    assert(a[1][0].a == 70);
+    assert(a[1][0].b == 80);
+    assert(a[1][0].c == 90);
+    assert(b[0][0].a == 110);
+    assert(b[0][0].b == 120);
+    assert(b[0][0].c == 130);
+    assert(b[0][1].a == 140);
+    assert(b[0][1].b == 150);
+    assert(b[0][1].c == 160);
+    assert(b[1][0].a == 170);
+    assert(b[1][0].b == 180);
+    assert(b[1][0].c == 190);
 }
 

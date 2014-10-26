@@ -194,13 +194,29 @@ class Parser:
             else:
                 break
         self.tokens.expect(")")
+
+        #arguments have offsets before the frame pointer
+        #for every argument decrease the offset by the size of the
+        #argument so that the offsets are correctly assigned later.
+        #
+        #Exception - arrays are passed as references not coppies
+        #argument_size returns the size of an array reference
+        #in this case, but in all other cases returns the size of an object.
         for argument, declaration in arguments:
-            function.offset -= declaration.size()//4
+            function.offset -= declaration.argument_size()//4
         function.arguments = []
+
+        #arguments look like a series of declarations, for each argument
+        #create an instance - like a local variable.
+        #
+        #Exception - arrays are passed as references not coppies
+        #argument instance returns an instance of a reference to an array
+        #in this case, but in all other cases returns an instance of an object.
         for argument, declaration in arguments:
             instance = declaration.argument_instance(self.function)
             self.scope[argument] = instance
             function.arguments.append(instance.reference())
+
         function.statement = self.parse_statement()
         if type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Non-void function must have a return statement")
@@ -1206,7 +1222,6 @@ class Parser:
         if not is_a_struct:
             self.tokens.error(
                 "Cannot access member of non-struct type %s"%struct.type_())
-
         member = self.tokens.get()
         if member not in struct.declaration.member_names:
             self.tokens.error("%s is not a member of struct"%member)
@@ -1338,7 +1353,6 @@ class Parser:
         #Check that the thing being called is a function
         #
         if not hasattr(function_call.function, "arguments"):
-            print dir(function_call)
             self.tokens.error(
                 "not a function cannot be called")
 
@@ -1347,8 +1361,7 @@ class Parser:
         required_arguments = len(function_call.function.arguments)
         actual_arguments = len(function_call.arguments)
         if required_arguments != actual_arguments:
-            self.tokens.error("Function %s takes %s arguments %s given."%(
-                name,
+            self.tokens.error("Function takes %s arguments %s given."%(
                 len(function_call.function.arguments),
                 len(function_call.arguments)))
 
@@ -1390,8 +1403,8 @@ class Parser:
                 elif required.type_().endswith("[]") and required.element_declaration.size() != actual.element_declaration.size():
                     self.tokens.error(
                         "element size mismatch in function argument expected: %s actual: %s"%(
-                            required.element_size(),
-                            actual.element_size()))
+                            required.element_declaration.size(),
+                            actual.element_declaration.size()))
 
             corrected_arguments.append(actual)
         function_call.arguments = corrected_arguments
