@@ -155,10 +155,18 @@ class PythonModel:
 
         this_instruction = self.program_counter
         self.program_counter += 1
+        wait = False
 
+        if instruction["op"] == "stop":
+            wait = True
+            for file_ in self.input_files.values():
+                file_.close()
+            for file_ in self.output_files.values():
+                file_.close()
+            raise StopSim
 
         #reserve memory on the stack
-        if instruction["op"] == "new":
+        elif instruction["op"] == "new":
            self.tos += literal
 
         #save return address and current frame in non-volatile registers
@@ -203,27 +211,27 @@ class PythonModel:
             c = instruction["c"]
             d = instruction["d"]
 
-            tos = self.memory.get(self.tos + b, 0) 
-            tos_1 = self.memory.get(self.tos + a, 0)
+            operand_b = self.memory.get(self.tos + b, 0) 
+            operand_a = self.memory.get(self.tos + a, 0)
 
 
             #execute instrcution
             #
             result = None
             if instruction["op"] == "local_to_global":
-               result = uint32(tos + self.frame)
+               result = uint32(operand_b + self.frame)
             elif instruction["op"] == "*tos->pointer":
-               self.pointer = tos
+               self.pointer = operand_b
             elif instruction["op"] == "*tos->return_frame":
-               self.return_frame = tos
+               self.return_frame = operand_b
             elif instruction["op"] == "*tos->return_address":
-               self.return_address = tos
+               self.return_address = operand_b
             elif instruction["op"] == "return_address->*tos":
                result = self.return_address
             elif instruction["op"] == "return_frame->*tos":
                result = self.return_frame
             elif instruction["op"] == "tos->pointer":
-               self.pointer = self.tos
+               self.pointer = self.operand_b
             elif instruction["op"] == "literal+frame->pointer":
                self.pointer = literal + self.frame
             elif instruction["op"] == "literal->pointer":
@@ -231,13 +239,13 @@ class PythonModel:
             elif instruction["op"] == "literal->*tos":
                result = uint32(literal)
             elif instruction["op"] == "pop_a_lo":
-               self.a_lo=tos
+               self.a_lo=operand_b
             elif instruction["op"] == "pop_b_lo":
-               self.b_lo=tos
+               self.b_lo=operand_b
             elif instruction["op"] == "pop_a_hi":
-               self.a_hi=tos
+               self.a_hi=operand_b
             elif instruction["op"] == "pop_b_hi":
-               self.b_hi=tos
+               self.b_hi=operand_b
             elif instruction["op"] == "push_a_lo":
                result = uint32(self.a_lo)
             elif instruction["op"] == "push_a_hi":
@@ -247,9 +255,9 @@ class PythonModel:
             elif instruction["op"] == "push_b_hi":
                result = uint32(self.b_hi)
             elif instruction["op"] == "not":
-               result = uint32(~tos)
+               result = uint32(~operand_b)
             elif instruction["op"] == "int_to_long":
-               if tos & 0x80000000:
+               if operand_b & 0x80000000:
                    result = uint32(0xffffffff)
                else:
                    result = uint32(0x00000000)
@@ -273,113 +281,113 @@ class PythonModel:
                f = bits_to_double(join_words(self.a_hi, self.a_lo))
                self.a_lo = float_to_bits(f)
             elif instruction["op"] == "add":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                lw = int(uint32(a)) + int(uint32(b))
                self.carry, result = split_word(lw)
                self.carry &= 1
             elif instruction["op"] == "add_with_carry":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                lw = int(uint32(a)) + int(uint32(b)) + self.carry
                self.carry, result = split_word(lw)
                self.carry &= 1
             elif instruction["op"] == "subtract":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                lw = int(uint32(a)) + ~int(uint32(b)) + 1
                self.carry, result = split_word(lw)
                self.carry &= 1
                self.carry ^= 1
             elif instruction["op"] == "subtract_with_carry":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                lw = int(uint32(a)) + ~int(uint32(b)) + self.carry
                self.carry, result = split_word(lw)
                self.carry &= 1
                self.carry ^= 1
             elif instruction["op"] == "multiply":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                lw = int(uint32(a)) * int(uint32(b))
                self.carry, result = split_word(lw)
             elif instruction["op"] == "carry":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = uint32(self.carry)
             elif instruction["op"] == "or":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = uint32(a | b)
             elif instruction["op"] == "and":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = uint32(a & b)
             elif instruction["op"] == "xor":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = uint32(a ^ b)
             elif instruction["op"] == "shift_left":
-               a = tos_1
-               b = int(tos)
+               a = operand_a
+               b = int(operand_b)
                b = b if b <= 32 else 32
                self.carry = uint32(a >> (32 - b))
                result = uint32(a << b)
             elif instruction["op"] == "shift_left_with_carry":
-               a = tos_1
-               b = int(tos)
+               a = operand_a
+               b = int(operand_b)
                b = b if b <= 32 else 32
                carry_in = self.carry
                self.carry = uint32(a >> (32 - b))
                result = uint32(a << b) | carry_in
             elif instruction["op"] == "shift_right":
-               a = tos_1
-               b = int(tos)
+               a = operand_a
+               b = int(operand_b)
                b = b if b <= 32 else 32
                self.carry = uint32(a << (32 - b))
                result = uint32(int32(a) >> b)
             elif instruction["op"] == "unsigned_shift_right":
-               a = tos_1
-               b = int(tos)
+               a = operand_a
+               b = int(operand_b)
                b = b if b <= 32 else 32
                self.carry = uint32(a << (32 - b))
                result = uint32(a >> b)
             elif instruction["op"] == "shift_right_with_carry":
-               a = tos_1
-               b = int(tos)
+               a = operand_a
+               b = int(operand_b)
                b = b if b <= 32 else 32
                carry_in = self.carry
                self.carry = uint32(a << (32 - b))
                result = uint32(a) >> b | carry_in
             elif instruction["op"] == "greater":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = int32(int32(a) > int32(b))
             elif instruction["op"] == "greater_equal":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = int32(int32(a) >= int32(b))
             elif instruction["op"] == "unsigned_greater":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = int32(uint32(a) > uint32(b))
             elif instruction["op"] == "unsigned_greater_equal":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = int32(uint32(a) >= uint32(b))
             elif instruction["op"] == "equal":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = int32(int32(a) == int32(b))
             elif instruction["op"] == "not_equal":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                result = int32(int32(a) != int32(b))
             elif instruction["op"] == "jmp_if_false":
-                if tos == 0:
+                if operand_b == 0:
                     self.program_counter = literal
             elif instruction["op"] == "jmp_if_true":
-                if tos != 0:
+                if operand_b != 0:
                     self.program_counter = literal
             elif instruction["op"] == "goto":
                 self.program_counter = literal
@@ -387,71 +395,59 @@ class PythonModel:
                 value = self.input_files[instruction["filename"]].getline()
                 result = uint32(value)
             elif instruction["op"] == "float_file_write":
-                self.output_files[instruction["file_name"]].write("%f\n"%bits_to_float(tos))
+                self.output_files[instruction["file_name"]].write("%f\n"%bits_to_float(operand_b))
             elif instruction["op"] == "unsigned_file_write":
-                self.output_files[instruction["file_name"]].write("%i\n"%uint32(tos))
+                self.output_files[instruction["file_name"]].write("%i\n"%uint32(operand_b))
             elif instruction["op"] == "file_write":
-                self.output_files[instruction["file_name"]].write("%i\n"%int32(tos))
+                self.output_files[instruction["file_name"]].write("%i\n"%int32(operand_b))
             elif instruction["op"] == "read":
-                if tos not in self.inputs:
+                if operand_a not in self.inputs:
                     result = 0
                 else:
-                    input_ = self.inputs[tos]
-                    self.program_counter = this_instruction
-
-                    if self.read_state == "wait_stb":
-                        if input_.stb:
-                            input_.ack = True
-                            self.read_state = "wait_nstb"
-                            result = input_.data
-                    elif self.read_state == "wait_nstb":
-                        if not input_.stb:
-                            input_.ack = False
-                            self.read_state = "wait_stb"
-                            self.program_counter += 1
+                    input_ = self.inputs[operand_a]
+                    if input_.q:
+                        result = input_.q.pop()
+                    else:
+                        wait = True
             elif instruction["op"] == "ready":
-                if tos not in self.inputs:
-                    tos = 0
+                if operand_a not in self.inputs:
+                    operand_a = 0
                 else:
-                    input_ = self.inputs[tos]
-                    result = uint32(int(input_.stb))
+                    input_ = self.inputs[operand_a]
+                    if input_.q:
+                        result = uint32(1)
+                    else:
+                        result = uint32(0)
             elif instruction["op"] == "write":
-                if tos not in self.outputs:
+                if operand_a not in self.outputs:
                     pass
                 else:
-                    output = self.outputs[tos]
-                    output.data = tos_1
-                    self.program_counter = this_instruction
-                    if self.write_state == "wait_ack":
-                        output.stb = True
-                        if output.ack:
-                            output.stb = False
-                            self.write_state = "wait_nack"
-                    elif self.write_state == "wait_nack":
-                        if not output.ack:
-                            self.write_state = "wait_ack"
-                            self.program_counter += 1
+                    output = self.outputs[operand_a]
+                    if output.q:
+                        wait = True
+                    else:
+                        output.q.append(operand_b)
             elif instruction["op"] == "float_add":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                float_ = bits_to_float(a)
                floatb = bits_to_float(b)
                result = float_to_bits(float_ + floatb)
             elif instruction["op"] == "float_subtract":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                float_ = bits_to_float(a)
                floatb = bits_to_float(b)
                result = float_to_bits(float_ - floatb)
             elif instruction["op"] == "float_multiply":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                float_ = bits_to_float(a)
                floatb = bits_to_float(b)
                result = float_to_bits(float_ * floatb)
             elif instruction["op"] == "float_divide":
-               a = tos_1
-               b = tos
+               a = operand_a
+               b = operand_b
                float_ = bits_to_float(a)
                floatb = bits_to_float(b)
                result = float_to_bits(float_ / floatb)
@@ -478,7 +474,7 @@ class PythonModel:
                 long_word = join_words(self.a_hi, self.a_lo)
                 self.output_files[instruction["file_name"]].write("%f\n"%long_word)
             elif instruction["op"] == "assert":
-                if tos == 0:
+                if operand_b == 0:
                     print "(assertion failed at line: %s in file: %s)"%(
                     instruction["line"],
                     instruction["file"])
@@ -519,13 +515,6 @@ class PythonModel:
                     instruction["line"],
                     instruction["file"],
                 )
-            elif instruction["op"] == "stop":
-                self.program_counter = this_instruction
-                for file_ in self.input_files.values():
-                    file_.close()
-                for file_ in self.output_files.values():
-                    file_.close()
-                raise StopSim
             elif instruction["op"] == "wait_clocks":
                 pass
 
@@ -539,7 +528,10 @@ class PythonModel:
                 self.memory[self.tos+c] = result
 
             #manipulate stack pointer
-            self.tos += d
+            if wait:
+                self.program_counter = this_instruction
+            else:
+                self.tos += d
             
 
 def float_to_bits(f):

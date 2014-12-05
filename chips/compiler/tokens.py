@@ -213,7 +213,10 @@ class Tokens:
         if self.tokens:
             self.lineno = self.tokens[0][1]
             self.filename = self.tokens[0][0]
-        filename, lineno, token = self.tokens.pop(0)
+        try:
+            filename, lineno, token = self.tokens.pop(0)
+        except IndexError:
+            self.error("Unexpected end of file")
         return token
 
     def end(self):
@@ -227,7 +230,10 @@ class Tokens:
         """Consume the next token in the stream,
         generate an error if it is not as expected."""
 
-        filename, lineno, actual = self.tokens.pop(0)
+        try:
+            filename, lineno, actual = self.tokens.pop(0)
+        except IndexError:
+            self.error("Unexpected end of file")
         if self.tokens:
             self.lineno = self.tokens[0][1]
             self.filename = self.tokens[0][0]

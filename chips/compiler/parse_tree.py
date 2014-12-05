@@ -1916,7 +1916,7 @@ class FunctionCall(Expression):
 
 class Output(Expression):
 
-    """ Create an output (and return an integer "file handle" """
+    """ Write an expression to the output numbered "handle" """
 
     def __init__(self, handle, expression):
         self.handle = handle
@@ -1929,7 +1929,7 @@ class Output(Expression):
 
         instructions.append({
             "op"   : "write",
-            "a":-1,
+            "a":-2,
             "b":-1,
             "c":-1,
             "d":-2,
@@ -2033,8 +2033,8 @@ class Input(Expression):
             "op"   : "read",
             "a":-1,
             "b":-1,
-            "c":0,
-            "d":1,
+            "c":-1,
+            "d":0,
         })
 
         return instructions

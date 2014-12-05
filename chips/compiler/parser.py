@@ -1471,16 +1471,12 @@ class Parser:
 
         """parse a floating point literal"""
 
-        type_ = "int"
-        size = 4
-        signed = True
         try:
             if "F" in token.upper():
                 type_ = "float"
                 signed = True
                 size = 4
                 token = token.upper().replace("F", "")
-                token = token.upper().replace("L", "")
                 value = float(eval(token))
                 try:
                     byte_value = struct.pack(">f", value)
@@ -1490,7 +1486,6 @@ class Parser:
                 type_ = "float"
                 signed = True
                 size = 8
-                token = token.upper().replace("L", "")
                 value = float(eval(token))
                 try:
                     byte_value = struct.pack(">d", value)

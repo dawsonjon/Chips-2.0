@@ -196,29 +196,29 @@ void fprint_float(float f, handle){
     unsigned print = 0;
     float significance = 100000000.0;
 
-    if( f < 0) {
+    if( f < 0.0f) {
         fputc('-', handle);
         f = -f;
     }
 
-    while(significance >= 1.0){
+    while(significance >= 1.0f){
         digit = f / significance; 
         print |= digit;
         if(print){
             fputc(digit + '0', handle);
         }
         f = f - (digit * significance);
-        significance /= 10.0;
+        significance /= 10.0f;
     }
 
     fputc('.', handle);
 
-    while(significance > 0.00000001){
+    while(significance > 0.00000001f){
         digit = f / significance; 
         fputc(digit + '0', handle);
         f = f - (digit * significance);
-        significance /= 10.0;
-        if(f == 0.0) break;
+        significance /= 10.0f;
+        if(f == 0.0f) break;
     }
 }
 

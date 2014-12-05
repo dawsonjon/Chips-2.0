@@ -292,7 +292,7 @@ def generate_CHIP(input_file,
 
     output_file.write("module %s"%name)
 
-    all_ports = [name for name, size in inports + outports]
+    all_ports = [name for name, size in inports + outports] + ["exception"]
     if all_ports:
         output_file.write("(")
         output_file.write(",".join(all_ports))
@@ -410,8 +410,9 @@ def generate_CHIP(input_file,
     for name, size in signals:
         write_declaration("  reg ", name, size)
 
+    output_file.write("  output reg exception;\n")
     output_file.write("  reg [%s:0] instructions [%i:0];\n"%(instruction_bits-1, len(instructions)-1))
-    output_file.write("  reg [31:0] memory [%i:0];\n"%65535)
+    output_file.write("  reg [31:0] memory [%i:0];\n"%4095)
 
 
     #generate clock and reset in testbench mode
@@ -559,6 +560,12 @@ def generate_CHIP(input_file,
     output_file.write("    operand_b <= memory[address_b];\n")
     output_file.write("    if(write_enable) begin\n")
     output_file.write("      memory[address_c] <= result;\n")
+    output_file.write("    end\n")
+    output_file.write("    if (address_c > 4095) begin\n")
+    output_file.write("      exception <= 1;\n")
+    output_file.write("    end\n")
+    output_file.write("    if (rst) begin\n")
+    output_file.write("      exception <= 0;\n")
     output_file.write("    end\n")
     output_file.write("  end\n\n")
 
@@ -1194,7 +1201,7 @@ def generate_CHIP(input_file,
         output_file.write("       %s_out_ack <= 1;\n"%i)
         output_file.write("       if (%s_out_stb && %s_out_ack) begin\n"%(i,i))
         output_file.write("         %s_out_ack <= 0;\n"%i)
-        if i.startswith("double") or i.endswith("double") or i.startswith("long"):
+        if (i.startswith("double") and not i.endswith("float")) or i.endswith("double") or i.startswith("long"):
             output_file.write("         a_lo <= %s_out[31:0];\n"%i)
             output_file.write("         a_hi <= %s_out[63:32];\n"%i)
         else:
@@ -1213,10 +1220,10 @@ def generate_CHIP(input_file,
     output_file.write("      return_frame <= 0;\n")
     output_file.write("      frame <= 0;\n")
     output_file.write("      tos <= 0;\n")
-    output_file.write("      a <= 0;\n")
-    output_file.write("      b <= 0;\n")
-    output_file.write("      c <= 0;\n")
-    output_file.write("      d <= 0;\n")
+    output_file.write("      a = 0;\n")
+    output_file.write("      b = 0;\n")
+    output_file.write("      c = 0;\n")
+    output_file.write("      d = 0;\n")
     output_file.write("      state <= instruction_fetch;\n")
 
     for i in inputs:

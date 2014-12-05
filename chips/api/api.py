@@ -54,7 +54,7 @@ class Chip:
             if i.source is None:
                 raise C2CHIPError("output %s has no source"%i.name)
 
-        ports = ["clk", "rst"]
+        ports = ["clk", "rst", "exception"]
         ports += ["%s"%i.name for i in self.inputs]
         ports += ["%s_stb"%i.name for i in self.inputs]
         ports += ["%s_ack"%i.name for i in self.inputs]
@@ -67,6 +67,7 @@ class Chip:
         output_file.write("module %s(%s);\n"%(self.name, ports))
         output_file.write("  input  clk;\n")
         output_file.write("  input  rst;\n")
+        output_file.write("  output  exception;\n")
         for i in self.inputs:
             output_file.write("  input  [31:0] %s;\n"%i.name)
             output_file.write("  input  %s_stb;\n"%i.name)
@@ -80,11 +81,14 @@ class Chip:
             output_file.write("  wire   %s_stb;\n"%i.name)
             output_file.write("  wire   %s_ack;\n"%i.name)
         for instance in self.instances:
+            output_file.write("  wire   exception_%s;\n"%(id(instance)))
+        for instance in self.instances:
             component = instance.component_name
             output_file.write("  %s %s_%s(\n    "%(component, component, id(instance)))
             ports = []
             ports.append(".clk(clk)")
             ports.append(".rst(rst)")
+            ports.append(".exception(exception_%s)"%id(instance))
             for name, i in instance.inputs.iteritems():
                 ports.append(".input_%s(%s)"%(name, i.name))
                 ports.append(".input_%s_stb(%s_stb)"%(name, i.name))
@@ -95,6 +99,7 @@ class Chip:
                 ports.append(".output_%s_ack(%s_ack)"%(name, i.name))
             output_file.write(",\n    ".join(ports))
             output_file.write(");\n")
+        output_file.write("  assign exception = %s;\n"%(" or ".join(["exception_" + str(id(i)) for i in self.instances])))
         output_file.write("endmodule\n")
         output_file.close()
 
@@ -176,6 +181,7 @@ class Chip:
         for wire in self.wires:
             wire.stb = False
             wire.ack = False
+            wire.simulation_reset()
 
         for input_ in self.inputs:
             input_.stb = False
@@ -313,6 +319,7 @@ class _Instance:
                 raise C2CHIPError("%s has allready has a source %s"%(i, component_name))
 
     def generate_verilog(self):
+        print self.component.C_file
         chips.compiler.compiler.comp(self.component.C_file, self.component.options, self.parameters)
 
 
@@ -329,6 +336,9 @@ class Wire:
         self.sink = None
         self.name = "wire_" + str(id(self))
 
+    def simulation_reset(self):
+        self.q = []
+
 class Input:
 
     """Create an input to the chip."""
@@ -344,19 +354,11 @@ class Input:
         self.name = name
 
     def simulation_reset(self):
-        self.data = self.data_source()
-        self.write_state = "wait_ack"
+        self.q = [self.data_source()]
 
     def simulation_step(self):
-        if self.write_state == "wait_ack":
-            self.stb = True
-            if self.ack:
-                self.stb = False
-                self.write_state = "wait_nack"
-        elif self.write_state == "wait_nack":
-            if not self.ack:
-                self.write_state = "wait_ack"
-                self.data = self.data_source()
+        if not self.q:
+            self.q.append(self.data_source())
 
     def data_source(self):
 
@@ -379,18 +381,11 @@ class Output:
         self.name = name
 
     def simulation_reset(self):
-        self.read_state = "wait_stb"
+        self.q = []
 
     def simulation_step(self):
-        if self.read_state == "wait_stb":
-            if self.stb:
-                self.ack = True
-                self.read_state = "wait_nstb"
-                self.data_sink(self.data)
-        elif self.read_state == "wait_nstb":
-            if not self.stb:
-                self.ack = False
-                self.read_state = "wait_stb"
+        if self.q:
+            self.data_sink(self.q.pop(0))
 
     def data_sink(data):
 
@@ -413,8 +408,6 @@ class Stimulus(Input):
         Input.simulation_reset(self)
 
     def data_source(self):
-
-        """Override the Input data_sorce() method to read data from a sequence"""
 
         if self.type_ == "int":
             return next(self.iterator)
