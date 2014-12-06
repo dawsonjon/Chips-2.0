@@ -1049,12 +1049,7 @@ class DiscardExpression:
         self.expression = expression
 
     def generate(self):
-        instructions = self.expression.generate()
-        if self.expression.size():
-            instructions.append({
-                "op":"new",
-                "literal":-self.expression.size()//4,
-            })
+        instructions = self.expression.discard()
         return instructions
 
 
@@ -1084,6 +1079,23 @@ class Expression:
 
     def signed(self):
         return self.signed_var
+
+    def discard(self):
+
+        """In some instances, the value of an expression is dicarded, this
+        can be achieved by removing the correct amount of data from the stack.
+
+        A derived class can provide discard functionality directly by overriding
+        this function, this can result in efficiencies because it may not be
+        necassary to place a value onto the stack in the first place.
+        """
+
+        instructions = self.generate()
+        instructions.append({
+            "op" : "new",
+            "literal" : -self.size()//4
+        })
+        return instructions
 
     def value(self):
 
@@ -1191,11 +1203,7 @@ class MultiExpression(Expression):
         instructions = []
         instructions.extend(self.first.generate())
         for expression in self.others:
-            instructions.extend(expression.generate())
-            instructions.append({
-                "op":"new",
-                "literal":-expression.size()//4,
-            })
+            instructions.extend(expression.discard())
         return instructions
 
 class ANDOR(Expression):
@@ -2449,8 +2457,11 @@ class Assignment(Expression):
         self.lvalue = lvalue
         self.expression = expression
 
-    def generate(self, leave_on_stack=True):
-        return self.lvalue.copy(self.expression, leave_on_stack)
+    def discard(self):
+        return self.lvalue.copy(self.expression, False)
+
+    def generate(self):
+        return self.lvalue.copy(self.expression, True)
 
 class Constant(Expression):
 
