@@ -91,6 +91,7 @@ def compile_python_model(
                     print i
 
             debug = "debug" in options
+            profile = "profile" in options
             model = generate_python_model(
                     debug,
                     input_file,
@@ -98,7 +99,8 @@ def compile_python_model(
                     instructions,
                     parser.allocator, 
                     inputs, 
-                    outputs)
+                    outputs,
+                    profile)
 
             return model, parser.allocator.input_names.values(), parser.allocator.output_names.values(), name
 

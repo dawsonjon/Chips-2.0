@@ -10,6 +10,7 @@ from numpy import uint64
 from numpy import int64
 import struct
 import sys
+import math
 
 class StopSim(Exception):
     pass
@@ -52,6 +53,7 @@ def generate_python_model(
         allocator,
         inputs,
         outputs,
+        profile = False
     ):
 
     instructions = calculate_jumps(instructions)
@@ -77,6 +79,7 @@ def generate_python_model(
         output_files, 
         numbered_inputs, 
         numbered_outputs,
+        profile,
     )
 
 
@@ -91,9 +94,11 @@ class PythonModel:
             memory_content, 
             input_files, 
             output_files, 
-            inputs, outputs
+            inputs, outputs,
+            profile = False
         ):
         self.debug = debug
+        self.profile = profile
         self.instructions = instructions
         self.memory_content = memory_content
 
@@ -121,6 +126,8 @@ class PythonModel:
         self.new_frame = 0
         self.return_address = 0
         self.pointer = 0
+
+        self.coverage = {}
         
         self.input_files = {}
         for file_name in self.input_file_names:
@@ -131,6 +138,11 @@ class PythonModel:
         for file_name in self.output_file_names:
             file_ = open(file_name, "w")
             self.output_files[file_name] = file_
+
+    def report_coverage(self):
+        print "Coverage Report:"
+        for number, instruction in enumerate(self.instructions):
+            print number, self.coverage.get(number, 0), instruction
 
     def simulation_step(self):
 
@@ -146,6 +158,9 @@ class PythonModel:
             print "frame:", self.frame
             for i in range(self.frame, self.tos + 3):
                 print i, i - self.tos, self.memory.get(i, 0)
+
+        if self.profile:
+            self.coverage[self.program_counter] = self.coverage.get(self.program_counter, 0) + 1
 
         if "literal" in instruction:
             literal = instruction["literal"]
@@ -163,6 +178,8 @@ class PythonModel:
                 file_.close()
             for file_ in self.output_files.values():
                 file_.close()
+            if self.profile:
+                self.report_coverage()
             raise StopSim
 
         #reserve memory on the stack
@@ -266,10 +283,16 @@ class PythonModel:
                self.a_lo = float_to_bits(f)
             elif instruction["op"] == "float_to_int":
                i = bits_to_float(self.a_lo)
-               self.a_lo = int32(i)
+               if math.isnan(i):
+                   self.a_lo = int32(0)
+               else:
+                   self.a_lo = int32(i)
             elif instruction["op"] == "long_to_double":
                double = float(join_words(self.a_hi, self.a_lo))
-               self.a_hi, self.a_lo = split_word(double_to_bits(double))
+               if math.isnan(double):
+                   self.a_hi, self.a_lo = split_word(0, 0)
+               else:
+                   self.a_hi, self.a_lo = split_word(double_to_bits(double))
             elif instruction["op"] == "double_to_long":
                bits = int(bits_to_double(join_words(self.a_hi, self.a_lo)))
                self.a_hi, self.a_lo = split_word(bits)
@@ -450,7 +473,10 @@ class PythonModel:
                b = operand_b
                float_ = bits_to_float(a)
                floatb = bits_to_float(b)
-               result = float_to_bits(float_ / floatb)
+               try:
+                   result = float_to_bits(float_ / floatb)
+               except ZeroDivisionError:
+                   result = float_to_bits(float("nan"))
             elif instruction["op"] == "long_float_add":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
                doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
@@ -466,7 +492,10 @@ class PythonModel:
             elif instruction["op"] == "long_float_divide":
                double = bits_to_double(join_words(self.a_hi, self.a_lo))
                doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-               self.a_hi, self.a_lo = split_word(double_to_bits(double / doubleb))
+               try:
+                   self.a_hi, self.a_lo = split_word(double_to_bits(double / doubleb))
+               except ZeroDivisionError:
+                   self.a_hi, self.a_lo = split_word(double_to_bits(float("nan")))
             elif instruction["op"] == "long_float_file_write":
                 long_word = join_words(self.a_hi, self.a_lo)
                 self.output_files[instruction["file_name"]].write("%f\n"%bits_to_double(long_word))

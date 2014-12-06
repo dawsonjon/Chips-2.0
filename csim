@@ -10,6 +10,7 @@ import os
 import subprocess
 
 from chips.compiler.compiler import compile_python_model
+from chips.compiler.python_model import StopSim
 
 if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     print "Usage: csim [options] <input_file>"
@@ -24,7 +25,8 @@ model, inputs, outputs, name = compile_python_model(input_file, options)
 model.simulation_reset()
 
 while True:
-    model.simulation_step()
-    if model.instructions[model.program_counter]["op"] == "stop":
+    try:
+        model.simulation_step()
+    except StopSim:
         break
 
