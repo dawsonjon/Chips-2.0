@@ -2403,14 +2403,24 @@ class Variable(Object):
 
     def generate(self):
         instructions = []
-        instructions.extend(self.address())
-        instructions.append({
-            "op":"*tos->pointer",
-            "a":-1,
-            "b":-1,
-            "c":-1,
-            "d":-1,
-        })
+        if self.instance.local:
+            instructions.append({
+                "op" : "literal+frame->pointer",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op" : "literal->pointer",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
         instructions.append({
             "op":"*pointer->*tos",
             "literal":self.size()//4,
@@ -2421,14 +2431,24 @@ class Variable(Object):
 
         instructions = []
         instructions.extend(expression.generate())
-        instructions.extend(self.address())
-        instructions.append({
-            "op":"*tos->pointer",
-            "a":-1,
-            "b":-1,
-            "c":-1,
-            "d":-1,
-        })
+        if self.instance.local:
+            instructions.append({
+                "op" : "literal+frame->pointer",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
+        else:
+            instructions.append({
+                "op" : "literal->pointer",
+                "a":-1,
+                "b":-1,
+                "c":-1,
+                "d":0,
+                "literal" : self.instance.offset,
+            })
         instructions.append({
             "op":"*tos->*pointer",
             "literal":self.size()//4,
