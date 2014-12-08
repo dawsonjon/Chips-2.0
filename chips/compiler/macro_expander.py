@@ -8,6 +8,43 @@ def unique():
     sn += 1
     return label
 
+def push_pop(instructions):
+
+    """substitue push and pop macros with real instructions"""
+
+    new_instructions = []
+    i=0
+    while i<len(instructions):
+        instruction = instructions[i]
+        if i<len(instructions)-1:
+            next_instruction = instructions[i+1]
+        else:
+            #dummy instruction
+            next_instruction = {"op"}
+
+        if instruction["op"] == "push" and next_instruction["op"] == "pop":
+            new_instructions.append({
+                "op":"addl", 
+                "literal":0, 
+                "z":next_instruction["reg"], 
+                "a":instruction["reg"],
+                "comment":"pushpop"
+            })
+            i += 1
+        elif instruction["op"] == "push":
+            #push
+            new_instructions.append({"op":"store", "a":tos, "b":instruction["reg"], "comment":"push"})
+            new_instructions.append({"op":"addl", "z":tos, "a":tos, "literal":1})
+        elif instruction["op"] == "pop":
+            #pop
+            new_instructions.append({"op":"addl", "z":tos, "a":tos, "literal":-1, "comment":"pop"})
+            new_instructions.append({"op":"load", "z":instruction["reg"], "a":tos})
+        else:
+            new_instructions.append(instruction)
+        i+=1
+
+    return new_instructions
+
 def expand_macros(instructions, allocator):
     new_instructions = []
     for instruction in instructions:
@@ -54,7 +91,7 @@ def expand_macros(instructions, allocator):
         else:
             new_instructions.append(instruction)
 
-    return new_instructions
+    return push_pop(new_instructions)
 
 def long_shift_left(instruction):
 

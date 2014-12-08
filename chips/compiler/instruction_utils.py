@@ -5,13 +5,11 @@ __version__ = "0.1"
 from register_map import *
 
 def push(instructions, reg):
-    instructions.append({"op":"store", "a":tos, "b":reg})
-    instructions.append({"op":"addl", "z":tos, "a":tos, "literal":1})
+    instructions.append({"op":"push", "reg":reg})
     return instructions
 
 def pop(instructions, reg):
-    instructions.append({"op":"addl", "z":tos, "a":tos, "literal":-1})
-    instructions.append({"op":"load", "z":reg, "a":tos})
+    instructions.append({"op":"pop", "reg":reg})
     return instructions
 
 def pop_object(instructions, n, leave_on_stack):
