@@ -250,14 +250,14 @@ class Component:
         self.C_file = C_file
         self.options = options
 
-    def __call__(self, chip, inputs, outputs, parameters={}):
+    def __call__(self, chip, inputs, outputs, parameters={}, debug=False, profile=False):
 
         """Takes three arguments:
             + chip, the chip that the component instance belongs to.
             + inputs, a list of *Wires* (or *Inputs*) to connect to the component inputs
             + outputs, a list of *Wires* (or *Outputs*) to connect to the component outputs
             + parameters, a dictionary of parameters"""
-        return _Instance(self, chip, parameters, inputs, outputs)
+        return _Instance(self, chip, parameters, inputs, outputs, debug, profile)
 
 
 class _Instance:
@@ -265,13 +265,15 @@ class _Instance:
     """This class represents a component instance. You don't normaly need to
     create them directly, use the Component.__call__ method."""
 
-    def __init__(self, component, chip, parameters, inputs, outputs):
+    def __init__(self, component, chip, parameters, inputs, outputs, debug=False, profile=False):
         self.chip = chip
         self.parameters = parameters
         self.inputs = inputs
         self.outputs = outputs
         self.component = component
         self.chip.instances.append(self)
+        self.debug=debug
+        self.profile=profile
 
         #generate a python simulation model of the instance
         self.model, component_inputs, component_outputs, component_name = chips.compiler.compiler.compile_python_model(
@@ -280,6 +282,8 @@ class _Instance:
                 parameters,
                 inputs,
                 outputs, 
+                self.debug,
+                self.profile
                 )
 
         self.component_name = component_name

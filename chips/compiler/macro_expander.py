@@ -1,14 +1,12 @@
+from register_map import *
+from instruction_utils import *
+
 sn = 0
 def unique():
     global sn
     label = "macro_" + str(sn)
     sn += 1
     return label
-
-b_hi = -1
-b_lo = -2
-a_hi = -3
-a_lo = -4
 
 def expand_macros(instructions, allocator):
     new_instructions = []
@@ -66,92 +64,30 @@ def long_shift_left(instruction):
 
     end = unique()
 
-    thirty_two =-1 
-    greater_than_32 = 0
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    #shift msb and lsb by up to 32
+    instructions.append({"op": "shift_left",            "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({"op": "shift_left_with_carry", "a":a_hi, "b":b_lo, "z":a_hi})
 
-    new_instruction = [
+    #if shift amount is less than or equal to 32
+    instructions.append({"op":"literal", "z":thirty_two, "literal":32})
+    instructions.append({"op":"greater",       "a":b_lo, "b":thirty_two, "z":greater_than_32})
+    instructions.append({"op":"jmp_if_false",  "a":greater_than_32, "label":end})
 
-        #shift msb and lsb by up to 32
-        {
-        "op"  : "shift_left",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
-        {
-        "op"  : "shift_left_with_carry",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":0,
-        },
+    #reduce shift amount by 32
+    instructions.append({"op":"subtract",              "a":b_lo, "b":thirty_two, "z":b_lo})
 
-        #if shift amount is less than or equal to 32
-        {
-        "op"  : "literal->*tos",
-        "a":b_hi,
-        "b":b_hi,
-        "c":thirty_two,
-        "d":0,
-        "literal":32,
-        },
-        {
-        "op"  : "greater",
-        "a":b_lo,
-        "b":b_hi,
-        "c":greater_than_32,
-        "d":0,
-        "literal":32,
-        },
-        {
-        "op"  : "jmp_if_false",
-        "a":greater_than_32,
-        "b":greater_than_32,
-        "c":b_hi,
-        "d":0,
-        "label":end,
-        },
-
-        #reduce shift amount by 32
-        {
-        "op"  : "subtract",
-        "a":b_lo,
-        "b":thirty_two,
-        "c":b_lo,
-        "d":0,
-        },
-
-        #shift msb and lsb again by up to 32
-        {
-        "op"  : "shift_left",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
-        {
-        "op"  : "shift_left_with_carry",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":0,
-        },
-        {
-        "op"  : "label",
-        "label":end,
-        },
-        {
-        "op"  : "or",
-        "a":0,
-        "b":0,
-        "c":0,
-        "d":-2,
-        },
-
-    ]
-
-    return new_instruction
+    #shift msb and lsb again by up to 32
+    instructions.append({"op":"shift_left",            "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({"op":"shift_left_with_carry", "a":a_hi, "b":b_lo, "z":a_hi})
+    instructions.append({"op":"label", "label":end})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def unsigned_long_shift_right(instruction):
 
@@ -160,91 +96,30 @@ def unsigned_long_shift_right(instruction):
     """
     end = unique()
 
-    thirty_two = -1
-    greater_than_32 = 0
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    #shift msb and lsb by up to 32
+    instructions.append({"op": "unsigned_shift_right",   "a":a_hi, "b":b_lo, "z":a_hi})
+    instructions.append({"op": "shift_right_with_carry", "a":a_lo, "b":b_lo, "z":a_lo})
 
-    new_instruction = [
+    #if shift amount is less than or equal to 32
+    instructions.append({"op":"literal", "z":thirty_two, "literal":32})
+    instructions.append({"op":"greater",       "a":b_lo, "b":thirty_two, "z":greater_than_32})
+    instructions.append({"op":"jmp_if_false",  "a":greater_than_32, "label":end})
 
-        #shift msb and lsb by up to 32
-        {
-        "op"  : "unsigned_shift_right",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":0,
-        },
-        {
-        "op"  : "shift_right_with_carry",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
+    #reduce shift amount by 32
+    instructions.append({"op":"subtract",               "a":b_lo, "b":thirty_two, "z":b_lo})
 
-        #if shift amount is less than or equal to 32
-        {
-        "op"  : "literal->*tos",
-        "a":-1,
-        "b":-1,
-        "c":thirty_two,
-        "d":0,
-        "literal":32,
-        },
-        {
-        "op"  : "greater",
-        "a":b_lo,
-        "b":thirty_two,
-        "c":greater_than_32,
-        "d":0,
-        "literal":32,
-        },
-        {
-        "op"  : "jmp_if_false",
-        "a":greater_than_32,
-        "b":greater_than_32,
-        "c":-1,
-        "d":0,
-        "label":end,
-        },
-
-        #reduce shift amount by 32
-        {
-        "op"  : "subtract",
-        "a":b_lo,
-        "b":thirty_two,
-        "c":b_lo,
-        "d":0,
-        },
-
-        #shift msb and lsb again by up to 32
-        {
-        "op"  : "unsigned_shift_right",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":0,
-        },
-        {
-        "op"  : "shift_right_with_carry",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
-        {
-        "op"  : "label",
-        "label":end,
-        },
-        {
-        "op"  : "or",
-        "a":0,
-        "b":0,
-        "c":-1,
-        "d":-2,
-        },
-    ]
-
-    return new_instruction
+    #shift msb and lsb again by up to 32
+    instructions.append({"op":"unsigned_shift_right",   "a":a_hi, "b":b_lo, "z":a_hi})
+    instructions.append({"op":"shift_right_with_carry", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({"op":"label", "label":end})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_shift_right(instruction):
 
@@ -253,741 +128,288 @@ def long_shift_right(instruction):
     """
     end = unique()
 
-    thirty_two = -1
-    greater_than_32 = 0
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    #shift msb and lsb by up to 32
+    instructions.append({"op": "shift_right",            "a":a_hi, "b":b_lo, "z":a_hi})
+    instructions.append({"op": "shift_right_with_carry", "a":a_lo, "b":b_lo, "z":a_lo})
 
-    new_instruction = [
+    #if shift amount is less than or equal to 32
+    instructions.append({"op":"literal", "z":thirty_two, "literal":32})
+    instructions.append({"op":"greater",       "a":b_lo, "b":thirty_two, "z":greater_than_32})
+    instructions.append({"op":"jmp_if_false",  "a":greater_than_32, "label":end})
 
-        #shift msb and lsb by up to 32
-        {
-        "op"  : "shift_right",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":0,
-        },
-        {
-        "op"  : "shift_right_with_carry",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
+    #reduce shift amount by 32
+    instructions.append({"op":"subtract",               "a":b_lo, "b":thirty_two, "z":b_lo})
 
-        #if shift amount is less than or equal to 32
-        {
-        "op"  : "literal->*tos",
-        "a":-1,
-        "b":-1,
-        "c":thirty_two,
-        "d":0,
-        "literal":32,
-        },
-        {
-        "op"  : "greater",
-        "a":b_lo,
-        "b":thirty_two,
-        "c":greater_than_32,
-        "d":0,
-        "literal":32,
-        },
-        {
-        "op"  : "jmp_if_false",
-        "a":greater_than_32,
-        "b":greater_than_32,
-        "c":-1,
-        "d":0,
-        "label":end,
-        },
-
-        #reduce shift amount by 32
-        {
-        "op"  : "subtract",
-        "a":b_lo,
-        "b":thirty_two,
-        "c":b_lo,
-        "d":0,
-        },
-
-        #shift msb and lsb again by up to 32
-        {
-        "op"  : "shift_right",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":0,
-        },
-        {
-        "op"  : "shift_right_with_carry",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
-        {
-        "op"  : "label",
-        "label":end,
-        },
-        {
-        "op"  : "or",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-2,
-        },
-    ]
-
-    return new_instruction
+    #shift msb and lsb again by up to 32
+    instructions.append({"op":"shift_right",            "a":a_hi, "b":b_lo, "z":a_hi})
+    instructions.append({"op":"shift_right_with_carry", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({"op":"label", "label":end})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_equal(instruction):
-
     """ perform equal function on long numbers """
 
-    new_instruction = [
-        {
-        "op"  : "equal",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : a_hi,
-        "d"    : 0,
-        },
-        {
-        "op"  : "equal",
-        "a"   : a_lo,
-        "b"   : b_lo,
-        "c"   : a_lo,
-        "d"    : 0,
-        },
-        {
-        "op"   : "and",
-        "a"    : a_lo,
-        "b"    : a_hi,
-        "c"    : a_lo,
-        "d"    : -3,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({"op":"equal", "a":a_hi, "b":b_hi, "z":a_hi})
+    instructions.append({"op":"equal", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({"op":"and",   "a":a_lo, "b":a_hi, "z":a_lo})
+    push(instructions, a_lo)
+    return instructions
 
 def long_not_equal(instruction):
-
     """ perform not_equal function on long numbers """
 
-    new_instruction = [
-        {
-        "op"  : "not_equal",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : a_hi,
-        "d"    : 0,
-        },
-        {
-        "op"  : "not_equal",
-        "a"   : a_lo,
-        "b"   : b_lo,
-        "c"   : a_lo,
-        "d"    : 0,
-        },
-        {
-        "op"   : "or",
-        "a"    : a_lo,
-        "b"    : a_hi,
-        "c"    : a_lo,
-        "d"    : -3,
-        },
-    ]
-
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({"op":"not_equal", "a":a_hi, "b":b_hi, "z":a_hi})
+    instructions.append({"op":"not_equal", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({"op":"or",        "a":a_lo, "b":a_hi, "z":a_lo})
+    push(instructions, a_lo)
+    return instructions
 
 def long_greater(instruction):
     """ perform greater function on long numbers """
 
-
-    new_instruction = [
-        {
-        "op"  : "unsigned_greater",
-        "a"   : a_lo,
-        "b"   : b_lo,
-        "c"   : a_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "greater",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : b_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "equal",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"  : "and",
-        "a"   : a_lo,
-        "b"   : a_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"   : "or",
-        "a"    : b_lo,
-        "b"    : a_hi,
-        "c"    : a_lo,
-        "d"    : -3,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "unsigned_greater", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({ "op"  : "greater",          "a":a_hi, "b":b_hi, "z":b_lo})
+    instructions.append({ "op"  : "equal",            "a":a_hi, "b":b_hi, "z":a_hi})
+    instructions.append({ "op"  : "and",              "a":a_lo, "b":a_hi, "z":a_hi})
+    instructions.append({ "op"   : "or",              "a":b_lo, "b":a_hi, "z":a_lo})
+    push(instructions, a_lo)
+    return instructions
 
 def unsigned_long_greater(instruction):
     """ perform greater function on long numbers """
 
-
-    new_instruction = [
-        {
-        "op"  : "unsigned_greater",
-        "a"   : a_lo,
-        "b"   : b_lo,
-        "c"   : a_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "unsigned_greater",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : b_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "equal",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"  : "and",
-        "a"   : a_lo,
-        "b"   : a_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"   : "or",
-        "a"    : b_lo,
-        "b"    : a_hi,
-        "c"    : a_lo,
-        "d"    : -3,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "unsigned_greater", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({ "op"  : "unsigned_greater", "a":a_hi, "b":b_hi, "z":b_lo})
+    instructions.append({ "op"  : "equal",            "a":a_hi, "b":b_hi, "z":a_hi})
+    instructions.append({ "op"  : "and",              "a":a_lo, "b":a_hi, "z":a_hi})
+    instructions.append({ "op"  : "or",               "a":b_lo, "b":a_hi, "z":a_lo})
+    push(instructions, a_lo)
+    return instructions
 
 def long_greater_equal(instruction):
-
     """ perform greater function on long numbers """
 
-    new_instruction = [
-        {
-        "op"  : "unsigned_greater_equal",
-        "a"   : a_lo,
-        "b"   : b_lo,
-        "c"   : a_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "greater",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : b_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "equal",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"  : "and",
-        "a"   : a_lo,
-        "b"   : a_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"   : "or",
-        "a"    : b_lo,
-        "b"    : a_hi,
-        "c"    : a_lo,
-        "d"    : -3,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "unsigned_greater_equal", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({ "op"  : "greater",                "a":a_hi, "b":b_hi, "z":b_lo})
+    instructions.append({ "op"  : "equal",                  "a":a_hi, "b":b_hi, "z":a_hi})
+    instructions.append({ "op"  : "and",                    "a":a_lo, "b":a_hi, "z":a_hi})
+    instructions.append({ "op"  : "or",                     "a":b_lo, "b":a_hi, "z":a_lo})
+    push(instructions, a_lo)
+    return instructions
 
 def unsigned_long_greater_equal(instruction):
-
     """ perform greater equal function on long unsigned numbers """
 
-    new_instruction = [
-        {
-        "op"  : "unsigned_greater_equal",
-        "a"   : a_lo,
-        "b"   : b_lo,
-        "c"   : a_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "unsigned_greater",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : b_lo,
-        "d"   : 0,
-        },
-        {
-        "op"  : "equal",
-        "a"   : a_hi,
-        "b"   : b_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"  : "and",
-        "a"   : a_lo,
-        "b"   : a_hi,
-        "c"   : a_hi,
-        "d"   : 0,
-        },
-        {
-        "op"   : "or",
-        "a"    : b_lo,
-        "b"    : a_hi,
-        "c"    : a_lo,
-        "d"    : -3,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op" : "unsigned_greater_equal", "a":a_lo, "b":b_lo, "z":a_lo})
+    instructions.append({ "op" : "unsigned_greater",       "a":a_hi, "b":b_hi, "z":b_lo})
+    instructions.append({ "op" : "equal",                  "a":a_hi, "b":b_hi, "z":a_hi})
+    instructions.append({ "op" : "and",                    "a":a_lo, "b":a_hi, "z":a_hi})
+    instructions.append({ "op"  : "or",                    "a":b_lo, "b":a_hi, "z":a_lo})
+    push(instructions, a_lo)
+    return instructions
 
 def long_and(instruction):
-
     """ perform and function on long numbers """
 
-    new_instruction = [
-        #msb
-        {
-        "op"  : "and",
-        "a":a_hi,
-        "b":b_hi,
-        "c":a_hi,
-        "d":0,
-        },
-
-        #lsb
-        {
-        "op"  : "and",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":-2,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op":"and", "z":a_lo, "a":a_lo, "b":b_lo})
+    instructions.append({ "op":"and", "z":a_hi, "a":a_hi, "b":b_hi})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_or(instruction):
-
     """ perform or function on long numbers """
 
-    new_instruction = [
-        #msb
-        {
-        "op"  : "or",
-        "a":a_hi,
-        "b":b_hi,
-        "c":a_hi,
-        "d":0,
-        },
-
-        #lsb
-        {
-        "op"  : "or",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":-2,
-        },
-    ]
-
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "or", "z":a_lo, "a":a_lo, "b":b_lo})
+    instructions.append({ "op"  : "or", "z":a_hi, "a":a_hi, "b":b_hi})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_xor(instruction):
     """ perform xor function on long numbers """
 
-    new_instruction = [
-        #msb
-        {
-        "op"  : "xor",
-        "a":a_hi,
-        "b":b_hi,
-        "c":a_hi,
-        "d":0,
-        },
-
-        #lsb
-        {
-        "op"  : "xor",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":-2,
-        },
-    ]
-
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "xor", "z":a_lo, "a":a_lo, "b":b_lo})
+    instructions.append({ "op"  : "xor", "z":a_hi, "a":a_hi, "b":b_hi})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_not(instruction):
     """ perform not function on long numbers """
 
-    new_instruction = [
-        {
-        "op"  : "not",
-        "a":b_hi,
-        "b":b_hi,
-        "c":b_hi,
-        "d":0,
-        },
-        {
-        "op"  : "not",
-        "a":b_lo,
-        "b":b_lo,
-        "c":b_lo,
-        "d":0,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op" : "not", "z":a_lo, "a":a_lo})
+    instructions.append({ "op" : "not", "z":a_hi, "a":a_hi})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_add(instruction):
     """ perform add function on long numbers """
 
-    new_instruction = [
-        #add
-        {
-        "op"  : "add",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        "pop":True,
-        },
-
-        #add_with_carry
-        {
-        "op"  : "add_with_carry",
-        "a":a_hi,
-        "b":b_hi,
-        "c":a_hi,
-        "d":-2,
-        "pop":True,
-        },
-
-    ]
-
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "add", "z":a_lo, "a":a_lo, "b":b_lo})
+    instructions.append({ "op"  : "add_with_carry", "z":a_hi, "a":a_hi, "b":b_hi})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_subtract(instruction):
     """ perform subtract function on long numbers """
 
-    new_instruction = [
-        {
-        "op"  : "subtract",
-        "a":a_lo,
-        "b":b_lo,
-        "c":a_lo,
-        "d":0,
-        },
-
-        #add_with_carry
-        {
-        "op"  : "subtract_with_carry",
-        "a":a_hi,
-        "b":b_hi,
-        "c":a_hi,
-        "d":-2,
-        },
-
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "subtract", "z":a_lo, "a":a_lo, "b":b_lo})
+    instructions.append({ "op"  : "subtract_with_carry", "z":a_hi, "a":a_hi, "b":b_hi})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_multiply(instruction):
 
     """ perform multiply function on long numbers """
 
-    new_instruction = [
-        {
-        "op"  : "multiply",
-        "a":b_hi,
-        "b":a_lo,
-        "c":b_hi,
-        "d":0,
-        },
-        {
-        "op"  : "multiply",
-        "a":b_lo,
-        "b":a_hi,
-        "c":a_hi,
-        "d":0,
-        },
-        {
-        "op"  : "multiply",
-        "a":b_lo,
-        "b":a_lo,
-        "c":a_lo,
-        "d":0,
-        },
-        {
-        "op"  : "carry",
-        "a":b_hi,
-        "b":b_hi,
-        "c":b_lo,
-        "d":0,
-        },
-        {
-        "op"  : "add",
-        "a":b_lo,
-        "b":b_hi,
-        "c":b_lo,
-        "d":0,
-        },
-        {
-        "op"  : "add",
-        "a":a_hi,
-        "b":b_lo,
-        "c":a_hi,
-        "d":-2,
-        },
-    ]
-
-    return new_instruction
+    instructions = []
+    pop(instructions, b_hi)
+    pop(instructions, b_lo)
+    pop(instructions, a_hi)
+    pop(instructions, a_lo)
+    instructions.append({ "op"  : "multiply", "z":b_hi, "a":b_hi, "b":a_lo})
+    instructions.append({ "op"  : "multiply", "z":a_hi, "a":b_lo, "b":a_hi})
+    instructions.append({ "op"  : "multiply", "z":a_lo, "a":b_lo, "b":a_lo})
+    instructions.append({ "op"  : "carry", "z":b_lo})
+    instructions.append({ "op"  : "add", "z":b_lo, "a":b_lo, "b":b_hi})
+    instructions.append({ "op"  : "add", "z":a_hi, "a":a_hi, "b":b_lo})
+    push(instructions, a_lo)
+    push(instructions, a_hi)
+    return instructions
 
 def long_float_add(instruction):
-
-    new_instruction = [
-        {
-        "op"  : "pop_b_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_b_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "long_float_add",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":0,
-        },
-        {
-        "op"  : "push_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-        {
-        "op"  : "push_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, temp)
+    instructions.append({"op":"b_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"b_lo", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    instructions.append({"op":"long_float_add"})
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    push(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    push(instructions, temp)
+    return instructions
 
 def long_float_subtract(instruction):
-
-    new_instruction = [
-        {
-        "op"  : "pop_b_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_b_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "long_float_subtract",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":0,
-        },
-        {
-        "op"  : "push_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-        {
-        "op"  : "push_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, temp)
+    instructions.append({"op":"b_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"b_lo", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    instructions.append({"op":"long_float_subtract"})
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    push(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    push(instructions, temp)
+    return instructions
 
 def long_float_multiply(instruction):
-
-    new_instruction = [
-        {
-        "op"  : "pop_b_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_b_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "long_float_multiply",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":0,
-        },
-        {
-        "op"  : "push_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-        {
-        "op"  : "push_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, temp)
+    instructions.append({"op":"b_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"b_lo", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    instructions.append({"op":"long_float_multiply"})
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    push(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    push(instructions, temp)
+    return instructions
 
 def long_float_divide(instruction):
-
-    new_instruction = [
-        {
-        "op"  : "pop_b_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_b_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "pop_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":-1,
-        },
-        {
-        "op"  : "long_float_divide",
-        "a":-1,
-        "b":-1,
-        "c":-1,
-        "d":0,
-        },
-        {
-        "op"  : "push_a_lo",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-        {
-        "op"  : "push_a_hi",
-        "a":-1,
-        "b":-1,
-        "c":0,
-        "d":1,
-        },
-    ]
-    return new_instruction
+    instructions = []
+    pop(instructions, temp)
+    instructions.append({"op":"b_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"b_lo", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    pop(instructions, temp)
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    instructions.append({"op":"long_float_divide"})
+    instructions.append({"op":"a_lo", "z":temp, "a":temp})
+    push(instructions, temp)
+    instructions.append({"op":"a_hi", "z":temp, "a":temp})
+    push(instructions, temp)
+    return instructions

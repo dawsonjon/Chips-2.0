@@ -74,7 +74,9 @@ def compile_python_model(
         options=[], 
         parameters = {}, 
         inputs = {}, 
-        outputs = {}
+        outputs = {},
+        debug = False,
+        profile = False,
         ):
 
     generate_library()
@@ -90,8 +92,8 @@ def compile_python_model(
                 for i in instructions:
                     print i
 
-            debug = "debug" in options
-            profile = "profile" in options
+            debug = debug or ("debug" in options)
+            profile = profile or ("profile" in options)
             model = generate_python_model(
                     debug,
                     input_file,
