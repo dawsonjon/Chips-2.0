@@ -831,21 +831,25 @@ def generate_CHIP(input_file,
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "float_add":
+            output_file.write("          adder_a_stb <= 1;\n")
             output_file.write("          adder_a <= operand_a;\n")
             output_file.write("          adder_b <= operand_b;\n")
             output_file.write("          state <= adder_write_a;\n")
 
         elif instruction["op"] == "float_subtract":
+            output_file.write("          adder_a_stb <= 1;\n")
             output_file.write("          adder_a <= operand_a;\n")
             output_file.write("          adder_b <= {~operand_b[31], operand_b[30:0]};\n")
             output_file.write("          state <= adder_write_a;\n")
 
         elif instruction["op"] == "float_multiply":
+            output_file.write("          multiplier_a_stb <= 1;\n")
             output_file.write("          multiplier_a <= operand_a;\n")
             output_file.write("          multiplier_b <= operand_b;\n")
             output_file.write("          state <= multiplier_write_a;\n")
 
         elif instruction["op"] == "float_divide":
+            output_file.write("          divider_a_stb <= 1;\n")
             output_file.write("          divider_a <= operand_a;\n")
             output_file.write("          divider_b <= operand_b;\n")
             output_file.write("          state <= divider_write_a;\n")
