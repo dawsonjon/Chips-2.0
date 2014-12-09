@@ -23,13 +23,16 @@ def push_pop(instructions):
             next_instruction = {"op"}
 
         if instruction["op"] == "push" and next_instruction["op"] == "pop":
-            new_instructions.append({
-                "op":"addl", 
-                "literal":0, 
-                "z":next_instruction["reg"], 
-                "a":instruction["reg"],
-                "comment":"pushpop"
-            })
+            to = next_instruction["reg"]
+            from_ = instruction["reg"]
+            if to != from_:
+                new_instructions.append({
+                    "op":"addl", 
+                    "literal":0, 
+                    "z":next_instruction["reg"], 
+                    "a":instruction["reg"],
+                    "comment":"pushpop"
+                })
             i += 1
         elif instruction["op"] == "push":
             #push
