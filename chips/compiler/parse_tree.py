@@ -1934,9 +1934,10 @@ class Variable(Object):
 
     def generate(self):
         instructions = []
-        instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
         if self.instance.local:
-            instructions.append({"op":"add", "z":temp, "a":temp, "b":frame})
+            instructions.append({"op":"addl", "z":temp, "a":frame, "literal":self.instance.offset})
+        else:
+            instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
         instructions.append({"op":"load", "z":temp1, "a":temp})
         push(instructions, temp1)
         if self.size() == 8:
@@ -1947,18 +1948,6 @@ class Variable(Object):
         return instructions
 
     def copy(self, expression, leave_on_stack=True):
-
-        instructions = []
-        instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
-        if self.instance.local:
-            instructions.append({"op":"add", "z":temp, "a":temp, "b":frame})
-        pop(instructions, temp1)
-        instructions.append({"op":"store", "b":temp1, "a":temp})
-        if self.size() == 8:
-            instructions.append({"op":"addl", "z":temp, "a":temp, "literal":1})
-            pop(instructions, temp1)
-            instructions.append({"op":"store", "b":temp1, "a":temp})
-
         instructions = []
         instructions.extend(expression.generate())
         instructions.extend(self.address())
