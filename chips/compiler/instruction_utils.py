@@ -24,15 +24,17 @@ def pop_object(instructions, n, leave_on_stack):
         else:
             pop(instructions, temp)
         instructions.append({"op":"store", "a":obj, "b":temp})
-        instructions.append({"op":"addl", "z":obj, "a":obj, "literal":-1})
+        if i < n-1: 
+            instructions.append({"op":"addl", "z":obj, "a":obj, "literal":-1})
     return instructions
 
 def push_object(instructions, n):
     pop(instructions, obj)
     for i in range(n):
         instructions.append({"op":"load", "z":temp, "a":obj})
+        if i < n-1: 
+            instructions.append({"op":"addl", "z":obj, "a":obj, "literal":1})
         push(instructions, temp)
-        instructions.append({"op":"addl", "z":obj, "a":obj, "literal":1})
     return instructions
 
 def pop_global(instructions, n, offset):
@@ -40,33 +42,35 @@ def pop_global(instructions, n, offset):
     for i in range(n):
         pop(instructions, temp)
         instructions.append({"op":"store", "a":obj, "b":temp})
-        instructions.append({"op":"addl", "z":obj, "a":obj, "literal":-1})
+        if i < n-1:
+            instructions.append({"op":"addl", "z":obj, "a":obj, "literal":-1})
     return instructions
 
 def push_global(instructions, n, offset):
     instructions.append({"op":"literal", "z":obj, "literal":offset})
     for i in range(n):
         instructions.append({"op":"load", "z":temp, "a":obj})
+        if i < n-1:
+            instructions.append({"op":"addl", "z":obj, "a":obj, "literal":1})
         push(instructions, temp)
-        instructions.append({"op":"addl", "z":obj, "a":obj, "literal":1})
     return instructions
 
 def pop_local(instructions, n, offset):
-    instructions.append({"op":"literal", "z":obj, "literal":offset+n-1})
-    instructions.append({"op":"add", "z":obj, "a":obj, "b":frame})
+    instructions.append({"op":"addl", "z":obj, "a":frame, "literal":offset+n-1})
     for i in range(n):
         pop(instructions, temp)
         instructions.append({"op":"store", "a":obj, "b":temp})
-        instructions.append({"op":"addl", "z":obj, "a":obj, "literal":-1})
+        if i < n-1:
+            instructions.append({"op":"addl", "z":obj, "a":obj, "literal":-1})
     return instructions
 
 def push_local(instructions, n, offset):
-    instructions.append({"op":"literal", "z":obj, "literal":offset})
-    instructions.append({"op":"add", "z":obj, "a":obj, "b":frame})
+    instructions.append({"op":"addl", "z":obj, "a":frame, "literal":offset+n-1})
     for i in range(n):
         instructions.append({"op":"load", "z":temp, "a":obj})
+        if i < n-1:
+            instructions.append({"op":"addl", "z":obj, "a":obj, "literal":1})
         push(instructions, temp)
-        instructions.append({"op":"addl", "z":obj, "a":obj, "literal":1})
     return instructions
 
 def call(instructions, label):

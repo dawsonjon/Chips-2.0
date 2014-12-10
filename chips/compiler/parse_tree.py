@@ -1768,9 +1768,10 @@ class Struct(Object):
 
     def address(self):
         instructions = []
-        instructions.append({ "op" : "literal", "z":temp, "literal":self.instance.offset})
         if self.instance.local:
-            instructions.append({"op" : "add", "z":temp, "a":temp, "b":frame})
+            instructions.append({ "op" : "addl", "z":temp, "a":frame, "literal":self.instance.offset})
+        else:
+            instructions.append({ "op" : "literal", "z":temp, "literal":self.instance.offset})
         push(instructions, temp)
         return instructions
 
@@ -1855,8 +1856,7 @@ class Array(Object):
     def address(self):
         instructions = []
         if self.instance.local:
-            instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
-            instructions.append({"op":"add", "z":temp, "a":temp, "b":frame})
+            instructions.append({"op":"addl", "z":temp, "a":frame, "literal":self.instance.offset})
             push(instructions, reg=temp)
         else:
             instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
@@ -1924,8 +1924,7 @@ class Variable(Object):
     def address(self):
         instructions = []
         if self.instance.local:
-            instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
-            instructions.append({"op":"add", "z":temp, "a":temp, "b":frame})
+            instructions.append({"op":"addl", "z":temp, "a":frame, "literal":self.instance.offset})
             push(instructions, reg=temp)
         else:
             instructions.append({"op":"literal", "z":temp, "literal":self.instance.offset})
