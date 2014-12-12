@@ -174,6 +174,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
 
       ("load_data", 32),
       ("write_output", 32),
+      ("write_value", 32),
       ("read_input", 32),
 
       ("literal_2", 32),
@@ -543,7 +544,7 @@ def generate_CHIP(input_file,
     output_file.write("  \n  always @(posedge clk)\n")
     output_file.write("  begin\n")
     output_file.write("    load_data <= memory[load_address];\n")
-    output_file.write("    if(store_enable) begin\n")
+    output_file.write("    if(store_enable && state == execute) begin\n")
     output_file.write("      memory[store_address] <= store_data;\n")
     output_file.write("    end\n")
     output_file.write("  end\n\n")
@@ -620,6 +621,7 @@ def generate_CHIP(input_file,
     output_file.write("    end\n")
     output_file.write("    //execute\n")
     output_file.write("    execute: begin\n")
+    #output_file.write("      $display(program_counter_2);\n")
     output_file.write("      program_counter <= program_counter + 1;\n")
     output_file.write("      address_z_3 <= address_z_2;\n")
     output_file.write("      case(opcode_2)\n\n")
@@ -946,6 +948,7 @@ def generate_CHIP(input_file,
         elif instruction["op"] == "write":
             output_file.write("          state <= write;\n")
             output_file.write("          write_output <= operand_a;\n")
+            output_file.write("          write_value <= operand_b;\n")
 
         elif instruction["op"] == "assert":
             output_file.write("          if (operand_a == 0) begin\n")
@@ -1048,7 +1051,7 @@ def generate_CHIP(input_file,
             output_file.write("      %s:\n"%(handle))
             output_file.write("      begin\n")
             output_file.write("        s_output_%s_stb <= 1;\n"%output_name)
-            output_file.write("        s_output_%s <= operand_b;\n"%output_name)
+            output_file.write("        s_output_%s <= write_value;\n"%output_name)
             output_file.write("        if (output_%s_ack && s_output_%s_stb) begin\n"%(
               output_name,
               output_name))

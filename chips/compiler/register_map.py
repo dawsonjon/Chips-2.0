@@ -1,34 +1,32 @@
 temp = 0 
 temp1 = 1 
-temp2 = 2 
-obj = 3 
-tos = 4 
-frame = 5 
-tos_copy = 6 
-return_address = 7 
-return_frame = 8 
-a_hi = 9
-b_hi = 10
-a_lo = 11
-b_lo = 12
-thirty_two = 13
-greater_than_32 = 14
+address = 2 
+tos = 3 
+frame = 4 
+tos_copy = 5 
+return_address = 6 
+return_frame = 7 
+result = 8
+result_hi = 9
+result_b = 10
+result_b_hi = 11
+thirty_two = 12
+greater_than_32 = 13
 
 regmap = {
     "temp" : 0 ,
     "temp1" : 1 ,
-    "temp2" : 2 ,
-    "obj" : 3 ,
-    "tos" : 4 ,
-    "frame" : 5 ,
-    "tos_copy" : 6 ,
-    "return_address" : 7 ,
-    "return_frame" : 8 ,
-    "a_hi" : 9,
-    "b_hi" : 10,
-    "a_lo" : 11,
-    "b_lo" : 12,
-    "thirty_two" : 13,
-    "greater_than_32" : 14,
+    "address" : 2 ,
+    "tos" : 3 ,
+    "frame" : 4 ,
+    "tos_copy" : 5 ,
+    "return_address" : 6 ,
+    "return_frame" : 7 ,
+    "result" : 8,
+    "result_hi" : 9,
+    "result_b" : 10,
+    "result_b_hi" : 11,
+    "thirty_two" : 12,
+    "greater_than_32" : 13,
 }
 rregmap = dict((j, i) for i, j in regmap.iteritems())

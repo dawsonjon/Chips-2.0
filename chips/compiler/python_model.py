@@ -159,7 +159,7 @@ class PythonModel:
 
             tos = self.registers.get(register_map.tos, 0)
             frame = self.registers.get(register_map.frame, 0)
-            for i in range(frame, tos):
+            for i in range(0, tos):
                 print i, self.memory.get(i, 0)
 
         if self.profile:
@@ -356,10 +356,10 @@ class PythonModel:
            b = operand_b
            result = int32(int32(a) != int32(b))
         elif instruction["op"] == "jmp_if_false":
-            if operand_b == 0:
+            if operand_a == 0:
                 self.program_counter = literal
         elif instruction["op"] == "jmp_if_true":
-            if operand_b != 0:
+            if operand_a != 0:
                 self.program_counter = literal
         elif instruction["op"] == "goto":
             self.program_counter = literal
@@ -367,11 +367,11 @@ class PythonModel:
             value = self.input_files[instruction["filename"]].getline()
             result = uint32(value)
         elif instruction["op"] == "float_file_write":
-            self.output_files[instruction["file_name"]].write("%f\n"%bits_to_float(operand_b))
+            self.output_files[instruction["file_name"]].write("%f\n"%bits_to_float(operand_a))
         elif instruction["op"] == "unsigned_file_write":
-            self.output_files[instruction["file_name"]].write("%i\n"%uint32(operand_b))
+            self.output_files[instruction["file_name"]].write("%i\n"%uint32(operand_a))
         elif instruction["op"] == "file_write":
-            self.output_files[instruction["file_name"]].write("%i\n"%int32(operand_b))
+            self.output_files[instruction["file_name"]].write("%i\n"%int32(operand_a))
         elif instruction["op"] == "read":
             if operand_a not in self.inputs:
                 result = 0
@@ -452,7 +452,7 @@ class PythonModel:
             long_word = join_words(self.a_hi, self.a_lo)
             self.output_files[instruction["file_name"]].write("%f\n"%long_word)
         elif instruction["op"] == "assert":
-            if operand_b == 0:
+            if operand_a == 0:
                 print "(assertion failed at line: %s in file: %s)"%(
                 instruction["line"],
                 instruction["file"])

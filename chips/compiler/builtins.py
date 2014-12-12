@@ -58,7 +58,9 @@ int modulo_xxxx(int dividend, int divisor){
     udividend = dividend_sign ? -dividend : dividend;
     udivisor = divisor_sign ? -divisor : divisor;
     modulo = unsigned_modulo_xxxx(udividend, udivisor);
+    report(modulo);
     modulo = dividend_sign ? -modulo : modulo;
+    report(modulo);
     return modulo;
 }
 
