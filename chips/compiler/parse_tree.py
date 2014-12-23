@@ -1733,6 +1733,18 @@ class Ready(Expression):
 
         return instructions
 
+class OutputReady(Expression):
+
+    def __init__(self, handle):
+        self.handle = handle
+        Expression.__init__(self, "int", 4, False)
+
+    def generate(self):
+        instructions = self.handle.generate()
+        instructions.append({"op":"output_ready", "z":result, "a":result})
+
+        return instructions
+
 class Struct(Object):
 
     def __init__(self, instance, declaration):

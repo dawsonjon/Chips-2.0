@@ -401,7 +401,7 @@ def generate_CHIP(input_file,
 
     output_file.write("  output reg exception;\n")
     output_file.write("  reg [%s:0] instructions [%i:0];\n"%(instruction_bits-1, len(instructions)-1))
-    output_file.write("  reg [31:0] memory [%i:0];\n"%4095)
+    output_file.write("  reg [31:0] memory [%i:0];\n"%6143)
     output_file.write("  reg [31:0] registers [15:0];\n")
     output_file.write("  wire [31:0] operand_a;\n")
     output_file.write("  wire [31:0] operand_b;\n")
@@ -940,7 +940,18 @@ def generate_CHIP(input_file,
             for handle, input_name in allocator.input_names.iteritems():
                 output_file.write("            %s:\n"%(handle))
                 output_file.write("            begin\n")
-                output_file.write("              result[0] <= s_input_%s_ack;\n"%input_name)
+                output_file.write("              result[0] <= input_%s_stb;\n"%input_name)
+                output_file.write("            end\n")
+            output_file.write("          endcase\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "output_ready":
+            output_file.write("          result <= 0;\n")
+            output_file.write("          case(operand_a)\n\n")
+            for handle, output_name in allocator.output_names.iteritems():
+                output_file.write("            %s:\n"%(handle))
+                output_file.write("            begin\n")
+                output_file.write("              result[0] <= output_%s_ack;\n"%output_name)
                 output_file.write("            end\n")
             output_file.write("          endcase\n")
             output_file.write("          write_enable <= 1;\n")

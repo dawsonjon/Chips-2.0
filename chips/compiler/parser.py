@@ -1162,6 +1162,8 @@ class Parser:
                 expression = self.parse_fputc()
             elif name == "ready":
                 expression = self.parse_ready()
+            elif name == "output_ready":
+                expression = self.parse_output_ready()
             elif name == "file_read":
                 expression = self.parse_file_read()
             elif name == "file_write":
@@ -1311,6 +1313,15 @@ class Parser:
         handle = self.parse_expression()
         self.tokens.expect(")")
         return Ready(handle)
+
+    def parse_output_ready(self):
+
+        """parse the built-in function ready"""
+
+        self.tokens.expect("(")
+        handle = self.parse_expression()
+        self.tokens.expect(")")
+        return OutputReady(handle)
 
     def parse_output(self):
 

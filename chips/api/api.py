@@ -99,7 +99,7 @@ class Chip:
                 ports.append(".output_%s_ack(%s_ack)"%(name, i.name))
             output_file.write(",\n    ".join(ports))
             output_file.write(");\n")
-        output_file.write("  assign exception = %s;\n"%(" or ".join(["exception_" + str(id(i)) for i in self.instances])))
+        output_file.write("  assign exception = %s;\n"%(" || ".join(["exception_" + str(id(i)) for i in self.instances])))
         output_file.write("endmodule\n")
         output_file.close()
 

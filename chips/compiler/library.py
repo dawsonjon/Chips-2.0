@@ -112,18 +112,13 @@ long fget_long(unsigned handle){
 
 //Print an unsigned int to stdout in hex format
 void fprint_uhex(unsigned uhex, unsigned handle){
-        unsigned digit_3 = (uhex >> 12) & 0xf;
-        unsigned digit_2 = (uhex >> 8) & 0xf;
-        unsigned digit_1 = (uhex >> 4) & 0xf;
-        unsigned digit_0 = uhex & 0xf;
-        if(digit_3 < 9) fputc(digit_3 | 0x30, handle);
-        else fputc(digit_3 + 87, handle);
-        if(digit_2 < 9) fputc(digit_2 | 0x30, handle);
-        else fputc(digit_2 + 87, handle);
-        if(digit_1 < 9) fputc(digit_1 | 0x30, handle);
-        else fputc(digit_1 + 87, handle);
-        if(digit_0 < 9) fputc(digit_0 | 0x30, handle);
-        else fputc(digit_0 + 87, handle);
+        char digits[] = "0123456789abcdef";
+        unsigned i, value;
+        for(i=0; i<8; i++){
+            value = uhex >> 28;
+            uhex <<= 4;
+            fputc(digits[value], handle);
+        }
 }
 
 //Print an unsigned int to stdout in decimal format
@@ -203,7 +198,11 @@ void fprint_float(float f, handle){
 
     while(significance >= 1.0f){
         digit = f / significance; 
-        print |= digit;
+        if(significance < 10.0){
+            print = 1;
+        } else {
+            print |= digit;
+        }
         if(print){
             fputc(digit + '0', handle);
         }
@@ -234,7 +233,11 @@ void fprint_double(double f, handle){
 
     while(significance >= 1.0){
         digit = f / significance; 
-        print |= digit;
+        if(significance < 10.0){
+            print = 1;
+        } else {
+            print |= digit;
+        }
         if(print){
             fputc(digit + '0', handle);
         }

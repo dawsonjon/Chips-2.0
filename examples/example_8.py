@@ -12,6 +12,7 @@ def test():
     im = Image.open("test.bmp")
     image_data = list(im.getdata())
     width, height = im.size
+    print width, height
     
     chip = Chip("edge_detection")
     image_in = Stimulus(chip, "image_in", "int", image_data)

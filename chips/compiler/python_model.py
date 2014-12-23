@@ -186,6 +186,7 @@ class PythonModel:
         result = None
 
         if instruction["op"] == "stop":
+            self.program_counter = this_instruction
             wait = True
             for file_ in self.input_files.values():
                 file_.close()
@@ -387,6 +388,15 @@ class PythonModel:
             else:
                 input_ = self.inputs[operand_a]
                 if input_.q:
+                    result = uint32(1)
+                else:
+                    result = uint32(0)
+        elif instruction["op"] == "output_ready":
+            if operand_a not in self.outputs:
+                operand_a = 0
+            else:
+                output_ = self.outputs[operand_a]
+                if not output_.q:
                     result = uint32(1)
                 else:
                     result = uint32(0)
