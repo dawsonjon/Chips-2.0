@@ -49,7 +49,7 @@ def comp(input_file, options=[], parameters={}):
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
                 for i in instructions:
-                    print i
+                    print i.get("op", "-"), i.get("z", "-"), i.get("a", "-"), i.get("b", "-"), i.get("literal", "-"), i.get("trace")
             output_file = name + ".v"
             output_file = open(output_file, "w")
             inputs, outputs = generate_CHIP_area(
@@ -90,7 +90,7 @@ def compile_python_model(
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
                 for i in instructions:
-                    print i
+                    print i.get("op", "-"), i.get("z", "-"), i.get("a", "-"), i.get("b", "-"), i.get("literal", "-"), i.get("trace")
 
             debug = debug or ("debug" in options)
             profile = profile or ("profile" in options)

@@ -216,6 +216,7 @@ int long_float_gt_xxxx(long a, long b){
     if (b < 0) {
         b = 0x8000000000000000lu - b;
     }
+    report(a);
     return  a > b;
 }
 

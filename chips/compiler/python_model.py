@@ -152,14 +152,18 @@ class PythonModel:
         instruction = self.instructions[self.program_counter]
 
         if self.debug:
-            print "executing...", self.program_counter, instruction["op"], "z:", register_map.rregmap[instruction.get("z", 0)], "a:", register_map.rregmap[instruction.get("a", 0)], "b:", register_map.rregmap[instruction.get("b", 0)], instruction.get("literal", "-")
+            print "executing...", self.program_counter, instruction["op"], "z:", register_map.rregmap[instruction.get("z", 0)], "a:", register_map.rregmap[instruction.get("a", 0)], "b:", register_map.rregmap[instruction.get("b", 0)], instruction.get("literal", "-"), instruction.get("trace", "-")
 
             for name, register in register_map.regmap.iteritems():
                 print "    ", name, self.registers.get(register, "x")
 
             tos = self.registers.get(register_map.tos, 0)
             frame = self.registers.get(register_map.frame, 0)
-            for i in range(0, tos):
+            for i in range(0, tos+1):
+                if i == frame:
+                    print "->",
+                else:
+                    print "  ",
                 print i, self.memory.get(i, 0)
 
         if self.profile:

@@ -4,7 +4,7 @@ __version__ = "0.1"
 
 import struct
 import sys
-from copy import copy
+from copy import copy, deepcopy
 from operator import mul
 
 from parse_tree import *
@@ -13,6 +13,7 @@ from allocator import Allocator
 
 types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int", "void"]
 numeric_types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int"]
+integer_like = ["long", "int"]
 storage_specifiers = ["const"]
 
 class GlobalScope:
@@ -21,6 +22,11 @@ class GlobalScope:
         self.is_global = True
         self.referenced_globals = []
 
+class TypeSpecifier:
+    def __init__(self, type_, signed, const):
+        self.type_ = type_
+        self.signed = signed
+        self.const = const
 
 class Parser:
 
@@ -37,7 +43,7 @@ class Parser:
         self.initialize_memory = initialize_memory
 
     def parse_process(self):
-        process = Process()
+        process = Process(Trace(self))
         process.allocator = self.allocator
         process.inputs = []
         process.outputs = []
@@ -60,24 +66,21 @@ class Parser:
         while self.tokens.peek() in types + self.structs + storage_specifiers:
             type_specifiers.append(self.tokens.get())
 
+        type_ = "int"
         signed = True
         if "unsigned" in type_specifiers:
             signed = False
             if "signed" in type_specifiers:
                 self.tokens.error("Cannot be signed and unsigned")
 
-        size = 4
         if "long" in type_specifiers:
             if "short" in type_specifiers:
                 self.tokens.error("Cannot be long and short")
-            size = 8
+            type_ = "long"
 
-        type_ = "int"
         for i in type_specifiers:
             if i in self.structs:
-                type_ = i
-                size = self.scope[i].size()
-                signed = False
+                type_ = self.scope[i]
 
         if "float" in type_specifiers:
             if "short" in type_specifiers:
@@ -87,7 +90,6 @@ class Parser:
             if "unsigned" in type_specifiers:
                 self.tokens.error("Float cannot be unsigned")
             type_ = "float"
-            size = 4
             signed = True
 
         if "double" in type_specifiers:
@@ -95,92 +97,82 @@ class Parser:
                 self.tokens.error("Double cannot be short")
             if "unsigned" in type_specifiers:
                 self.tokens.error("Double cannot be unsigned")
-            type_ = "float"
-            size = 8
+            type_ = "double"
             signed = True
 
-        const = False 
+        const = False
         if "const" in type_specifiers:
             const = True
 
         if "void" in type_specifiers:
             type_ = "void"
-            size = 0
             signed = False
 
+        if self.tokens.peek() == "*":
+            self.tokens.expect("*")
+            type_ = PointerTo(type_)
 
-        return type_, size, signed, const
+        return TypeSpecifier(type_, signed, const)
 
     def parse_argument(self):
-        type_, size, signed, const = self.parse_type_specifier()
+        type_specifier = self.parse_type_specifier()
         argument = self.tokens.get()
 
-        if type_ in ["void"]:
+        if type_specifier.type_ == "void":
             self.tokens.error("argument cannot be void")
-        elif type_ in self.structs:
-            declaration = self.scope[type_]
-        else:
-            declaration = VariableDeclaration(
-                argument,
-                type_,
-                size,
-                signed,
-                const
-            )
 
-        #Gather dimensions of subarrays
-        array_number_of_elements = []
-        while self.tokens.peek() == "[":
-            self.tokens.expect("[")
-            if self.tokens.peek() != "]":
-                size_expression = self.parse_ternary_expression()
-                if size_expression.type_() != "int":
-                    self.tokens.error("Array size must be an integer like expression")
-                try:
-                    array_number_of_elements.append(size_expression.value())
-                except NotConstant:
-                    self.tokens.error("Array size must be constant")
-            else:
-                array_number_of_elements.append(None)
-            self.tokens.expect("]")
+        if type_specifier.type_ in self.structs:
+            type_ = self.scope[type_].type_
 
-        array_number_of_elements.reverse()
+        #Gather dimensions of sub arrays
+        if self.tokens.peek() == "[":
+            type_specifier.type_ = ArrayOf(type_specifier.type_)
+            type_specifier.type_.dimensions = []
+            while self.tokens.peek() == "[":
+                self.tokens.expect("[")
+                if self.tokens.peek() != "]":
+                    size_expression = self.parse_ternary_expression()
+                    if size_expression.type_() not in integer_like:
+                        self.tokens.error("Array size must be an integer like expression")
+                    try:
+                        type_specifier.type_.dimensions.append(size_expression.value())
+                    except NotConstant:
+                        self.tokens.error("Array size must be constant")
+                else:
+                    type_specifier.type_.dimensions.append(None)
+                self.tokens.expect("]")
 
-        #Encapsulate elements in arrays, starting from the right most
-        for number_of_elements in array_number_of_elements[:-1]:
-            if number_of_elements is None:
-                self.tokens.error("Inner array range must be specified")
-            declaration = ArrayDeclaration(
-                elements = number_of_elements,
-                element_declaration = declaration,
-            )
-        for number_of_elements in array_number_of_elements[-1:]:
-            #if number_of_elements is None:
-            number_of_elements = 1
-            declaration = ArrayDeclaration(
-                elements = number_of_elements,
-                element_declaration = declaration,
-            )
+            #Encapsulate elements in arrays, starting from the right most
+            for number_of_elements in type_specifier.type_.dimensions[1:]:
+                if number_of_elements is None:
+                    self.tokens.error("Inner array range must be specified")
 
-        return argument, declaration
+            type_specifier.type_.dimensions.reverse()
+
+        return argument, type_specifier
 
     def parse_function(self):
 
         #Check the type specification
         #
-        type_, size, signed, const = self.parse_type_specifier()
+        type_specifier = self.parse_type_specifier()
         name = self.tokens.get()
 
         #At this point we don;t know whether this is a function or a variable
         #check for a ( and make a decision.
         #
         if self.tokens.peek() != "(":
-            return self.parse_global_declaration(type_, size, signed, const, name)
+            return self.parse_global_declaration(name, type_specifier)
 
         #parse the function argument list
         #
         self.tokens.expect("(")
-        function = Function(name, type_, size, signed)
+        function = Function(
+                Trace(self), 
+                name, 
+                type_specifier.type_,
+                type_specifier.signed
+        )
         #add the function to the scope before starting
         self.scope[function.name] = function
         #store the scope so that we can put it back when we are done
@@ -199,26 +191,25 @@ class Parser:
         #for every argument decrease the offset by the size of the
         #argument so that the offsets are correctly assigned later.
         #
-        #Exception - arrays are passed as references not coppies
+        #Exception - arrays are passed as references not copies
         #argument_size returns the size of an array reference
         #in this case, but in all other cases returns the size of an object.
-        for argument, declaration in arguments:
-            function.offset -= declaration.argument_size()//4
+        for argument, argument_declaration in arguments:
+            function.offset -= type_arg_size(argument_declaration.type_)//4
         function.arguments = []
 
         #arguments look like a series of declarations, for each argument
         #create an instance - like a local variable.
-        #
-        #Exception - arrays are passed as references not coppies
+        #Exception - arrays are passed as references not copies
         #argument instance returns an instance of a reference to an array
         #in this case, but in all other cases returns an instance of an object.
-        for argument, declaration in arguments:
-            instance = declaration.argument_instance(self.function)
+        for argument, argument_declaration in arguments:
+            instance = Argument(Trace(self), argument_declaration, self.function)
             self.scope[argument] = instance
-            function.arguments.append(instance.reference())
+            function.arguments.append(instance.reference(Trace(self)))
 
         function.statement = self.parse_statement()
-        if type_ != "void" and not hasattr(function, "return_statement"):
+        if type_specifier.type_ != "void" and not hasattr(function, "return_statement"):
             self.tokens.error("Non-void function must have a return statement")
 
         #Put back the scope as it was
@@ -231,21 +222,21 @@ class Parser:
         return function
 
     def parse_break(self):
-        break_ = Break()
+        break_ = Break(Trace(self))
         break_.loop = self.loop
         self.tokens.expect("break")
         self.tokens.expect(";")
         return break_
 
     def parse_continue(self):
-        continue_ = Continue()
+        continue_ = Continue(Trace(self))
         continue_.loop = self.loop
         self.tokens.expect("continue")
         self.tokens.expect(";")
         return continue_
 
     def parse_return(self):
-        return_ = Return()
+        return_ = Return(Trace(self))
         return_.function = self.function
         self.function.return_statement = return_
         self.tokens.expect("return")
@@ -253,24 +244,19 @@ class Parser:
         if self.function.type_() != "void":
             expression = self.parse_expression()
 
-            if self.function.type_() == "float" and self.function.size() == 8:
+            if self.function.type_() == "double":
                 expression = self.to_double(expression)
-            elif self.function.type_() == "float" and self.function.size() == 4:
+            elif self.function.type_() == "float":
                 expression = self.to_float(expression)
-            elif self.function.type_() == "int" and self.function.size() == 8:
+            elif self.function.type_() == "long":
                 expression = self.to_long(expression)
-            elif self.function.type_() == "int" and self.function.size() == 4:
+            elif self.function.type_() == "int":
                 expression = self.to_int(expression)
-            elif self.function.type_() != expression.type_():
+            elif not self.function.type_() == expression.type_():
                 self.tokens.error(
                     "type mismatch in return statement expected: %s actual: %s"%(
                         self.function.type_(),
                         expression.type_()))
-            elif self.function.size() != expression.size():
-                self.tokens.error(
-                    "size mismatch in return statement expected: %s actual: %s"%(
-                        self.function.size(),
-                        expression.size()))
 
             return_.expression = expression
 
@@ -278,7 +264,7 @@ class Parser:
         return return_
 
     def parse_assert(self):
-        assert_ = Assert()
+        assert_ = Assert(Trace(self))
         self.tokens.expect("assert")
         self.tokens.expect("(")
         assert_.expression = self.parse_expression()
@@ -289,7 +275,7 @@ class Parser:
         return assert_
 
     def parse_report(self):
-        report_ = Report()
+        report_ = Report(Trace(self))
         self.tokens.expect("report")
         self.tokens.expect("(")
         report_.expression = self.parse_expression()
@@ -300,7 +286,7 @@ class Parser:
         return report_
 
     def parse_wait_clocks(self):
-        wait_clocks = WaitClocks()
+        wait_clocks = WaitClocks(Trace(self))
         self.tokens.expect("wait_clocks")
         self.tokens.expect("(")
         wait_clocks.expression = self.parse_expression()
@@ -348,7 +334,7 @@ class Parser:
             return expression
 
     def parse_discard(self):
-        return DiscardExpression(self.parse_expression())
+        return DiscardExpression(Trace(self), self.parse_expression())
 
     def parse_assignment(self):
         assignment_operators = [
@@ -374,7 +360,7 @@ class Parser:
                 expression = self.parse_ternary_expression()
                 expression = self.binary(operator[:-1], lvalue, expression)
 
-            #Promote numberic types
+            #Promote numeric types
             #
             if is_double(lvalue):
                 expression = self.to_double(expression)
@@ -384,27 +370,28 @@ class Parser:
                 expression = self.to_long(expression)
             elif is_int(lvalue):
                 expression = self.to_int(expression)
-            elif expression.type_() != lvalue.type_():
+            elif is_array_of(lvalue):
+                self.tokens.error(
+                    "assignment is not permitted for arrays")
+            elif is_array_of(expression):
+                self.tokens.error(
+                    "assignment is not permitted for arrays")
+            elif not compatible(expression, lvalue):
                 self.tokens.error(
                     "type mismatch in assignment expected: %s actual: %s"%(
                         lvalue.type_(),
                         expression.type_()))
-            elif expression.size() != lvalue.size():
-                self.tokens.error(
-                    "size mismatch in assignment expected: %s actual: %s"%(
-                        lvalue.size(),
-                        expression.size()))
 
-            return Assignment(lvalue, expression)
+            return Assignment(Trace(self), lvalue, expression)
         else:
             return lvalue
 
     def parse_if(self):
-        if_ = If()
+        if_ = If(Trace(self))
         self.tokens.expect("if")
         self.tokens.expect("(")
         if_.expression = self.parse_expression()
-        if if_.expression.type_() not in ["unsigned", "int", "short", "long", "char"]:
+        if if_.expression.type_() not in integer_like:
             self.tokens.error(
                 "if statement conditional must be an integer like expression")
         self.tokens.expect(")")
@@ -417,12 +404,12 @@ class Parser:
         return if_
 
     def parse_switch(self):
-        switch = Switch()
+        switch = Switch(Trace(self))
         switch.cases = {}
         self.tokens.expect("switch")
         self.tokens.expect("(")
         expression = self.parse_expression()
-        if expression.type_() not in ["int"]:
+        if expression.type_() not in integer_like:
             self.tokens.error(
                 "switch statement expression must be an integer like expression")
         self.tokens.expect(")")
@@ -437,13 +424,13 @@ class Parser:
     def parse_case(self):
         self.tokens.expect("case")
         expression = self.parse_expression()
-        if expression.type_() not in ["int"]:
+        if expression.type_() not in integer_like:
             self.tokens.error(
                 "case expression must be an integer like expression")
         self.tokens.expect(":")
         try:
             expression = expression.value()
-            case = Case()
+            case = Case(Trace(self))
             self.loop.cases[expression] = case
         except NotConstant:
             self.tokens.error("case expression must be constant")
@@ -455,7 +442,7 @@ class Parser:
     def parse_default(self):
         self.tokens.expect("default")
         self.tokens.expect(":")
-        default = Default()
+        default = Default(Trace(self))
         if not hasattr(self.loop, "cases"):
             self.tokens.error(
                 "default statements may only be used inside a switch statment")
@@ -466,7 +453,7 @@ class Parser:
         return default
 
     def parse_while(self):
-        loop = Loop()
+        loop = Loop(Trace(self))
         self.tokens.expect("while")
         self.tokens.expect("(")
         expression = self.parse_expression()
@@ -475,11 +462,11 @@ class Parser:
         self.loop = loop
         statement = self.parse_statement()
         self.loop = stored_loop
-        if_ = If()
+        if_ = If(Trace(self))
         loop.statement = if_
-        break_ = Break()
+        break_ = Break(Trace(self))
         break_.loop = loop
-        if expression.type_() not in ["int"]:
+        if expression.type_() not in integer_like:
             self.tokens.error(
                 "while statement conditional must be an integer like expression")
         if_.expression = expression
@@ -490,7 +477,7 @@ class Parser:
     def parse_do_while(self):
 
         #compile the loop
-        loop = Loop()
+        loop = Loop(Trace(self))
         self.tokens.expect("do")
         stored_loop = self.loop
         self.loop = loop
@@ -504,29 +491,29 @@ class Parser:
 
         #construct a conditional that will break if false
         #or continue if true
-        break_ = Break()
+        break_ = Break(Trace(self))
         break_.loop = loop
-        continue_ = Continue()
+        continue_ = Continue(Trace(self))
         continue_.loop = loop
-        if_ = If()
+        if_ = If(Trace(self))
         if_.expression = expression
         if_.false_statement = break_
         if_.true_statement = continue_
 
         #form the body of the loop from the compiled loop
         #followed by the conditional statement
-        block = Block()
+        block = Block(Trace(self))
         block.statements = [statement, if_]
         loop.statement = block
 
         #check that the loop condition is like an integer
-        if expression.type_() not in ["int"]:
+        if expression.type_() not in integer_like:
             self.tokens.error(
                 "do while statement conditional must be an integer like expression")
         return loop
 
     def parse_for(self):
-        for_ = For()
+        for_ = For(Trace(self))
         self.tokens.expect("for")
         self.tokens.expect("(")
         if self.tokens.peek() != ";":
@@ -534,13 +521,7 @@ class Parser:
         self.tokens.expect(";")
         if self.tokens.peek() != ";":
             for_.expression = self.parse_expression()
-            if for_.expression.type_() not in [
-                "unsigned", 
-                "int", 
-                "short", 
-                "long", 
-                "char"]:
-
+            if for_.expression.type_() not in integer_like:
                 self.tokens.error(
             "For statement conditional must be an integer like expression")
 
@@ -555,7 +536,7 @@ class Parser:
         return for_
 
     def parse_block(self):
-        block = Block()
+        block = Block(Trace(self))
         stored_scope = copy(self.scope)
         self.tokens.expect("{")
         block.statements = []
@@ -568,30 +549,22 @@ class Parser:
     def parse_struct_body(self):
         self.tokens.expect("{")
         member_names = []
-        member_declarations = []
+        member_types = []
         while self.tokens.peek() != "}":
-            type_, size, signed, const = self.parse_type_specifier()
+            type_specifier = self.parse_type_specifier()
             name = self.tokens.get()
-
+            name, type_specifier = self.parse_declaration(name, type_specifier)
             member_names.append(name)
-            member_declarations.append(self.parse_declaration(
-                type_, 
-                size, 
-                signed, 
-                const,
-                name,
-            ))
-
+            member_types.append(type_specifier.type_) 
             self.tokens.expect(";")
         self.tokens.expect("}")
-        return member_names, member_declarations
+        return StructOf(member_names, member_types)
 
     def parse_typedef_struct(self):
         self.tokens.expect("typedef")
         self.tokens.expect("struct")
-        declaration = StructDeclaration(*self.parse_struct_body())
+        declaration = self.parse_struct_body()
         name = self.tokens.get()
-        declaration._type= name
         self.tokens.expect(";")
         self.scope[name] = declaration
         self.structs.append(name)
@@ -599,8 +572,7 @@ class Parser:
     def parse_define_struct(self):
         self.tokens.expect("struct")
         name = self.tokens.get()
-        declaration = StructDeclaration(*self.parse_struct_body())
-        declaration._type="struct_"+str(id(declaration))
+        declaration = self.parse_struct_body()
         self.tokens.expect(";")
         self.scope[name] = declaration
 
@@ -609,11 +581,17 @@ class Parser:
         struct_name = self.tokens.get()
         name = self.tokens.get()
         self.tokens.expect(";")
-        instance = self.scope[struct_name].instance(self.function)
+        type_ = self.scope[struct_name]
+        instance = LocalVariable(
+                Trace(self),
+                TypeSpecifier(type_, False, False),
+                None, 
+                self.function
+        )
         self.scope[name] = instance
         return instance
 
-    def parse_global_declaration(self, type_, size, signed, const, name):
+    def parse_global_declaration(self, name, type_specifier):
 
         """global_declaration := "{" 
             declaration 
@@ -624,12 +602,13 @@ class Parser:
         instances = []
         while True:
 
-            instance = self.parse_declaration(
-                type_, 
-                size, 
-                signed, 
-                const,
-                name).instance(self.function)
+            type_specifier, initializer = self.parse_instance(name, type_specifier)
+            instance = GlobalVariable(
+                Trace(self),
+                type_specifier,
+                initializer,
+                self.function
+            )
 
             self.scope[name] = instance
             instances.append(instance)
@@ -649,17 +628,17 @@ class Parser:
             ";"
         """
 
-        type_, size, signed, const = self.parse_type_specifier()
+        type_specifier = self.parse_type_specifier()
         instances = []
         while True:
             name = self.tokens.get()
-
-            instance = self.parse_declaration(
-                type_, 
-                size, 
-                signed, 
-                const,
-                name).instance(self.function)
+            new_type_specifier, initializer = self.parse_instance(name, type_specifier)
+            instance = LocalVariable(
+                    Trace(self),
+                    new_type_specifier, 
+                    initializer, 
+                    self.function
+            )
 
             self.scope[name] = instance
             instances.append(instance)
@@ -671,7 +650,7 @@ class Parser:
         self.tokens.expect(";")
         return CompoundDeclaration(instances)
 
-    def parse_array_initializer(self, type_, size, signed):
+    def parse_array_initializer(self, type_):
 
         """array_initialiser := "{" 
              [array_initializer | variable_initializer] 
@@ -682,103 +661,103 @@ class Parser:
         elements=[]
         while 1:
             if self.tokens.peek() == "{":
-                elements.append(self.parse_array_initializer(type_, size, signed))
+                elements.append(self.parse_array_initializer(type_))
             else:
-                elements.append(self.parse_variable_initializer(type_, size, signed))
+                elements.append(self.parse_variable_initializer(type_.root_type()))
             if self.tokens.peek() == "}": break
             self.tokens.expect(",")
         self.tokens.expect("}")
         return elements
 
-    def parse_string_initializer(self, type_, size, signed):
+    def parse_string_initializer(self, type_specifier):
 
         """string_initialiser := "\"" *[character] "\"" """
 
-        if type_ != "int" or size != 4:
+        if type_specifier.type_.base_type() not in integer_like:
             self.tokens.error("unsuitable array type for string initializer")
         initializer = self.tokens.get()
-        initializer = [Constant(ord(i)) for i in initializer.strip('"').decode("string_escape")]
-        initializer += [Constant(0)]
+        initializer = [
+            Constant(
+                Trace(self), 
+                ord(i)
+            ) 
+            for i in initializer.strip('"').decode("string_escape")
+        ]
+        initializer += [Constant(Trace(self), 0)]
         return initializer
 
-    def parse_variable_initializer(self, type_, size, signed):
+    def parse_variable_initializer(self, type_):
 
         """variable_initialiser := parse_ternary_expression"""
 
         initializer = self.parse_ternary_expression()
-        if type_ == "float" and size == 8:
+        if type_ == "double":
             initializer = self.to_double(initializer)
-        elif type_ == "float" and size == 4:
+        elif type_ == "float":
             initializer = self.to_float(initializer)
-        elif type_ == "int" and size == 8:
+        elif type_ == "long":
             initializer = self.to_long(initializer)
-        elif type_ == "int" and size == 4:
+        elif type_ == "int":
             initializer = self.to_int(initializer)
         elif type_ != initializer.type_():
             self.tokens.error(
-                "type mismatch in intializer expected: %s actual: %s"%(
+                "type mismatch in initializer expected: %s actual: %s"%(
                     type_,
                     initializer.type_()))
-        elif size != initializer.size():
-            self.tokens.error(
-                "size mismatch in intializer expected: %s actual: %s"%(
-                    size,
-                    initializer.size()))
 
         return initializer
 
 
-    def parse_declaration(self, type_, size, signed, const, name):
+    def parse_declaration(self, name, type_specifier):
 
         """declaration := type_specifier name 
             *["[" ternary_expression "]"] 
-            ?["=" 
-                [string_initialiser | array_initialiser | variable_initialiser]
-            ]
         """
 
+        type_ = deepcopy(type_specifier.type_)
+        signed = type_specifier.signed
+        const = type_specifier.const
+
         if type_ in self.structs:
-            declaration = self.scope[type_]
-        else:
-            declaration = VariableDeclaration(
-                name,
-                type_,
-                size,
-                signed,
-                const
-            )
+            type_ = self.scope[type_]
 
-        #Gather dimensions of subarrays
-        array_number_of_elements = []
-        while self.tokens.peek() == "[":
-            self.tokens.expect("[")
-            if self.tokens.peek() != "]":
-                size_expression = self.parse_ternary_expression()
-                if size_expression.type_() != "int":
-                    self.tokens.error("Array size must be an integer like expression")
-                try:
-                    array_number_of_elements.append(size_expression.value())
-                except NotConstant:
-                    self.tokens.error("Array size must be constant")
-            else:
-                array_number_of_elements.append(None)
-            self.tokens.expect("]")
+        #Gather dimensions of arrays
+        if self.tokens.peek() == "[":
+            type_ = ArrayOf(type_)
+            type_.dimensions = []
 
-        array_number_of_elements.reverse()
+            while self.tokens.peek() == "[":
+                self.tokens.expect("[")
+                if self.tokens.peek() != "]":
+                    size_expression = self.parse_ternary_expression()
+                    if size_expression.type_() not in integer_like:
+                        self.tokens.error("Array size must be an integer like expression")
+                    try:
+                        type_.dimensions.append(size_expression.value())
+                    except NotConstant:
+                        self.tokens.error("Array size must be constant")
+                else:
+                    type_.dimensions.append(None)
+                self.tokens.expect("]")
 
-        #Encapsulate elements in arrays, starting from the right most
-        for number_of_elements in array_number_of_elements[:-1]:
-            if number_of_elements is None:
-                self.tokens.error("Inner array range must be specified")
-            declaration = ArrayDeclaration(
-                elements = number_of_elements,
-                element_declaration = declaration,
-            )
-        for number_of_elements in array_number_of_elements[-1:]:
-            declaration = ArrayDeclaration(
-                elements = number_of_elements,
-                element_declaration = declaration,
-            )
+            #Encapsulate elements in arrays, starting from the right most
+            for number_of_elements in type_.dimensions[1:]:
+                if number_of_elements is None:
+                    self.tokens.error("Inner array range must be specified")
+
+            type_.dimensions.reverse()
+
+
+        return name, TypeSpecifier(type_, signed, const)
+
+    def parse_instance(self, name, type_specifier):
+
+        """declaration
+        ?["=" [string_initialiser | array_initialiser | variable_initialiser]]
+        ]
+        """
+
+        name, type_specifier = self.parse_declaration(name, type_specifier)
 
         #Array Initialiser
         initializer = None
@@ -787,35 +766,33 @@ class Parser:
 
             #initialize as a string
             if self.tokens.peek().startswith('"'):
-                initializer = self.parse_string_initializer(type_, size, signed)
+                initializer = self.parse_string_initializer(type_specifier)
 
-                #Not strictly correct initializastion behaviour
-                if declaration.elements is None:
-                    declaration.elements = len(initializer)
-                elif declaration.elements != len(initializer):
+                #Not strictly correct initialization behaviour
+                if type_specifier.type_.dimensions[-1] is None:
+                    type_specifier.type_.dimensions[-1] = len(initializer)
+                elif type_specifier.type_.dimensions[-1] != len(initializer):
                     self.tokens.error(
                         "Array initializer does not match array dimensions")
 
             elif self.tokens.peek() == "{":
-                initializer = self.parse_array_initializer(type_, size, signed)
+                initializer = self.parse_array_initializer(type_specifier.type_)
 
-                #Not strictly correct initializastion behaviour
-                if declaration.elements is None:
-                    declaration.elements = len(initializer)
-                elif declaration.elements != len(initializer):
+                #Not strictly correct initialization behaviour
+                if type_specifier.type_.dimensions[-1] is None:
+                    type_specifier.type_.dimensions[-1] = len(initializer)
+                elif type_specifier.type_.dimensions[-1] != len(initializer):
                     self.tokens.error(
                         "Array initializer does not match array dimensions")
 
             else:
-                initializer = self.parse_variable_initializer(type_, size, signed)
+                initializer = self.parse_variable_initializer(type_specifier.type_)
 
-            declaration.initializer = initializer
-
-        if hasattr(declaration, "elements") and declaration.elements is None:
+        if hasattr(type_specifier.type_, "dimensions") and type_specifier.type_.dimensions[-1] is None:
             self.tokens.error(
                 "Array size must be specified if not initialized")
 
-        return declaration
+        return type_specifier, initializer
 
     def parse_expression(self):
 
@@ -828,12 +805,12 @@ class Parser:
 
         """ternary_expression := or_expression "?" or_expression ":" or_expression"""
 
-        expression = constant_fold(self.parse_or_expression())
+        expression = constant_fold(Trace(self), self.parse_or_expression())
         while self.tokens.peek() in ["?"]:
             self.tokens.expect("?")
-            true_expression = constant_fold(self.parse_or_expression())
+            true_expression = constant_fold(Trace(self), self.parse_or_expression())
             self.tokens.expect(":")
-            false_expression = constant_fold(self.parse_or_expression())
+            false_expression = constant_fold(Trace(self), self.parse_or_expression())
             expression, true_expression = self.coerce_integer_types(
                     expression, 
                     true_expression
@@ -842,7 +819,7 @@ class Parser:
                     true_expression, 
                     false_expression
             )
-            expression = OR(AND(expression, true_expression), false_expression)
+            expression = OR(Trace(self), AND(Trace(self), expression, true_expression), false_expression)
         return expression
 
     def parse_or_expression(self):
@@ -854,7 +831,7 @@ class Parser:
             self.tokens.expect("||")
             right = self.parse_and_expression()
             expression, right = self.coerce_integer_types(expression, right)
-            expression = OR(expression, right)
+            expression = OR(Trace(self), expression, right)
         return expression
 
     def parse_and_expression(self):
@@ -866,7 +843,7 @@ class Parser:
             self.tokens.expect("&&")
             right = self.parse_binary_expression(["|"])
             expression, right = self.coerce_integer_types(expression, right)
-            expression = AND(expression, right)
+            expression = AND(Trace(self), expression, right)
         return expression
 
     def substitute_function(self, binary_expression):
@@ -877,44 +854,42 @@ class Parser:
 
         functions = {
            #signed,left,right,size,operator
-           "False,int,int,4,/" : "unsigned_divide_xxxx",
-           "True,int,int,4,/" : "divide_xxxx",
-           "False,int,int,4,%" : "unsigned_modulo_xxxx",
-           "True,int,int,4,%" : "modulo_xxxx",
+           "False,int,/" : "unsigned_divide_xxxx",
+           "True,int,/" : "divide_xxxx",
+           "False,int,%" : "unsigned_modulo_xxxx",
+           "True,int,%" : "modulo_xxxx",
 
-           "True,float,float,4,==" : "float_equal_xxxx",
-           "True,float,float,4,!=" : "float_ne_xxxx",
-           "True,float,float,4,<" : "float_lt_xxxx",
-           "True,float,float,4,>" : "float_gt_xxxx",
-           "True,float,float,4,<=" : "float_le_xxxx",
-           "True,float,float,4,>=" : "float_ge_xxxx",
+           "True,float,==" : "float_equal_xxxx",
+           "True,float,!=" : "float_ne_xxxx",
+           "True,float,<" : "float_lt_xxxx",
+           "True,float,>" : "float_gt_xxxx",
+           "True,float,<=" : "float_le_xxxx",
+           "True,float,>=" : "float_ge_xxxx",
 
-           "True,float,float,8,==" : "long_float_equal_xxxx",
-           "True,float,float,8,!=" : "long_float_ne_xxxx",
-           "True,float,float,8,<" : "long_float_lt_xxxx",
-           "True,float,float,8,>" : "long_float_gt_xxxx",
-           "True,float,float,8,<=" : "long_float_le_xxxx",
-           "True,float,float,8,>=" : "long_float_ge_xxxx",
+           "True,double,==" : "long_float_equal_xxxx",
+           "True,double,!=" : "long_float_ne_xxxx",
+           "True,double,<" : "long_float_lt_xxxx",
+           "True,double,>" : "long_float_gt_xxxx",
+           "True,double,<=" : "long_float_le_xxxx",
+           "True,double,>=" : "long_float_ge_xxxx",
 
-           "False,int,int,8,/" : "long_unsigned_divide_xxxx",
-           "True,int,int,8,/" : "long_divide_xxxx",
-           "False,int,int,8,%" : "long_unsigned_modulo_xxxx",
-           "True,int,int,8,%" : "long_modulo_xxxx",
+           "False,long,/" : "long_unsigned_divide_xxxx",
+           "True,long,/" : "long_divide_xxxx",
+           "False,long,%" : "long_unsigned_modulo_xxxx",
+           "True,long,%" : "long_modulo_xxxx",
         }
 
         #select a function that matches the template.
         signature = ",".join([
             str(binary_expression.signed()), 
             binary_expression.left.type_(), 
-            binary_expression.right.type_(), 
-            str(binary_expression.left.size()), 
             binary_expression.operator])
 
         #Some things can't be implemented in verilog, substitute them with a
         #function
         if signature in functions:
             function = self.scope[functions[signature]]
-            function_call = FunctionCall(function)
+            function_call = FunctionCall(Trace(self), function)
             self.function.called_functions.append(function)
             function_call.arguments = [
                     binary_expression.left, 
@@ -942,11 +917,6 @@ class Parser:
                 left.type_(),
                 right.type_(),
                 ))
-        elif left.size() != right.size():
-            self.tokens.error("Incompatible sizes : %s %s"%(
-                left.size(),
-                right.size(),
-                ))
 
         return left, right
 
@@ -957,17 +927,17 @@ class Parser:
         if is_long(left) or is_long(right):
             right = self.to_long(right)
             left = self.to_long(left)
-        elif left.type_() != "int":
+        elif left.type_() not in ("int", "long"):
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
                 right.type_(),
                 ))
-        elif right.type_() != "int":
+        elif right.type_() not in ("int", "long"):
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
                 right.type_(),
                 ))
-        elif left.size() != right.size():
+        elif left.type_() != right.type_():
             self.tokens.error("Incompatible sizes : %s %s"%(
                 left.size(),
                 right.size(),
@@ -1007,6 +977,8 @@ class Parser:
     def parse_unary_expression(self):
 
         """unary_expression := ?[
+            "&" | 
+            "*" | 
             "!" | 
             "-" | 
             "~" | 
@@ -1021,43 +993,61 @@ class Parser:
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
 
-            if expression.type_() not in ["int"]:
+            if expression.type_() not in integer_like:
                 self.tokens.error(
                     "! is only valid for integer like expressions")
 
-            return Binary("==", expression, Constant(0))
+            return Binary(Trace(self), "==", expression, Constant(Trace(self), 0))
 
         elif self.tokens.peek() == "-":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
-            return Binary("-", Constant(0, 
-                expression.type_(), 
-                expression.size(), 
-                expression.signed()), 
-                expression)
+            return Binary(
+                    Trace(self), 
+                    "-", 
+                    Constant(
+                        Trace(self), 
+                        0, 
+                        expression.type_(), 
+                        expression.signed()
+                    ), 
+                    expression
+            )
+
+        elif self.tokens.peek() == "&":
+            operator = self.tokens.get()
+            expression = self.parse_postfix_expression()
+            return Address(Trace(self), expression)
+
+        elif self.tokens.peek() == "*":
+            operator = self.tokens.get()
+            expression = self.parse_postfix_expression()
+            return Dereference(Trace(self), expression)
 
         elif self.tokens.peek() == "~":
             operator = self.tokens.get()
             expression = self.parse_postfix_expression()
 
-            if expression.type_() not in ["int"]:
+            if expression.type_() not in integer_like:
                 self.tokens.error(
                     "~ is only valid for integer like expressions")
 
-            return Unary("~", expression)
+            return Unary(Trace(self), "~", expression)
 
         elif self.tokens.peek() in ["++", "--"]:
             operator = self.tokens.get()
             expression = self.parse_unary_expression()
             expression = Assignment(
+                Trace(self),
                 expression,
                 Binary(
+                    Trace(self),
                     operator[0],
                     expression,
-                    Constant(
+                    Constant( 
+                        Trace(self),
                         1, 
                         expression.type_(),
-                        expression.size(), 
                         expression.signed()
                     ),
                 ),
@@ -1067,33 +1057,28 @@ class Parser:
         elif self.tokens.peek() == "sizeof":
             self.tokens.get()
             expression = self.parse_unary_expression()
-            return SizeOf(expression)
+            return SizeOf(Trace(self), expression)
 
         #cast operation
         elif self.tokens.peek() == "(" and self.tokens.peek_next() in numeric_types:
             self.tokens.expect("(")
-            type_, size, signed, const = self.parse_type_specifier()
+            type_specifier = self.parse_type_specifier()
             self.tokens.expect(")")
             expression = self.parse_unary_expression()
 
-            if type_ == "float" and size == 8:
+            if type_specifier.type_ == "double":
                 expression = self.to_double(expression)
-            elif type_ == "float" and size == 4:
+            elif type_specifier.type_ == "float":
                 expression = self.to_float(expression)
-            elif type_ == "int" and size == 8:
+            elif type_specifier.type_ == "long":
                 expression = self.to_long(expression)
-            elif type_ == "int" and size == 4:
+            elif type_specifier.type_ == "int":
                 expression = self.to_int(expression)
-            elif type_ != expression.type_():
+            elif type_specifier.type_ != expression.type_():
                 self.tokens.error(
                     "cannot cast incompatible types expected: %s actual: %s"%(
-                        type_,
+                        type_specifier.type_,
                         expression.type_()))
-            elif size != expression.size():
-                self.tokens.error(
-                    "cannot cast incompatible types expected: %s actual: %s"%(
-                        size,
-                        expression.size()))
             
             return expression
 
@@ -1102,7 +1087,7 @@ class Parser:
 
     def parse_postfix_expression(self):
 
-        """postfix_expression := primary_expreession *[
+        """postfix_expression := primary_expression *[
                 function_call | 
                 array_index | 
                 struct_member | 
@@ -1124,16 +1109,19 @@ class Parser:
             elif self.tokens.peek() in ["++", "--"]:
                 operator = self.tokens.get()
                 expression = MultiExpression(
+                    Trace(self),
                     expression,
                     [Assignment(
+                        Trace(self),
                         expression,
                         Binary(
+                            Trace(self),
                             operator[0],
                             expression,
                             Constant(
+                                Trace(self),
                                 1, 
                                 expression.type_(),
-                                expression.size(), 
                                 expression.signed()
                             ),
                         ),
@@ -1189,7 +1177,7 @@ class Parser:
                 #compiled
                 if not instance.local:
                     self.function.referenced_globals.append(instance)
-                expression = instance.reference()
+                expression = instance.reference(Trace(self))
         else:
             expression = self.parse_literal()
 
@@ -1202,13 +1190,13 @@ class Parser:
         self.tokens.expect("[")
         index_expression = self.parse_expression()
         self.tokens.expect("]")
-        if not array.type_().endswith("[]"):
+        if not is_array_of(array):
             self.tokens.error(
                 "Cannot index non-array type %s"%array.type_())
-        if index_expression.type_() not in ["int"]:
+        if index_expression.type_() not in integer_like:
             self.tokens.error(
                 "Array indices must be an integer like expression")
-        return ArrayIndex(array, index_expression)
+        return ArrayIndex(Trace(self), array, index_expression)
 
     def parse_struct_member(self, struct):
 
@@ -1216,18 +1204,13 @@ class Parser:
 
         self.tokens.expect(".")
 
-        is_a_struct = (
-            struct.type_().startswith("struct") or 
-            struct.type_() in self.structs
-        )
-
-        if not is_a_struct:
+        if not is_struct_of(struct):
             self.tokens.error(
                 "Cannot access member of non-struct type %s"%struct.type_())
         member = self.tokens.get()
-        if member not in struct.declaration.member_names:
+        if member not in struct.type_().names:
             self.tokens.error("%s is not a member of struct"%member)
-        return StructMember(struct, member)
+        return StructMember(Trace(self), struct, member)
 
     def parse_file_read(self):
 
@@ -1237,7 +1220,7 @@ class Parser:
         file_name = self.tokens.get()
         file_name = file_name.strip('"').decode("string_escape")
         self.tokens.expect(")")
-        return FileRead(file_name)
+        return FileRead(Trace(self), file_name)
 
     def parse_file_write(self):
 
@@ -1249,7 +1232,7 @@ class Parser:
         file_name = self.tokens.get()
         file_name = file_name.strip('"').decode("string_escape")
         self.tokens.expect(")")
-        return FileWrite(file_name, expression)
+        return FileWrite(Trace(self), file_name, expression)
 
     def parse_double_to_bits(self):
 
@@ -1258,7 +1241,7 @@ class Parser:
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return DoubleToBits(self.to_double(expression))
+        return DoubleToBits(Trace(self), self.to_double(expression))
 
     def parse_float_to_bits(self):
 
@@ -1267,7 +1250,7 @@ class Parser:
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return FloatToBits(self.to_float(expression))
+        return FloatToBits(Trace(self), self.to_float(expression))
 
     def parse_bits_to_double(self):
 
@@ -1276,7 +1259,7 @@ class Parser:
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return BitsToDouble(self.to_long(expression))
+        return BitsToDouble(Trace(self), self.to_long(expression))
 
     def parse_bits_to_float(self):
 
@@ -1285,7 +1268,7 @@ class Parser:
         self.tokens.expect("(")
         expression = self.parse_expression()
         self.tokens.expect(")")
-        return BitsToFloat(self.to_int(expression))
+        return BitsToFloat(Trace(self), self.to_int(expression))
 
     def parse_input(self):
 
@@ -1294,7 +1277,7 @@ class Parser:
         self.tokens.expect("(")
         input_name = self.tokens.get().strip('"').decode("string_escape")
         self.tokens.expect(")")
-        return Constant(self.allocator.new_input(input_name))
+        return Constant(Trace(self), self.allocator.new_input(input_name))
 
     def parse_fgetc(self):
 
@@ -1303,7 +1286,7 @@ class Parser:
         self.tokens.expect("(")
         handle = self.parse_expression()
         self.tokens.expect(")")
-        return Input(handle)
+        return Input(Trace(self), handle)
 
     def parse_ready(self):
 
@@ -1312,7 +1295,7 @@ class Parser:
         self.tokens.expect("(")
         handle = self.parse_expression()
         self.tokens.expect(")")
-        return Ready(handle)
+        return Ready(Trace(self), handle)
 
     def parse_output_ready(self):
 
@@ -1321,7 +1304,7 @@ class Parser:
         self.tokens.expect("(")
         handle = self.parse_expression()
         self.tokens.expect(")")
-        return OutputReady(handle)
+        return OutputReady(Trace(self), handle)
 
     def parse_output(self):
 
@@ -1330,7 +1313,7 @@ class Parser:
         self.tokens.expect("(")
         output_name = self.tokens.get().strip('"').decode("string_escape")
         self.tokens.expect(")")
-        return Constant(self.allocator.new_output(output_name))
+        return Constant(Trace(self), self.allocator.new_output(output_name))
 
     def parse_fputc(self):
 
@@ -1341,7 +1324,7 @@ class Parser:
         self.tokens.expect(",")
         handle = self.parse_expression()
         self.tokens.expect(")")
-        return Output(handle, expression)
+        return Output(Trace(self), handle, expression)
 
     def parse_function_call(self, function):
 
@@ -1349,7 +1332,7 @@ class Parser:
 
         #Pass the function call
         #
-        function_call = FunctionCall(function)
+        function_call = FunctionCall(Trace(self), function)
         self.function.called_functions.append(function)
         function_call.arguments = []
         self.tokens.expect("(")
@@ -1387,35 +1370,22 @@ class Parser:
             if not compatible(required, actual):
 
                 #attempt to promote numeric types
-                if required.type_() == "float" and required.size() == 8:
+                if required.type_() == "double":
                     actual = self.to_double(actual)
-                elif required.type_() == "float" and required.size() == 4:
+                elif required.type_() == "float":
                     actual = self.to_float(actual)
-                elif required.type_() == "int" and required.size() == 8:
+                elif required.type_() == "long":
                     actual = self.to_long(actual)
-                elif required.type_() == "int" and required.size() == 4:
+                elif required.type_() == "int":
                     actual = self.to_int(actual)
+
 
                 #types should match
                 elif required.type_() != actual.type_():
                     self.tokens.error(
-                        "type mismatch in assignment expected: %s actual: %s"%(
+                        "type mismatch in function_argument expected: %s actual: %s"%(
                             required.type_(),
                             actual.type_()))
-
-                #size should match for non-arrays
-                elif not required.type_().endswith("[]") and required.size() != actual.size():
-                    self.tokens.error(
-                        "size mismatch in function argument expected: %s actual: %s"%(
-                            required.size(),
-                            actual.size()))
-
-                #element size should match for arrays
-                elif required.type_().endswith("[]") and required.element_declaration.size() != actual.element_declaration.size():
-                    self.tokens.error(
-                        "element size mismatch in function argument expected: %s actual: %s"%(
-                            required.element_declaration.size(),
-                            actual.element_declaration.size()))
 
             corrected_arguments.append(actual)
         function_call.arguments = corrected_arguments
@@ -1428,7 +1398,6 @@ class Parser:
 
         token = self.tokens.get()
         type_ = "int"
-        size = 4
         signed = True
         if token.startswith("'"):
             return self.parse_character_literal(token)
@@ -1444,12 +1413,11 @@ class Parser:
         """parse a character literal"""
 
         type_ = "int"
-        size = 4
         signed = True
         try:
             token = eval(token)
             value = ord(token)
-            return Constant(value, type_, size, signed)
+            return Constant(Trace(self), value, type_, signed)
         except SyntaxError:
             self.tokens.error("%s is not a character literal"%token)
 
@@ -1458,23 +1426,27 @@ class Parser:
         """parse a string literal"""
 
         type_ = "int"
-        size = 4
         signed = True
         try:
-            initializer = [Constant(ord(i)) for i in token.strip('"').decode("string_escape")] 
-            initializer += [Constant(0)]
-            initialize_memory = self.initialize_memory
-            declaration = ArrayDeclaration(
-                elements = len(initializer),
-                element_declaration = VariableDeclaration(None, "int", 4, False, True),
+            initializer = [
+                Constant(
+                    Trace(self), 
+                    ord(i)
+                ) 
+                for i in token.strip('"').decode("string_escape")
+            ] 
+            initializer += [Constant(Trace(self), 0)]
+            #initialize_memory = self.initialize_memory
+            instance = GlobalVariable(
+                Trace(self),
+                TypeSpecifier(ArrayOf("int", [len(initializer)]), False, False),
+                initializer,
+                self.function,
             )
-            declaration.initializer = initializer
-            instance = declaration.instance(self.function)
             #since we don't return instance, it doesn't get generated.
             #treat as a global
-            instance.local = False
             self.function.referenced_globals.append(instance)
-            return instance.reference()
+            return instance.reference(Trace(self))
         except SyntaxError:
             self.tokens.error("%s is not a character literal"%token)
 
@@ -1486,7 +1458,6 @@ class Parser:
             if "F" in token.upper():
                 type_ = "float"
                 signed = True
-                size = 4
                 token = token.upper().replace("F", "")
                 value = float(eval(token))
                 try:
@@ -1494,15 +1465,14 @@ class Parser:
                 except OverflowError:
                     self.tokens.error("value too large")
             else:
-                type_ = "float"
+                type_ = "double"
                 signed = True
-                size = 8
                 value = float(eval(token))
                 try:
                     byte_value = struct.pack(">d", value)
                 except OverflowError:
                     self.tokens.error("value too large")
-            return Constant(value, type_, size, signed)
+            return Constant(Trace(self), value, type_, signed)
         except SyntaxError:
             self.tokens.error("%s is not a floating point literal"%token)
 
@@ -1511,12 +1481,13 @@ class Parser:
         """parse an integer literal"""
 
         type_ = "int"
-        size = 4
         signed = True
+        size = 4
         try:
             if "U" in token.upper():
                 signed = False
             if "L" in token.upper():
+                type_ = "long"
                 size = 8
             token = token.upper().replace("U", "")
             value = int(eval(token))
@@ -1530,7 +1501,7 @@ class Parser:
                     self.tokens.error("value too large")
                 if value < 0:
                     self.tokens.error("value too small")
-            return Constant(value, type_, size, signed)
+            return Constant(Trace(self), value, type_, signed)
         except SyntaxError:
             self.tokens.error("%s is not an integer literal"%token)
 
@@ -1541,11 +1512,11 @@ class Parser:
         if is_double(expression):
             return expression
         elif is_float(expression):
-            return FloatToDouble(expression)
+            return FloatToDouble(Trace(self), expression)
         elif is_long(expression):
-            return LongToDouble(expression)
+            return LongToDouble(Trace(self), expression)
         elif is_int(expression):
-            return LongToDouble(IntToLong(expression))
+            return LongToDouble(Trace(self), IntToLong(Trace(self), expression))
         else:
             self.tokens.error(
                 "cannot convert expression with type %s to double"%expression.type_())
@@ -1554,14 +1525,15 @@ class Parser:
 
         """Convert (any type which can be converted) to a float"""
 
+
         if is_double(expression):
-            return DoubleToFloat(expression)
+            return DoubleToFloat(Trace(self), expression)
         elif is_float(expression):
             return expression
         elif is_long(expression):
-            return DoubleToFloat(LongToDouble(expression))
+            return DoubleToFloat(Trace(self), LongToDouble(Trace(self), expression))
         elif is_int(expression):
-            return IntToFloat(expression)
+            return IntToFloat(Trace(self), expression)
         else:
             self.tokens.error(
                 "cannot convert expression with type %s to float"%expression.type_())
@@ -1571,13 +1543,13 @@ class Parser:
         """Convert (any type which can be converted) to a long"""
 
         if is_double(expression):
-            return DoubleToLong(expression)
+            return DoubleToLong(Trace(self), expression)
         elif is_float(expression):
-            return DoubleToLong(FloatToDouble(expression))
+            return DoubleToLong(Trace(self), FloatToDouble(Trace(self), expression))
         elif is_long(expression):
             return expression
         elif is_int(expression):
-            return IntToLong(expression)
+            return IntToLong(Trace(self), expression)
         else:
             self.tokens.error("cannot convert expression with type %s to long"%expression.type_())
 
@@ -1586,11 +1558,11 @@ class Parser:
         """Convert (any type which can be converted) to an int"""
 
         if is_double(expression):
-            return LongToInt(DoubleToLong(expression))
+            return LongToInt(Trace(self), DoubleToLong(Trace(self), expression))
         elif is_float(expression):
-            return FloatToInt(expression)
+            return FloatToInt(Trace(self), expression)
         elif is_long(expression):
-            return LongToInt(expression)
+            return LongToInt(Trace(self), expression)
         elif is_int(expression):
             return expression
         else:
@@ -1601,43 +1573,20 @@ class Parser:
         """Create a Binary Expression object
 
         Coerce numeric types following standard promotion rules.
-        Where a binary opertion is implemented in software substitute a function call.
+        Where a binary operation is implemented in software substitute a function call.
         """
 
         left, right = self.coerce_types(left, right)
-        expression = Binary(operator, left, right)
+        expression = Binary(Trace(self), operator, left, right)
         expression = self.substitute_function(expression)
         return expression
 
 
 def compatible(left, right):
 
-    """ Comare expected and actual type and size in function arguments """
+    """ Compare expected and actual type in function arguments """
 
-    return left.type_() == right.type_() and left.size() == right.size()
+    if left.type_() == right.type_():
+        return True
 
-def is_double(expression):
-
-    """ Expression object is of type float and 8 bytes long """
-
-    return expression.size() == 8 and expression.type_() == "float"
-
-def is_float(expression):
-
-    """ Expression object is of type float and 4 bytes long """
-
-    return expression.size() == 4 and expression.type_() == "float"
-
-def is_long(expression):
-
-    """ Expression object is of type int and 8 bytes long """
-
-    return expression.size() == 8 and expression.type_() == "int"
-
-def is_int(expression):
-
-    """ Expression object is of type int and 4 bytes long """
-
-    return expression.size() == 4 and expression.type_() == "int"
-
-
+    return False

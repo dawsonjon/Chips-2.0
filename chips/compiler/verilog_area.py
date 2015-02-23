@@ -54,6 +54,12 @@ def generate_instruction_set(instructions):
         encoded_instruction["a"] = 0
         encoded_instruction["b"] = 0
         encoded_instruction["literal"] = 0
+        if "trace" in instruction:
+            encoded_instruction["lineno"] = instruction["trace"].lineno
+            encoded_instruction["filename"] = instruction["trace"].filename
+        else:
+            encoded_instruction["lineno"] = 0
+            encoded_instruction["filename"] = "unknown"
         opcode["op"] = instruction["op"]
         opcode["literal"] = False
 
@@ -517,13 +523,16 @@ def generate_CHIP(input_file,
     output_file.write("  begin\n")
     for location, instruction in enumerate(instruction_memory):
         #print instruction
-        output_file.write("    instructions[%s] = {%s, %s, %s, %s};//%s\n"%(
+        output_file.write("    instructions[%s] = {%s, %s, %s, %s};//%s : %s %s\n"%(
             location,
             print_verilog_literal(opcode_bits, instruction["op"]),
             print_verilog_literal(4, instruction.get("z", 0)),
             print_verilog_literal(4, instruction.get("a", 0)),
             print_verilog_literal(32, instruction["literal"] | instruction.get("b", 0)),
-            instruction["comment"]))
+            instruction["filename"],
+            instruction["lineno"],
+            instruction["comment"],
+        ))
     output_file.write("  end\n\n")
 
     if input_files or output_files:
