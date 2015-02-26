@@ -58,9 +58,7 @@ int modulo_xxxx(int dividend, int divisor){
     udividend = dividend_sign ? -dividend : dividend;
     udivisor = divisor_sign ? -divisor : divisor;
     modulo = unsigned_modulo_xxxx(udividend, udivisor);
-    report(modulo);
     modulo = dividend_sign ? -modulo : modulo;
-    report(modulo);
     return modulo;
 }
 
@@ -216,7 +214,6 @@ int long_float_gt_xxxx(long a, long b){
     if (b < 0) {
         b = 0x8000000000000000lu - b;
     }
-    report(a);
     return  a > b;
 }
 

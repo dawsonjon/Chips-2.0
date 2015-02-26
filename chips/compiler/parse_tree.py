@@ -106,6 +106,11 @@ class PointerTo():
                 return True
         return False
 
+    def __repr__(self):
+        string = repr(self.type_)
+        string += "*"
+        return string
+
     def _size_(self):
         return 4
 
@@ -1669,7 +1674,7 @@ class Address(Expression):
         return instructions
 
     def type_(self):
-        return self.expression.type_() + "*"
+        return PointerTo(self.expression.type_())
 
 class Dereference(Object):
 
@@ -1709,8 +1714,8 @@ class Dereference(Object):
         return instructions
 
     def type_(self):
-        assert self.expression.type_().endswith("*")
-        return self.expression.type_()[:-1]
+        is_pointer_to(self.expression)
+        return self.expression.type_().base_type()
 
 
 class FunctionCall(Expression):
