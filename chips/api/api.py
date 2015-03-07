@@ -233,7 +233,7 @@ class Component:
     C code, and extract the name, inputs, outputs and the documentation from the
     code.
 
-    If you want to keep the C file seperate you can read it in from a file like
+    If you want to keep the C file separate you can read it in from a file like
     this::
 
         my_component = Adder(C_file="adder.c")
@@ -306,7 +306,7 @@ class _Instance:
         #check for multiple sources or sinks
         for i in inputs.values():
             if i.sink is not None:
-                raise C2CHIPError("%s allready has a sink"%i.name)
+                raise C2CHIPError("%s already has a sink"%i.name)
             i.sink = self
 
         for i in outputs.values():

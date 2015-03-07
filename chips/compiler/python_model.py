@@ -372,7 +372,7 @@ class PythonModel:
             value = self.input_files[instruction["filename"]].getline()
             result = uint32(value)
         elif instruction["op"] == "float_file_write":
-            self.output_files[instruction["file_name"]].write("%f\n"%bits_to_float(operand_a))
+            self.output_files[instruction["file_name"]].write("%.7f\n"%bits_to_float(operand_a))
         elif instruction["op"] == "unsigned_file_write":
             self.output_files[instruction["file_name"]].write("%i\n"%uint32(operand_a))
         elif instruction["op"] == "file_write":
@@ -461,7 +461,7 @@ class PythonModel:
                self.a_hi, self.a_lo = split_word(double_to_bits(float("nan")))
         elif instruction["op"] == "long_float_file_write":
             long_word = join_words(self.a_hi, self.a_lo)
-            self.output_files[instruction["file_name"]].write("%f\n"%bits_to_double(long_word))
+            self.output_files[instruction["file_name"]].write("%.16f\n"%bits_to_double(long_word))
         elif instruction["op"] == "long_file_write":
             long_word = join_words(self.a_hi, self.a_lo)
             self.output_files[instruction["file_name"]].write("%f\n"%long_word)
