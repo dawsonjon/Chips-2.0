@@ -7,7 +7,7 @@ def cleanup_functions(instructions):
     """Remove functions that are not called"""
 
 
-    #This is an iterative processr. Once a function is removed,
+    #This is an iterative processor. Once a function is removed,
     #there may be more unused functions
     while 1:
 

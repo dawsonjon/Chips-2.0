@@ -233,6 +233,160 @@ def test_long_arithmetic():
             test_corner_cases(operator, type_)
             test_random(operator, type_)
 
+test("pointers 1",
+"""
+void main(){
+    int a = 10;
+    int b = 20;
+    int* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 2",
+"""
+void main(){
+    long a = 10;
+    long b = 20;
+    long* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 3",
+"""
+void main(){
+    float a = 10;
+    float b = 20;
+    float* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 4",
+"""
+void main(){
+    double a = 10;
+    double b = 20;
+    double* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 5",
+"""
+typedef struct{int a; int b; int c;} mytype;
+
+void main(){
+    mytype a, b;
+    mytype* pa, pb;
+
+    a.a=10;
+    a.b=20;
+    a.c=30;
+    a.a=40;
+    a.b=50;
+    a.c=60;
+
+    pa = &a;
+    pb = &b;
+
+    (*pa).a=70;
+    (*pa).b=80;
+    (*pa).c=90;
+
+    (*pb).a=100;
+    (*pb).b=110;
+    (*pb).c=120;
+
+    assert(a.a==70);
+    assert(a.b==80);
+    assert(a.c==90);
+    assert(b.a==100);
+    assert(b.b==110);
+    assert(b.c==120);
+
+}
+"""
+)
+
+test("pointers 6",
+"""
+typedef struct{int a; int b; int c;} mytype;
+
+void main(){
+    mytype a, b;
+    mytype* pa, pb;
+
+    a.a=10;
+    a.b=20;
+    a.c=30;
+    a.a=40;
+    a.b=50;
+    a.c=60;
+
+    pa = &a;
+    pb = &b;
+
+    pa->a=70;
+    pa->b=80;
+    pa->c=90;
+
+    pb->a=100;
+    pb->b=110;
+    pb->c=120;
+
+    assert(a.a==70);
+    assert(a.b==80);
+    assert(a.c==90);
+    assert(b.a==100);
+    assert(b.b==110);
+    assert(b.c==120);
+
+}
+"""
+)
+
 test("array passing 1",
 """
 int store[100];

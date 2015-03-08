@@ -373,9 +373,6 @@ class Parser:
             elif is_array_of(lvalue):
                 self.tokens.error(
                     "assignment is not permitted for arrays")
-            elif is_array_of(expression):
-                self.tokens.error(
-                    "assignment is not permitted for arrays")
             elif not compatible(expression, lvalue):
                 self.tokens.error(
                     "type mismatch in assignment expected: %s actual: %s"%(
@@ -882,7 +879,7 @@ class Parser:
         #select a function that matches the template.
         signature = ",".join([
             str(binary_expression.signed()), 
-            binary_expression.left.type_(), 
+            "%s"%binary_expression.left.type_(), 
             binary_expression.operator])
 
         #Some things can't be implemented in verilog, substitute them with a
@@ -899,7 +896,7 @@ class Parser:
         else:
             return binary_expression
 
-    def coerce_types(self, left, right):
+    def coerce_types(self, left, right, operation):
 
         """Convert numeric types in expressions."""
 
@@ -912,6 +909,47 @@ class Parser:
         elif is_long(left) or is_long(right):
             right = self.to_long(right)
             left = self.to_long(left)
+        elif is_pointer_to(left) and is_pointer_to(right):
+            if operation != "-":
+                self.tokens.error("Only subtraction is permitted for two pointers : %s %s"%(
+                    left.type_(),
+                    right.type_(),
+                    ))
+            print left.type_(), right.type_()
+            print left.type_() == right.type_()
+            if left.type_() != right.type_():
+                print left.type_(), right.type_()
+                print left.type_() == right.type_()
+                self.tokens.error("pointer types must be identical : %s %s"%(
+                    left.type_(),
+                    right.type_(),
+                    ))
+
+        elif is_pointer_to(left):
+            if operation not in ["+", "-"]:
+                self.tokens.error("Only addition and subtraction are permitted for pointer arithmetic: %s %s"%(
+                    left.type_(),
+                    right.type_(),
+                    ))
+            if right.type_() not in integer_like:
+                self.tokens.error("Only integer like expressions may be used in pointer arithmetic : %s %s"%(
+                    left.type_(),
+                    right.type_(),
+                    ))
+
+        elif is_pointer_to(right):
+            if operation not in ["+", "-"]:
+                self.tokens.error("Only addition and subtraction are permitted for pointer arithmetic: %s %s"%(
+                    left.type_(),
+                    right.type_(),
+                    ))
+            if left.type_() not in integer_like:
+                self.tokens.error("Only integer like expressions may be used in pointer arithmetic : %s %s"%(
+                    left.type_(),
+                    right.type_(),
+                    ))
+
+
         elif left.type_() != right.type_():
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
@@ -1098,7 +1136,7 @@ class Parser:
 
         expression = self.parse_primary_expression()
 
-        while self.tokens.peek() in ["(", "[", ".", "++", "--"]:#, "->"]
+        while self.tokens.peek() in ["(", "[", ".", "->", "++", "--"]:
 
             if self.tokens.peek() == "(":
                 expression = self.parse_function_call(expression)
@@ -1106,6 +1144,8 @@ class Parser:
                 expression = self.parse_array_index(expression)
             elif self.tokens.peek() == ".":
                 expression = self.parse_struct_member(expression)
+            elif self.tokens.peek() == "->":
+                expression = self.parse_struct_pointer_access(expression)
             elif self.tokens.peek() in ["++", "--"]:
                 operator = self.tokens.get()
                 expression = MultiExpression(
@@ -1211,6 +1251,25 @@ class Parser:
         if member not in struct.type_().names:
             self.tokens.error("%s is not a member of struct"%member)
         return StructMember(Trace(self), struct, member)
+
+    def parse_struct_pointer_access(self, struct):
+
+        """parse a member of a struct i.e. . operation"""
+
+        self.tokens.expect("->")
+        struct = Dereference(Trace(self), struct) 
+
+        if not is_struct_of(struct):
+            self.tokens.error(
+                "Cannot access member of non-struct type %s"%struct.type_())
+        member = self.tokens.get()
+        if member not in struct.type_().names:
+            self.tokens.error("%s is not a member of struct"%member)
+
+        return StructMember(
+                Trace(self), 
+                struct,
+                member)
 
     def parse_file_read(self):
 
@@ -1576,7 +1635,7 @@ class Parser:
         Where a binary operation is implemented in software substitute a function call.
         """
 
-        left, right = self.coerce_types(left, right)
+        left, right = self.coerce_types(left, right, operator)
         expression = Binary(Trace(self), operator, left, right)
         expression = self.substitute_function(expression)
         return expression

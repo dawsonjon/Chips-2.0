@@ -65,7 +65,13 @@ class ArrayOf():
                         return True
                     if self.dimensions[-1] == self.dimensions[-1]:
                         return True
+        if hasattr(other, "is_pointer_to"):
+            if self.type_ == other.type_:
+                return True
         return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __repr__(self):
         string = repr(self.type_)
@@ -104,7 +110,13 @@ class PointerTo():
         if hasattr(other, "is_pointer_to"):
             if self.type_ == other.type_:
                 return True
+        if hasattr(other, "is_array_of"):
+            if self.type_ == other.type_:
+                return True
         return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __repr__(self):
         string = repr(self.type_)
@@ -137,6 +149,9 @@ class StructOf():
             if self.types == other.types:
                 return True
         return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __repr__(self):
         string = "struct {"
@@ -1187,16 +1202,42 @@ class Binary(Expression):
             pop(self.trace, instructions, result_b)
         else:
             instructions.extend(self.right.generate())
+
+            #pointer arithmetic
+            if is_pointer_to(self.left) and not is_pointer_to(self.right):
+                assert self.operator == "+"
+                size = type_size(self.left.type_().base_type())
+                if size > 4:
+                    instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size//4})
+                    instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
+
             push(self.trace, instructions, result)
             if size_of(self.right) == 8:
                 push(self.trace, instructions, result_hi)
             instructions.extend(self.left.generate())
+
+            #pointer arithmetic
+            if is_pointer_to(self.right) and not is_pointer_to(self.left):
+                assert self.operator == "+"
+                size = type_size(self.right.type_().base_type())
+                if size > 4:
+                    instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size//4})
+                    instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
+
             if size_of(self.left) == 8:
                 pop(self.trace, instructions, result_b_hi)
             pop(self.trace, instructions, result_b)
 
-
         instructions.append({"trace":self.trace,  "op":operation, "z":result, "a":result, "b":result_b})
+
+        #implement pointer arithmetic
+        if is_pointer_to(self.right) and is_pointer_to(self.left):
+            assert self.operator == "-"
+            size = type_size(self.right.type_().base_type())
+            if size > 4:
+                size = type_size(self.left.type_().base_type())
+                instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size//4})
+                instructions.append({"trace":self.trace, "op":"divide", "z":result, "a":result, "b":temp})
 
         return instructions
 
@@ -1689,6 +1730,11 @@ class Dereference(Object):
             expression.type_(),
             expression.signed())
 
+    def address(self):
+        instructions = []
+        instructions.extend(self.expression.generate())
+        return instructions
+
     def generate(self):
         instructions = []
         instructions.extend(self.expression.generate())
@@ -1990,13 +2036,6 @@ class Variable(Object):
             instructions.append({"trace":self.trace, "op":"addl", "z":result, "a":frame, "literal":self.instance.offset})
         else:
             instructions.append({"trace":self.trace, "op":"literal", "z":result, "literal":self.instance.offset})
-      #  if self.instance.local:
-      #      instructions.append({"trace":self.trace, "op":"addl", "z":result, "a":frame, "literal":self.instance.offset})
-      #  elif is_array_of(self):
-      #      instructions.append({"trace":self.trace, "op":"addl", "z":result, "a":frame, "literal":self.instance.offset})
-      #      load_object(self.trace, instructions, 4, offset=None, local=True)
-      #  else:
-      #      instructions.append({"trace":self.trace, "op":"literal", "z":result, "literal":self.instance.offset})
         return instructions
 
     def generate(self):
