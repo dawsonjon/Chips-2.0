@@ -18,7 +18,7 @@ Test
 ::
 
         $ cd test_suite
-        $ test_c2verilog
+        $ test_c_compiler
 
 Install
 -------

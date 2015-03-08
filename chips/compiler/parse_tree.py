@@ -1159,6 +1159,9 @@ def get_binary_type(left, right, operator):
     boolean_types = ["==", "!=", "<", ">", "<=", ">="]
     if operator in boolean_types:
         type_, signed = "int", True
+    elif is_pointer_to(left) and is_pointer_to(right):
+        type_ = "int"
+        signed = True
     else:
         type_ = left.type_()
         signed = left.signed() and right.signed()
@@ -1235,9 +1238,17 @@ class Binary(Expression):
             assert self.operator == "-"
             size = type_size(self.right.type_().base_type())
             if size > 4:
-                size = type_size(self.left.type_().base_type())
-                instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size//4})
-                instructions.append({"trace":self.trace, "op":"divide", "z":result, "a":result, "b":temp})
+                locations = size//4
+                #use multiply by the reciprocal * (2^32)
+                #use top half of product is quotient
+                reciprocal = int(round((2.0**32)/locations))
+                instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":reciprocal})
+                instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
+                instructions.append({"trace":self.trace, "op":"carry", "z":result_hi})
+                instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":0})
+                instructions.append({"trace":self.trace, "op":"literal", "z":temp1, "literal":0x80000000})
+                instructions.append({"trace":self.trace, "op":"add", "z":result, "a":result, "b":temp1 })
+                instructions.append({"trace":self.trace, "op":"add_with_carry", "z":result, "a":result_hi, "b":temp })
 
         return instructions
 

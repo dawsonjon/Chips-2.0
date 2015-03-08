@@ -387,6 +387,44 @@ void main(){
 """
 )
 
+test("pointers 7",
+"""
+void main(){
+    double a[5];
+    double* pa;
+
+    pa = a;
+
+    a[0] = 0;
+    a[1] = 1;
+    a[2] = 2;
+    a[3] = 3;
+    a[4] = 4;
+
+    assert(*pa == 0);
+    assert(*pa+1 == 1);
+    assert(*pa+2 == 2);
+    assert(*pa+3 == 3);
+    assert(*pa+4 == 4);
+
+    assert(&a[4] - &a[0] == 4);
+
+}
+"""
+)
+
+test("pointers 8",
+"""
+typedef struct{int a; int b; int c;} mytype;
+void main(){
+    mytype a[5];
+
+    assert(&a[4] - &a[0] == 4);
+
+}
+"""
+)
+
 test("array passing 1",
 """
 int store[100];

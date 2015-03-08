@@ -915,11 +915,7 @@ class Parser:
                     left.type_(),
                     right.type_(),
                     ))
-            print left.type_(), right.type_()
-            print left.type_() == right.type_()
             if left.type_() != right.type_():
-                print left.type_(), right.type_()
-                print left.type_() == right.type_()
                 self.tokens.error("pointer types must be identical : %s %s"%(
                     left.type_(),
                     right.type_(),
