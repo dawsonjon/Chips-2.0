@@ -8,9 +8,13 @@ __version__ = "0.1"
 import sys
 import os
 import subprocess
+import cmd
 
 from chips.compiler.compiler import compile_python_model
 from chips.compiler.python_model import StopSim
+from chips.compiler.python_model import NoProfile
+import chips.compiler.profiler as profiler
+from chips.compiler.register_map import rregmap, frame, tos
 
 if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     print "Usage: csim [options] <input_file>"
@@ -18,15 +22,198 @@ if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     sys.exit(-1)
 
 input_file = sys.argv[-1]
-options = sys.argv[1:-1]
+options = sys.argv[1:-1] + ["profile"]
 model, inputs, outputs, name = compile_python_model(input_file, options)
-
-
 model.simulation_reset()
 
-while True:
-    try:
-        model.simulation_step()
-    except StopSim:
-        break
 
+def clear():
+    subprocess.call("cls" if os.name == "nt" else "clear")
+
+def print_file_line(filename, lineno):
+    lines = open(filename).read().splitlines()
+
+    #show file and line number
+    print "\033[34m\033[1mFile:", filename
+    print "Line:", "[", lineno, "of", len(lines), "]"
+    print "\033[0m",
+    print "\033[39m"
+
+    #Print a fragment of the file to show in context
+    for i in range(lineno - 10, lineno + 10):
+        if i < 1:
+            print
+        elif i > len(lines):
+            print
+        elif i == lineno:
+            print "\033[33m\033[1m", str(i).rjust(4), "\033[32m->", lines[i-1], "\033[0m\033[39m"
+        else:
+            print "\033[33m\033[1m", str(i).rjust(4), "\033[0m\033[39m  ", lines[i-1]
+
+def print_process_state():
+
+    filename = model.get_file()
+    lineno = model.get_line()
+    print_file_line(filename, lineno)
+   
+
+class command_interpreter(cmd.Cmd):
+
+   intro="""
+   Chips-2.0 Interactive Debug
+   Copyright (C) Jonathan P Dawson 2015
+   """
+   prompt=">>> "
+
+   def do_exit(self, line): 
+       sys.exit(-1)
+
+   def do_reset(self, line): 
+      clear()
+      model.simulation_reset()
+      print_process_state()
+
+   def do_run(self, line): 
+      clear()
+      while True:
+        try:
+            model.simulation_step()
+        except StopSim:
+            break
+      print_process_state()
+
+   def do_into(self, line): 
+      clear()
+      try:
+          model.step_into()
+      except StopSim:
+          print "Process has completed"
+      print_process_state()
+
+   def do_over(self, line): 
+      clear()
+      try:
+          model.step_over()
+      except StopSim:
+          print "Process has completed"
+      print_process_state()
+
+   def do_set_breakpoint(self, line): 
+      clear()
+      try:
+          #print list of files
+          print "Code Files:"
+          code_files = sorted(profiler.code_files(model.instructions))
+          for i, f in enumerate(code_files):
+              print "[%u] %s"%(i, f)
+
+          #get user selection
+          print "\nEnter file:"
+          selection = raw_input()
+          f = code_files[int(selection)]
+
+          line = 0
+          while 1:
+              clear()
+              print_file_line(f, line)
+              print 
+              print "n=next, p=prev, j=down, k=up, blank=enter"
+              command = raw_input()
+              if command == "n":
+                  line = abs(line + 10)
+              elif command == "n":
+                  line = abs(line - 10)
+              elif command == "j":
+                  line = abs(line + 1)
+              elif command == "k":
+                  line = abs(line - 1)
+              elif command == "":
+                  break
+
+          model.set_breakpoint(f, line)
+
+      except StopSim:
+          print "Process has completed"
+      except (ValueError, IndexError):
+          print "Invalid selection"
+
+   def do_registers(self, line): 
+      clear()
+      registers = model.get_registers()
+      for number in range(16):
+          register = registers.get(number, 0)
+          print "%0.10d:"%number, "%0.10d"%register, rregmap.get(number, "reserved")
+
+   def do_memory(self, line): 
+      clear()
+      registers = model.get_registers()
+      memory = model.get_memory()
+      start_of_frame = registers.get(frame, None)
+      end_of_frame = registers.get(tos, 0)
+      for number in range(end_of_frame):
+          if number == end_of_frame:
+              break
+          if number == start_of_frame:
+              print "->", 
+          else:
+              print "  ", 
+
+          location = memory.get(number, 0)
+          print "%0.10d:"%number, "%0.10d"%location, "%0.8x"%location
+
+   def do_run_to_breakpoint(self, line): 
+      clear()
+      try:
+          model.run_to_breakpoint()
+      except StopSim:
+          pass
+      print_process_state()
+
+   def do_mstep(self, line): 
+      clear()
+      try:
+          model.simulation_step()
+      except StopSim:
+            "process completed"
+      print_process_state()
+
+   def do_coverage(self, line): 
+      clear()
+      try:
+          profile = model.get_profile()
+          profiler.report_coverage(profile, model.instructions)
+      except NoProfile:
+          print "Profiling must be enabled to use this feature"
+
+   def do_annotate(self, line): 
+      clear()
+      try:
+
+          #print list of files
+          print "Code Files:"
+          code_files = sorted(profiler.code_files(model.instructions))
+          for i, f in enumerate(code_files):
+              print "[%u] %s"%(i, f)
+
+          #get user selection
+          print "\nEnter file:"
+          selection = raw_input()
+          f = code_files[int(selection)]
+
+          #annotate
+          profile = model.get_profile()
+          profiler.annotate_coverage(f, profile, model.instructions)
+
+      except NoProfile:
+          print "Profiling must be enabled to use this feature"
+      except (ValueError, IndexError):
+          print "Invalid selection"
+
+if "interactive" in options:
+    command_interpreter().cmdloop()
+else:
+    while True:
+        try:
+            model.simulation_step()
+        except StopSim:
+            break

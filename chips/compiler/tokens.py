@@ -6,7 +6,6 @@ import os.path
 import StringIO
 
 from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.builtins import builtins
 from chips.compiler.library import libs
 
 operators = [
@@ -25,8 +24,8 @@ class Tokens:
         self.tokens = []
         self.filename = None
         self.lineno = None
-        self.scan("built in", StringIO.StringIO(builtins))
-        self.scan(filename)
+        self.scan(os.path.join(os.path.dirname(__file__), "builtins.h"))
+        self.scan(os.path.abspath(filename))
 
         tokens = []
         for token in self.tokens:
@@ -61,6 +60,7 @@ class Tokens:
                     jump = False
                 if line.strip().startswith("#else"):
                     jump = False
+                self.lineno += 1
                 continue
                 
             elif line.strip().startswith("#include"):
@@ -69,43 +69,51 @@ class Tokens:
                 self.tokens.extend(tokens)
                 directory = os.path.abspath(self.filename)
                 directory = os.path.dirname(directory)
+                directory = os.path.join("include")
                 if line.strip().endswith(">"):
-                    self.filename = "library"
-                    library = line.strip().split("<")[1].strip(' ><"')
-                    self.scan(self.filename, StringIO.StringIO(libs[library]))
+                    directory = os.path.abspath(__file__)
+                    directory = os.path.dirname(directory)
                 else:
-                    self.filename = line.strip().replace("#include", "").strip(' ><"')
-                    self.filename = os.path.join(directory, self.filename)
-                    self.scan(self.filename)
+                    directory = os.path.abspath(self.filename)
+                    directory = os.path.dirname(directory)
+                self.filename = line.strip().replace("#include", "").strip(' ><"')
+                self.filename = os.path.join(directory, self.filename)
+                self.scan(self.filename)
                 self.lineno = lineno
                 self.filename = filename
                 tokens = []
+                self.lineno += 1
                 continue
 
             elif line.strip().startswith("#define"):
                 definition = line.strip.split(" ")[1]
                 self.definitions.append(self.definition)
+                self.lineno += 1
                 continue
 
             elif line.strip().startswith("#undef"):
                 definition = line.strip.split(" ")[1]
                 self.definitions.remove(definition)
+                self.lineno += 1
                 continue
 
             elif line.strip().startswith("#ifdef"):
                 definition = line.strip.split(" ")[1]
                 if definition not in self.definitions:
                     jump = True
+                self.lineno += 1
                 continue
 
             elif line.strip().startswith("#ifndef"):
                 definition = line.strip.split(" ")[1]
                 if definition in self.definitions:
                     jump = True
+                self.lineno += 1
                 continue
 
             elif line.strip().startswith("#else"):
                 jump = True
+                self.lineno += 1
                 continue
 
             newline = True

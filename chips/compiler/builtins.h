@@ -1,12 +1,3 @@
-#!/usr/bin/env python
-"""Support Library for builtin Functionality"""
-
-__author__ = "Jon Dawson"
-__copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
-__version__ = "0.1"
-
-builtins="""
-
 unsigned unsigned_modulo_yyyy;
 unsigned unsigned_divide_xxxx(unsigned dividend, unsigned divisor){
     unsigned remainder = 0;
@@ -236,5 +227,3 @@ int long_float_ge_xxxx(long a, long b){
     }
     return  a >= b;
 }
-
-"""

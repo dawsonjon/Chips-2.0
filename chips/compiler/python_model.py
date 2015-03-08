@@ -16,6 +16,9 @@ import register_map
 class StopSim(Exception):
     pass
 
+class NoProfile(Exception):
+    pass
+
 def unique(l):
 
     """In the absence of set in older python implementations, make list values unique"""
@@ -86,7 +89,7 @@ def generate_python_model(
 
 class PythonModel:
 
-    """create a python model equivilent to the generated verilog"""
+    """create a python model equivalent to the generated verilog"""
 
     def __init__(
             self, 
@@ -127,7 +130,7 @@ class PythonModel:
         self.b_hi = 0
 
 
-        self.coverage = {}
+        self.files = {}
         
         self.input_files = {}
         for file_name in self.input_file_names:
@@ -139,35 +142,72 @@ class PythonModel:
             file_ = open(file_name, "w")
             self.output_files[file_name] = file_
 
-    def report_coverage(self):
-        print "Coverage Report:"
-        for number, instruction in enumerate(self.instructions):
-            print number, self.coverage.get(number, 0), instruction
+    def get_line(self):
+        trace = self.instructions[self.program_counter]["trace"]
+        return trace.lineno
+
+    def get_file(self):
+        trace = self.instructions[self.program_counter]["trace"]
+        return trace.filename
+
+    def get_profile(self):
+        if not self.profile:
+            raise NoProfile
+        return self.files
+
+    def get_registers(self):
+        return self.registers
+
+    def get_memory(self):
+        return self.memory
+
+    def get_instruction(self):
+        return self.instructions[self.program_counter]
+
+    def get_program_counter(self):
+        return self.program_counter
+
+    def set_breakpoint(self, break_file, break_line):
+        self.break_file = break_file
+        self.break_line = break_line
+
+    def run_to_breakpoint(self):
+        while 1:
+            self.simulation_step()
+            if self.get_line() == self.break_line and self.get_file() == self.break_file:
+                break
+
+    def step_into(self):
+
+        """run until a different line (e.g jump into functions)"""
+
+        l = self.get_line()
+        f = self.get_file()
+        while(l == self.get_line() and f == self.get_file()):
+            self.simulation_step()
+
+    def step_over(self):
+
+        """run until the next line (e.g. skip over functions)"""
+
+        l = self.get_line()
+        f = self.get_file()
+        while(self.get_line() <= l and self.get_file != f):
+            self.simulation_step()
 
     def simulation_step(self):
 
-        """execute the python simuilation by one step"""
+        """execute the python simulation by one step"""
 
 
         instruction = self.instructions[self.program_counter]
 
-        if self.debug:
-            print "executing...", self.program_counter, instruction["op"], "z:", register_map.rregmap[instruction.get("z", 0)], "a:", register_map.rregmap[instruction.get("a", 0)], "b:", register_map.rregmap[instruction.get("b", 0)], instruction.get("literal", "-"), instruction.get("trace", "-")
-
-            for name, register in register_map.regmap.iteritems():
-                print "    ", name, self.registers.get(register, "x")
-
-            tos = self.registers.get(register_map.tos, 0)
-            frame = self.registers.get(register_map.frame, 0)
-            for i in range(0, tos+1):
-                if i == frame:
-                    print "->",
-                else:
-                    print "  ",
-                print i, self.memory.get(i, 0)
 
         if self.profile:
-            self.coverage[self.program_counter] = self.coverage.get(self.program_counter, 0) + 1
+            trace = instruction.get("trace", "-")
+            lines = self.files.get(trace.filename, {})
+            lines[trace.lineno] = lines.get(trace.lineno, 0) + 1
+            self.files[trace.filename] = lines
 
         if "literal" in instruction:
             literal = instruction["literal"]
@@ -196,8 +236,6 @@ class PythonModel:
                 file_.close()
             for file_ in self.output_files.values():
                 file_.close()
-            if self.profile:
-                self.report_coverage()
             raise StopSim
 
         elif instruction["op"] == "literal":

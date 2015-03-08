@@ -42,6 +42,12 @@ Features
           "chips.compiler",
           "chips.api"
       ],
+      package_data = {
+          "chips.compiler":[
+              "builtins.h",
+              "include/*.h",
+          ]
+      },
       scripts=[
           "c2verilog",
           "csim"
