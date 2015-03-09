@@ -19,6 +19,8 @@ class Trace:
     def __init__(self, parser):
         self.lineno=parser.tokens.lineno
         self.filename=parser.tokens.filename
+        self.function=parser.function
+        self.global_scope=parser.global_scope
 
     def __repr__(self):
         return "%s : %s"%(self.filename, self.lineno)
@@ -160,6 +162,8 @@ class Function:
         self._signed = signed
         self.called_functions = []
         self.referenced_globals = []
+        self.local_variables = {}
+        self.global_variables = {}
 
     def generate(self):
         instructions = []

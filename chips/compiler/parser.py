@@ -21,6 +21,8 @@ class GlobalScope:
         self.offset = 0
         self.is_global = True
         self.referenced_globals = []
+        self.global_variables = {}
+        self.local_variables = {}
 
 class TypeSpecifier:
     def __init__(self, type_, signed, const):
@@ -210,6 +212,7 @@ class Parser:
             instance = Argument(Trace(self), argument_declaration, self.function)
             self.scope[argument] = instance
             function.arguments.append(instance.reference(Trace(self)))
+            function.local_variables[argument] = instance
 
         function.statement = self.parse_statement()
         if type_specifier.type_ != "void" and not hasattr(function, "return_statement"):
@@ -607,6 +610,7 @@ class Parser:
                 None, 
                 self.function
         )
+        self.function.local_variable[name] = instance
         self.scope[name] = instance
         return instance
 
@@ -628,7 +632,7 @@ class Parser:
                 initializer,
                 self.function
             )
-
+            self.function.global_variables[name] = instance
             self.scope[name] = instance
             instances.append(instance)
             if self.tokens.peek() == ",":
@@ -659,6 +663,7 @@ class Parser:
                     self.function
             )
 
+            self.function.local_variables[name] = instance
             self.scope[name] = instance
             instances.append(instance)
             if self.tokens.peek() == ",":
@@ -1522,6 +1527,7 @@ class Parser:
             )
             #since we don't return instance, it doesn't get generated.
             #treat as a global
+            self.function.global_variables[name] = instance
             self.function.referenced_globals.append(instance)
             return instance.reference(Trace(self))
         except SyntaxError:

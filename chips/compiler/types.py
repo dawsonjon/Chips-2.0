@@ -72,6 +72,8 @@ class ArrayOf():
     def _size_(self):
         size = type_size(self.type_)
         for i in self.dimensions:
+            if i is None:
+                return 4
             size *= i
         return size
 

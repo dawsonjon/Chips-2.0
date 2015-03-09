@@ -15,6 +15,7 @@ from chips.compiler.python_model import StopSim
 from chips.compiler.python_model import NoProfile
 import chips.compiler.profiler as profiler
 from chips.compiler.register_map import rregmap, frame, tos
+from chips.compiler.types import size_of
 
 if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     print "Usage: csim [options] <input_file>"
@@ -191,6 +192,65 @@ class command_interpreter(cmd.Cmd):
           label = instruction.get("label", 0)
 
           print "%0.10d:"%i, o.ljust(11), "%0.2d"%z, "%0.2d"%a, "%0.10d"%(b | label | literal)
+
+   def do_locals(self, line): 
+
+      """Print the values of local variables"""
+
+      clear()
+      instruction = model.get_instruction()
+      trace = instruction["trace"]
+      function = trace.function
+      registers = model.get_registers()
+      memory = model.get_memory()
+
+      variables = function.local_variables
+
+      print "locals"
+      print "======"
+      for name, instance in variables.iteritems():
+          offset = instance.offset
+          size = size_of(instance)
+          if size == 4:
+              print name, ":", memory.get(tos+offset, 0)
+          elif size == 8:
+              print name, ":", memory.get(tos+offset+1, 0) << 32 | memory.get(tos+offset, 0)
+          else:
+              print name, ":"
+              for i in range((size//4)//8):
+                  print "%4x:"%(i*8),
+                  for j in range(8):
+                      print "%08x"%memory.get(tos+offset+8*i+j, 0), 
+                  print 
+
+   def do_globals(self, line): 
+
+      """Print the values of global variables"""
+
+      clear()
+      instruction = model.get_instruction()
+      trace = instruction["trace"]
+      global_scope = trace.global_scope
+      memory = model.get_memory()
+
+      print "globals"
+      print "======="
+      for name, instance in global_scope.global_variables.iteritems():
+          offset = instance.offset
+          size = size_of(instance)
+          if size == 4:
+              print name, ":", memory.get(offset, 0)
+          elif size == 8:
+              print name, ":", memory.get(offset+1, 0) << 32 | memory.get(tos+offset, 0)
+          else:
+              print name, ":"
+              for i in range((size//4)//8):
+                  print "%4x:"%(i*8),
+                  for j in range(8):
+                      print "%08x"%memory.get(offset+8*i+j, 0), 
+                  print 
+
+
 
    def do_memory(self, line): 
 
