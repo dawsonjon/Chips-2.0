@@ -161,7 +161,7 @@ class PythonModel:
     def get_memory(self):
         return self.memory
 
-    def get_instruction(self):
+    def get_instructions(self):
         return self.instructions[self.program_counter]
 
     def get_program_counter(self):

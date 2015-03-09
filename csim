@@ -144,6 +144,23 @@ class command_interpreter(cmd.Cmd):
           register = registers.get(number, 0)
           print "%0.10d:"%number, "%0.10d"%register, rregmap.get(number, "reserved")
 
+   def do_instructions(self, line): 
+      clear()
+      instructions = model.instructions
+      for i, instruction in enumerate(instructions):
+          if i == model.get_program_counter():
+              print "->", 
+          else:
+              print "  ", 
+
+          z = instruction.get("z", 0)
+          a = instruction.get("a", 0)
+          b = instruction.get("b", 0)
+          literal = instruction.get("literal", 0)
+          label = instruction.get("label", 0)
+
+          print "%0.10d:"%i, "%0.10d"%z, "%0.10d"%a, "%0.10d"%(b | label | literal)
+
    def do_memory(self, line): 
       clear()
       registers = model.get_registers()

@@ -6,7 +6,6 @@ import os.path
 import StringIO
 
 from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.library import libs
 
 operators = [
   "!", "~", "+", "-", "*", "/", "//", "%", "=", "==", "<", ">", "<=", ">=",

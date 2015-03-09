@@ -158,6 +158,9 @@ class Parser:
         type_specifier = self.parse_type_specifier()
         name = self.tokens.get()
 
+        #create a seperate namespace for goto statements in each function
+        self.goto_labels = {}
+
         #At this point we don;t know whether this is a function or a variable
         #check for a ( and make a decision.
         #
@@ -285,6 +288,12 @@ class Parser:
         report_.filename = self.tokens.filename
         return report_
 
+    def parse_goto(self):
+        self.tokens.expect("goto")
+        label_name = self.tokens.get()
+        self.tokens.expect(";")
+        return Goto(Trace(self), self.goto_labels, label_name)
+
     def parse_wait_clocks(self):
         wait_clocks = WaitClocks(Trace(self))
         self.tokens.expect("wait_clocks")
@@ -296,7 +305,16 @@ class Parser:
         return wait_clocks
 
     def parse_statement(self):
-        if self.tokens.peek() in numeric_types + self.structs + storage_specifiers:
+
+        if self.tokens.peek_next() == ":":
+            label_name = self.tokens.get()
+            self.tokens.expect(":")
+            label = Label(Trace(self), self.parse_statement())
+            if label_name in self.goto_labels:
+                self.tokens.error("label %s is already defined"%label_name)
+            self.goto_labels[label_name] = label
+            return label
+        elif self.tokens.peek() in numeric_types + self.structs + storage_specifiers:
             return self.parse_compound_declaration()
         elif self.tokens.peek() == "struct":
             return self.parse_struct_declaration()
@@ -326,6 +344,8 @@ class Parser:
             return self.parse_case()
         elif self.tokens.peek() == "default":
             return self.parse_default()
+        elif self.tokens.peek() == "goto":
+            return self.parse_goto()
         elif self.tokens.peek() == "wait_clocks":
             return self.parse_wait_clocks()
         else:

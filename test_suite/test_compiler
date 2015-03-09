@@ -233,6 +233,81 @@ def test_long_arithmetic():
             test_corner_cases(operator, type_)
             test_random(operator, type_)
 
+test("goto 1",
+"""
+int something(){
+    int i=0;
+    while(i<100){
+        i++;
+        if(i==5){
+            goto fail;
+        }
+    }
+    return 0;
+    fail:
+        return 1;
+}
+void main(){
+  assert(something() == 1);
+}
+"""
+)
+
+test_fails("goto 2",
+"""
+void main(){
+    label1: report(1);
+    label1: report(1);
+}
+"""
+)
+
+test("goto 3",
+"""
+int a(){
+    goto label;
+    return 1;
+    label: return 5;
+}
+int b(){
+    goto label;
+    return 2;
+    label: return 6;
+}
+void main(){
+    assert(a()==5);
+    assert(b()==6);
+}
+"""
+)
+
+test_fails("goto 4",
+"""
+int a(){
+    goto label;
+    return 1;
+}
+int b(){
+    return 2;
+    a();
+    label: return 6;
+}
+"""
+)
+
+test("goto 5",
+"""
+void main(){
+    int x=0;
+    loop:
+        x++;
+        if(x<5)
+            goto loop;
+    assert(x==5);
+}
+"""
+)
+
 test("pointers 1",
 """
 void main(){

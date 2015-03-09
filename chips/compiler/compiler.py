@@ -90,7 +90,7 @@ def compile_python_model(
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
                 for i in instructions:
-                    print i.get("op", "-"), i.get("z", "-"), i.get("a", "-"), i.get("b", "-"), i.get("literal", "-"), i.get("trace")
+                    print i.get("op", "-"), i.get("z", "-"), i.get("a", "-"), (i.get("b", "-") | i.get("literal", "-") | i.get("label", 0)), i.get("trace")
 
             debug = debug or ("debug" in options)
             profile = profile or ("profile" in options)
