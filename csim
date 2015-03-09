@@ -66,14 +66,23 @@ class command_interpreter(cmd.Cmd):
    prompt=">>> "
 
    def do_exit(self, line): 
-       sys.exit(-1)
+
+      """Exit the interpreter session"""
+
+      sys.exit(-1)
 
    def do_reset(self, line): 
+
+      """Reset the simulation"""
+
       clear()
       model.simulation_reset()
       print_process_state()
 
    def do_run(self, line): 
+
+      """Run the simulation until the process terminated"""
+
       clear()
       while True:
         try:
@@ -83,6 +92,9 @@ class command_interpreter(cmd.Cmd):
       print_process_state()
 
    def do_into(self, line): 
+
+      """Step *into* a nested statement"""
+
       clear()
       try:
           model.step_into()
@@ -91,6 +103,9 @@ class command_interpreter(cmd.Cmd):
       print_process_state()
 
    def do_over(self, line): 
+
+      """Step *over* a nested statement"""
+
       clear()
       try:
           model.step_over()
@@ -99,6 +114,9 @@ class command_interpreter(cmd.Cmd):
       print_process_state()
 
    def do_set_breakpoint(self, line): 
+
+      """Set the breakpoint to a line in a file"""
+
       clear()
       try:
           #print list of files
@@ -138,9 +156,15 @@ class command_interpreter(cmd.Cmd):
           print "Invalid selection"
 
    def do_stack_use(self, line): 
-       print "Maximum Stack Usage: %s"%model.max_stack
+
+      """Print the maximum stack usage"""
+
+      print "Maximum Stack Usage: %s"%model.max_stack
 
    def do_registers(self, line): 
+
+      """Print the state of machine registers"""
+
       clear()
       registers = model.get_registers()
       for number in range(16):
@@ -148,6 +172,9 @@ class command_interpreter(cmd.Cmd):
           print "%0.10d:"%number, "%0.10u"%register, rregmap.get(number, "reserved")
 
    def do_instructions(self, line): 
+
+      """Print the machine code instructions"""
+
       clear()
       instructions = model.instructions
       for i, instruction in enumerate(instructions):
@@ -166,6 +193,9 @@ class command_interpreter(cmd.Cmd):
           print "%0.10d:"%i, o.ljust(11), "%0.2d"%z, "%0.2d"%a, "%0.10d"%(b | label | literal)
 
    def do_memory(self, line): 
+
+      """Print the contents of the memory"""
+
       clear()
       registers = model.get_registers()
       memory = model.get_memory()
@@ -183,6 +213,9 @@ class command_interpreter(cmd.Cmd):
           print "%0.10d:"%number, "%0.10d"%location, "%0.8x"%location
 
    def do_run_to_breakpoint(self, line): 
+
+      """Run simulation until the breakpoint is encountered"""
+
       clear()
       try:
           model.run_to_breakpoint()
@@ -191,6 +224,9 @@ class command_interpreter(cmd.Cmd):
       print_process_state()
 
    def do_mstep(self, line): 
+
+      """step the simulator by a single machine instruction"""
+
       clear()
       try:
           model.simulation_step()
@@ -199,6 +235,9 @@ class command_interpreter(cmd.Cmd):
       print_process_state()
 
    def do_coverage(self, line): 
+
+      """Print a summary of the code coverage"""
+
       clear()
       try:
           profile = model.get_profile()
@@ -206,7 +245,21 @@ class command_interpreter(cmd.Cmd):
       except NoProfile:
           print "Profiling must be enabled to use this feature"
 
+   def do_profile(self, line): 
+
+      """Print proportion of execution time in each code line"""
+
+      clear()
+      try:
+          profile = model.get_profile()
+          profiler.report_profile(profile, model.instructions)
+      except NoProfile:
+          print "Profiling must be enabled to use this feature"
+
    def do_annotate(self, line): 
+
+      """Annotate a source file showing which files have been executed"""
+
       clear()
       try:
 

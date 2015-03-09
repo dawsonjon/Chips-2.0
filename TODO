@@ -10,6 +10,7 @@ multiple arguments
 pointers to pointers
 correct handling of signed types
 typedefs
+add a profiler                        - done
 interactive debug                     - done
 fix line numbers                      - done
 report stack usage                    - done
