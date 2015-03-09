@@ -135,13 +135,14 @@ class Process:
         call(self.trace, instructions, "function_%s"%id(self.main))
 
         #then stop
-        instructions.append(
-                {"trace":self.trace, "op":"stop"})
+        instructions.append({"trace":self.trace, "op":"stop"})
 
         #then generate functions. This will ensure that memory has been
         #reserved for globals before functions are compiled.
         for function in called_functions:
             instructions.extend(function.generate())
+
+        #instructions.append({"trace":self.trace, "op":"return", "a":return_address})
 
         return instructions
 

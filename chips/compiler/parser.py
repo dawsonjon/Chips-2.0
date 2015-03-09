@@ -306,7 +306,8 @@ class Parser:
 
     def parse_statement(self):
 
-        if self.tokens.peek_next() == ":":
+        if (self.tokens.peek_next() == ":" and 
+            self.tokens.peek() not in ["default", "case"]):
             label_name = self.tokens.get()
             self.tokens.expect(":")
             label = Label(Trace(self), self.parse_statement())
@@ -457,6 +458,7 @@ class Parser:
         return case
 
     def parse_default(self):
+        print self.loop
         self.tokens.expect("default")
         self.tokens.expect(":")
         default = Default(Trace(self))
