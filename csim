@@ -137,12 +137,15 @@ class command_interpreter(cmd.Cmd):
       except (ValueError, IndexError):
           print "Invalid selection"
 
+   def do_stack_use(self, line): 
+       print "Maximum Stack Usage: %s"%model.max_stack
+
    def do_registers(self, line): 
       clear()
       registers = model.get_registers()
       for number in range(16):
           register = registers.get(number, 0)
-          print "%0.10d:"%number, "%0.10d"%register, rregmap.get(number, "reserved")
+          print "%0.10d:"%number, "%0.10u"%register, rregmap.get(number, "reserved")
 
    def do_instructions(self, line): 
       clear()

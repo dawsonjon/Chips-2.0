@@ -1,15 +1,18 @@
-goto - done
+goto                                  - done
 forward function declarations
 stdlib
-do while
+do while                              - done
 comma operator
-pointer arithmetic - done
+pointer arithmetic                    - done
 function pointers
 static etc
 multiple arguments
 pointers to pointers
 correct handling of signed types
 typedefs
-interactive debug - done
-fix line numbers - done
-
+interactive debug                     - done
+fix line numbers                      - done
+report stack usage                    - done
+enter maximum stack size
+trap stack overflow
+conserve memory

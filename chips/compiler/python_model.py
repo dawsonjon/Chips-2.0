@@ -128,6 +128,7 @@ class PythonModel:
         self.b_lo = 0
         self.a_hi = 0
         self.b_hi = 0
+        self.max_stack = 0
 
 
         self.files = {}
@@ -201,6 +202,8 @@ class PythonModel:
 
 
         instruction = self.instructions[self.program_counter]
+        current_stack = self.registers.get(register_map.tos, 0)
+        self.max_stack = max([current_stack, self.max_stack])
 
 
         if self.profile:
