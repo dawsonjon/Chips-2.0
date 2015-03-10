@@ -216,3 +216,17 @@ def arg_size_of(thing):
     type_ = thing.type_()
     return type_arg_size(type_)
 
+class TypeSpecifier:
+    def __init__(self, type_, signed, const):
+        self.type_ = type_
+        self.signed = signed
+        self.const = const
+
+def compatible(left, right):
+
+    """ Compare expected and actual type in function arguments """
+
+    if left.type_() == right.type_():
+        return True
+
+    return False

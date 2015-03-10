@@ -7,7 +7,8 @@ from itertools import chain
 from register_map import *
 from instruction_utils import *
 from instruction_utils import _return
-from exceptions import C2CHIPError
+from exceptions import C2CHIPError, NotConstant
+from utils import bits_to_double, bits_to_float
 from types import *
 
 class Trace:
@@ -27,16 +28,6 @@ class Trace:
 
     def error(self, string):
         raise C2CHIPError(string + "\n", self.filename, self.lineno)
-
-class NotConstant(Exception):
-
-    """This expression gets raised when a non-constant ...
-    
-    Expression is evaluated at compile time.
-
-    """
-
-    pass
 
 def flatten(sequence):
 
@@ -63,35 +54,6 @@ def constant_fold(trace,  expression):
         )
     except NotConstant:
         return expression
-
-def bits_to_float(bits):
-
-    """convert integer containing the ieee 754 representation into a float"""
-
-    byte_string = (
-        chr((bits & 0xff000000) >> 24) +
-        chr((bits & 0xff0000) >> 16) +
-        chr((bits & 0xff00) >> 8) +
-        chr((bits & 0xff))
-    )
-    return struct.unpack(">f", byte_string)[0]
-
-def bits_to_double(bits):
-
-    """convert integer containing the ieee 754 representation into a float"""
-
-    bits = int(bits)
-    byte_string = (
-        chr((bits & 0xff00000000000000) >> 56) +
-        chr((bits & 0xff000000000000) >> 48) +
-        chr((bits & 0xff0000000000) >> 40) +
-        chr((bits & 0xff00000000) >> 32) +
-        chr((bits & 0xff000000) >> 24) +
-        chr((bits & 0xff0000) >> 16) +
-        chr((bits & 0xff00) >> 8) +
-        chr((bits & 0xff))
-    )
-    return struct.unpack(">d", byte_string)[0]
 
 class Process:
 
@@ -147,6 +109,17 @@ class Process:
         #instructions.append({"trace":self.trace, "op":"return", "a":return_address})
 
         return instructions
+
+class GlobalScope:
+
+    """A stand in for a function for areas where no function is in scope"""
+
+    def __init__(self):
+        self.offset = 0
+        self.is_global = True
+        self.referenced_globals = []
+        self.global_variables = {}
+        self.local_variables = {}
 
 
 class Function:

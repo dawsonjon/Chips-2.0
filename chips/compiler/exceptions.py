@@ -12,3 +12,29 @@ class C2CHIPError(Exception):
         else:
             self.filename = None
         self.lineno = lineno
+
+class StopSim(Exception):
+
+    """A process has terminated
+    
+    """
+
+    pass
+
+class NoProfile(Exception):
+
+    """A function requires profiling information, but none is available
+    
+    """
+
+    pass
+
+class NotConstant(Exception):
+
+    """This expression gets raised when a non-constant ...
+    
+    Expression is evaluated at compile time.
+
+    """
+
+    pass

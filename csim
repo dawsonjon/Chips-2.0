@@ -11,8 +11,7 @@ import subprocess
 import cmd
 
 from chips.compiler.compiler import compile_python_model
-from chips.compiler.python_model import StopSim
-from chips.compiler.python_model import NoProfile
+from chips.compiler.exceptions import NoProfile, StopSim
 import chips.compiler.profiler as profiler
 from chips.compiler.register_map import rregmap, frame, tos
 from chips.compiler.types import size_of

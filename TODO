@@ -9,6 +9,7 @@ static etc
 multiple arguments
 pointers to pointers
 correct handling of signed types
+fix ternary expression
 typedefs
 add a profiler                        - done
 interactive debug                     - done

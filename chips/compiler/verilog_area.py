@@ -14,11 +14,7 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
 __version__ = "0.1"
 
-def unique(l):
-
-    """In the absence of set in older python implementations, make list values unique"""
-
-    return dict(zip(l, l)).keys()
+from utils import unique, calculate_jumps
 
 def log2(instructions):
 
@@ -106,30 +102,6 @@ def generate_instruction_set(instructions):
                 break
 
     return instruction_set, instruction_memory
-
-def calculate_jumps(instructions):
-
-    """change symbolic labels into numeric addresses"""
-
-    #calculate the values of jump locations
-    location = 0
-    labels = {}
-    new_instructions = []
-    for instruction in instructions:
-       if instruction["op"] == "label":
-            labels[instruction["label"]] = location
-       else:
-            new_instructions.append(instruction)
-            location += 1
-    instructions = new_instructions
-
-    #substitue real values for labeled jump locations
-    for instruction in instructions:
-        if "label" in instruction:
-            instruction["label"]=labels[instruction["label"]]
-
-    return instructions
-
 
 def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, allocator):
 

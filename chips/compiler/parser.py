@@ -10,25 +10,12 @@ from operator import mul
 from parse_tree import *
 from tokens import Tokens
 from allocator import Allocator
+from types import *
 
 types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int", "void"]
 numeric_types = ["double", "float", "signed", "unsigned", "short", "long", "char", "int"]
 integer_like = ["long", "int"]
 storage_specifiers = ["const"]
-
-class GlobalScope:
-    def __init__(self):
-        self.offset = 0
-        self.is_global = True
-        self.referenced_globals = []
-        self.global_variables = {}
-        self.local_variables = {}
-
-class TypeSpecifier:
-    def __init__(self, type_, signed, const):
-        self.type_ = type_
-        self.signed = signed
-        self.const = const
 
 class Parser:
 
@@ -273,7 +260,7 @@ class Parser:
         assert_ = Assert(Trace(self))
         self.tokens.expect("assert")
         self.tokens.expect("(")
-        assert_.expression = self.parse_expression()
+        assert_.expression = self.parse_assignment()
         self.tokens.expect(")")
         self.tokens.expect(";")
         assert_.line = self.tokens.lineno
@@ -284,7 +271,7 @@ class Parser:
         report_ = Report(Trace(self))
         self.tokens.expect("report")
         self.tokens.expect("(")
-        report_.expression = self.parse_expression()
+        report_.expression = self.parse_assignment()
         self.tokens.expect(")")
         self.tokens.expect(";")
         report_.line = self.tokens.lineno
@@ -301,7 +288,7 @@ class Parser:
         wait_clocks = WaitClocks(Trace(self))
         self.tokens.expect("wait_clocks")
         self.tokens.expect("(")
-        wait_clocks.expression = self.parse_expression()
+        wait_clocks.expression = self.parse_assignment()
         self.tokens.expect(")")
         self.tokens.expect(";")
         wait_clocks.line = self.tokens.lineno
@@ -444,7 +431,7 @@ class Parser:
 
     def parse_case(self):
         self.tokens.expect("case")
-        expression = self.parse_expression()
+        expression = self.parse_ternary_expression()
         if expression.type_() not in integer_like:
             self.tokens.error(
                 "case expression must be an integer like expression")
@@ -610,7 +597,7 @@ class Parser:
                 None, 
                 self.function
         )
-        self.function.local_variable[name] = instance
+        self.function.local_variables[name] = instance
         self.scope[name] = instance
         return instance
 
@@ -823,6 +810,13 @@ class Parser:
         """expression := assignment"""
 
         expression = self.parse_assignment()
+        while self.tokens.peek() == ",":
+            self.tokens.expect(",")
+            expression = MultiExpression(
+                Trace(self),
+                expression,
+                [self.parse_assignment()]
+            )
         return expression
 
     def parse_ternary_expression(self):
@@ -1309,7 +1303,7 @@ class Parser:
         """parse the built-in function file_write"""
 
         self.tokens.expect("(")
-        expression = self.parse_expression()
+        expression = self.parse_assignment()
         self.tokens.expect(",")
         file_name = self.tokens.get()
         file_name = file_name.strip('"').decode("string_escape")
@@ -1321,7 +1315,7 @@ class Parser:
         """parse the built-in function double_to_bits"""
 
         self.tokens.expect("(")
-        expression = self.parse_expression()
+        expression = self.parse_assignment()
         self.tokens.expect(")")
         return DoubleToBits(Trace(self), self.to_double(expression))
 
@@ -1330,7 +1324,7 @@ class Parser:
         """parse the built-in function float_to_bits"""
 
         self.tokens.expect("(")
-        expression = self.parse_expression()
+        expression = self.parse_assignment()
         self.tokens.expect(")")
         return FloatToBits(Trace(self), self.to_float(expression))
 
@@ -1339,7 +1333,7 @@ class Parser:
         """parse the built-in function bits_to_float"""
 
         self.tokens.expect("(")
-        expression = self.parse_expression()
+        expression = self.parse_assignment()
         self.tokens.expect(")")
         return BitsToDouble(Trace(self), self.to_long(expression))
 
@@ -1348,7 +1342,7 @@ class Parser:
         """parse the built-in function bits_to_float"""
 
         self.tokens.expect("(")
-        expression = self.parse_expression()
+        expression = self.parse_assignment()
         self.tokens.expect(")")
         return BitsToFloat(Trace(self), self.to_int(expression))
 
@@ -1366,7 +1360,7 @@ class Parser:
         """parse the built-in function fgetc"""
 
         self.tokens.expect("(")
-        handle = self.parse_expression()
+        handle = self.parse_assignment()
         self.tokens.expect(")")
         return Input(Trace(self), handle)
 
@@ -1375,7 +1369,7 @@ class Parser:
         """parse the built-in function ready"""
 
         self.tokens.expect("(")
-        handle = self.parse_expression()
+        handle = self.parse_assignment()
         self.tokens.expect(")")
         return Ready(Trace(self), handle)
 
@@ -1384,7 +1378,7 @@ class Parser:
         """parse the built-in function ready"""
 
         self.tokens.expect("(")
-        handle = self.parse_expression()
+        handle = self.parse_assignment()
         self.tokens.expect(")")
         return OutputReady(Trace(self), handle)
 
@@ -1402,9 +1396,9 @@ class Parser:
         """parse the built-in function fputc"""
 
         self.tokens.expect("(")
-        expression = self.parse_expression()
+        expression = self.parse_assignment()
         self.tokens.expect(",")
-        handle = self.parse_expression()
+        handle = self.parse_assignment()
         self.tokens.expect(")")
         return Output(Trace(self), handle, expression)
 
@@ -1419,7 +1413,7 @@ class Parser:
         function_call.arguments = []
         self.tokens.expect("(")
         while self.tokens.peek() != ")":
-            function_call.arguments.append(self.parse_expression())
+            function_call.arguments.append(self.parse_assignment())
             if self.tokens.peek() == ",":
                 self.tokens.expect(",")
             else:
@@ -1527,7 +1521,7 @@ class Parser:
             )
             #since we don't return instance, it doesn't get generated.
             #treat as a global
-            self.function.global_variables[name] = instance
+            self.function.global_variables["const_char_%s"%id(instance)] = instance
             self.function.referenced_globals.append(instance)
             return instance.reference(Trace(self))
         except SyntaxError:
@@ -1663,13 +1657,3 @@ class Parser:
         expression = Binary(Trace(self), operator, left, right)
         expression = self.substitute_function(expression)
         return expression
-
-
-def compatible(left, right):
-
-    """ Compare expected and actual type in function arguments """
-
-    if left.type_() == right.type_():
-        return True
-
-    return False
