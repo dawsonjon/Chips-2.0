@@ -97,7 +97,7 @@ class Parser:
             type_ = "void"
             signed = False
 
-        if self.tokens.peek() == "*":
+        while self.tokens.peek() == "*":
             self.tokens.expect("*")
             type_ = PointerTo(type_)
 
@@ -448,7 +448,6 @@ class Parser:
         return case
 
     def parse_default(self):
-        print self.loop
         self.tokens.expect("default")
         self.tokens.expect(":")
         default = Default(Trace(self))
@@ -825,19 +824,17 @@ class Parser:
 
         expression = constant_fold(Trace(self), self.parse_or_expression())
         while self.tokens.peek() in ["?"]:
+            if expression.type_() not in integer_like:
+                self.tokens.error("Condition in ternary expression must be an integer like type")
             self.tokens.expect("?")
             true_expression = constant_fold(Trace(self), self.parse_or_expression())
             self.tokens.expect(":")
             false_expression = constant_fold(Trace(self), self.parse_or_expression())
-            expression, true_expression = self.coerce_integer_types(
-                    expression, 
-                    true_expression
-            )
             true_expression, false_expression = self.coerce_integer_types(
                     true_expression, 
                     false_expression
             )
-            expression = OR(Trace(self), AND(Trace(self), expression, true_expression), false_expression)
+            expression = Ternary(Trace(self), expression, true_expression, false_expression)
         return expression
 
     def parse_or_expression(self):

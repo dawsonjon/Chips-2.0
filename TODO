@@ -1,15 +1,14 @@
 goto                                  - done
 forward function declarations
-stdlib
 do while                              - done
-comma operator
+comma operator                        - done
 pointer arithmetic                    - done
 function pointers
 static etc
 multiple arguments
-pointers to pointers
+pointers to pointers                  - done
 correct handling of signed types
-fix ternary expression
+fix ternary expression                - done
 typedefs
 add a profiler                        - done
 interactive debug                     - done
@@ -18,3 +17,4 @@ report stack usage                    - done
 enter maximum stack size
 trap stack overflow
 conserve memory
+stdlib

@@ -933,6 +933,42 @@ class MultiExpression(Expression):
             pop(self.trace, instructions, result)
         return instructions
 
+class Ternary(Expression):
+
+    """A ternary expression"""
+
+    def __init__(self, trace, expression, true_expression, false_expression):
+        self.trace = trace
+        self.expression = constant_fold(trace, expression)
+        self.true_expression = constant_fold(trace, true_expression)
+        self.false_expression = constant_fold(trace, false_expression)
+        type_ = true_expression.type_()
+        Expression.__init__(
+            self,
+            type_,
+            true_expression.signed() and false_expression.signed())
+
+    def generate(self):
+        instructions = []
+        instructions.extend(self.expression.generate())
+        if size_of(self.expression) == 8:
+            instructions.append({"trace":self.trace, "op":"or", "z":temp, "a":result, "b":result_hi})
+            instructions.append({"trace":self.trace, "op":"jmp_if_false", "a":temp, "label":"false_%s"%id(self)})
+        else:
+            instructions.append({"trace":self.trace, "op":"jmp_if_false", "a":result, "label":"false_%s"%id(self)})
+        instructions.extend(self.true_expression.generate())
+        instructions.append({"trace":self.trace, "op":"goto", "a":result, "label":"end_%s"%id(self)})
+        instructions.append({"trace":self.trace, "op":"label", "label":"false_%s"%id(self), })
+        instructions.extend(self.false_expression.generate())
+        instructions.append({"trace":self.trace, "op":"label", "label":"end_%s"%id(self), })
+        return instructions
+
+    def value(self):
+        if self.expression.value():
+            return self.true_expression.value()
+        else:
+            return self.false_expression.value()
+
 class ANDOR(Expression):
 
     """The actual class used to implement AND and OR.
