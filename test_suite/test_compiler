@@ -233,6 +233,197 @@ def test_long_arithmetic():
             test_corner_cases(operator, type_)
             test_random(operator, type_)
 
+test("function proto 1",
+"""
+int foo(int y);
+int foo(int x){return 3*x;}
+void main(){
+    assert(foo(2)==6);
+}
+"""
+)
+
+test("function proto 2",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+int foo(int z, int arry[]);
+void main(){
+    int arr[3];
+    arr[1]=4;
+    assert(foo(2,arr)==4);
+}
+"""
+)
+
+test_fails("function proto 3",
+"""
+int foo(int y, int arry[]);
+int foo(int x, float arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 4",
+"""
+void foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 5",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr){
+    return arr;
+}
+"""
+)
+
+test_fails("function proto 6",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arry[1];
+}
+"""
+)
+
+test_fails("function proto 7",
+"""
+int foo(int y, int arry[]);
+void main(){
+    int arr[3];
+    foo(0,arr);
+}
+"""
+)
+
+test_fails("function proto 8",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+int foo(int x, int arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 9",
+"""
+int foo(int y, long arry[]);
+int foo(int x, int arr[]){
+    return arr;
+}
+"""
+)
+
+test_fails("function proto 10",
+"""
+int foo(int y);
+int foo(long x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 11",
+"""
+int foo(int y);
+int foo(unsigned int x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 12",
+"""
+int foo(int y);
+int foo(const int x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 13",
+"""
+int foo(int y[]);
+int foo(unsigned int x[]){
+    return x[0];
+}
+"""
+)
+test_fails("function proto 14",
+"""
+int foo(int y[]);
+unsigned int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 15",
+"""
+int foo(int y[]);
+long int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 16",
+"""
+int foo(int y[]);
+const int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 17",
+"""
+int foo(int y[]);
+float foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 18",
+"""
+int foo(int y[], int z);
+int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 19",
+"""
+int foo(int y[]);
+int foo(int x[], int z){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 20",
+"""
+int foo;
+int foo(int x[], int z){
+    return x[0];
+}
+"""
+)
+
+
 test("goto 1",
 """
 int something(){

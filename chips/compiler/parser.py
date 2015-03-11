@@ -147,7 +147,7 @@ class Parser:
         type_specifier = self.parse_type_specifier()
         name = self.tokens.get()
 
-        #create a seperate namespace for goto statements in each function
+        #create a separate namespace for goto statements in each function
         self.goto_labels = {}
 
         #At this point we don;t know whether this is a function or a variable
@@ -156,21 +156,52 @@ class Parser:
         if self.tokens.peek() != "(":
             return self.parse_global_declaration(name, type_specifier)
 
-        #parse the function argument list
-        #
-        self.tokens.expect("(")
-        function = Function(
-                Trace(self), 
-                name, 
-                type_specifier.type_,
-                type_specifier.signed
-        )
-        #add the function to the scope before starting
-        self.scope[function.name] = function
+        if name in self.scope:
+            allready_defined = True
+            function = self.scope[name]           
+            old_type = function.type_()
+            old_signed = function.signed()
+            old_const = function.const()
+
+            if not isinstance(function, Function):
+                self.tokens.error(
+                  "%s was previously declared, but was not a function."%name
+                )
+            if type_specifier.type_ != old_type:
+                self.tokens.error(
+                  "Function type differs from previous function declaration expected: %s got: %s"%(
+                  type_specifier.type_,
+                  old_type,
+                ))
+            if type_specifier.signed != old_signed:
+                self.tokens.error(
+                  "Function signedness differs from previous function declaration expected: %s got: %s"%(
+                  type_specifier.signed,
+                  old_signed,
+                ))
+            if type_specifier.const != old_const:
+                self.tokens.error(
+                  "Argument constness differs from previous function declaration expected: %s got: %s"%(
+                  type_specifier.const,
+                  old_const,
+                ))
+        else:
+            allready_defined = False
+            function = Function(
+                     Trace(self), 
+                    name, 
+                    type_specifier,
+            )
+            function.has_definition = False
+            self.scope[function.name] = function
+
+
         #store the scope so that we can put it back when we are done
         stored_scope = copy(self.scope)
         self.function = function
+
         arguments = []
+        self.tokens.expect("(")
         while self.tokens.peek() != ")":
             arguments.append(self.parse_argument())
             if self.tokens.peek() == ",":
@@ -188,27 +219,68 @@ class Parser:
         #in this case, but in all other cases returns the size of an object.
         for argument, argument_declaration in arguments:
             function.offset -= type_arg_size(argument_declaration.type_)//4
-        function.arguments = []
 
         #arguments look like a series of declarations, for each argument
         #create an instance - like a local variable.
         #Exception - arrays are passed as references not copies
         #argument instance returns an instance of a reference to an array
         #in this case, but in all other cases returns an instance of an object.
+        if allready_defined:
+            old_arguments = iter(function.arguments)
+            if len(function.arguments) != len(arguments):
+                self.tokens.error("Function has a different number of arguments to previous declaration")
+        
+        function.arguments = []
         for argument, argument_declaration in arguments:
+            #The name of an argument may differ from a previous declaration
+            #The type may not
+            if allready_defined:
+                old_argument = next(old_arguments)
+                old_type = old_argument.type_()
+                old_signed = old_argument.signed()
+                old_const = old_argument.const()
+                if argument_declaration.type_ != old_type:
+                    self.tokens.error(
+                      "Argument type differs from previous function declaration expected: %s got: %s"%(
+                      argument_declaration.type_,
+                      old_type,
+                    ))
+                if argument_declaration.signed != old_signed:
+                    self.tokens.error(
+                      "Argument signedness differs from previous function declaration expected: %s got: %s"%(
+                      argument_declaration.signed,
+                      old_signed,
+                    ))
+                if argument_declaration.const != old_const:
+                    self.tokens.error(
+                      "Argument constness differs from previous function declaration expected: %s got: %s"%(
+                      argument_declaration.const,
+                      old_const,
+                    ))
             instance = Argument(Trace(self), argument_declaration, self.function)
             self.scope[argument] = instance
             function.arguments.append(instance.reference(Trace(self)))
             function.local_variables[argument] = instance
 
-        function.statement = self.parse_statement()
-        if type_specifier.type_ != "void" and not hasattr(function, "return_statement"):
-            self.tokens.error("Non-void function must have a return statement")
+        #A function declaration is distinct from a function definition
+        #a function may be declared many times, but defined only once.
+        if self.tokens.peek() == ";":
+            self.tokens.expect(";")
+        else:
+            if function.has_definition:
+                self.tokens.error(
+                  "Function %s has already been defined"%name
+                )
+            function.has_definition = True
+            function.statement = self.parse_statement()
+            if type_specifier.type_ != "void" and not hasattr(function, "return_statement"):
+                self.tokens.error("Non-void function must have a return statement")
 
         #Put back the scope as it was
         #
         self.function = self.global_scope
         self.scope = stored_scope
+
         #the last function to be compiled is considered the main function
         self.main = function
 

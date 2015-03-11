@@ -126,19 +126,23 @@ class Function:
 
     """A Function Object"""
 
-    def __init__(self, trace, name, type_, signed):
+    def __init__(self, trace, name, type_specifier):
         self.trace = trace
         self.offset = 0
         self.local = False
         self.name = name
-        self._type_ = type_
-        self._signed = signed
+        self._type_ = type_specifier.type_
+        self._signed = type_specifier.signed
+        self._const = type_specifier.const
         self.called_functions = []
         self.referenced_globals = []
         self.local_variables = {}
         self.global_variables = {}
 
     def generate(self):
+        if not hasattr(self, "statement"):
+            self.trace.error("Function %s has been declared, but not defined"%self.name)
+
         instructions = []
         instructions.append({
             "trace":self.trace,
@@ -169,6 +173,10 @@ class Function:
 
     def signed(self):
         return self._signed
+
+    def const(self):
+        """Potentially meaningless"""
+        return self._const
 
 class Label:
 
