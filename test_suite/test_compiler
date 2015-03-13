@@ -63,7 +63,7 @@ def test(test, code, no_init=False, check_output=""):
          quit = True
 
   if quit:
-    sys.exit(0)
+    sys.exit(-1)
 
   for i in ["main", "arbiter", "real_main"]:
       if(os.path.exists(i)):
@@ -91,7 +91,7 @@ def test_fails(test, code, no_init=False):
 
   if result == 0:
     print test, "...fail"
-    sys.exit(0)
+    sys.exit(-1)
   else:
     print test, "...pass"
 
@@ -100,7 +100,7 @@ def test_fails(test, code, no_init=False):
 
   if result == 0:
     print test, "...fail"
-    sys.exit(0)
+    sys.exit(-1)
   else:
     print test, "...pass"
 
