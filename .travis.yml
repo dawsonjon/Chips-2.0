@@ -10,5 +10,6 @@ branches:
 # command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
 install:
  - python setup.py install
-#script:
-#- python setup.py install
+script:
+ - cd test_suite
+ - ./test_compiler
