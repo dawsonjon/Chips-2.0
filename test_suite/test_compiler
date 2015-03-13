@@ -102,7 +102,10 @@ def test_fails(test, code, no_init=False):
     print test, "...pass"
 
   #Test using csim compiler
-  result = os.system("coverage2 run -p ../csim test.c > /dev/null")
+  if "coverage" in sys.argv[1:]:
+      result = os.system("coverage2 run -p ../csim test.c > /dev/null")
+  else:
+      result = os.system("../csim test.c > /dev/null")
 
   if result == 0:
     print test, "...fail"
