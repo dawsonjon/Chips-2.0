@@ -1,6 +1,9 @@
 Chips
 =====
 
+.. image:: https://travis-ci.org/dawsonjon/Chips-2.0.svg?branch=development
+    :target: https://travis-ci.org/dawsonjon/Chips-2.0`
+
 Introduction
 ------------
 
