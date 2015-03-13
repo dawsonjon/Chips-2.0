@@ -5,7 +5,7 @@ import subprocess
 from random import randint
 from numpy import uint64, int64
 
-thoroughness = 100
+thoroughness = 10
 
 def test(test, code, no_init=False, check_output=""):
 
