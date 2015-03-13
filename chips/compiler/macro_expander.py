@@ -21,20 +21,8 @@ def push_pop(instructions):
             next_instruction = instructions[i+1]
         else:
             #dummy instruction
-            next_instruction = {"op"}
+            next_instruction = {"op":None}
 
-        #if instruction["op"] == "push" and next_instruction["op"] == "pop":
-            #to = next_instruction["reg"]
-            #from_ = instruction["reg"]
-            #if to != from_:
-                #new_instructions.append({
-                    #"op":"addl", 
-                    #"literal":0, 
-                    #"z":next_instruction["reg"], 
-                    #"a":instruction["reg"],
-                    #"comment":"pushpop"
-                #})
-            #i += 1
         if instruction["op"] == "push":
             #push
             new_instructions.append({"trace":trace, "op":"store", "a":tos, "b":instruction["reg"], "comment":"push"})
