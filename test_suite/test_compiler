@@ -84,10 +84,16 @@ def test_fails(test, code, no_init=False):
   f = open("test.c", 'w')
   f.write(code)
   f.close()
-  if no_init:
-      result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+  if "coverage" in sys.argv[1:]:
+      if no_init:
+          result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+      else:
+          result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
   else:
-      result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
+      if no_init:
+          result = os.system("../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+      else:
+          result = os.system("../c2verilog iverilog run test.c > /dev/null")
 
   if result == 0:
     print test, "...fail"
