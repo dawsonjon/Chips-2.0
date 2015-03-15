@@ -315,34 +315,46 @@ class PythonModel:
            a = operand_a
            b = int(operand_b)
            b = b if b <= 32 else 32
-           self.carry = uint32(a >> (32 - b))
-           result = uint32(a << b)
+           self.carry = uint32(a) >> (32 - uint32(b))
+           if b == 32:
+               result = uint32(0)
+           else:
+               result = uint32(a) << uint32(b)
         elif instruction["op"] == "shift_left_with_carry":
            a = operand_a
            b = int(operand_b)
            b = b if b <= 32 else 32
            carry_in = self.carry
-           self.carry = uint32(a >> (32 - b))
-           result = uint32(a << b) | carry_in
+           self.carry = uint32(a) >> (32 - uint32(b))
+           if b == 32:
+               result = uint32(0) | carry_in
+           else:
+               result = uint32(a) << uint32(b) | carry_in
         elif instruction["op"] == "shift_right":
            a = operand_a
            b = int(operand_b)
            b = b if b <= 32 else 32
-           self.carry = uint32(a << (32 - b))
-           result = uint32(int32(a) >> b)
+           self.carry = uint32(a) << (32 - uint32(b))
+           result = uint32(int32(a) >> uint32(b))
         elif instruction["op"] == "unsigned_shift_right":
            a = operand_a
            b = int(operand_b)
            b = b if b <= 32 else 32
-           self.carry = uint32(a << (32 - b))
-           result = uint32(a >> b)
+           self.carry = uint32(a) << (32 - uint32(b))
+           if b == 32:
+               result = uint32(0)
+           else:
+               result = uint32(a) >> uint32(b)
         elif instruction["op"] == "shift_right_with_carry":
            a = operand_a
            b = int(operand_b)
            b = b if b <= 32 else 32
            carry_in = self.carry
-           self.carry = uint32(a << (32 - b))
-           result = uint32(a) >> b | carry_in
+           self.carry = uint32(a) << (32 - uint32(b))
+           if b == 32:
+               result = uint32(0) | carry_in
+           else:
+               result = uint32(a) >> uint32(b) | carry_in
         elif instruction["op"] == "greater":
            a = operand_a
            b = operand_b
@@ -480,13 +492,13 @@ class PythonModel:
                 exit(1)
         elif instruction["op"] == "report":
             print "%d (report (int) at line: %s in file: %s)"%(
-                self.a_lo,
+                int32(self.a_lo),
                 instruction["line"],
                 instruction["file"],
             )
         elif instruction["op"] == "long_report":
             print "%d (report (long) at line: %s in file: %s)"%(
-                join_words(self.a_hi, self.a_lo),
+                int64(join_words(self.a_hi, self.a_lo)),
                 instruction["line"],
                 instruction["file"],
             )

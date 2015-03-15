@@ -66,12 +66,10 @@ class Tokens:
                 filename = self.filename
                 lineno = self.lineno
                 self.tokens.extend(tokens)
-                directory = os.path.abspath(self.filename)
-                directory = os.path.dirname(directory)
-                directory = os.path.join("include")
                 if line.strip().endswith(">"):
                     directory = os.path.abspath(__file__)
                     directory = os.path.dirname(directory)
+                    directory = os.path.join(directory, "include")
                 else:
                     directory = os.path.abspath(self.filename)
                     directory = os.path.dirname(directory)

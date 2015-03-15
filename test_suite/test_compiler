@@ -5,9 +5,12 @@ import subprocess
 from random import randint
 from numpy import uint64, int64
 
-thoroughness = 10
+thoroughness = 100
+sn = 1
 
 def test(test, code, no_init=False, check_output=""):
+
+  global sn
 
   #run only selected tests
   if "selection" in sys.argv[1:] and test not in sys.argv[1:]:
@@ -71,10 +74,13 @@ def test(test, code, no_init=False, check_output=""):
       if(os.path.exists(i+".v")):
           os.remove(i+".v")
 
-  print test, "...pass"
+  print sn, test, "...pass"
+  sn += 1
   return True
 
 def test_fails(test, code, no_init=False):
+
+  global sn
 
   #run only selected tests
   if "selection" in sys.argv[1:] and test not in sys.argv[1:]:
@@ -99,7 +105,7 @@ def test_fails(test, code, no_init=False):
     print test, "...fail"
     sys.exit(-1)
   else:
-    print test, "...pass"
+    print sn, test, "...pass"
 
   #Test using csim compiler
   if "coverage" in sys.argv[1:]:
@@ -111,7 +117,8 @@ def test_fails(test, code, no_init=False):
     print test, "...fail"
     sys.exit(-1)
   else:
-    print test, "...pass"
+    print sn, test, "...pass"
+    sn += 1
 
 
 class InvalidStimulus:
@@ -188,59 +195,74 @@ def long_function(type_, operator, a, b):
             value = abs(a) % abs(b)
             return -int64(value) if negative else int64(value)
 
-
 def test_corner_cases(operator, type_):
-    n = 0
+
+    program = """
+    void main(){
+        %s i;
+        %s j;
+    """%(type_, type_)
+    i=0
     for a in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
         for b in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
-            try:
-                test("long %s %i"%(operator, n),
-                """
-                void main(){
-                    %s i = 0x%xul;
-                    %s j = 0x%xul;
-                    assert((i %s j) == %su);
-                }
-                """%(type_, uint64(a), 
-                     type_, uint64(b), 
-                     operator,
-                     hex(long_function(type_, operator,a,b)))
-                )
-                n+=1
-            except InvalidStimulus:
-                continue
 
-            if n == thoroughness:
-                return
+            #generate test program
+            try:
+                program += """
+                    i = 0x%xul;
+                    j = 0x%xul;
+                    assert((i %s j) == %su);
+                """%(uint64(a), 
+                     uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator, a, b)))
+            except InvalidStimulus:
+                pass
+
+    program += "}\n"
+    test("corner cases %s %s %u"%(type_, operator, i), program)
 
 def test_random(operator, type_):
-    n = 0
-    a = randint(-(2**63), (2**63)-1)
-    b = randint(-(2**63), (2**63)-1)
-    while n < thoroughness:
-        try:
-            test("random long %s %i"%(operator, n),
-            """
-            void main(){
-                %s i = 0x%xul;
-                %s j = 0x%xul;
-                assert((i %s j) == %su);
-            }
-            """%(type_, uint64(a), 
-                 type_, uint64(b), 
-                 operator,
-                 hex(long_function(type_, operator, a, b)))
-            )
-        except InvalidStimulus:
-            pass
-        n+=1
+
+    for i in range(thoroughness/10):
+        program = """
+        void main(){
+            %s i;
+            %s j;
+        """%(type_, type_)
+        
+        for j in range(10):
+
+            #generate random stimulus
+            a = randint(-(2**63), (2**63)-1)
+            if operator in ["<<", ">>"]:
+                b = randint(0, (2**6)-1)
+            else:
+                b = randint(-(2**63), (2**63)-1)
+
+            #generate test program
+            try:
+                program += """
+                    i = 0x%xul;
+                    j = 0x%xul;
+                    assert((i %s j) == %su);
+                """%(uint64(a), 
+                     uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator, a, b)))
+            except InvalidStimulus:
+                pass
+
+        program += "}\n"
+        test("random %s %s %u"%(type_, operator, i), program)
 
 
 def test_long_arithmetic():
-    for type_ in ["long int", "unsigned long int"]:
-        for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "*"]:
+    for type_ in ["long", "unsigned long"]:
+        for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "/"]:
             test_corner_cases(operator, type_)
             test_random(operator, type_)
+
 
 test("function proto 1",
 """

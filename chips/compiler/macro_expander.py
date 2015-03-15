@@ -100,7 +100,7 @@ def long_shift_left(trace, instruction):
     instructions.append({"trace":trace,"op": "shift_left_with_carry", "a":result_hi, "b":result_b, "z":result_hi})
 
     #if shift amount is less than or equal to 32
-    instructions.append({"trace":trace,"op":"literal", "z":thirty_two, "literal":32})
+    instructions.append({"trace":trace,"op":"literal",       "z":thirty_two, "literal":32})
     instructions.append({"trace":trace,"op":"greater",       "a":result_b, "b":thirty_two, "z":greater_than_32})
     instructions.append({"trace":trace,"op":"jmp_if_false",  "a":greater_than_32, "label":end})
 
