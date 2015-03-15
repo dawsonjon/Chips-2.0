@@ -184,7 +184,7 @@ def long_function(type_, operator, a, b):
         else:
             negative = (a < 0) ^ (b < 0)
             value = abs(a) // abs(b)
-            return -int64(value) if negative else int64(value)
+            return uint64(-value) if negative else uint64(value)
     if operator == "%":
         if b == 0:
             raise InvalidStimulus
@@ -193,7 +193,7 @@ def long_function(type_, operator, a, b):
         else:
             negative = (a < 0)
             value = abs(a) % abs(b)
-            return -int64(value) if negative else int64(value)
+            return int64(-value) if negative else int64(value)
 
 def test_corner_cases(operator, type_):
 
