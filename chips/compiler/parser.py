@@ -1565,6 +1565,8 @@ class Parser:
             return Constant(Trace(self), value, type_, signed)
         except SyntaxError:
             self.tokens.error("%s is not a character literal"%token)
+        except TypeError:
+            self.tokens.error("%s is not a character literal"%token)
 
     def parse_string_literal(self, token): 
 

@@ -17,7 +17,7 @@ void fgets(unsigned string[], unsigned maxlength, unsigned handle){
                 c = fgetc(handle);
                 string[i] = c;
                 i++;
-                if(c == '\\n') break;
+                if(c == '\n') break;
                 if(i == maxlength-1) break;
         }
         string[i] = 0;
