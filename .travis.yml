@@ -16,4 +16,5 @@ install:
 
 script:
  - cd test_suite
+ - ./test_api
  - ./test_compiler
