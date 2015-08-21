@@ -8,11 +8,11 @@ $def with (form)
 	<style>
 
 		body {
-		  background-color: #f2f2f2;
-		    font-family: "Lato";
+		  background-color: #ffffff;
+		    font-family: "sans-serif";
 		    font-weight: 300;
 		    font-size: 16px;
-		    color: #555;
+		    color: #007a7c;
 
 		    -webkit-font-smoothing: antialiased;
 		    -webkit-overflow-scrolling: touch;
@@ -22,9 +22,9 @@ $def with (form)
 
 		/* Titles */
 		h1, h2, h3, h4, h5, h6 {
-		    font-family: "Raleway";
+		    font-family: "sans-serif";
 		    font-weight: 300;
-		    color: #333;
+		    color: #007a7c;
 		}
 
 
@@ -40,6 +40,32 @@ $def with (form)
 
 		.mt {
 			margin-top: 40px;
+		}
+
+
+		.btn {
+		  background: #ffffff;
+		  border-style: solid;
+		  border-width: small;
+		  border-radius: 5px;
+		  border-color: #007a7c;
+		  font-family: "sans-serif";
+		  color: #007a7c;
+		  font-size: 18px;
+		  text-decoration: none;
+	          text-align: center;
+		}
+
+		.txtarea {
+		  background: #ffffff;
+		  border-style: solid;
+		  border-width: small;
+		  border-radius: 5px;
+		  border-color: #007a7c;
+		  font-family: "monospace";
+		  color: #000000;
+		  font-size: 14px;
+		  text-decoration: none;
 		}
 
 		/* Links */
@@ -70,18 +96,38 @@ $def with (form)
 		    transition: color 0.1s ease-in, background 0.1s ease-in;
 		}
 	</style>
+	<script>
 
+		function update_form(){
+			document.main_form.action="/";
+			document.main_form.method="post";
+			document.main_form.submit();
+			return true;
+		}
+
+		function generate_code(){
+			document.main_form.target="_blank";
+			document.main_form.action="main.v";
+			document.main_form.method="post";
+			document.main_form.submit();
+			return true;
+		}
+
+	</script>
 </head>
 
-<form name="main" action="main.v" method="post" target="_blank"> 
-	<div style="justify-content:center; display:flex; padding:1%">
-		<h1> Generate Hardware from C </h1>
+<form name="main_form"> 
+	<div style="display:flex; justify-content:center;">
+		<h1> Chips-2.0 - Generate Hardware with C </h1>
 	</div>
-	<div style="justify-content:center; display:flex; padding:5%">
-$:form.render()
+	<div style="display:flex; justify-content:center; padding:10px">
+		<label for="Examples" style="margin-right:10px">Examples</label>$:form["Examples"].render()
 	</div>
-	<div style="justify-content:center; display:flex; padding:1%">
-		<input type="submit" value="Generate Verilog"> </input>
+	<div style="display:flex; justify-content:center;">
+		<textarea id="c" name="C" class="txtarea" rows=20 cols=100>$form["C"].value</textarea>
+	</div>
+	<div style="display:flex; justify-content:center; padding:10px">
+		<input class="btn" value="Generate Verilog" onclick="return generate_code();"> </input>
 	</div>
 </form>
 

@@ -8,6 +8,8 @@ from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 from pygments import highlight
 from pygments.lexers.hdl import VerilogLexer
 from pygments.formatters import HtmlFormatter
+from examples import examples
+
 
 render = web.template.render('templates/')
         
@@ -18,7 +20,8 @@ urls = (
 app = web.application(urls, globals())
 
 myform = form.Form(
-        form.Textarea("C", rows="20", cols="100"),
+        form.Textarea("C"),
+        form.Dropdown("Examples", examples.keys(), onclick = "return update_form()"),
 )
 
 class file_download:        
@@ -37,7 +40,15 @@ class source_entry:
     def GET(self):
         f = myform()
         f["C"].value="void main(){}"
-        return render.formtest(f)
+        return render.page(f)
+
+    def POST(self):
+        f = myform()
+        f.validates()
+        example_selected=f["Examples"].value
+        f["C"].value=examples[example_selected]
+        f["Examples"].value=example_selected
+        return render.page(f)
 
 def compile(c_buffer):
 
