@@ -1,3 +1,6 @@
 [submodule "fpu"]
 	path = fpu
 	url = https://github.com/dawsonjon/fpu.git
+[submodule "static/CodeMirror"]
+	path = static/CodeMirror
+	url = https://github.com/codemirror/CodeMirror.git
