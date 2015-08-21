@@ -39,6 +39,7 @@ Features
       ],
       packages=[
           "chips",
+          "chips.chipsweb",
           "chips.compiler",
           "chips.api"
       ],
@@ -46,6 +47,9 @@ Features
           "chips.compiler":[
               "builtins.h",
               "include/*.h",
+          ],
+          "chips.chipsweb":[
+              "templates/*.html",
           ]
       },
       scripts=[
