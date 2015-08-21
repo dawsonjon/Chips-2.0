@@ -15,6 +15,8 @@ systems all in a single chip. You don't need to worry about clocks, resets,
 or timing. You don't need to follow special templates to make your code
 synthesisable. All that's done for you!
 
+Why not try the `Chips <http://dawsonjon.pythonanywhere.com>`_ web app. 
+
 Test
 ----
 
