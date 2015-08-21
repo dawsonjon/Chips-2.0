@@ -4,44 +4,50 @@ $def with (form)
 <head>
 
 	<meta charset="utf-8">
+	<script src="/static/CodeMirror/lib/codemirror.js"></script>
+	<link rel="stylesheet" href="/static/CodeMirror/lib/codemirror.css">
+	<script src="/static/CodeMirror/mode/clike/clike.js"></script>
 	<title>Chips Web Demo - Generate Verilog from C</title>
 	<style>
 
 		body {
 		  background-color: #ffffff;
-		    font-family: "sans-serif";
-		    font-weight: 300;
-		    font-size: 16px;
-		    color: #007a7c;
+		  font-family: "sans-serif";
+		  font-weight: 300;
+		  font-size: 16px;
+		  color: #007a7c;
 
-		    -webkit-font-smoothing: antialiased;
-		    -webkit-overflow-scrolling: touch;
+		  -webkit-font-smoothing: antialiased;
+		  -webkit-overflow-scrolling: touch;
 		    
-		    margin-top: 70px;
+		  margin-top: 70px;
 		}
 
 		/* Titles */
 		h1, h2, h3, h4, h5, h6 {
-		    font-family: "sans-serif";
-		    font-weight: 300;
-		    color: #007a7c;
+		  font-family: "sans-serif";
+		  font-weight: 300;
+		  color: #007a7c;
 		}
 
 
 		/* Paragraph & Typographic */
 		p {
-		    line-height: 28px;
-		    margin-bottom: 25px;
+		  line-height: 28px;
+		  margin-bottom: 25px;
 		}
 
 		.centered {
-		    text-align: center;
+		  text-align: center;
 		}
 
 		.mt {
-			margin-top: 40px;
+		  margin-top: 40px;
 		}
 
+		.footer {
+		  text-align: center;
+		}
 
 		.btn {
 		  background: #ffffff;
@@ -56,27 +62,23 @@ $def with (form)
 	          text-align: center;
 		}
 
-		.footer {
-		  text-align: center;
-		}
-
-		.txtarea {
-		  background: #ffffff;
+		.CodeMirror {
+		  /* Set height, width, borders, and global font properties here */
+		  font-family: monospace;
 		  border-style: solid;
 		  border-width: small;
 		  border-radius: 5px;
 		  border-color: #007a7c;
-		  font-family: "monospace";
-		  color: #000000;
-		  font-size: 14px;
-		  text-decoration: none;
+		  height: 60%;
+		  width: 90%;
+		  color: black;
 		}
 
 		/* Links */
 		a {
-		    color: #303030;
+		    color: #505050;
 		    word-wrap: break-word;
-            margin: 10px;
+		    margin: 10px;
 
 		    -webkit-transition: color 0.1s ease-in, background 0.1s ease-in;
 		    -moz-transition: color 0.1s ease-in, background 0.1s ease-in;
@@ -122,12 +124,11 @@ $def with (form)
 </head>
 
 <div style="display:flex; justify-content:center;">
-    <h1> Chips-2.0 - Generate Hardware with C </h1>
+	<h1> Chips-2.0 - Generate Hardware with C </h1>
 </div>
-
 <form name="main_form"> 
 	<div style="display:flex; justify-content:center; padding:10px">
-		<label for="Examples" style="margin-right:10px">Examples</label>$:form["Examples"].render()
+		$:form["Examples"].render()
 	</div>
 	<div style="display:flex; justify-content:center;">
 		<textarea id="c" name="C" class="txtarea" rows=20 cols=100>$form["C"].value</textarea>
@@ -137,9 +138,17 @@ $def with (form)
 	</div>
 </form>
 
-<div class="footer">
-    <a href="http://pyandchips.org"> chips - find out more... </a>
-    <a href="https://github.com/dawsonjon/Chips-2.0"> github </a>
-    <a href="/static/chips_lib.v"> support library </a>
-</div>
+<script>
 
+	var editor = CodeMirror.fromTextArea(document.getElementById("c"), {
+	    lineNumbers: true,
+	    mode: "text/x-csrc",
+	    matchBrackets: true
+	});
+
+</script>
+<div class="footer">
+<a href="http://pyandchips.org"> chips - find out more... </a>
+<a href="https://github.com/dawsonjon/Chips-2.0"> github </a>
+<a href="/static/chips_lib.v"> support library </a>                                                                                         
+</div>

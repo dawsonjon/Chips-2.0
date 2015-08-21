@@ -50,6 +50,7 @@ Features
           ],
           "chips.chipsweb":[
               "templates/*.html",
+              "static/*",
           ]
       },
       scripts=[
