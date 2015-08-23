@@ -1,11 +1,11 @@
 from chips.compiler.exceptions import C2CHIPError
 from chips.compiler.python_model import StopSim
+from chips.compiler.utils import float_to_bits, bits_to_float, double_to_bits, bits_to_double, split_word, join_words
 import chips.compiler.compiler
 import os
 import sys
 import struct
 import itertools
-from numpy import int32, int64, uint32, uint64
 
 
 class Chip:
@@ -175,6 +175,8 @@ class Chip:
 
         """reset the native python simulation"""
 
+        self.time = 0
+
         for instance in self.instances:
             instance.model.simulation_reset()
 
@@ -193,9 +195,9 @@ class Chip:
             output.ack = False
             output.simulation_reset()
 
-    def simulation_step(self):
+    def simulation_step(self, report_time=False, clock_frequency=100.0e6):
 
-        """execute the python simuilation by one step"""
+        """execute the python simulation by one step"""
 
         AllDone = True
         for instance in self.instances:
@@ -214,14 +216,19 @@ class Chip:
         for output in self.outputs:
             output.simulation_step()
 
-    def simulation_run(self):
+        self.time += 1
+        if report_time:
+            clock_period = 1/clock_frequency
+            print clock_period * self.time
 
-        """execute the python simuilation to completion"""
+    def simulation_run(self, report_time=False, clock_frequency=100.0e6):
+
+        """execute the python simulation to completion"""
 
         #if all instances have reached the end of execution then stop
         try:
             while True:
-                self.simulation_step()
+                self.simulation_step(report_time, clock_frequency)
         except StopSim:
             return
 
@@ -311,7 +318,7 @@ class _Instance:
 
         for i in outputs.values():
             if i.source is not None:
-                raise C2CHIPError("%s has allready has a source"%i.name)
+                raise C2CHIPError("%s has already has a source"%i.name)
             i.source = self
 
         for i in inputs.keys():
@@ -376,7 +383,7 @@ class Output:
 
     def __init__(self, chip, name):
 
-        """Takes two argument, the chip to which the output belongs, and a
+        """Takes two arguments, the chip to which the output belongs, and a
         string representing the name"""
 
         self.chip = chip
@@ -405,10 +412,11 @@ class Stimulus(Input):
         Input.__init__(self, chip, name)
         self.sequence = sequence
         self.type_ = type_
-        self.high = False
+        self.high_word = False
        
     def simulation_reset(self):
         self.iterator = itertools.cycle(iter(self.sequence))
+        self.high_word = False
         Input.simulation_reset(self)
 
     def data_source(self):
@@ -418,14 +426,15 @@ class Stimulus(Input):
 
         elif self.type_ == "long":
 
-            if self.high:
+            if self.high_word:
+                self.high_word  = not self.high_word
                 word = self.high
-                self.high = False
                 return word
             else:
+                self.high_word  = not self.high_word
                 long_word = next(self.iterator)
-                self.high = long_word >> 32
-                return long_word | 0xffffffff
+                self.high, low = split_word(long_word)
+                return low
 
         elif self.type_ == "float":
 
@@ -433,14 +442,15 @@ class Stimulus(Input):
 
         elif self.type_ == "double":
 
-            if self.high:
+            if self.high_word:
+                self.high_word  = not self.high_word
                 word = self.high
-                self.high = False
                 return word
             else:
+                self.high_word  = not self.high_word
                 long_word = double_to_bits(next(self.iterator))
-                self.high = long_word >> 32
-                return long_word | 0xffffffff
+                self.high, low = split_word(long_word)
+                return low
 
     def __iter__(self):
 
@@ -458,97 +468,52 @@ class Response(Output):
 
     """Capture output values during a simulation"""
 
-    def __init__(self, chip, name, type_, stop_samples = None):
+    def __init__(self, chip, name, type_):
         Output.__init__(self, chip, name)
         self.type_ = type_
-        self.stop_samples = stop_samples
-        self.high = False
+        self.high_word = False
 
     def simulation_reset(self):
         self.l = []
+        self.times = []
         Output.simulation_reset(self)
+        self.high_word = False
        
     def data_sink(self, value):
 
         if self.type_ == "int":
 
             self.l.append(value)
+            self.times.append(self.chip.time)
 
         elif self.type_ == "long":
 
-            if self.high:
-                self.l.append(self.high << 32 | value)
+
+            if self.high_word:
+                self.high_word = not self.high_word
+                self.l.append(join_words(value, self.low))
+                self.times.append(self.chip.time)
             else:
-                self.high = value
+                self.high_word = not self.high_word
+                self.low = value
 
         elif self.type_ == "float":
 
             self.l.append(bits_to_float(value))
+            self.times.append(self.chip.time)
 
         elif self.type_ == "double":
 
-            if self.high:
-                self.l.append(bits_to_double(self.high << 32 | value))
+            if self.high_word:
+                self.high_word = not self.high_word
+                self.l.append(bits_to_double(join_words(value, self.low)))
+                self.times.append(self.chip.time)
             else:
-                self.high = value
-
-
-        if self.stop_samples:
-            if len(self.l) >= self.stop_samples:
-                raise StopSim
+                self.high_word = not self.high_word
+                self.low = value
 
     def __iter__(self):
         return iter(self.l)
 
     def __len__(self):
         return len(self.l)
-
-def float_to_bits(f):
-
-    "convert a floating point number into an integer containing the ieee 754 representation."
-
-    value = 0
-    for byte in struct.pack(">f", float(f)):
-         value <<= 8
-         value |= ord(byte)
-    return int32(value)
-
-def double_to_bits(f):
-
-    "convert a double precision floating point number into a 64 bit integer containing the ieee 754 representation."
-
-    value = 0
-    for byte in struct.pack(">d", float(f)):
-         value <<= 8
-         value |= ord(byte) 
-    return uint64(value)
-
-def bits_to_float(bits):
-
-    "convert integer containing the ieee 754 representation into a float"
-
-    byte_string = (
-        chr((bits & 0xff000000) >> 24) +
-        chr((bits & 0xff0000) >> 16) +
-        chr((bits & 0xff00) >> 8) +
-        chr((bits & 0xff))
-    )
-    return struct.unpack(">f", byte_string)[0]
-
-def bits_to_double(bits):
-
-    "convert integer containing the ieee 754 representation into a float"
-
-    bits = int(bits)
-    byte_string = (
-        chr((bits & 0xff00000000000000) >> 56) +
-        chr((bits & 0xff000000000000) >> 48) +
-        chr((bits & 0xff0000000000) >> 40) +
-        chr((bits & 0xff00000000) >> 32) +
-        chr((bits & 0xff000000) >> 24) +
-        chr((bits & 0xff0000) >> 16) +
-        chr((bits & 0xff00) >> 8) +
-        chr((bits & 0xff))
-    )
-    return struct.unpack(">d", byte_string)[0]
-

@@ -343,18 +343,6 @@
     }
 
 
-    /* Return absolute value of integer n*/
-
-    int abs(int n){
-        if (n < 0) {
-            return - n;
-        } else {
-            return n;
-        }
-    }
-
-
-
     /* return log_10(n) */
 
     double log10(double n){

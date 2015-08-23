@@ -35,7 +35,7 @@ def test():
     chip = Chip("compression_test")
     test_in = Stimulus(chip, "test_in", "int", map(ord, test_data))
     wire = Wire(chip)
-    test_out = Response(chip, "test_out", "int", 1024)
+    test_out = Response(chip, "test_out", "int")
     
     #create a filter component using the C code
     compressor = Component("lzss_compress.c")
@@ -73,7 +73,8 @@ def test():
 
     #run the simulation
     chip.simulation_reset()
-    chip.simulation_run()
+    while len(test_out) < 1024:
+        chip.simulation_step()
 
 
     #show the result

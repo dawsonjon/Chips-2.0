@@ -95,6 +95,7 @@ class PythonModel:
         self.a_hi = 0
         self.b_hi = 0
         self.max_stack = 0
+        self.timer = 0
 
 
         self.files = {}
@@ -527,7 +528,12 @@ class PythonModel:
                 instruction["file"],
             )
         elif instruction["op"] == "wait_clocks":
-            pass
+            if self.timer == operand_a:
+                wait = False
+                self.timer = 0
+            else:
+                wait = True
+                self.timer += 1
 
         else:
             print "Unknown machine instruction", instruction["op"]

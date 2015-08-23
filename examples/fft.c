@@ -2,7 +2,8 @@
 /* Jonathan P Dawson */
 /* 2013-12-23 */
 
-#include "math.h"
+#include <math.h>
+#include <stdio.h>
 
 /*globals*/
 const int n = 1024;
@@ -67,6 +68,7 @@ void fft(double reals[], double imaginaries[]){
         si = twiddle_step_imaginary[stage];
 
         report(stage);
+
         for(j=0; j<span; j++){
             for(i=j; i<n; i+=subdft_size){
                 ip=i+span;
@@ -91,6 +93,11 @@ void fft(double reals[], double imaginaries[]){
 
 }
 
+const int x_re_in = input("x_re");
+const int x_im_in = input("x_im");
+const int fft_x_re_out = output("fft_x_re");
+const int fft_x_im_out = output("fft_x_im");
+
 void main(){
     unsigned i;
     double reals[n];
@@ -99,27 +106,20 @@ void main(){
     /* pre-calculate sine and cosine*/
     calculate_twiddles();
 
-    /* generate a 64 sample sin wave */
-    for(i=0; i<n; i++){
-        reals[i] = 0.0;
-        imaginaries[i] = 0.0;
-    }
-    for(i=0; i<=64; i++){
-       reals[i] = sin(2.0 * M_PI * (i/64.0));
-    }
+    while(1){
+        /* read time domain signal */
+        for(i=0; i<n; i++){
+            reals[i] = fget_double(x_re_in);
+            imaginaries[i] = fget_double(x_im_in);
+        }
 
-    /* output time domain signal to a file */
-    for(i=0; i<n; i++){
-        file_write(reals[i], "x_re");
-        file_write(imaginaries[i], "x_im");
-    }
+        /* transform into frequency domain */
+        fft(reals, imaginaries);
 
-    /* transform into frequency domain */
-    fft(reals, imaginaries);
-
-    /* output frequency domain signal to a file */
-    for(i=0; i<n; i++){
-        file_write(reals[i], "fft_x_re");
-        file_write(imaginaries[i], "fft_x_im");
+        /* output frequency domain signal*/
+        for(i=0; i<n; i++){
+            fput_double(reals[i], fft_x_re_out);
+            fput_double(imaginaries[i], fft_x_im_out);
+        }
     }
 }

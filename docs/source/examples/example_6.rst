@@ -26,7 +26,7 @@ Blackman window. The Blackman window gives good attenuation in the stop band.
 
     #impulse response
     input_ = Stimulus(chip, "input", "float", [1.0] + [0.0 for i in range(1024)])
-    output = Response(chip, "output", "float", 1024)
+    output = Response(chip, "output", "float")
     
     #create a filter component using the C code
     fir_comp = Component("fir.c")
@@ -48,7 +48,8 @@ Blackman window. The Blackman window gives good attenuation in the stop band.
 
     #run the simulation
     chip.simulation_reset()
-    chip.simulation_run()
+    while len(output) < 1024:
+        chip.simulation_step()
         
     #plot the result
     pyplot.semilogy(abs(fft(list(output)))[0:len(output)/2])

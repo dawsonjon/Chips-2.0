@@ -32,9 +32,9 @@ def test():
 
     frequency = Stimulus(chip, "frequency", "float", [30.0 + 20.0 * math.sin(2.0 * pi * i/1024.0) for i in range(1024)])
     #sin output
-    sin = Response(chip, "sin", "float", 1024)
+    sin = Response(chip, "sin", "float")
     #sin output
-    cos = Response(chip, "cos", "float", 1024)
+    cos = Response(chip, "cos", "float")
     
     #create a filter component using the C code
     fir_comp = Component("dds.c")
@@ -56,7 +56,9 @@ def test():
 
     #run the simulation
     chip.simulation_reset()
-    chip.simulation_run()
+    while len(cos) < 1024:
+        print len(cos)/1024.0
+        chip.simulation_step()
         
     #plot the result
     pyplot.plot(list(sin), label = "baseband")

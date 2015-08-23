@@ -2,6 +2,8 @@
 /* Jonathan P Dawson */
 /* 2013-12-23 */
 
+#include <stdio.h>
+
 /* globals */
 double pi=3.14159265359;
 
@@ -54,14 +56,17 @@ double cos(double angle){
 
 
 /* test routine */
+const int x_in = input("x");
+const int sin_x_out = output("sin_x");
+const int cos_x_out = output("cos_x");
 
 void main(){
     double x;
-    double step=pi/25;
 
-    for(x=-2*pi; x <= 2*pi; x += step){
-       file_write(x, "x");
-       file_write(cos(x), "cos_x");
-       file_write(sin(x), "sin_x");
+    while(1){
+        x = fget_double(x_in);
+        fput_double(sin(x), sin_x_out);
+        fput_double(cos(x), cos_x_out);
     }
+
 }

@@ -1772,7 +1772,7 @@ class FileRead(Expression):
     def __init__(self, trace, name):
         self.name = name
         self.trace = trace
-        Expression.__init__(self, "int", 4, True)
+        Expression.__init__(self, "int", True)
 
     def generate(self):
         instructions = []
@@ -1785,7 +1785,7 @@ class Ready(Expression):
     def __init__(self, trace, handle):
         self.handle = handle
         self.trace = trace
-        Expression.__init__(self, "int", 4, False)
+        Expression.__init__(self, "int", False)
 
     def generate(self):
         instructions = self.handle.generate()
@@ -1798,7 +1798,7 @@ class OutputReady(Expression):
     def __init__(self, trace, handle):
         self.handle = handle
         self.trace = trace
-        Expression.__init__(self, "int", 4, False)
+        Expression.__init__(self, "int", False)
 
     def generate(self):
         instructions = self.handle.generate()

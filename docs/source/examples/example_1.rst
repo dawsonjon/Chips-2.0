@@ -35,8 +35,9 @@ Newton's method until further refinements agree to within a small degree.
     /* Jonathan P Dawson */
     /* 2013-12-23 */
     
-    /* approximate sqrt using newton's method*/
+    #include <stdio.h>
     
+    /* approximate sqrt using newton's method*/
     double sqrt(double n){
         double square, x, old;
         x = n;
@@ -49,12 +50,13 @@ Newton's method until further refinements agree to within a small degree.
     }
     
     /* test sqrt function*/
-    
+    const int x_in = input("x");
+    const int sqrt_x_out = output("sqrt_x");
     void main(){
         double x;
-        for(x=0.0; x <= 10.0; x+= 0.01){
-            file_write(x, "x");
-            file_write(sqrt(x), "sqrt_x");
+        while(1){
+            x = fget_float(x_in);
+            fput_float(sqrt(x), sqrt_x_out);
         }
     }
 

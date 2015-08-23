@@ -37,8 +37,8 @@ class file_download:
 class source_entry:        
     def GET(self):
         f = myform()
-        f["C"].value=examples["empty template"]
-        f["Examples"].value="empty template"
+        f["C"].value=examples.values()[0]
+        f["Examples"].value=examples.keys()[0]
         return render.page(f)
 
     def POST(self):

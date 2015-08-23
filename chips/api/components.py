@@ -10,7 +10,7 @@ def constant(type_, value):
 void main(){
   const int output("out"); 
   while(1){ fput_double(%f); }
-}"""%value
+}"""%value)
 
     elif type_ == "float":
 
@@ -18,7 +18,7 @@ void main(){
 void main(){
   const int output("out"); 
   while(1){ fput_float(%ff); }
-}"""%value
+}"""%value)
 
     elif type_ == "int":
 
@@ -26,7 +26,7 @@ void main(){
 void main(){
   const int output("out"); 
   while(1){ fput_float(%d); }
-}"""%value
+}"""%value)
 
     elif type_ == "long":
 
@@ -34,7 +34,7 @@ void main(){
 void main(){
   const int output("out"); 
   while(1){ fput_long(%dl); }
-}"""%value
+}"""%value)
     
     return Component(c_model_name)
 

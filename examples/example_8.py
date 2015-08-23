@@ -16,7 +16,7 @@ def test():
     
     chip = Chip("edge_detection")
     image_in = Stimulus(chip, "image_in", "int", image_data)
-    image_out = Response(chip, "image_out", "int", width * height)
+    image_out = Response(chip, "image_out", "int")
     
     #create a filter component using the C code
     fir_comp = Component("edge_detect.c")
@@ -39,7 +39,8 @@ def test():
 
     #run the simulation
     chip.simulation_reset()
-    chip.simulation_run()
+    while len(image_out) < width * height:
+        chip.simulation_step()
 
     #show the result
     new_image = list(image_out)

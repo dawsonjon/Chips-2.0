@@ -52,7 +52,7 @@ void fput_double(double d, unsigned handle){
 }
 
 double fget_double(unsigned handle){
-    int low, high;
+    unsigned low, high;
     unsigned long l;
     double d;
     low = fgetc(handle);
