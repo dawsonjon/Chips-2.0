@@ -51,13 +51,13 @@
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/*globals*/</span>
 <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">int</span> <span class="n">seed</span><span class="p">;</span>
 
-<span class="kt">void</span> <span class="nf">srand</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">int</span> <span class="n">s</span><span class="p">){</span>
+<span class="kt">void</span> <span class="nf">srand</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">s</span><span class="p">){</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">rand</span><span class="p">(){</span>
-    <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1103515245ul</span><span class="p">;</span>
-    <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">12345ul</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">unsigned</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1103515245u</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">unsigned</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">12345u</span><span class="p">;</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">seed</span><span class="o">+</span><span class="n">c</span><span class="p">);</span>
     <span class="k">return</span> <span class="n">seed</span><span class="p">;</span>
 <span class="p">}</span>

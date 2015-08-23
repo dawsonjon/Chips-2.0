@@ -26,10 +26,7 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/chips.ico"/>
-    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
-    <link rel="up" title="Reference Manual" href="index.html" />
-    <link rel="next" title="C Libraries" href="c_library.html" />
-    <link rel="prev" title="Download" href="install.html" /> 
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,14 +35,7 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="c_library.html" title="C Libraries"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="install.html" title="Download"
-             accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
-          <li><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -69,23 +59,24 @@
 <li><cite>unsigned int</cite></li>
 <li><cite>unsigned long</cite></li>
 <li><cite>float</cite></li>
+<li><cite>double</cite></li>
 </ul>
 </div></blockquote>
-<p>A <cite>char</cite> is at least 8 bits wide.  An <cite>int</cite> is at least 16 bits wide.  A <cite>long</cite>
-is at least 32 bits wide.</p>
+<p>A <cite>char</cite> is at least 8 bits wide.  An <cite>int</cite> is at least 32 bits wide.  A <cite>long</cite>
+is at least 64 bits wide.</p>
 <p>The <cite>float</cite> type is implemented as an IEEE 754 single precision floating point
-number.</p>
-<p>At present, <cite>long long</cite> and <cite>double</cite> have not been implemented, but I
-plan to add support for these types in a later release.</p>
-<p>single dimensional arrays, <cite>char[]</cite>, <cite>int[]</cite> and <cite>long[]</cite> are supported, but
-multidimensional arrays are not yet supported.</p>
+number. The <cite>double</cite> and <cite>long double</cite> types are implemented as IEEE 754 double
+precision floating point numbers. Round-to-zero (ties to even) is the only
+supported rounding mode.</p>
+<p>single dimensional arrays, <cite>char[]</cite>, <cite>int[]</cite>, <cite>long[]</cite>, <cite>float[]</cite> and <cite>double[]</cite>
+are supported, but multidimensional arrays are not yet supported.</p>
 <p><cite>struct</cite> s are supported, you can define arrays of <cite>struct</cite> s, and <cite>struct</cite> s
 may contain arrays.</p>
 <p><cite>struct</cite> s cannot yet be passed to a function or returned from a function.</p>
 <p>Arrays may be passed (by reference) to functions.</p>
-<p>Pointers are not supported, and neither is dynamic memory allocation. This is a
-deliberate decision with low memory FPGAs in mind, and probably won&#8217;t be
-supported in future releases.</p>
+<p>Pointers are not supported, and neither is dynamic memory allocation or
+recursion.  This is a deliberate decision with low memory FPGAs in mind, these
+features probably won&#8217;t be supported in future releases.</p>
 </div>
 <div class="section" id="functions">
 <h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
@@ -233,28 +224,8 @@ the <cite>speed</cite> option.</p>
             <p class="logo"><a href="../index.html">
               <img class="logo" src="../_static/chips.png" alt="Logo"/>
             </a></p>
-  <h3><a href="../index.html">Table Of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">C to Verilog Compiler</a><ul>
-<li><a class="reference internal" href="#types">Types</a></li>
-<li><a class="reference internal" href="#functions">Functions</a></li>
-<li><a class="reference internal" href="#control-structures">Control Structures</a></li>
-<li><a class="reference internal" href="#operators">Operators</a></li>
-<li><a class="reference internal" href="#stream-i-o">Stream I/O</a></li>
-<li><a class="reference internal" href="#timed-waits">Timed Waits</a></li>
-<li><a class="reference internal" href="#debug-and-test">Debug and Test</a></li>
-<li><a class="reference internal" href="#c-preprocessor">C Preprocessor</a></li>
-<li><a class="reference internal" href="#c2verilog">c2verilog</a></li>
-</ul>
-</li>
-</ul>
+<h3><a href="../index.html">Table Of Contents</a></h3>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="install.html"
-                        title="previous chapter">Download</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="c_library.html"
-                        title="next chapter">C Libraries</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/language_reference/c_compiler.txt"
@@ -283,14 +254,7 @@ the <cite>speed</cite> option.</p>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li class="right" >
-          <a href="c_library.html" title="C Libraries"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="install.html" title="Download"
-             >previous</a> |</li>
-        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
-          <li><a href="index.html" >Reference Manual</a> &raquo;</li> 
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

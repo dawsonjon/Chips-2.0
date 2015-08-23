@@ -1,0 +1,165 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Edge Detection &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="edge-detection">
+<h1>Edge Detection<a class="headerlink" href="#edge-detection" title="Permalink to this headline">¶</a></h1>
+<p>This simple example shows how a simple 3x3 convolution matrix can be used to
+perform an <em>edge detect</em> operation on a grey-scale image. The convolution matrix
+is the &#8220;quick mask&#8221; matrix presented in <a class="reference external" href="http://homepages.inf.ed.ac.uk/rbf/BOOKS/PHILLIPS/cips2ed.pdf">Image Processing in C</a> which
+also gives a straight forward introduction to edge detection algorithms.</p>
+<p>The Python Imaging Library allows real images to be used in the simulation.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/*Edge Detection*/</span>
+<span class="cm">/*Jonathan P Dawson 2014-07-06*/</span>
+
+<span class="kt">void</span> <span class="nf">set_xy</span><span class="p">(</span><span class="kt">int</span> <span class="n">image</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="kt">int</span> <span class="n">pixel</span><span class="p">){</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">WIDTH</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="n">image</span><span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">WIDTH</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixel</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">get_xy</span><span class="p">(</span><span class="kt">int</span> <span class="n">image</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">){</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">WIDTH</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">image</span><span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">WIDTH</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+
+    <span class="kt">unsigned</span> <span class="n">image_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;image_in&quot;</span><span class="p">);</span>
+    <span class="kt">unsigned</span> <span class="n">image_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;image_out&quot;</span><span class="p">);</span>
+
+    <span class="kt">unsigned</span> <span class="n">image</span><span class="p">[</span><span class="n">SIZE</span><span class="p">];</span>
+    <span class="kt">unsigned</span> <span class="n">new_image</span><span class="p">[</span><span class="n">SIZE</span><span class="p">];</span>
+
+    <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pixel</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+
+        <span class="cm">/* read in image */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">y</span><span class="o">&lt;</span><span class="n">HEIGHT</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">x</span><span class="o">&lt;</span><span class="n">WIDTH</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">){</span>
+                <span class="n">set_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">image_in</span><span class="p">));</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* apply edge detect */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">y</span><span class="o">&lt;</span><span class="n">HEIGHT</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">x</span><span class="o">&lt;</span><span class="n">WIDTH</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">){</span>
+
+                <span class="n">pixel</span> <span class="o">=</span>  <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span>   <span class="n">y</span>  <span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">set_xy</span><span class="p">(</span><span class="n">new_image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pixel</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* write out image */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">y</span><span class="o">&lt;</span><span class="n">HEIGHT</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">x</span><span class="o">&lt;</span><span class="n">WIDTH</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">){</span>
+                <span class="n">fputc</span><span class="p">(</span><span class="n">get_xy</span><span class="p">(</span><span class="n">new_image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">image_out</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+        <span class="p">}</span>
+
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<img alt="../_images/test.bmp" src="../_images/test.bmp" />
+<img alt="../_images/after.bmp" src="../_images/after.bmp" />
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/examples/example_8.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

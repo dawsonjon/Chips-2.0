@@ -27,8 +27,8 @@
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/chips.ico"/>
     <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
-    <link rel="next" title="Tutorial" href="../tutorial/index.html" />
-    <link rel="prev" title="Physical Interface" href="../language_reference/interface.html" /> 
+    <link rel="next" title="Reference Manual" href="../user_manual/index.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="../home/index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,10 +38,10 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../tutorial/index.html" title="Tutorial"
+          <a href="../user_manual/index.html" title="Reference Manual"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../language_reference/interface.html" title="Physical Interface"
+          <a href="../home/index.html" title="&lt;no title&gt;"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -75,36 +75,28 @@ Newton&#8217;s method until further refinements agree to within a small degree.<
 <span class="cm">/* Jonathan P Dawson */</span>
 <span class="cm">/* 2013-12-23 */</span>
 
-<span class="cm">/* find absolute value of a floating point number*/</span>
-
-<span class="kt">float</span> <span class="nf">fabs</span><span class="p">(</span><span class="kt">float</span> <span class="n">n</span><span class="p">){</span>
-    <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="o">-</span> <span class="n">n</span><span class="p">;</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-        <span class="k">return</span> <span class="n">n</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">}</span>
+<span class="cp">#include &lt;stdio.h&gt;</span>
 
 <span class="cm">/* approximate sqrt using newton&#39;s method*/</span>
-
-<span class="kt">float</span> <span class="nf">sqrt</span><span class="p">(</span><span class="kt">float</span> <span class="n">n</span><span class="p">){</span>
-    <span class="kt">float</span> <span class="n">square</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">old</span><span class="p">;</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">;</span>
+<span class="kt">double</span> <span class="nf">sqrt</span><span class="p">(</span><span class="kt">double</span> <span class="n">n</span><span class="p">){</span>
+    <span class="kt">double</span> <span class="n">square</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">old</span><span class="p">;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">n</span><span class="p">;</span>
     <span class="n">old</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-    <span class="k">while</span><span class="p">(</span><span class="n">fabs</span><span class="p">(</span><span class="n">old</span><span class="o">-</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.000001</span><span class="p">){</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">old</span> <span class="o">!=</span> <span class="n">x</span><span class="p">){</span>
         <span class="n">old</span> <span class="o">=</span> <span class="n">x</span><span class="p">;</span>
-        <span class="n">x</span> <span class="o">-=</span> <span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">x</span><span class="o">-</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">);</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">+</span> <span class="n">n</span><span class="o">/</span><span class="n">x</span><span class="p">)</span><span class="o">*</span><span class="mf">0.5</span><span class="p">;</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">x</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="cm">/* test sqrt function*/</span>
-
+<span class="k">const</span> <span class="kt">int</span> <span class="n">x_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">sqrt_x_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;sqrt_x&quot;</span><span class="p">);</span>
 <span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
-    <span class="kt">float</span> <span class="n">x</span><span class="p">;</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mf">10.0</span><span class="p">;</span> <span class="n">x</span><span class="o">+=</span> <span class="mf">0.1</span><span class="p">){</span>
-        <span class="n">file_write</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&quot;x&quot;</span><span class="p">);</span>
-        <span class="n">file_write</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&quot;sqrt_x&quot;</span><span class="p">);</span>
+    <span class="kt">double</span> <span class="n">x</span><span class="p">;</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">fget_float</span><span class="p">(</span><span class="n">x_in</span><span class="p">);</span>
+        <span class="n">fput_float</span><span class="p">(</span><span class="n">sqrt</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">sqrt_x_out</span><span class="p">);</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
@@ -128,24 +120,26 @@ function is also synthesised using the identity <img class="math" src="../_image
 <span class="cm">/* Jonathan P Dawson */</span>
 <span class="cm">/* 2013-12-23 */</span>
 
+<span class="cp">#include &lt;stdio.h&gt;</span>
+
 <span class="cm">/* globals */</span>
-<span class="kt">float</span> <span class="n">pi</span><span class="o">=</span><span class="mf">3.14159265359</span><span class="p">;</span>
+<span class="kt">double</span> <span class="n">pi</span><span class="o">=</span><span class="mf">3.14159265359</span><span class="p">;</span>
 
 <span class="cm">/* approximate the cosine function using Taylor series */</span>
 
-<span class="kt">float</span> <span class="nf">taylor</span><span class="p">(</span><span class="kt">float</span> <span class="n">angle</span><span class="p">){</span>
+<span class="kt">double</span> <span class="nf">taylor</span><span class="p">(</span><span class="kt">double</span> <span class="n">angle</span><span class="p">){</span>
 
-    <span class="kt">float</span> <span class="n">old</span><span class="p">,</span> <span class="n">approximation</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">power</span><span class="p">,</span> <span class="n">fact</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">old</span><span class="p">,</span> <span class="n">approximation</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">power</span><span class="p">,</span> <span class="n">fact</span><span class="p">;</span>
     <span class="kt">unsigned</span> <span class="n">count</span><span class="p">,</span> <span class="n">i</span><span class="p">;</span>
 
-    <span class="n">approximation</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+    <span class="n">approximation</span> <span class="o">=</span> <span class="n">angle</span><span class="p">;</span>
     <span class="n">old</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
     <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">;</span>
     <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">power</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
     <span class="n">fact</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
 
-    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span> <span class="n">approximation</span><span class="o">!=</span><span class="n">old</span><span class="p">;</span> <span class="n">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">;</span> <span class="n">approximation</span><span class="o">!=</span><span class="n">old</span><span class="p">;</span> <span class="n">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
         <span class="n">old</span> <span class="o">=</span> <span class="n">approximation</span><span class="p">;</span>
 
         <span class="k">while</span><span class="p">(</span><span class="n">count</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">){</span>
@@ -161,30 +155,38 @@ function is also synthesised using the identity <img class="math" src="../_image
     <span class="k">return</span> <span class="n">approximation</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="cm">/* return the cosine of angle in radians */</span>
-
-<span class="kt">float</span> <span class="nf">cos</span><span class="p">(</span><span class="kt">float</span> <span class="n">angle</span><span class="p">){</span>
-    <span class="k">return</span> <span class="n">taylor</span><span class="p">(</span><span class="n">angle</span><span class="p">);</span>
-<span class="p">}</span>
 
 <span class="cm">/* return the sine of angle in radians */</span>
 
-<span class="kt">float</span> <span class="nf">sin</span><span class="p">(</span><span class="kt">float</span> <span class="n">angle</span><span class="p">){</span>
-    <span class="k">return</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="o">-</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">));</span>
+<span class="kt">double</span> <span class="nf">sin</span><span class="p">(</span><span class="kt">double</span> <span class="n">angle</span><span class="p">){</span>
+
+    <span class="k">return</span> <span class="n">taylor</span><span class="p">(</span><span class="n">angle</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="cm">/* return the cosine of angle in radians */</span>
+
+<span class="kt">double</span> <span class="nf">cos</span><span class="p">(</span><span class="kt">double</span> <span class="n">angle</span><span class="p">){</span>
+
+    <span class="k">return</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="o">+</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">));</span>
+
 <span class="p">}</span>
 
 
 <span class="cm">/* test routine */</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">x_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">sin_x_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;sin_x&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">cos_x_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;cos_x&quot;</span><span class="p">);</span>
 
 <span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
-    <span class="kt">float</span> <span class="n">x</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">step</span><span class="o">=</span><span class="n">pi</span><span class="o">/</span><span class="mi">25</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">x</span><span class="p">;</span>
 
-    <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">;</span> <span class="n">x</span> <span class="o">+=</span> <span class="n">step</span><span class="p">){</span>
-       <span class="n">file_write</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&quot;x&quot;</span><span class="p">);</span>
-       <span class="n">file_write</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&quot;cos_x&quot;</span><span class="p">);</span>
-       <span class="n">file_write</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&quot;sin_x&quot;</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">fget_double</span><span class="p">(</span><span class="n">x_in</span><span class="p">);</span>
+        <span class="n">fput_double</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">sin_x_out</span><span class="p">);</span>
+        <span class="n">fput_double</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">cos_x_out</span><span class="p">);</span>
     <span class="p">}</span>
+
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -198,7 +200,7 @@ function is also synthesised using the identity <img class="math" src="../_image
 <p>The quick-sort algorithm is a recurrsive algorithm, but <em>Chips</em> does not
 support recursive functions. Since the level of recursion is bounded, it is
 possible to implement the function using an explicitly created stack.</p>
-<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* fft.c */</span>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* sort.c */</span>
 <span class="cm">/* Jonathan P Dawson */</span>
 <span class="cm">/* 2013-12-23 */</span>
 
@@ -244,48 +246,22 @@ possible to implement the function using an explicitly created stack.</p>
 
 
 <span class="cm">/* recursive sort */</span>
-<span class="kt">void</span> <span class="nf">quick_sort</span><span class="p">(</span><span class="kt">int</span> <span class="n">array</span><span class="p">[]){</span>
+<span class="kt">void</span> <span class="nf">quick_sort</span><span class="p">(</span><span class="kt">int</span> <span class="n">array</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">left</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">right</span><span class="p">){</span>
+    <span class="kt">unsigned</span> <span class="n">pivot</span><span class="p">;</span>
 
-    <span class="cm">/* reccursive functions are not supported */</span>
-    <span class="cm">/* implement a stack explicitly */</span>
-    <span class="kt">unsigned</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">pivot</span><span class="p">;</span>
-    <span class="kt">unsigned</span> <span class="n">lefts</span><span class="p">[</span><span class="n">length</span><span class="p">];</span>
-    <span class="kt">unsigned</span> <span class="n">rights</span><span class="p">[</span><span class="n">length</span><span class="p">];</span>
-    <span class="kt">unsigned</span> <span class="n">stack_pointer</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="cm">/* if the subarray has two or more elements */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">){</span>
 
-    <span class="cm">/* initialy push whole array onto stack */</span>
-    <span class="n">lefts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="n">rights</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="cm">/* partition sub array into two further sub arrays */</span>
+        <span class="n">pivot</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">pivot</span> <span class="o">=</span> <span class="n">partition</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">pivot</span><span class="p">);</span>
 
-    <span class="k">while</span><span class="p">(</span><span class="n">stack_pointer</span><span class="p">){</span>
-
-
-        <span class="cm">/* pop a sub-array from stack */</span>
-        <span class="n">stack_pointer</span><span class="o">--</span><span class="p">;</span>
-        <span class="n">left</span> <span class="o">=</span> <span class="n">lefts</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">];</span>
-        <span class="n">right</span> <span class="o">=</span> <span class="n">rights</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">];</span>
-
-
-        <span class="cm">/* if the subarray has two or more elements */</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">left</span> <span class="o">&lt;</span> <span class="n">right</span><span class="p">){</span>
-
-            <span class="cm">/* partition sub array into two further sub arrays */</span>
-            <span class="n">pivot</span> <span class="o">=</span> <span class="p">(</span><span class="n">left</span> <span class="o">+</span> <span class="n">right</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
-            <span class="n">pivot</span> <span class="o">=</span> <span class="n">partition</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="p">,</span> <span class="n">pivot</span><span class="p">);</span>
-
-            <span class="cm">/* push both subarrays onto stack */</span>
-            <span class="n">lefts</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">left</span><span class="p">;</span>
-            <span class="n">rights</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">pivot</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
-            <span class="n">stack_pointer</span><span class="o">++</span><span class="p">;</span>
-            <span class="n">lefts</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">pivot</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
-            <span class="n">rights</span><span class="p">[</span><span class="n">stack_pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">right</span><span class="p">;</span>
-            <span class="n">stack_pointer</span><span class="o">++</span><span class="p">;</span>
-        <span class="p">}</span>
-
+        <span class="cm">/* push both subarrays onto stack */</span>
+        <span class="n">quick_sort</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">left</span><span class="p">,</span> <span class="n">pivot</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="n">quick_sort</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">pivot</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">right</span><span class="p">);</span>
     <span class="p">}</span>
 
 <span class="p">}</span>
-
 
 <span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
     <span class="kt">int</span> <span class="n">array</span><span class="p">[</span><span class="n">length</span><span class="p">];</span>
@@ -315,7 +291,7 @@ possible to implement the function using an explicitly created stack.</p>
     <span class="n">array</span><span class="p">[</span><span class="mi">15</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 
     <span class="cm">/* Sort the array */</span>
-    <span class="n">quick_sort</span><span class="p">(</span><span class="n">array</span><span class="p">);</span>
+    <span class="n">quick_sort</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">length</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
 
     <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
         <span class="n">report</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
@@ -325,38 +301,38 @@ possible to implement the function using an explicitly created stack.</p>
 </pre></div>
 </div>
 <p>The algorithm is tested using an array containing out of order values. The program correctly sorts the array:</p>
-<div class="highlight-python"><pre> 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 0 (report at line: 122 in file: sort.c)
- 1 (report at line: 122 in file: sort.c)
- 2 (report at line: 122 in file: sort.c)
- 3 (report at line: 122 in file: sort.c)
- 4 (report at line: 122 in file: sort.c)
- 5 (report at line: 122 in file: sort.c)
- 6 (report at line: 122 in file: sort.c)
- 7 (report at line: 122 in file: sort.c)
- 8 (report at line: 122 in file: sort.c)
- 9 (report at line: 122 in file: sort.c)
-10 (report at line: 122 in file: sort.c)
-11 (report at line: 122 in file: sort.c)
-12 (report at line: 122 in file: sort.c)
-13 (report at line: 122 in file: sort.c)
-14 (report at line: 122 in file: sort.c)
-15 (report at line: 122 in file: sort.c)
-16 (report at line: 122 in file: sort.c)</pre>
+<div class="highlight-python"><pre> 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 0 (report at line: 96 in file: sort.c)
+ 1 (report at line: 96 in file: sort.c)
+ 2 (report at line: 96 in file: sort.c)
+ 3 (report at line: 96 in file: sort.c)
+ 4 (report at line: 96 in file: sort.c)
+ 5 (report at line: 96 in file: sort.c)
+ 6 (report at line: 96 in file: sort.c)
+ 7 (report at line: 96 in file: sort.c)
+ 8 (report at line: 96 in file: sort.c)
+ 9 (report at line: 96 in file: sort.c)
+10 (report at line: 96 in file: sort.c)
+11 (report at line: 96 in file: sort.c)
+12 (report at line: 96 in file: sort.c)
+13 (report at line: 96 in file: sort.c)
+14 (report at line: 96 in file: sort.c)
+15 (report at line: 96 in file: sort.c)
+16 (report at line: 96 in file: sort.c)</pre>
 </div>
 </div>
 <div class="section" id="pseudo-random-number-generator">
@@ -366,13 +342,13 @@ possible to implement the function using an explicitly created stack.</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/*globals*/</span>
 <span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">int</span> <span class="n">seed</span><span class="p">;</span>
 
-<span class="kt">void</span> <span class="nf">srand</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">int</span> <span class="n">s</span><span class="p">){</span>
+<span class="kt">void</span> <span class="nf">srand</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">s</span><span class="p">){</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="n">s</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">rand</span><span class="p">(){</span>
-    <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1103515245ul</span><span class="p">;</span>
-    <span class="k">const</span> <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">12345ul</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">unsigned</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">1103515245u</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">unsigned</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">12345u</span><span class="p">;</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">seed</span><span class="o">+</span><span class="n">c</span><span class="p">);</span>
     <span class="k">return</span> <span class="n">seed</span><span class="p">;</span>
 <span class="p">}</span>
@@ -405,21 +381,21 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 <span class="cm">/* Jonathan P Dawson */</span>
 <span class="cm">/* 2013-12-23 */</span>
 
-<span class="cp">#include &quot;math.h&quot;</span>
+<span class="cp">#include &lt;math.h&gt;</span>
+<span class="cp">#include &lt;stdio.h&gt;</span>
 
 <span class="cm">/*globals*/</span>
 <span class="k">const</span> <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">;</span>
 <span class="k">const</span> <span class="kt">int</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-<span class="kt">float</span> <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
-<span class="kt">float</span> <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
+<span class="kt">double</span> <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
+<span class="kt">double</span> <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">m</span><span class="p">];</span>
 
 
 <span class="cm">/*calculate twiddle factors and store them*/</span>
 <span class="kt">void</span> <span class="nf">calculate_twiddles</span><span class="p">(){</span>
-    <span class="kt">unsigned</span> <span class="n">stage</span><span class="p">,</span> <span class="n">subdft_size</span><span class="p">,</span> <span class="n">span</span><span class="p">;</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;=</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
-        <span class="n">subdft_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
-        <span class="n">span</span> <span class="o">=</span> <span class="n">subdft_size</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">stage</span><span class="p">,</span> <span class="n">span</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
         <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">stage</span><span class="p">]</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="n">M_PI</span><span class="o">/</span><span class="n">span</span><span class="p">);</span>
         <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">stage</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">sin</span><span class="p">(</span><span class="n">M_PI</span><span class="o">/</span><span class="n">span</span><span class="p">);</span>
     <span class="p">}</span>
@@ -438,10 +414,11 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 <span class="p">}</span>
 
 <span class="cm">/*calculate fft*/</span>
-<span class="kt">void</span> <span class="nf">fft</span><span class="p">(</span><span class="kt">float</span> <span class="n">reals</span><span class="p">[],</span> <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[]){</span>
+<span class="kt">void</span> <span class="nf">fft</span><span class="p">(</span><span class="kt">double</span> <span class="n">reals</span><span class="p">[],</span> <span class="kt">double</span> <span class="n">imaginaries</span><span class="p">[]){</span>
 
     <span class="kt">int</span> <span class="n">stage</span><span class="p">,</span> <span class="n">subdft_size</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">j</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">sr</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">temp_real</span><span class="p">,</span> <span class="n">temp_imaginary</span><span class="p">,</span> <span class="n">imaginary_twiddle</span><span class="p">,</span> <span class="n">real_twiddle</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">sr</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">temp_real</span><span class="p">,</span> <span class="n">temp_imaginary</span><span class="p">,</span> <span class="n">imaginary_twiddle</span><span class="p">,</span> <span class="n">real_twiddle</span><span class="p">;</span>
+
 
     <span class="c1">//read data into array</span>
     <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
@@ -457,9 +434,8 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
     <span class="p">}</span>
 
     <span class="c1">//butterfly multiplies</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;=</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
-        <span class="n">report</span><span class="p">(</span><span class="n">stage</span><span class="p">);</span>
-        <span class="n">subdft_size</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">stage</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">stage</span><span class="o">&lt;</span><span class="n">m</span><span class="p">;</span> <span class="n">stage</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">subdft_size</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">&lt;&lt;</span> <span class="n">stage</span><span class="p">;</span>
         <span class="n">span</span> <span class="o">=</span> <span class="n">subdft_size</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">;</span>
 
         <span class="c1">//initialize trigonometric recurrence</span>
@@ -469,6 +445,8 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 
         <span class="n">sr</span> <span class="o">=</span> <span class="n">twiddle_step_real</span><span class="p">[</span><span class="n">stage</span><span class="p">];</span>
         <span class="n">si</span> <span class="o">=</span> <span class="n">twiddle_step_imaginary</span><span class="p">[</span><span class="n">stage</span><span class="p">];</span>
+
+        <span class="n">report</span><span class="p">(</span><span class="n">stage</span><span class="p">);</span>
 
         <span class="k">for</span><span class="p">(</span><span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">j</span><span class="o">&lt;</span><span class="n">span</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">){</span>
             <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="n">j</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">+=</span><span class="n">subdft_size</span><span class="p">){</span>
@@ -482,51 +460,445 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 
                 <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>       <span class="o">=</span> <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">temp_real</span><span class="p">;</span>
                 <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">+</span><span class="n">temp_imaginary</span><span class="p">;</span>
+
             <span class="p">}</span>
-            <span class="c1">//trigonometric recreal_twiddlerence</span>
+            <span class="c1">//trigonometric recurrence</span>
             <span class="n">temp_real</span><span class="o">=</span><span class="n">real_twiddle</span><span class="p">;</span>
             <span class="n">real_twiddle</span>      <span class="o">=</span> <span class="n">temp_real</span><span class="o">*</span><span class="n">sr</span> <span class="o">-</span> <span class="n">imaginary_twiddle</span><span class="o">*</span><span class="n">si</span><span class="p">;</span>
             <span class="n">imaginary_twiddle</span> <span class="o">=</span> <span class="n">temp_real</span><span class="o">*</span><span class="n">si</span> <span class="o">+</span> <span class="n">imaginary_twiddle</span><span class="o">*</span><span class="n">sr</span><span class="p">;</span>
         <span class="p">}</span>
+
     <span class="p">}</span>
+
 <span class="p">}</span>
 
+<span class="k">const</span> <span class="kt">int</span> <span class="n">x_re_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;x_re&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">x_im_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;x_im&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">fft_x_re_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;fft_x_re&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">fft_x_im_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;fft_x_im&quot;</span><span class="p">);</span>
+
 <span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
-    <span class="kt">float</span> <span class="n">reals</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
-    <span class="kt">float</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
     <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">reals</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
+    <span class="kt">double</span> <span class="n">imaginaries</span><span class="p">[</span><span class="n">n</span><span class="p">];</span>
 
     <span class="cm">/* pre-calculate sine and cosine*/</span>
     <span class="n">calculate_twiddles</span><span class="p">();</span>
 
-    <span class="cm">/* generate a 64 sample cos wave */</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
-        <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-        <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
-    <span class="p">}</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;=</span><span class="mi">64</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
-        <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">/</span><span class="mf">64.0</span><span class="p">));</span>
-    <span class="p">}</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="cm">/* read time domain signal */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fget_double</span><span class="p">(</span><span class="n">x_re_in</span><span class="p">);</span>
+            <span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fget_double</span><span class="p">(</span><span class="n">x_im_in</span><span class="p">);</span>
+        <span class="p">}</span>
 
-    <span class="cm">/* output time domain signal to a file */</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
-        <span class="n">file_write</span><span class="p">(</span><span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;x_re&quot;</span><span class="p">);</span>
-        <span class="n">file_write</span><span class="p">(</span><span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;x_im&quot;</span><span class="p">);</span>
-    <span class="p">}</span>
+        <span class="cm">/* transform into frequency domain */</span>
+        <span class="n">fft</span><span class="p">(</span><span class="n">reals</span><span class="p">,</span> <span class="n">imaginaries</span><span class="p">);</span>
 
-    <span class="cm">/* transform into frequency domain */</span>
-    <span class="n">fft</span><span class="p">(</span><span class="n">reals</span><span class="p">,</span> <span class="n">imaginaries</span><span class="p">);</span>
-
-    <span class="cm">/* output frequency domain signal to a file */</span>
-    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
-        <span class="n">file_write</span><span class="p">(</span><span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;fft_x_re&quot;</span><span class="p">);</span>
-        <span class="n">file_write</span><span class="p">(</span><span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s">&quot;fft_x_im&quot;</span><span class="p">);</span>
+        <span class="cm">/* output frequency domain signal*/</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="n">fput_double</span><span class="p">(</span><span class="n">reals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fft_x_re_out</span><span class="p">);</span>
+            <span class="n">fput_double</span><span class="p">(</span><span class="n">imaginaries</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">fft_x_im_out</span><span class="p">);</span>
+        <span class="p">}</span>
     <span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>The C code includes a simple test routine that calculates the frequency spectrum of a 64 point sine wave.</p>
 <img alt="../_images/example_5.png" src="../_images/example_5.png" />
+</div>
+<div class="section" id="fir-filter">
+<h2>FIR Filter<a class="headerlink" href="#fir-filter" title="Permalink to this headline">¶</a></h2>
+<p>An FIR filter contains a tapped delay line. By applying a weighting to each
+tap, and summing the results we can create a filter. The coefficients of the
+filter are critical. Here we create the coefficients using the firwin function
+from the SciPy package. In this example we create a low pass filter using a
+Blackman window. The Blackman window gives good attenuation in the stop band.</p>
+<div class="highlight-python"><div class="highlight"><pre>    <span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="nb">abs</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">fft</span>
+<span class="kn">from</span> <span class="nn">scipy.signal</span> <span class="kn">import</span> <span class="n">firwin</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span>
+<span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="n">Chip</span><span class="p">,</span> <span class="n">Stimulus</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Wire</span><span class="p">,</span> <span class="n">Component</span>
+
+<span class="c">#create a chip</span>
+<span class="n">chip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;filter_example&quot;</span><span class="p">)</span>
+
+<span class="c">#low pass filter half nyquist 50 tap</span>
+<span class="n">kernel</span> <span class="o">=</span> <span class="n">Stimulus</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="s">&quot;kernel&quot;</span><span class="p">,</span> <span class="s">&quot;float&quot;</span><span class="p">,</span> <span class="n">firwin</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">window</span><span class="o">=</span><span class="s">&quot;blackman&quot;</span><span class="p">))</span>
+
+<span class="c">#impulse response</span>
+<span class="n">input_</span> <span class="o">=</span> <span class="n">Stimulus</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="s">&quot;input&quot;</span><span class="p">,</span> <span class="s">&quot;float&quot;</span><span class="p">,</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">0.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1024</span><span class="p">)])</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="s">&quot;output&quot;</span><span class="p">,</span> <span class="s">&quot;float&quot;</span><span class="p">)</span>
+
+<span class="c">#create a filter component using the C code</span>
+<span class="n">fir_comp</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="s">&quot;fir.c&quot;</span><span class="p">)</span>
+
+<span class="c">#add an instance to the chip</span>
+<span class="n">fir_inst_1</span> <span class="o">=</span> <span class="n">fir_comp</span><span class="p">(</span>
+    <span class="n">chip</span><span class="p">,</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;a&quot;</span><span class="p">:</span><span class="n">input_</span><span class="p">,</span>
+        <span class="s">&quot;k&quot;</span><span class="p">:</span><span class="n">kernel</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;z&quot;</span><span class="p">:</span><span class="n">output</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;N&quot;</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="c">#run the simulation</span>
+<span class="n">chip</span><span class="o">.</span><span class="n">simulation_reset</span><span class="p">()</span>
+<span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1024</span><span class="p">:</span>
+    <span class="n">chip</span><span class="o">.</span><span class="n">simulation_step</span><span class="p">()</span>
+
+<span class="c">#plot the result</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">fft</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">output</span><span class="p">)))[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">output</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s">&quot;Magnitude of Impulse Response&quot;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&quot;X Sample&quot;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="s">&quot;../docs/source/examples/images/example_6.png&quot;</span><span class="p">)</span>
+<span class="n">pyplot</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The C code includes a simple test routine that calculates the frequency
+spectrum of a 64 point sine wave.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/* Chips-2.0 FIR Filter Example */</span>
+<span class="cm">/* Jonathan P Dawson 2014-07-05 */</span>
+
+<span class="cp">#include &lt;stdio.h&gt;</span>
+
+<span class="kt">unsigned</span> <span class="n">in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">kernel_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">fir_filter</span><span class="p">(){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">inp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="n">delay</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+    <span class="kt">float</span> <span class="n">kernel</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+    <span class="kt">float</span> <span class="n">data_out</span><span class="p">;</span>
+
+    <span class="cm">/* read in filter kernel */</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+       <span class="n">kernel</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">fget_float</span><span class="p">(</span><span class="n">kernel_in</span><span class="p">);</span>
+    <span class="p">}</span>
+
+
+    <span class="cm">/* execute filter on input stream */</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">delay</span><span class="p">[</span><span class="n">inp</span><span class="p">]</span> <span class="o">=</span> <span class="n">fget_float</span><span class="p">(</span><span class="n">in</span><span class="p">);</span>
+        <span class="n">data_out</span><span class="o">=</span><span class="mf">0.0</span><span class="p">;</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+        <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+            <span class="n">data_out</span> <span class="o">+=</span> <span class="n">delay</span><span class="p">[</span><span class="n">inp</span><span class="p">]</span> <span class="o">*</span> <span class="n">kernel</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">==</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span>
+            <span class="n">i</span><span class="o">++</span><span class="p">;</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">inp</span> <span class="o">==</span> <span class="n">N</span><span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+                <span class="n">inp</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+            <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+                <span class="n">inp</span><span class="o">++</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="n">fput_float</span><span class="p">(</span><span class="n">data_out</span><span class="p">,</span> <span class="n">out</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Increasing the length of the filter kernel results in a faster roll-off and
+greater attenuation.</p>
+<img alt="../_images/example_6.png" src="../_images/example_6.png" />
+<p>While in this example, we calculate all the coefficients inside a single
+process, it is possible to generate a pipelined implementation, and allow the
+work to be carried out by multiple processes resulting in an increase in the
+throughput rate.</p>
+<p><a class="reference external" href="http://www.dspguide.com/">The Scientist and Engineer&#8217;s Guide to Digital Signal Processing</a>
+gives a straight forward introduction, and can be viewed on-line for free.</p>
+</div>
+<div class="section" id="fm-modulation">
+<h2>FM Modulation<a class="headerlink" href="#fm-modulation" title="Permalink to this headline">¶</a></h2>
+<p>It is often useful in digital hardware to simulate a sin wave numerically. It
+is possible to implements a sinusoidal oscillator, without having to calculate
+the value of the sinusoid for each sample. A typical approach to this in
+hardware is to store within a lookup table a series of values, and to sweep
+through those values at a programmable rate. This method relies on a large
+amount of memory, and the memory requirements increase rapidly for high
+resolutions. It is possible to improve the resolution using techniques such as
+interpolation.</p>
+<p>In this example however, an alternative method is employed,
+trigonometric recurrence allows us to calculate the sin and cosine of a small
+angle just once. From there, subsequent samples can be found using multipliers.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;math.h&gt;</span>
+
+<span class="kt">unsigned</span> <span class="n">frequency_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;frequency&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">sin_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;sin&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">cos_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;cos&quot;</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">dds</span><span class="p">(){</span>
+    <span class="kt">float</span> <span class="n">sin_x</span><span class="p">,</span> <span class="n">cos_x</span><span class="p">,</span> <span class="n">new_sin</span><span class="p">,</span> <span class="n">new_cos</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">frequency</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+
+    <span class="n">cos_x</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+    <span class="n">sin_x</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
+    <span class="n">sr</span> <span class="o">=</span> <span class="n">cos</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="o">/</span><span class="n">N</span><span class="p">);</span>
+    <span class="n">si</span> <span class="o">=</span> <span class="n">sin</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">M_PI</span><span class="o">/</span><span class="n">N</span><span class="p">);</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">frequency</span> <span class="o">=</span> <span class="n">fget_float</span><span class="p">(</span><span class="n">frequency_in</span><span class="p">);</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">frequency</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+            <span class="n">new_cos</span> <span class="o">=</span> <span class="n">cos_x</span><span class="o">*</span><span class="n">sr</span> <span class="o">-</span> <span class="n">sin_x</span><span class="o">*</span><span class="n">si</span><span class="p">;</span>
+            <span class="n">new_sin</span> <span class="o">=</span> <span class="n">cos_x</span><span class="o">*</span><span class="n">si</span> <span class="o">+</span> <span class="n">sin_x</span><span class="o">*</span><span class="n">sr</span><span class="p">;</span>
+            <span class="n">cos_x</span> <span class="o">=</span> <span class="n">new_cos</span><span class="p">;</span>
+            <span class="n">sin_x</span> <span class="o">=</span> <span class="n">new_sin</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">fput_float</span><span class="p">(</span><span class="n">cos_x</span><span class="p">,</span> <span class="n">sin_out</span><span class="p">);</span>
+        <span class="n">fput_float</span><span class="p">(</span><span class="n">sin_x</span><span class="p">,</span> <span class="n">cos_out</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Conveniently, using this method, both a sin and cosine wave are generated. This
+is useful in complex mixers which require a coherent sin and cosine wave. We
+can control the frequency of the generated wave by stepping through the
+waveform more quickly. If the step rate is received from an input, this can be
+used to achieve frequency modulation.</p>
+<img alt="../_images/example_7.png" src="../_images/example_7.png" />
+</div>
+<div class="section" id="edge-detection">
+<h2>Edge Detection<a class="headerlink" href="#edge-detection" title="Permalink to this headline">¶</a></h2>
+<p>This simple example shows how a simple 3x3 convolution matrix can be used to
+perform an <em>edge detect</em> operation on a grey-scale image. The convolution matrix
+is the &#8220;quick mask&#8221; matrix presented in <a class="reference external" href="http://homepages.inf.ed.ac.uk/rbf/BOOKS/PHILLIPS/cips2ed.pdf">Image Processing in C</a> which
+also gives a straight forward introduction to edge detection algorithms.</p>
+<p>The Python Imaging Library allows real images to be used in the simulation.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/*Edge Detection*/</span>
+<span class="cm">/*Jonathan P Dawson 2014-07-06*/</span>
+
+<span class="kt">void</span> <span class="nf">set_xy</span><span class="p">(</span><span class="kt">int</span> <span class="n">image</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">,</span> <span class="kt">int</span> <span class="n">pixel</span><span class="p">){</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">WIDTH</span><span class="p">)</span> <span class="k">return</span><span class="p">;</span>
+    <span class="n">image</span><span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">WIDTH</span><span class="p">]</span> <span class="o">=</span> <span class="n">pixel</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">get_xy</span><span class="p">(</span><span class="kt">int</span> <span class="n">image</span><span class="p">[],</span> <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">y</span><span class="p">){</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;=</span><span class="n">WIDTH</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">image</span><span class="p">[</span><span class="n">x</span><span class="o">+</span><span class="n">y</span><span class="o">*</span><span class="n">WIDTH</span><span class="p">];</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+
+    <span class="kt">unsigned</span> <span class="n">image_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;image_in&quot;</span><span class="p">);</span>
+    <span class="kt">unsigned</span> <span class="n">image_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;image_out&quot;</span><span class="p">);</span>
+
+    <span class="kt">unsigned</span> <span class="n">image</span><span class="p">[</span><span class="n">SIZE</span><span class="p">];</span>
+    <span class="kt">unsigned</span> <span class="n">new_image</span><span class="p">[</span><span class="n">SIZE</span><span class="p">];</span>
+
+    <span class="kt">int</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pixel</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+
+        <span class="cm">/* read in image */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">y</span><span class="o">&lt;</span><span class="n">HEIGHT</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">x</span><span class="o">&lt;</span><span class="n">WIDTH</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">){</span>
+                <span class="n">set_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">image_in</span><span class="p">));</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* apply edge detect */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">y</span><span class="o">&lt;</span><span class="n">HEIGHT</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">x</span><span class="o">&lt;</span><span class="n">WIDTH</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">){</span>
+
+                <span class="n">pixel</span> <span class="o">=</span>  <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span>   <span class="n">y</span>  <span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">pixel</span> <span class="o">-=</span> <span class="n">get_xy</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="mi">1</span><span class="p">);</span>
+                <span class="n">set_xy</span><span class="p">(</span><span class="n">new_image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">pixel</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* write out image */</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">y</span><span class="o">&lt;</span><span class="n">HEIGHT</span><span class="p">;</span> <span class="n">y</span><span class="o">++</span><span class="p">){</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">x</span><span class="o">&lt;</span><span class="n">WIDTH</span><span class="p">;</span> <span class="n">x</span><span class="o">++</span><span class="p">){</span>
+                <span class="n">fputc</span><span class="p">(</span><span class="n">get_xy</span><span class="p">(</span><span class="n">new_image</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="n">image_out</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">report</span><span class="p">(</span><span class="n">y</span><span class="p">);</span>
+        <span class="p">}</span>
+
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<img alt="../_images/test.bmp" src="../_images/test.bmp" />
+<img alt="../_images/after.bmp" src="../_images/after.bmp" />
+</div>
+<div class="section" id="lzss-compression">
+<h2>LZSS Compression<a class="headerlink" href="#lzss-compression" title="Permalink to this headline">¶</a></h2>
+<p>LZSS is a simple form of of run length compression that exploits repeated
+sequences in a block of data. The encoder scans a block of data, and sends
+literal characters. However if the encoder encounters a sequence of characters
+that have already been sent, it will substitute the sequence with a
+reference to the earlier data. The encoder will always select the longest
+matching sequence that it has already sent. To achieve this the encoder
+needs to store a number of previously sent characters in a buffer. This buffer
+is referred to as the window.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/*LZSS Compression Component*/</span>
+<span class="cm">/*Jonathan P Dawson 2014-07.10*/</span>
+
+<span class="kt">unsigned</span> <span class="n">raw_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;raw_in&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">compressed_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;compressed_out&quot;</span><span class="p">);</span>
+
+<span class="cm">/*Create a to send data of an arbitrary bit length*/</span>
+<span class="kt">unsigned</span> <span class="n">packed</span><span class="p">,</span> <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">send_bits</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">data</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">bits</span><span class="p">){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">bits</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">packed</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">packed</span> <span class="o">|=</span> <span class="p">(</span><span class="n">data</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span><span class="p">;</span>
+        <span class="n">data</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">stored</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">stored</span> <span class="o">==</span> <span class="mi">32</span><span class="p">){</span>
+            <span class="n">fputc</span><span class="p">(</span><span class="n">packed</span><span class="p">,</span> <span class="n">compressed_out</span><span class="p">);</span>
+            <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*A function that reads a stream of uncompressed data,</span>
+<span class="cm">and creates a stream of compressed data*/</span>
+
+<span class="kt">void</span> <span class="nf">compress</span><span class="p">(){</span>
+
+    <span class="kt">unsigned</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">match_length</span><span class="p">,</span> <span class="n">longest_match</span><span class="p">,</span> <span class="n">longest_match_length</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">buffer</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+
+    <span class="kt">unsigned</span> <span class="n">new_size</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">pointer</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">pointer</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span> <span class="n">pointer</span><span class="o">++</span><span class="p">){</span>
+            <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">raw_in</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="n">pointer</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+        <span class="n">new_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">pointer</span><span class="o">&lt;</span><span class="n">N</span><span class="p">){</span>
+
+            <span class="cm">/*Find the longest matching string already sent*/</span>
+            <span class="n">longest_match</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">longest_match_length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">match</span><span class="o">&lt;</span><span class="n">pointer</span><span class="p">;</span> <span class="n">match</span><span class="o">++</span><span class="p">){</span>
+
+                <span class="cm">/*match length of 0 indicates no match*/</span>
+                <span class="n">match_length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+                <span class="cm">/*search through buffer to find a match*/</span>
+                <span class="k">while</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">match</span><span class="o">+</span><span class="n">match_length</span><span class="p">]</span> <span class="o">==</span> <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="o">+</span><span class="n">match_length</span><span class="p">]){</span>
+                    <span class="n">match_length</span><span class="o">++</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="cm">/*If this is the longest match, remember it*/</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">match_length</span> <span class="o">&gt;</span> <span class="n">longest_match_length</span><span class="p">){</span>
+                    <span class="n">longest_match</span> <span class="o">=</span> <span class="n">match</span><span class="p">;</span>
+                    <span class="n">longest_match_length</span> <span class="o">=</span> <span class="n">match_length</span><span class="p">;</span>
+                <span class="p">}</span>
+
+            <span class="p">}</span>
+
+            <span class="cm">/*send data*/</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">longest_match_length</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">){</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="n">longest_match_length</span><span class="p">,</span> <span class="n">LOG2N</span><span class="p">);</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="n">pointer</span> <span class="o">-</span> <span class="n">longest_match</span><span class="p">,</span> <span class="n">LOG2N</span><span class="p">);</span>
+                <span class="n">pointer</span> <span class="o">+=</span> <span class="n">longest_match_length</span><span class="p">;</span>
+                <span class="n">new_size</span> <span class="o">+=</span> <span class="n">LOG2N</span> <span class="o">+</span> <span class="n">LOG2N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span><span class="p">{</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">],</span> <span class="mi">8</span><span class="p">);</span>
+                <span class="n">pointer</span><span class="o">++</span><span class="p">;</span>
+                <span class="n">new_size</span> <span class="o">+=</span> <span class="mi">9</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="n">report</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="cm">/*report the compression ratio of this block in simulation*/</span>
+        <span class="n">report</span><span class="p">(</span><span class="n">new_size</span> <span class="o">/</span> <span class="p">(</span><span class="mf">8.0</span><span class="o">*</span><span class="n">N</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The encoding is simple. A bit is sent to indicate whether a raw character or a
+reference continues. A reference consists of a distance length pair. The
+distance tells the decoder how many characters ago the matching sequence was
+sent, and the distance indicates the length of the matching sequence. The
+size of the distance and length pointers will depend on the size of the
+window, for example a window size of 1024 requires the pointers to be 10 bits each.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/*LZSS Decmpression Component*/</span>
+<span class="cm">/* Jonathan P Dawson 2014-07-10*/</span>
+
+<span class="kt">unsigned</span> <span class="n">raw_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;raw_out&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">compressed_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;compressed_in&quot;</span><span class="p">);</span>
+
+<span class="cm">/* A function to get data of an arbtrary bit length data */</span>
+
+<span class="kt">unsigned</span> <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="n">packed</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="nf">get_bits</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">bits</span><span class="p">){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">bits</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">stored</span><span class="p">){</span>
+            <span class="n">stored</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+            <span class="n">packed</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">compressed_in</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">value</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">value</span> <span class="o">|=</span> <span class="p">(</span><span class="n">packed</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span><span class="p">;</span>
+        <span class="n">packed</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">stored</span><span class="o">--</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">32</span> <span class="o">-</span> <span class="n">bits</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="cm">/* Decompress a stream of lzss compressed data,</span>
+<span class="cm">and generate a stream of raw data*/</span>
+
+<span class="kt">void</span> <span class="nf">decompress</span><span class="p">(){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">data</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">buffer</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+
+        <span class="cm">/*get distance length*/</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">get_bits</span><span class="p">(</span><span class="mi">1</span><span class="p">)){</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">get_bits</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span>
+            <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
+            <span class="n">pointer</span><span class="o">++</span><span class="p">;</span>
+            <span class="n">fputc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">raw_out</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span><span class="p">{</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">get_bits</span><span class="p">(</span><span class="n">LOG2N</span><span class="p">);</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">get_bits</span><span class="p">(</span><span class="n">LOG2N</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="o">-</span><span class="n">distance</span><span class="p">];</span>
+                <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
+                <span class="n">pointer</span><span class="o">++</span><span class="p">;</span>
+                <span class="n">fputc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">raw_out</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the simulation, a short passage of text is compressed by the encoder
+component, sent to the decoder component, decompressed and recovered. A fuller
+explanation may be found on <a class="reference external" href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Storer%E2%80%93Szymanski">wikipedia</a>.</p>
 </div>
 </div>
 
@@ -547,16 +919,20 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
 <li><a class="reference internal" href="#implement-quicksort">Implement Quicksort</a></li>
 <li><a class="reference internal" href="#pseudo-random-number-generator">Pseudo Random Number Generator</a></li>
 <li><a class="reference internal" href="#fast-fourier-transform">Fast Fourier Transform</a></li>
+<li><a class="reference internal" href="#fir-filter">FIR Filter</a></li>
+<li><a class="reference internal" href="#fm-modulation">FM Modulation</a></li>
+<li><a class="reference internal" href="#edge-detection">Edge Detection</a></li>
+<li><a class="reference internal" href="#lzss-compression">LZSS Compression</a></li>
 </ul>
 </li>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="../language_reference/interface.html"
-                        title="previous chapter">Physical Interface</a></p>
+  <p class="topless"><a href="../home/index.html"
+                        title="previous chapter">&lt;no title&gt;</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="../tutorial/index.html"
-                        title="next chapter">Tutorial</a></p>
+  <p class="topless"><a href="../user_manual/index.html"
+                        title="next chapter">Reference Manual</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/examples/index.txt"
@@ -586,10 +962,10 @@ gives a straight forward introduction, and can be viewed on-line for free.</p>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../tutorial/index.html" title="Tutorial"
+          <a href="../user_manual/index.html" title="Reference Manual"
              >next</a> |</li>
         <li class="right" >
-          <a href="../language_reference/interface.html" title="Physical Interface"
+          <a href="../home/index.html" title="&lt;no title&gt;"
              >previous</a> |</li>
         <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
