@@ -195,7 +195,7 @@ class Chip:
             output.ack = False
             output.simulation_reset()
 
-    def simulation_step(self, report_time=False, clock_frequency=100.0e6):
+    def simulation_step(self):
 
         """execute the python simulation by one step"""
 
@@ -216,19 +216,16 @@ class Chip:
         for output in self.outputs:
             output.simulation_step()
 
-        self.time += 1
-        if report_time:
-            clock_period = 1/clock_frequency
-            print clock_period * self.time
+        self.time+=1
 
-    def simulation_run(self, report_time=False, clock_frequency=100.0e6):
+    def simulation_run(self):
 
         """execute the python simulation to completion"""
 
         #if all instances have reached the end of execution then stop
         try:
             while True:
-                self.simulation_step(report_time, clock_frequency)
+                self.simulation_step()
         except StopSim:
             return
 

@@ -21,6 +21,14 @@ class StopSim(Exception):
 
     pass
 
+class BreakSim(Exception):
+
+    """A breakpoint has been reached
+    
+    """
+
+    pass
+
 class NoProfile(Exception):
 
     """A function requires profiling information, but none is available

@@ -11,7 +11,7 @@ from numpy import int64
 import sys
 import math
 import register_map
-from exceptions import StopSim
+from exceptions import StopSim, BreakSim
 from utils import unique, calculate_jumps, bits_to_double, double_to_bits
 from utils import bits_to_float, float_to_bits, split_word, join_words
 
@@ -77,6 +77,8 @@ class PythonModel:
         self.inputs = inputs
         self.outputs = outputs
 
+        self.breakpoints = {}
+
     def simulation_reset(self):
 
         """reset the python model"""
@@ -135,15 +137,15 @@ class PythonModel:
     def get_program_counter(self):
         return self.program_counter
 
-    def set_breakpoint(self, break_file, break_line):
-        self.break_file = break_file
-        self.break_line = break_line
+    def set_breakpoint(self, f, l):
+        lines = self.breakpoints.get(f, {})
+        lines[l] = True
+        self.breakpoints[f] = lines
 
-    def run_to_breakpoint(self):
-        while 1:
-            self.simulation_step()
-            if self.get_line() == self.break_line and self.get_file() == self.break_file:
-                break
+    def clear_breakpoint(self, f, l):
+        lines = self.breakpoints.get(f, {})
+        lines.pop(l)
+        self.breakpoints[f] = lines
 
     def step_into(self):
 
@@ -167,6 +169,12 @@ class PythonModel:
 
         """execute the python simulation by one step"""
 
+
+        l = self.get_line()
+        f = self.get_file()
+        if f in self.breakpoints:
+            if l in self.breakpoints[f]:
+                raise BreakSim
 
         instruction = self.instructions[self.program_counter]
         current_stack = self.registers.get(register_map.tos, 0)

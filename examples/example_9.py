@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from chips.api.api import *
+from chips.api.gui import GuiChip
 from math import ceil, log
 
 try:
@@ -10,49 +11,25 @@ except ImportError:
 
 def test():
 
-    test_data = """IN the year 1878 I took my degree of Doctor of Medicine of the
-    University of London, and proceeded to Netley to go through the course
-    prescribed for surgeons in the army. Having completed my studies there,
-    I was duly attached to the Fifth Northumberland Fusiliers as Assistant
-    Surgeon. The regiment was stationed in India at the time, and before
-    I could join it, the second Afghan war had broken out. On landing at
-    Bombay, I learned that my corps had advanced through the passes, and
-    was already deep in the enemy's country. I followed, however, with many
-    other officers who were in the same situation as myself, and succeeded
-    in reaching Candahar in safety, where I found my regiment, and at once
-    entered upon my new duties.
-
-    The campaign brought honours and promotion to many, but for me it had
-    nothing but misfortune and disaster. I was removed from my brigade and
-    attached to the Berkshires, with whom I served at the fatal battle of
-    Maiwand. There I was struck on the shoulder by a Jezail bullet, which
-    shattered the bone and grazed the subclavian artery. I should have
-    fallen into the hands of the murderous Ghazis had it not been for the
-    devotion and courage shown by Murray, my orderly, who threw me across a
-    pack-horse, and succeeded in bringing me safely to the British lines.
-    """
-
-    chip = Chip("compression_test")
-    test_in = Stimulus(chip, "test_in", "int", map(ord, test_data))
+    chip = GuiChip("Test Chip")
+    test_in = Stimulus(chip, "test_in", "int", [1, 2, 3])
     wire = Wire(chip)
     test_out = Response(chip, "test_out", "int")
     
     #create a filter component using the C code
-    compressor = Component("lzss_compress.c")
-    decompressor = Component("lzss_decompress.c")
+    compressor = Component("pro.c")
+    decompressor = Component("mpress.c")
 
     #add an instance to the chip
     compressor(
         chip, 
         inputs = {
-            "raw_in":test_in,
+            "in":test_in,
         },
         outputs = {
-            "compressed_out":wire,
+            "out":wire,
         },
         parameters = {
-            "N":1024,
-            "LOG2N":ceil(log(1024, 2)),
         },
     )
 
@@ -60,14 +37,12 @@ def test():
     decompressor(
         chip, 
         inputs = {
-            "compressed_in":wire,
+            "in":wire,
         },
         outputs = {
-            "raw_out":test_out,
+            "out":test_out,
         },
         parameters = {
-            "N":1024,
-            "LOG2N":ceil(log(1024, 2)),
         },
     )
 
