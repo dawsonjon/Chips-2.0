@@ -4,7 +4,7 @@
 unsigned raw_in = input("raw_in");
 unsigned compressed_out = output("compressed_out");
 
-/*Create a to send data of an arbitrary bit length*/
+/*Send data of an arbitrary bit length*/
 unsigned packed, stored = 0;
 void send_bits(unsigned data, unsigned bits){
     unsigned i;

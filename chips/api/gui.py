@@ -20,9 +20,9 @@ image_dir = os.path.join(os.path.dirname(__file__), "icons")
 
 class GuiChip(wx.Frame, Chip):
 
-    def __init__(self, *args, **vargs):
+    def debug(self):
+        app = wx.App()
         wx.Frame.__init__(self, None, title="Chip", size=(1024,768))
-        Chip.__init__(self, *args, **vargs)
 
         #create toolbar
         toolbar = self.CreateToolBar(wx.TB_HORIZONTAL | wx.NO_BORDER | wx.TB_FLAT)
@@ -68,6 +68,11 @@ class GuiChip(wx.Frame, Chip):
         self.instance_windows = {}
 
         self.Show()
+        self.on_reset(None)
+        app.MainLoop()
+
+    def __init__(self, *args, **vargs):
+        Chip.__init__(self, *args, **vargs)
 
     def on_reset(self, arg):
         self.simulation_reset()

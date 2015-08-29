@@ -1,10 +1,10 @@
 /*LZSS Decmpression Component*/
-/* Jonathan P Dawson 2014-07-10*/
+/*Jonathan P Dawson 2014-07-10*/
 
 unsigned raw_out = output("raw_out");
 unsigned compressed_in = input("compressed_in");
 
-/* A function to get data of an arbtrary bit length data */
+/*A function to get data of an arbitrary bit length*/
 
 unsigned stored = 0;
 unsigned packed;
@@ -24,7 +24,7 @@ unsigned get_bits(unsigned bits){
 }
 
 
-/* Decompress a stream of lzss compressed data, 
+/*Decompress a stream of lzss compressed data, 
 and generate a stream of raw data*/
 
 void decompress(){

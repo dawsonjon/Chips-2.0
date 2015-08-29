@@ -12,6 +12,7 @@ from chips.api.api import Chip
 from chips.compiler.types import size_of
 from chips.compiler.register_map import rregmap, frame, tos
 import chips.compiler.profiler as profiler
+from chips.compiler.exceptions import StopSim, BreakSim
 
 keywords = ["auto", "break", "case", "char", "const", "continue", "default",
 "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int",
@@ -100,7 +101,11 @@ class GuiInstance(wx.Frame):
         font1 = wx.Font(12, wx.TELETYPE, wx.NORMAL, wx.NORMAL, False)
         globals_window.SetFont(font1)
 
-        instructions_window = wx.TextCtrl(self,  -1, style=wx.TE_MULTILINE|wx.TE_RICH)
+        registers_window = wx.TextCtrl(self,  -1, style=wx.TE_MULTILINE|wx.TE_RICH)
+        font1 = wx.Font(12, wx.TELETYPE, wx.NORMAL, wx.NORMAL, False)
+        registers_window.SetFont(font1)
+
+        instructions_window = wx.py.editwindow.EditWindow(self,  -1)
         font1 = wx.Font(12, wx.TELETYPE, wx.NORMAL, wx.NORMAL, False)
         instructions_window.SetFont(font1)
 
@@ -109,34 +114,43 @@ class GuiInstance(wx.Frame):
                 CentrePane().
                 CloseButton(False).
                 MinimizeButton(True).
-                BestSize((500, 500))
+                BestSize((700, 500))
+        )
+        self._mgr.AddPane(registers_window, wx.aui.AuiPaneInfo().
+                Caption("registers").
+                Left().
+                CloseButton(False).
+                MinimizeButton(True).
+                BestSize((700, 500))
         )
         self._mgr.AddPane(locals_window, wx.aui.AuiPaneInfo().
                 Caption("locals").
                 Left().
                 CloseButton(False).
                 MinimizeButton(True).
-                BestSize((500, 500))
+                BestSize((700, 500))
         )
         self._mgr.AddPane(globals_window, wx.aui.AuiPaneInfo().
                 Caption("globals").Left().
                 CloseButton(False).
                 MinimizeButton(True).
-                BestSize((500, 500))
+                BestSize((700, 500))
         )
         self._mgr.AddPane(instructions_window, wx.aui.AuiPaneInfo().
                 Caption("instructions").
                 Bottom().
                 CloseButton(False).
                 MinimizeButton(True).
-                BestSize((500, 500))
+                BestSize((700, 500))
         )
 
         self._mgr.Update()
 
         self.code = code
         self.locals_window = locals_window
+        self.registers_window = registers_window
         self.globals_window = globals_window
+        self.instructions_window = instructions_window
         self.breakpoints = {}
 
         self.open_files()
@@ -160,6 +174,17 @@ class GuiInstance(wx.Frame):
             ff.close()
             cw.setDisplayLineNumbers(True)
             self.file_mapping[f] = i
+
+        display = ""
+        for i, instruction in enumerate(self.instance.model.instructions):
+            z = instruction.get("z", 0)
+            a = instruction.get("a", 0)
+            b = instruction.get("b", 0)
+            o = instruction.get("op", "unknown")
+            literal = instruction.get("literal", 0)
+            label = instruction.get("label", 0)
+            display += "%0.10d: %s %0.2d %0.2d %0.10d\n"%(i, o.ljust(11), z, a, (b | label | literal))
+        self.instructions_window.AddText(display)
 
     def update_code(self, filename, lineno):
         for cw in self.file_windows.values():
@@ -200,6 +225,15 @@ class GuiInstance(wx.Frame):
                   display += "\n"
         self.locals_window.SetValue(display)
 
+    def update_registers(self):
+        model = self.instance.model
+        registers = model.get_registers()
+        display = ""
+        for number in range(16):
+            register = registers.get(number, 0)
+            display += "%0.2d: %0.10u %s\n"%(number, register, rregmap.get(number, "reserved"))
+        self.registers_window.SetValue(display)
+
     def update_globals(self):
         model = self.instance.model
         instruction = model.get_instruction()
@@ -226,6 +260,14 @@ class GuiInstance(wx.Frame):
                   display += "\n"
         self.globals_window.SetValue(display)
 
+    def update_instructions(self):
+        model = self.instance.model
+        lineno = model.get_program_counter()
+        self.instructions_window.GotoLine(lineno)
+        self.instructions_window.MarkerDefine(0, stc.STC_MARK_ARROW, "blue", "blue")
+        self.instructions_window.MarkerDeleteAll(0)
+        self.instructions_window.MarkerAdd(lineno, 0)
+
     def update_status(self):
         self.statusbar.SetStatusText("step: " + str(self.parent.time), 0)
         self.statusbar.SetStatusText("file: " + self.instance.model.get_file(), 1)
@@ -238,33 +280,37 @@ class GuiInstance(wx.Frame):
         self.update_locals()
         self.update_globals()
         self.update_status()
+        self.update_registers()
+        self.update_instructions()
 
     def on_reset(self, arg):
-        self.parent.simulation_reset()
+        self.wrap_sim(self.parent.simulation_reset)
         self.parent.update()
 
     def on_tick(self, arg):
-        self.parent.simulation_step()
+        self.wrap_sim(self.parent.simulation_step)
         self.parent.update()
 
     def on_over(self, arg):
-        model = self.instance.model
-        l = model.get_line()
-        f = model.get_file()
-        while(model.get_line() <= l and model.get_file != f):
-            self.parent.simulation_step()
-        self.parent.update()
+        pass
+        #model = self.instance.model
+        #l = model.get_line()
+        #f = model.get_file()
+        ##while(model.get_line() == l or model.get_file() != f):
+            #wrap_sim(self.parent.simulation_step)
+        #self.parent.update()
 
     def on_into(self, arg):
         model = self.instance.model
         l = model.get_line()
         f = model.get_file()
         while(l == model.get_line() and f == model.get_file()):
-            self.parent.simulation_step()
+            if self.wrap_sim(self.parent.simulation_step):
+                break
         self.parent.update()
 
     def on_run(self, arg):
-        self.parent.simulation_run()
+        self.wrap_sim(self.parent.simulation_run)
         self.parent.update()
 
     def on_set_breakpoint(self, filename, event):
@@ -286,35 +332,13 @@ class GuiInstance(wx.Frame):
         self.parent.instance_windows.pop(id(self.instance))
         event.Skip()
 
-#      clear()
-#      try:
-#          #print list of files
-#          print "Code Files:"
-#          code_files = sorted(profiler.code_files(model.instructions))
-#          for i, f in enumerate(code_files):
-#              print "[%u] %s"%(i, f)
-#
-#          #get user selection
-#          print "\nEnter file:"
-#          selection = raw_input()
-#          f = code_files[int(selection)]
-#
-#          line = 0
-#          while 1:
-#              clear()
-#              print_file_line(f, line)
-#              print 
-#              print "n=next, p=prev, j=down, k=up, blank=enter"
-#              command = raw_input()
-#              if command == "n":
-#                  line = abs(line + 10)
-#              elif command == "n":
-#                  line = abs(line - 10)
-#              elif command == "j":
-#                  line = abs(line + 1)
-#              elif command == "k":
-#                  line = abs(line - 1)
-#              elif command == "":
-#                  break
-#
-#          model.set_breakpoint(f, line)
+    def wrap_sim(self, sim_function):
+        try:
+            sim_function()
+        except BreakSim:
+            return True
+            pass
+        except StopSim:
+            return True
+            pass
+        return False

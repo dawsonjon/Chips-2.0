@@ -33,7 +33,7 @@ Implement Quicksort
 This example sorts an array of data using the 
 `Quick Sort algorithm <http://en.wikipedia.org/wiki/Quicksort>`_
 
-The quick-sort algorithm is a recurrsive algorithm, but *Chips* does not
+The quick-sort algorithm is a recursive algorithm, but *Chips* does not
 support recursive functions. Since the level of recursion is bounded, it is
 possible to implement the function using an explicitly created stack.
 
