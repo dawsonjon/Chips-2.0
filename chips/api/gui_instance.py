@@ -13,6 +13,7 @@ from chips.compiler.types import size_of
 from chips.compiler.register_map import rregmap, frame, tos
 import chips.compiler.profiler as profiler
 from chips.compiler.exceptions import StopSim, BreakSim
+from chips.compiler.utils import bits_to_float, bits_to_double
 
 keywords = ["auto", "break", "case", "char", "const", "continue", "default",
 "do", "double", "else", "enum", "extern", "float", "for", "goto", "if", "int",
@@ -198,6 +199,23 @@ class GuiInstance(wx.Frame):
         cw.Colourise(0, -1)
         self.code.SetSelection(self.file_mapping[filename])
 
+    def mem_location_as_value(self, memory, type_, size, location):
+        
+        if size == 4:
+            value = memory.get(location, 0)
+            if type_ == "int":
+                return value
+            elif type_ == "float":
+                return bits_to_float(value)
+        elif size == 8:
+            value = memory.get(location, 0) | memory.get(location+1, 0) << 32
+            if type_ == "long":
+                return value
+            elif type_ == "double":
+                return bits_to_double(value)
+
+        return 0
+
     def update_locals(self):
         model = self.instance.model
         instruction = model.get_instruction()
@@ -211,18 +229,9 @@ class GuiInstance(wx.Frame):
         for name, instance in variables.iteritems():
           offset = instance.offset
           size = size_of(instance)
- 
-          if size == 4:
-              display = "%s : %s"%(name, memory.get(tos+offset, 0))
-          elif size == 8:
-              display = "%s : %s"%(name, memory.get(tos+offset+1, 0) << 32 | memory.get(tos+offset, 0))
-          else:
-              display = "%s : "%name
-              for i in range((size//4)//8):
-                  display += "%4x:"%(i*8),
-                  for j in range(8):
-                      display += "%08x"%memory.get(tos+offset+8*i+j, 0) 
-                  display += "\n"
+          type_ = instance.type_()
+          tos_val = registers[tos]
+          display += "%s %s %s\n"%(type_, name, self.mem_location_as_value(memory, type_, size, tos_val+offset))
         self.locals_window.SetValue(display)
 
     def update_registers(self):
@@ -246,18 +255,9 @@ class GuiInstance(wx.Frame):
         for name, instance in global_scope.global_variables.iteritems():
           offset = instance.offset
           size = size_of(instance)
+          type_ = instance.type_()
+          display += "%s %s %s\n"%(type_, name, self.mem_location_as_value(memory, type_, size, offset))
  
-          if size == 4:
-              display = "%s : %s"%(name, memory.get(offset, 0))
-          elif size == 8:
-              display = "%s : %s"%(name, memory.get(offset+1, 0) << 32 | memory.get(offset, 0))
-          else:
-              display = "%s : "%name
-              for i in range((size//4)//8):
-                  display += "%4x:"%(i*8),
-                  for j in range(8):
-                      display += "%08x"%memory.get(offset+8*i+j, 0) 
-                  display += "\n"
         self.globals_window.SetValue(display)
 
     def update_instructions(self):
@@ -292,13 +292,17 @@ class GuiInstance(wx.Frame):
         self.parent.update()
 
     def on_over(self, arg):
-        pass
-        #model = self.instance.model
-        #l = model.get_line()
-        #f = model.get_file()
-        ##while(model.get_line() == l or model.get_file() != f):
-            #wrap_sim(self.parent.simulation_step)
-        #self.parent.update()
+        model = self.instance.model
+        instruction = model.get_instruction()
+        l = model.get_line()
+        f = model.get_file()
+        fu = instruction["trace"].function
+        while 1:
+            self.wrap_sim(self.parent.simulation_step)
+            if fu is instruction["trace"].function:
+                if model.get_line() != l or model.get_file() != f:
+                    break
+        self.parent.update()
 
     def on_into(self, arg):
         model = self.instance.model

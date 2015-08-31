@@ -1,11 +1,13 @@
-from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.python_model import StopSim
-from chips.compiler.utils import float_to_bits, bits_to_float, double_to_bits, bits_to_double, split_word, join_words
-import chips.compiler.compiler
 import os
 import sys
 import struct
 import itertools
+import tempfile
+import shutil
+from chips.compiler.exceptions import C2CHIPError
+from chips.compiler.python_model import StopSim
+from chips.compiler.utils import float_to_bits, bits_to_float, double_to_bits, bits_to_double, split_word, join_words
+import chips.compiler.compiler
 
 
 class Chip:
@@ -159,7 +161,7 @@ class Chip:
 
     def compile_iverilog(self, run=False):
 
-        """Compile using the Iverilog simulator"""
+        """Compile using the iverilog simulator"""
 
         files = ["%s.v"%i.component_name for i in self.instances]
         files.append(self.name + ".v")
@@ -235,10 +237,7 @@ class Component:
     Components are written in C, and you need to supply the C code for the
     component when you create it. The Chips API will automatically compile the
     C code, and extract the name, inputs, outputs and the documentation from the
-    code.
-
-    If you want to keep the C file separate you can read it in from a file like
-    this::
+    code::
 
         my_component = Adder(C_file="adder.c")
 
@@ -247,12 +246,21 @@ class Component:
 
     """
 
-    def __init__(self, C_file, options=[]):
+    def __init__(self, C_file, options=[], inline=False):
 
-        """Takes a single string argument, the C code to compile"""
+        """Takes a single string argument, the file name of the C file to compile"""
 
         self.C_file = C_file
+        if inline:
+            self.tempdir = tempfile.mkdtemp()
+            self.C_file = os.path.join(self.tempdir, "inline_c_file.c")
+            f = open(self.C_file, "w")
+            f.write(C_file)
+            f.close()
         self.options = options
+
+    def __del__(self):
+        shutil.rmtree(self.tempdir)
 
     def __call__(self, chip, inputs, outputs, parameters={}, debug=False, profile=False):
 
@@ -266,7 +274,7 @@ class Component:
 
 class _Instance:
 
-    """This class represents a component instance. You don't normaly need to
+    """This class represents a component instance. You don't normally need to
     create them directly, use the Component.__call__ method."""
 
     def __init__(self, component, chip, parameters, inputs, outputs, debug=False, profile=False):
@@ -324,10 +332,9 @@ class _Instance:
 
         for i in outputs.keys():
             if i not in component_outputs:
-                raise C2CHIPError("%s has allready has a source %s"%(i, component_name))
+                raise C2CHIPError("%s has already has a source %s"%(i, component_name))
 
     def generate_verilog(self):
-        print self.component.C_file
         chips.compiler.compiler.comp(self.component.C_file, self.component.options, self.parameters)
 
 

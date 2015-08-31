@@ -41,16 +41,23 @@ Features
           "chips",
           "chips.chipsweb",
           "chips.compiler",
-          "chips.api"
+          "chips.api",
+          "chips.components"
       ],
       package_data = {
           "chips.compiler":[
               "builtins.h",
               "include/*.h",
           ],
+          "chips.api":[
+              "icons/*.png",
+          ],
           "chips.chipsweb":[
               "templates/*.html",
               "static/*",
+          ],
+          "chips.components":[
+              "verilog/*.v",
           ]
       },
       scripts=[

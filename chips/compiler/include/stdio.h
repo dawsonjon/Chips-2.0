@@ -71,6 +71,14 @@ float fget_float(unsigned handle){
     return bits_to_float(fgetc(handle));
 }
 
+void fput_int(int d, unsigned handle){
+    fputc(d, handle);
+}
+
+int fget_int(unsigned handle){
+    return fgetc(handle);
+}
+
 void fput_long(long d, unsigned handle){
     int low, high;
     long l = d;
