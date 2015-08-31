@@ -324,7 +324,7 @@ class _Instance:
 
         for i in outputs.keys():
             if i not in component_outputs:
-                raise C2CHIPError("%s has allready has a source %s"%(i, component_name))
+                raise C2CHIPError("%s is not an output of component %s"%(i, component_name))
 
     def generate_verilog(self):
         print self.component.C_file

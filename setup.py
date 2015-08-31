@@ -51,6 +51,12 @@ Features
           "chips.chipsweb":[
               "templates/*.html",
               "static/*",
+          ],
+          "chips.api":[
+              "icons/*.png",
+          ],
+          "chips.components":[
+              "components/*.v",
           ]
       },
       scripts=[

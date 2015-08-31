@@ -13,7 +13,6 @@ from chips.compiler.types import size_of
 from chips.compiler.register_map import rregmap, frame, tos
 import chips.compiler.profiler as profiler
 
-from chips.api.breakpoint_dialog import BreakPointDialog
 from chips.api.gui_instance import GuiInstance
 
 image_dir = os.path.join(os.path.dirname(__file__), "icons")
