@@ -15,7 +15,6 @@ from chips.compiler.macro_expander import expand_macros
 from chips.compiler.tokens import Tokens
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 from chips.compiler.python_model import generate_python_model
-from chips.api.hash import dict_to_hash
 import fpu
 
 def generate_library():
@@ -44,7 +43,7 @@ def comp(input_file, options=[], parameters={}):
             #Optimize for area
             parser = Parser(input_file, reuse, initialize_memory, parameters)
             process = parser.parse_process()
-            name = process.main.name + dict_to_hash(parameters)
+            name = process.main.name + "_" + str(id(process)) 
             instructions = process.generate()
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
@@ -85,7 +84,7 @@ def compile_python_model(
             #Optimize for area
             parser = Parser(input_file, False, False, parameters)
             process = parser.parse_process()
-            name = process.main.name + dict_to_hash(parameters)
+            name = process.main.name + "_" + str(id(process)) 
             instructions = process.generate()
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:

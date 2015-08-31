@@ -11,7 +11,7 @@ from numpy import int64
 import sys
 import math
 import register_map
-from exceptions import StopSim, BreakSim
+from chips.compiler.exceptions import StopSim, BreakSim
 from utils import unique, calculate_jumps, bits_to_double, double_to_bits
 from utils import bits_to_float, float_to_bits, split_word, join_words
 
@@ -179,7 +179,6 @@ class PythonModel:
         instruction = self.instructions[self.program_counter]
         current_stack = self.registers.get(register_map.tos, 0)
         self.max_stack = max([current_stack, self.max_stack])
-
 
         if self.profile:
             trace = instruction.get("trace", "-")

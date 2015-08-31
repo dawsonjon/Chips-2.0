@@ -1,5 +1,4 @@
 *.pyc
-components
 .coverage*
 main.v
 test_suite/main.v
@@ -12,3 +11,4 @@ chips_lib.v
 *.bak
 *,cover
 play*.v
+.*
