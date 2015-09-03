@@ -409,16 +409,18 @@ class PythonModel:
                 result = 0
             else:
                 input_ = self.inputs[operand_a]
-                if input_.q:
-                    result = input_.q.pop()
+                if input_.src_rdy and input_.dst_rdy:
+                    result = input_.q
+                    input_.next_dst_rdy = False
                 else:
+                    input_.next_dst_rdy = True
                     wait = True
         elif instruction["op"] == "ready":
             if operand_a not in self.inputs:
                 operand_a = 0
             else:
                 input_ = self.inputs[operand_a]
-                if input_.q:
+                if input_.src_rdy:
                     result = uint32(1)
                 else:
                     result = uint32(0)
@@ -427,7 +429,7 @@ class PythonModel:
                 operand_a = 0
             else:
                 output_ = self.outputs[operand_a]
-                if not output_.q:
+                if output_.dst_rdy:
                     result = uint32(1)
                 else:
                     result = uint32(0)
@@ -435,11 +437,13 @@ class PythonModel:
             if operand_a not in self.outputs:
                 pass
             else:
-                output = self.outputs[operand_a]
-                if output.q:
-                    wait = True
+                output_ = self.outputs[operand_a]
+                if output_.src_rdy and output_.dst_rdy:
+                    output_.next_src_rdy = False
                 else:
-                    output.q.append(operand_b)
+                    output_.q = operand_b
+                    output_.next_src_rdy = True
+                    wait = True
         elif instruction["op"] == "float_add":
            a = operand_a
            b = operand_b

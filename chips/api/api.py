@@ -218,6 +218,9 @@ class Chip:
         for output in self.outputs:
             output.simulation_step()
 
+        for i in self.inputs + self.outputs + self.wires:
+            i.simulation_update()
+
         self.time+=1
 
     def simulation_run(self):
@@ -351,9 +354,17 @@ class Wire:
         self.source = None
         self.sink = None
         self.name = "wire_" + str(id(self))
+        self.src_rdy = False
+        self.dst_rdy = False
+        self.next_src_rdy = False
+        self.next_dst_rdy = False
 
     def simulation_reset(self):
-        self.q = []
+        self.q = False
+
+    def simulation_update(self):
+        self.src_rdy = self.next_src_rdy
+        self.dst_rdy = self.next_dst_rdy
 
 class Input:
 
@@ -368,13 +379,21 @@ class Input:
         chip.inputs.append(self)
         self.sink = None
         self.name = name
+        self.src_rdy = True
+        self.dst_rdy = False
+        self.next_dst_rdy = False
 
     def simulation_reset(self):
-        self.q = [self.data_source()]
+        self.src_rdy = True
+        self.q = self.data_source()
 
     def simulation_step(self):
-        if not self.q:
-            self.q.append(self.data_source())
+        self.update_data = self.src_rdy and self.dst_rdy
+
+    def simulation_update(self):
+        self.dst_rdy = self.next_dst_rdy
+        if self.update_data:
+            self.q = self.data_source()
 
     def data_source(self):
 
@@ -395,13 +414,20 @@ class Output:
         chip.outputs.append(self)
         self.source = None
         self.name = name
+        self.src_rdy = False
+        self.dst_rdy = True
+        self.next_src_rdy = False
 
     def simulation_reset(self):
-        self.q = []
+
+        pass
 
     def simulation_step(self):
-        if self.q:
-            self.data_sink(self.q.pop(0))
+        if self.src_rdy and self.dst_rdy:
+            self.data_sink(self.q)
+
+    def simulation_update(self):
+        self.src_rdy = self.next_src_rdy
 
     def data_sink(data):
 
