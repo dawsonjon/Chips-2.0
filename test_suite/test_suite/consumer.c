@@ -10,5 +10,4 @@ void consumer(){
 	assert(fgetc(a)==8);
 	assert(fgetc(a)==9);
 	assert(fgetc(a)==10);
-	report(1);
 }
