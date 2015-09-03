@@ -260,7 +260,8 @@ class Component:
         self.options = options
 
     def __del__(self):
-        shutil.rmtree(self.tempdir)
+        if hasattr(self, "tempdir"):
+            shutil.rmtree(self.tempdir)
 
     def __call__(self, chip, inputs, outputs, parameters={}, debug=False, profile=False):
 

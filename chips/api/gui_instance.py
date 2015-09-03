@@ -230,8 +230,8 @@ class GuiInstance(wx.Frame):
           offset = instance.offset
           size = size_of(instance)
           type_ = instance.type_()
-          tos_val = registers[tos]
-          display += "%s %s %s\n"%(type_, name, self.mem_location_as_value(memory, type_, size, tos_val+offset))
+          frame_val = registers[frame]
+          display += "%s %s %s\n"%(type_, name, self.mem_location_as_value(memory, type_, size, frame_val+offset))
         self.locals_window.SetValue(display)
 
     def update_registers(self):
