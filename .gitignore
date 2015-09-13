@@ -12,3 +12,4 @@ chips_lib.v
 *,cover
 play*.v
 .*
+*.v

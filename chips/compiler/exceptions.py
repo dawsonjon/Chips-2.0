@@ -13,6 +13,21 @@ class C2CHIPError(Exception):
             self.filename = None
         self.lineno = lineno
 
+    def __str__(self):
+        return self.message + " in line %s at file %s"%(self.lineno, self.filename)
+
+class ChipsAssertionFail(Exception):
+    def __init__(self, filename=None, lineno=None):
+        self.message = "Assertion failed"
+        if filename is not None:
+            self.filename = os.path.abspath(filename)
+        else:
+            self.filename = None
+        self.lineno = lineno
+
+    def __str__(self):
+        return self.message + " in line %s at file %s"%(self.lineno, self.filename)
+
 class StopSim(Exception):
 
     """A process has terminated

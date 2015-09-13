@@ -1,3 +1,6 @@
+#ifndef __STDIO_H
+#define __STDIO_H
+
 unsigned stdin = 0;
 unsigned stdout = 0;
 
@@ -97,4 +100,6 @@ long fget_long(unsigned handle){
     l |= low;
     return l;
 }
+
+#endif
 

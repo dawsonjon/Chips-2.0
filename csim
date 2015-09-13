@@ -11,7 +11,7 @@ import subprocess
 import cmd
 
 from chips.compiler.compiler import compile_python_model
-from chips.compiler.exceptions import NoProfile, StopSim
+from chips.compiler.exceptions import NoProfile, StopSim, ChipsAssertionFail
 import chips.compiler.profiler as profiler
 from chips.compiler.register_map import rregmap, frame, tos
 from chips.compiler.types import size_of
@@ -349,4 +349,7 @@ else:
         try:
             model.simulation_step()
         except StopSim:
+            break
+        except ChipsAssertionFail as e:
+            print e
             break

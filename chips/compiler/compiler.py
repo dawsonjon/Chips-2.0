@@ -17,14 +17,6 @@ from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 from chips.compiler.python_model import generate_python_model
 import fpu
 
-sn = 0
-def serialise(name):
-    global sn
-    retval = sn
-    sn += 1
-    return name + "_" + str(sn)
-
-
 def generate_library():
     output_file = open("chips_lib.v", "w")
     output_file.write(fpu.adder)
@@ -41,7 +33,7 @@ def generate_library():
     output_file.write(fpu.double_to_float)
     output_file.close()
 
-def comp(input_file, options=[], parameters={}):
+def comp(input_file, options=[], parameters={}, sn=0):
 
     reuse = "no_reuse" not in options
     initialize_memory = "no_initialize_memory" not in options
@@ -51,7 +43,7 @@ def comp(input_file, options=[], parameters={}):
             #Optimize for area
             parser = Parser(input_file, reuse, initialize_memory, parameters)
             process = parser.parse_process()
-            name = serialise(process.main.name) 
+            name = process.main.name + "_%s"%sn
             instructions = process.generate()
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
@@ -84,6 +76,7 @@ def compile_python_model(
         outputs = {},
         debug = False,
         profile = False,
+        sn = 0,
         ):
 
     generate_library()
@@ -92,7 +85,7 @@ def compile_python_model(
             #Optimize for area
             parser = Parser(input_file, False, False, parameters)
             process = parser.parse_process()
-            name = serialise(process.main.name) 
+            name = process.main.name  + "_%u"%sn
             instructions = process.generate()
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:

@@ -2,6 +2,8 @@
 
 import sys
 import os
+import threading
+
 import wx
 import wx.aui
 import wx.py.editwindow
@@ -72,11 +74,19 @@ class GuiInstance(wx.Frame):
                 wx.Bitmap(os.path.join(image_dir, "run.png")), 
                 shortHelp="Run to breakpoint"
         )
+        self.stop = toolbar.AddLabelTool(
+                wx.NewId(), 
+                "stop", 
+                wx.Bitmap(os.path.join(image_dir, "stop.png")), 
+                shortHelp="StopSimualtion"
+        )
+        self.stop.Enable(False)
         self.Bind(wx.EVT_TOOL, self.on_reset, self.reset)
         self.Bind(wx.EVT_TOOL, self.on_tick, self.tick)
         self.Bind(wx.EVT_TOOL, self.on_over, self.over)
         self.Bind(wx.EVT_TOOL, self.on_into, self.into)
         self.Bind(wx.EVT_TOOL, self.on_run,  self.run)
+        self.Bind(wx.EVT_TOOL, self.on_stop,  self.stop)
 
         self._mgr.AddPane(toolbar, wx.aui.AuiPaneInfo().
             Caption("Toolbar").
@@ -153,6 +163,9 @@ class GuiInstance(wx.Frame):
         self.globals_window = globals_window
         self.instructions_window = instructions_window
         self.breakpoints = {}
+            
+        self.timer = wx.Timer(self, -1)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
 
         self.open_files()
 
@@ -186,6 +199,26 @@ class GuiInstance(wx.Frame):
             label = instruction.get("label", 0)
             display += "%0.10d: %s %0.2d %0.2d %0.10d\n"%(i, o.ljust(11), z, a, (b | label | literal))
         self.instructions_window.AddText(display)
+    
+    def set_running(self):
+        self.running=True
+        self.reset.Enable(False)
+        self.tick.Enable(False)
+        self.into.Enable(False)
+        self.over.Enable(False)
+        self.run.Enable(False)
+        self.stop.Enable(True)
+        self.timer.Start(500)
+        self.thread.start()
+
+    def set_not_running(self):
+        self.running=False
+        self.reset.Enable(True)
+        self.tick.Enable(True)
+        self.into.Enable(True)
+        self.over.Enable(True)
+        self.run.Enable(True)
+        self.stop.Enable(False)
 
     def update_code(self, filename, lineno):
         for cw in self.file_windows.values():
@@ -291,31 +324,62 @@ class GuiInstance(wx.Frame):
         self.wrap_sim(self.parent.simulation_step)
         self.parent.update()
 
-    def on_over(self, arg):
-        model = self.instance.model
-        instruction = model.get_instruction()
-        l = model.get_line()
-        f = model.get_file()
-        fu = instruction["trace"].function
-        while 1:
-            self.wrap_sim(self.parent.simulation_step)
-            if fu is instruction["trace"].function:
-                if model.get_line() != l or model.get_file() != f:
-                    break
+    def on_timer(self, arg):
+        if not self.running:
+            self.timer.Stop()
         self.parent.update()
+
+
+    def on_over(self, arg):
+
+        def over():
+            model = self.instance.model
+            instruction = model.get_instruction()
+            l = model.get_line()
+            f = model.get_file()
+            fu = instruction["trace"].function
+            while 1:
+                self.wrap_sim(self.parent.simulation_step)
+                if fu is instruction["trace"].function:
+                    if model.get_line() != l or model.get_file() != f:
+                        break
+                if not self.running:
+                    break
+            self.set_not_running()
+
+        self.run_in_thread(over)
+
 
     def on_into(self, arg):
-        model = self.instance.model
-        l = model.get_line()
-        f = model.get_file()
-        while(l == model.get_line() and f == model.get_file()):
-            if self.wrap_sim(self.parent.simulation_step):
-                break
-        self.parent.update()
+
+        def into():
+            model = self.instance.model
+            l = model.get_line()
+            f = model.get_file()
+            while(l == model.get_line() and f == model.get_file()):
+                if self.wrap_sim(self.parent.simulation_step):
+                    break
+                if not self.running:
+                    break
+            self.set_not_running()
+
+        self.run_in_thread(into)
+
 
     def on_run(self, arg):
-        self.wrap_sim(self.parent.simulation_run)
-        self.parent.update()
+
+        def run():
+            while 1:
+                if self.wrap_sim(self.parent.simulation_step):
+                    break
+                if not self.running:
+                    break
+            self.set_not_running()
+
+        self.run_in_thread(run)
+
+    def on_stop(self, arg):
+        self.set_not_running()
 
     def on_set_breakpoint(self, filename, event):
         cw = event.GetEventObject()
@@ -333,10 +397,15 @@ class GuiInstance(wx.Frame):
         self.breakpoints[filename] = lines
 
     def on_exit(self, event):
-        self.parent.instance_windows.pop(id(self.instance))
+        print "deleting", self.parent.instance_windows.pop(id(self.instance))
         event.Skip()
 
+    def run_in_thread(self, f):
+        self.thread=threading.Thread(target=f)
+        self.set_running()
+
     def wrap_sim(self, sim_function):
+        """Wrap simulations in this function to prevent sim related exceptions getting out"""
         try:
             sim_function()
         except BreakSim:
@@ -345,4 +414,3 @@ class GuiInstance(wx.Frame):
         except StopSim:
             return True
             pass
-        return False

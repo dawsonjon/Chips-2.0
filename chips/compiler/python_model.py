@@ -11,7 +11,7 @@ from numpy import int64
 import sys
 import math
 import register_map
-from chips.compiler.exceptions import StopSim, BreakSim
+from chips.compiler.exceptions import StopSim, BreakSim, ChipsAssertionFail
 from utils import unique, calculate_jumps, bits_to_double, double_to_bits
 from utils import bits_to_float, float_to_bits, split_word, join_words
 
@@ -498,10 +498,7 @@ class PythonModel:
             self.output_files[instruction["file_name"]].write("%f\n"%long_word)
         elif instruction["op"] == "assert":
             if operand_a == 0:
-                print "(assertion failed at line: %s in file: %s)"%(
-                instruction["line"],
-                instruction["file"])
-                exit(1)
+                raise ChipsAssertionFail(instruction["file"], instruction["line"])
         elif instruction["op"] == "report":
             print "%d (report (int) at line: %s in file: %s)"%(
                 int32(self.a_lo),

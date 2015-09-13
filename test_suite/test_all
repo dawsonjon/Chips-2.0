@@ -6,7 +6,8 @@ from numpy import uint64, int64
 
 os.system("coverage2 erase")
 
-result = os.system("./test_compiler")
+
+result = os.system("./test_api.py")
 
 if result == 0:
   print "...pass"
@@ -14,7 +15,15 @@ else:
   print "...fail"
   sys.exit(0)
 
-result = os.system("./test_api")
+result = os.system("./test_components")
+
+if result == 0:
+  print "...pass"
+else:
+  print "...fail"
+  sys.exit(0)
+
+result = os.system("./test_compiler")
 
 if result == 0:
   print "...pass"

@@ -42,7 +42,8 @@ Features
           "chips.chipsweb",
           "chips.compiler",
           "chips.api",
-          "chips.components"
+          "chips.components",
+          "chips.utils"
       ],
       package_data = {
           "chips.compiler":[

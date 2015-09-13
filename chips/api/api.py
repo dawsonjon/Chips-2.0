@@ -4,6 +4,8 @@ import struct
 import itertools
 import tempfile
 import shutil
+import inspect
+import textwrap
 from chips.compiler.exceptions import C2CHIPError
 from chips.compiler.python_model import StopSim
 from chips.compiler.utils import float_to_bits, bits_to_float, double_to_bits, bits_to_double, split_word, join_words
@@ -34,6 +36,8 @@ class Chip:
         self.inputs = []
         self.outputs = []
         self.components = {}
+        self.sn=0
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def generate_verilog(self):
 
@@ -44,17 +48,17 @@ class Chip:
 
         for i in self.wires:
             if i.source is None:
-                raise C2CHIPError("wire %s has no source"%i.name)
+                raise C2CHIPError("wire %s has no source"%i.name, i.filename, i.lineno)
             if i.sink is None:
-                raise C2CHIPError("wire %s has no sink"%i.name)
+                raise C2CHIPError("wire %s has no sink"%i.name, i.filename, i.lineno)
 
         for i in self.inputs:
             if i.sink is None:
-                raise C2CHIPError("input %s has no sink"%i.name)
+                raise C2CHIPError("input %s has no sink"%i.name, i.filename, i.lineno)
 
         for i in self.outputs:
             if i.source is None:
-                raise C2CHIPError("output %s has no source"%i.name)
+                raise C2CHIPError("output %s has no source"%i.name, i.filename, i.lineno)
 
         ports = ["clk", "rst", "exception"]
         ports += ["%s"%i.name for i in self.inputs]
@@ -253,13 +257,18 @@ class Component:
 
         """Takes a single string argument, the file name of the C file to compile"""
 
-        self.C_file = C_file
         if inline:
             self.tempdir = tempfile.mkdtemp()
             self.C_file = os.path.join(self.tempdir, "inline_c_file.c")
             f = open(self.C_file, "w")
-            f.write(C_file)
+            f.write(textwrap.dedent(C_file).strip())
             f.close()
+        else:
+            caller = inspect.stack()[1]
+            caller_module = inspect.getmodule(caller[0])
+            caller_location = os.path.dirname(caller_module.__file__)
+            self.C_file = os.path.join(caller_location, C_file)
+
         self.options = options
 
     def __del__(self):
@@ -290,6 +299,9 @@ class _Instance:
         self.chip.instances.append(self)
         self.debug=debug
         self.profile=profile
+        self.sn = chip.sn
+        chip.sn += 1
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
         #generate a python simulation model of the instance
         self.model, component_inputs, component_outputs, component_name = chips.compiler.compiler.compile_python_model(
@@ -299,7 +311,8 @@ class _Instance:
                 inputs,
                 outputs, 
                 self.debug,
-                self.profile
+                self.profile,
+                self.sn
                 )
 
         self.component_name = component_name
@@ -322,24 +335,24 @@ class _Instance:
         #check for multiple sources or sinks
         for i in inputs.values():
             if i.sink is not None:
-                raise C2CHIPError("%s already has a sink"%i.name)
+                raise C2CHIPError("%s already has a sink"%i.name, i.filename, i.lineno)
             i.sink = self
 
         for i in outputs.values():
             if i.source is not None:
-                raise C2CHIPError("%s has already has a source"%i.name)
+                raise C2CHIPError("%s has already has a source"%i.name, i.filename, i.lineno)
             i.source = self
 
         for i in inputs.keys():
             if i not in component_inputs:
-                raise C2CHIPError("%s is not an input of component %s"%(i, component_name))
+                raise C2CHIPError("%s is not an input of component %s"%(i, component_name), i.filename, i.lineno)
 
         for i in outputs.keys():
             if i not in component_outputs:
-                raise C2CHIPError("%s is not an output of component %s"%(i, component_name))
+                raise C2CHIPError("%s is not an output of component %s"%(i, component_name), i.filename, i.lineno)
 
     def generate_verilog(self):
-        chips.compiler.compiler.comp(self.component.C_file, self.component.options, self.parameters)
+        chips.compiler.compiler.comp(self.component.C_file, self.component.options, self.parameters, self.sn)
 
 
 
@@ -358,6 +371,8 @@ class Wire:
         self.dst_rdy = False
         self.next_src_rdy = False
         self.next_dst_rdy = False
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
+        
 
     def simulation_reset(self):
         self.q = False
@@ -382,6 +397,7 @@ class Input:
         self.src_rdy = True
         self.dst_rdy = False
         self.next_dst_rdy = False
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
         self.src_rdy = True
@@ -417,6 +433,7 @@ class Output:
         self.src_rdy = False
         self.dst_rdy = True
         self.next_src_rdy = False
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
 
@@ -444,6 +461,7 @@ class Stimulus(Input):
         self.sequence = sequence
         self.type_ = type_
         self.high_word = False
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
        
     def simulation_reset(self):
         self.iterator = itertools.cycle(iter(self.sequence))
@@ -503,6 +521,7 @@ class Response(Output):
         Output.__init__(self, chip, name)
         self.type_ = type_
         self.high_word = False
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
         self.l = []
@@ -548,3 +567,51 @@ class Response(Output):
 
     def __len__(self):
         return len(self.l)
+
+class VerilogComponent(Component):
+
+    """This version of a component allows an existing verilog file to be used
+    instead of autogenerating from the C model::
+
+        my_component = Adder(C_file="adder.c", V_file="adder.v")
+
+    """
+
+    def __init__(self, C_file, V_file, options=[], inline=False):
+        Component.__init__(self, C_file, options, inline)
+
+        if inline:
+            self.V_file = os.path.join(self.tempdir, "inline_v_file.v")
+            f = open(self.V_file, "w")
+            f.write(textwrap.dedent(V_file).strip())
+            f.close()
+        else:
+            caller = inspect.stack()[1]
+            caller_module = inspect.getmodule(caller[0])
+            caller_location = os.path.dirname(caller_module.__file__)
+            self.V_file = os.path.join(caller_location, V_file)
+
+    def __call__(self, chip, inputs, outputs, parameters={}, debug=False, profile=False):
+
+        """Takes three arguments:
+            + chip, the chip that the component instance belongs to.
+            + inputs, a list of *Wires* (or *Inputs*) to connect to the component inputs
+            + outputs, a list of *Wires* (or *Outputs*) to connect to the component outputs
+            + parameters, a dictionary of parameters"""
+        return _Verilog_Instance(self, chip, parameters, inputs, outputs, debug, profile)
+
+class _Verilog_Instance(_Instance):
+
+    """This class represents a component instance. You don't normally need to
+    create them directly, use the Component.__call__ method."""
+
+    def __init__(self, component, chip, parameters, inputs, outputs, debug=False, profile=False):
+        _Instance.__init__(self, component, chip, parameters, inputs, outputs, debug, profile)
+        _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
+
+    def generate_verilog(self):
+        f = open(self.component.V_file)
+        f1 = open(self.component_name + ".v", "w")
+        f1.write(f.read().format(name=self.component_name))
+        f.close()
+        f1.close()

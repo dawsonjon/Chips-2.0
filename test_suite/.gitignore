@@ -1,4 +1,7 @@
-main
+main*
+interconnect*
+test_chip*
+test_components*
 real_main
 test
 arbiter
@@ -6,3 +9,4 @@ test_file
 chips_lib.v
 foo
 foo.v
+*.v

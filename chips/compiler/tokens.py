@@ -21,6 +21,7 @@ class Tokens:
 
     def __init__(self, filename, parameters = {}):
         self.tokens = []
+        self.definitions = []
         self.filename = None
         self.lineno = None
         self.scan(os.path.join(os.path.dirname(__file__), "builtins.h"))
@@ -83,26 +84,26 @@ class Tokens:
                 continue
 
             elif line.strip().startswith("#define"):
-                definition = line.strip.split(" ")[1]
-                self.definitions.append(self.definition)
+                definition = line.strip().split(" ")[1]
+                self.definitions.append(definition)
                 self.lineno += 1
                 continue
 
             elif line.strip().startswith("#undef"):
-                definition = line.strip.split(" ")[1]
+                definition = line.strip().split(" ")[1]
                 self.definitions.remove(definition)
                 self.lineno += 1
                 continue
 
             elif line.strip().startswith("#ifdef"):
-                definition = line.strip.split(" ")[1]
+                definition = line.strip().split(" ")[1]
                 if definition not in self.definitions:
                     jump = True
                 self.lineno += 1
                 continue
 
             elif line.strip().startswith("#ifndef"):
-                definition = line.strip.split(" ")[1]
+                definition = line.strip().split(" ")[1]
                 if definition in self.definitions:
                     jump = True
                 self.lineno += 1
@@ -110,6 +111,10 @@ class Tokens:
 
             elif line.strip().startswith("#else"):
                 jump = True
+                self.lineno += 1
+                continue
+
+            elif line.strip().startswith("#endif"):
                 self.lineno += 1
                 continue
 
