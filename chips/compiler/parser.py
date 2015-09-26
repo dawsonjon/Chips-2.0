@@ -30,6 +30,7 @@ class Parser:
         self.allocator = Allocator(reuse)
         self.structs = []
         self.initialize_memory = initialize_memory
+        self.statement = 0
 
     def parse_process(self):
         process = Process(Trace(self))
@@ -188,7 +189,7 @@ class Parser:
         else:
             allready_defined = False
             function = Function(
-                     Trace(self), 
+                    Trace(self), 
                     name, 
                     type_specifier,
             )
@@ -367,6 +368,7 @@ class Parser:
         return wait_clocks
 
     def parse_statement(self):
+        self.statement += 1
 
         if (self.tokens.peek_next() == ":" and 
             self.tokens.peek() not in ["default", "case"]):

@@ -207,7 +207,7 @@ def tee(chip, a, out1=None, out2=None):
             outputs = {"out1":out1, "out2":out2},
             parameters = {}
     )
-    return wire1, wire2
+    return out1, out2
 
 def delay(chip, a, initial = 0, type_="int", out=None):
     delay_component = Component("""

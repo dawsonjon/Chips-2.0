@@ -216,9 +216,14 @@ class PythonModel:
             raise StopSim
 
         elif instruction["op"] == "literal":
-           result = literal
+           if literal & 0x8000:
+               result = 0xffff0000 | literal
+           else:
+               result = literal
         elif instruction["op"] == "addl":
            result = literal+operand_a
+        elif instruction["op"] == "literal_hi":
+           result = operand_a & 0x0000ffff | ((literal & 0xffff) << 16)
         elif instruction["op"] == "store":
            self.memory[operand_a] = operand_b
         elif instruction["op"] == "load":

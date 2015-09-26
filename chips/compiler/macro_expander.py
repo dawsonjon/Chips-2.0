@@ -37,6 +37,30 @@ def push_pop(instructions):
 
     return new_instructions
 
+def expand_literals(instructions):
+    new_instructions = []
+    for instruction in instructions:
+        new_instructions.append(instruction)
+        op = instruction["op"]
+        if op == "literal":
+            literal = instruction["literal"]
+            hi = (literal >> 16) & 0xffff
+            lo = literal & 0xffff
+            instruction["literal"] = lo
+            if hi not in [0x0000, 0xffff]:
+                trace = instruction["trace"]
+                dest = instruction["z"]
+                new_instructions.append({"trace":trace, "op":"literal_hi", "a":dest, "z":dest, "literal":hi})
+            elif hi == 0x0000 and lo & 0x8000:
+                trace = instruction["trace"]
+                dest = instruction["z"]
+                new_instructions.append({"trace":trace, "op":"literal_hi", "a":dest, "z":dest, "literal":hi})
+            elif hi == 0xffff and not lo & 0x8000:
+                trace = instruction["trace"]
+                dest = instruction["z"]
+                new_instructions.append({"trace":trace, "op":"literal_hi", "a":dest, "z":dest, "literal":hi})
+    return new_instructions
+
 def expand_macros(instructions, allocator):
     new_instructions = []
     for instruction in instructions:
@@ -84,7 +108,7 @@ def expand_macros(instructions, allocator):
         else:
             new_instructions.append(instruction)
 
-    return push_pop(new_instructions)
+    return expand_literals(push_pop(new_instructions))
 
 def long_shift_left(trace, instruction):
 

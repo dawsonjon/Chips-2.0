@@ -50,7 +50,7 @@ Features
               "builtins.h",
               "include/*.h",
           ],
-          "chips.api":[
+          "chips.utils":[
               "icons/*.png",
           ],
           "chips.chipsweb":[

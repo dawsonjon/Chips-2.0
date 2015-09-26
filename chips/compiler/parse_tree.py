@@ -22,6 +22,7 @@ class Trace:
         self.filename=parser.tokens.filename
         self.function=parser.function
         self.global_scope=parser.global_scope
+        self.statement=parser.statement
 
     def __repr__(self):
         return "%s : %s"%(self.filename, self.lineno)

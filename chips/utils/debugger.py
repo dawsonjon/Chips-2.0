@@ -13,16 +13,17 @@ from chips.compiler.types import size_of
 from chips.compiler.register_map import rregmap, frame, tos
 import chips.compiler.profiler as profiler
 
-from chips.api.gui_instance import GuiInstance
+from chips.utils.gui_instance import GuiInstance
 
 image_dir = os.path.join(os.path.dirname(__file__), "icons")
 
-class GuiChip(wx.Frame, Chip):
+class Debugger(wx.Frame):
 
-    def debug(self):
+    def __init__(self, chip):
         app = wx.App()
         wx.Frame.__init__(self, None, title="Chip", size=(1024,768))
 
+        self.chip = chip
         panel = wx.Panel(self, -1)
         vsizer = wx.BoxSizer(wx.VERTICAL)
         instance_list = wx.ListBox(self, 60, (100, 50), (90, 120), [], wx.LB_SINGLE)
@@ -36,13 +37,14 @@ class GuiChip(wx.Frame, Chip):
         self.Layout()
         self.instance_list = instance_list
         self.instance_windows = {}
-        self.simulation_reset()
+        self.chip.simulation_reset()
         self.update()
         self.Show()
+        self.timer = wx.Timer(self, -1)
+        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
+        self.set_not_running()
         app.MainLoop()
 
-    def __init__(self, *args, **vargs):
-        Chip.__init__(self, *args, **vargs)
 
     def on_select_instance(self, arg):
         selection = self.instance_list.GetSelection()
@@ -57,9 +59,36 @@ class GuiChip(wx.Frame, Chip):
         window.update()
         window.Raise()
 
+    def set_running(self):
+        self.running=True
+        for i in self.instance_windows.values():
+            i.reset.Enable(False)
+            i.tick.Enable(False)
+            i.into.Enable(False)
+            i.over.Enable(False)
+            i.run.Enable(False)
+            i.stop.Enable(True)
+        self.timer.Start(500)
+        self.thread.start()
+
+    def set_not_running(self):
+        self.running=False
+        for i in self.instance_windows.values():
+            i.reset.Enable(True)
+            i.tick.Enable(True)
+            i.into.Enable(True)
+            i.over.Enable(True)
+            i.run.Enable(True)
+            i.stop.Enable(False)
+
+    def on_timer(self, arg):
+        if not self.running:
+            self.timer.Stop()
+        self.update()
+
     def update(self):
         self.instance_list.Clear()
-        for instance in self.instances:
+        for instance in self.chip.instances:
             description = "%s id:%s file:%s line:%s"%(
                     instance.component_name,
                     str(id(instance)),

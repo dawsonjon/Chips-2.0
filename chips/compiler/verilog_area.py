@@ -133,7 +133,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
 
     #create list of signals
     signals = [
-      ("timer", 16),
+      ("timer", 32),
       ("program_counter", 16),
       ("program_counter_1", 16),
       ("program_counter_2", 16),
@@ -155,7 +155,7 @@ def generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, 
       ("write_value", 32),
       ("read_input", 32),
 
-      ("literal_2", 32),
+      ("literal_2", 16),
       ("a_hi", 32),
       ("b_hi", 32),
       ("a_lo", 32),
@@ -237,6 +237,7 @@ def generate_CHIP(input_file,
                   output_file,
                   allocator,
                   initialize_memory,
+                  memory_size=1024,
                   no_tb_mode=False):
 
     """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
@@ -245,7 +246,7 @@ def generate_CHIP(input_file,
     instruction_set, instruction_memory = generate_instruction_set(instructions)
     register_bits = 16;
     opcode_bits = log2(len(instruction_set));
-    instruction_bits = 32 + 4 + 4 + opcode_bits
+    instruction_bits = 16 + 4 + 4 + opcode_bits
     declarations = generate_declarations(instructions, no_tb_mode, register_bits, opcode_bits, allocator)
     inputs, outputs, input_files, output_files, testbench, inports, outports, signals = declarations
     floating_point_arithmetic, floating_point_conversions, floating_point_debug = floating_point_enables(instruction_set)
@@ -379,13 +380,13 @@ def generate_CHIP(input_file,
 
     output_file.write("  output reg exception;\n")
     output_file.write("  reg [%s:0] instructions [%i:0];\n"%(instruction_bits-1, len(instructions)-1))
-    output_file.write("  reg [31:0] memory [%i:0];\n"%6143)
+    output_file.write("  reg [31:0] memory [%i:0];\n"%memory_size)
     output_file.write("  reg [31:0] registers [15:0];\n")
     output_file.write("  wire [31:0] operand_a;\n")
     output_file.write("  wire [31:0] operand_b;\n")
     output_file.write("  wire [31:0] register_a;\n")
     output_file.write("  wire [31:0] register_b;\n")
-    output_file.write("  wire [31:0] literal;\n")
+    output_file.write("  wire [15:0] literal;\n")
     output_file.write("  wire [%s:0] opcode;\n"%(opcode_bits-1))
     output_file.write("  wire [3:0] address_a;\n")
     output_file.write("  wire [3:0] address_b;\n")
@@ -500,7 +501,7 @@ def generate_CHIP(input_file,
             print_verilog_literal(opcode_bits, instruction["op"]),
             print_verilog_literal(4, instruction.get("z", 0)),
             print_verilog_literal(4, instruction.get("a", 0)),
-            print_verilog_literal(32, instruction["literal"] | instruction.get("b", 0)),
+            print_verilog_literal(16, instruction["literal"] | instruction.get("b", 0)),
             instruction["filename"],
             instruction["lineno"],
             instruction["comment"],
@@ -545,10 +546,10 @@ def generate_CHIP(input_file,
     output_file.write("  assign opcode    = instruction[%s:%s];\n"%(
         instruction_bits - 1,
         instruction_bits - opcode_bits))
-    output_file.write("  assign address_z = instruction[39:36];\n")
-    output_file.write("  assign address_a = instruction[35:32];\n")
+    output_file.write("  assign address_z = instruction[23:20];\n")
+    output_file.write("  assign address_a = instruction[19:16];\n")
     output_file.write("  assign address_b = instruction[3:0];\n")
-    output_file.write("  assign literal   = instruction[31:0];\n")
+    output_file.write("  assign literal   = instruction[15:0];\n")
 
     output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
     output_file.write("  // PIPELINE STAGE 2 -- FETCH OPERANDS\n")
@@ -618,11 +619,15 @@ def generate_CHIP(input_file,
             pass
 
         elif instruction["op"] == "literal":
-            output_file.write("          result<=literal_2;\n")
+            output_file.write("          result<=$signed(literal_2);\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "addl":
             output_file.write("          result<=operand_a + literal_2;\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "literal_hi":
+            output_file.write("          result<= {literal_2, operand_a[15:0]};\n")
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "store":

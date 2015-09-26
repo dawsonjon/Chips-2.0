@@ -27,11 +27,11 @@ class BlockDiagram():
             )
             g.node(str(id(instance)), label=label, shape="record")
 
-        for input_ in self.chip.inputs:
+        for input_ in self.chip.inputs.values():
             sources[str(id(input_))] = str(id(input_))
             g.node(str(id(input_)), label=input_.name, shape="record")
 
-        for output_ in self.chip.outputs:
+        for output_ in self.chip.outputs.values():
             sinks[str(id(output_))] = str(id(output_))
             g.node(str(id(output_)), label=output_.name, shape="record")
 

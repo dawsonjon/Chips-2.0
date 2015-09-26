@@ -33,7 +33,7 @@ def generate_library():
     output_file.write(fpu.double_to_float)
     output_file.close()
 
-def comp(input_file, options=[], parameters={}, sn=0):
+def comp(input_file, options={}, parameters={}, sn=0):
 
     reuse = "no_reuse" not in options
     initialize_memory = "no_initialize_memory" not in options
@@ -57,7 +57,8 @@ def comp(input_file, options=[], parameters={}, sn=0):
                     instructions,
                     output_file,
                     parser.allocator,
-                    initialize_memory)
+                    initialize_memory,
+                    options.get("memory_size",4096))
             output_file.close()
 
     except C2CHIPError as err:
@@ -70,7 +71,7 @@ def comp(input_file, options=[], parameters={}, sn=0):
 
 def compile_python_model(
         input_file, 
-        options=[], 
+        options={}, 
         parameters = {}, 
         inputs = {}, 
         outputs = {},
@@ -90,7 +91,7 @@ def compile_python_model(
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
                 for i in instructions:
-                    print i.get("op", "-"), i.get("z", "-"), i.get("a", "-"), (i.get("b", "-") | i.get("literal", "-") | i.get("label", 0)), i.get("trace")
+                    print i
 
             debug = debug or ("debug" in options)
             profile = profile or ("profile" in options)

@@ -38,8 +38,8 @@ class GuiInstance(wx.Frame):
         self._mgr.SetManagedWindow(self)
 
         #Status Bar
-        self.statusbar = self.CreateStatusBar(3, wx.ST_SIZEGRIP)
-        self.statusbar.SetStatusWidths([-1, -5, -1])
+        self.statusbar = self.CreateStatusBar(4, wx.ST_SIZEGRIP)
+        self.statusbar.SetStatusWidths([-1, -2, -5, -1])
 
         #Toolbar
         toolbar = wx.ToolBar(self, -1, wx.DefaultPosition, wx.DefaultSize, wx.TB_FLAT | wx.TB_NODIVIDER)
@@ -48,36 +48,42 @@ class GuiInstance(wx.Frame):
                 wx.NewId(), 
                 "Reset", 
                 wx.Bitmap(os.path.join(image_dir, "reset.png")), 
+                wx.Bitmap(os.path.join(image_dir, "reset_disabled.png")), 
                 shortHelp="Reset Simulation"
         )
         self.tick = toolbar.AddLabelTool(
                 wx.NewId(), 
                 "Step", 
                 wx.Bitmap(os.path.join(image_dir, "tick.png")), 
+                wx.Bitmap(os.path.join(image_dir, "tick_disabled.png")), 
                 shortHelp="Simulation Step"
         )
         self.into = toolbar.AddLabelTool(
                 wx.NewId(), 
                 "Step Into", 
                 wx.Bitmap(os.path.join(image_dir, "into.png")), 
+                wx.Bitmap(os.path.join(image_dir, "into_disabled.png")), 
                 shortHelp="Step Into"
         )
         self.over = toolbar.AddLabelTool(
                 wx.NewId(), 
                 "Step Over", 
                 wx.Bitmap(os.path.join(image_dir, "over.png")), 
+                wx.Bitmap(os.path.join(image_dir, "over_disabled.png")), 
                 shortHelp="Step Over"
         )
         self.run = toolbar.AddLabelTool(
                 wx.NewId(), 
                 "run", 
                 wx.Bitmap(os.path.join(image_dir, "run.png")), 
+                wx.Bitmap(os.path.join(image_dir, "run_disabled.png")), 
                 shortHelp="Run to breakpoint"
         )
         self.stop = toolbar.AddLabelTool(
                 wx.NewId(), 
                 "stop", 
                 wx.Bitmap(os.path.join(image_dir, "stop.png")), 
+                wx.Bitmap(os.path.join(image_dir, "stop_disabled.png")), 
                 shortHelp="StopSimualtion"
         )
         self.stop.Enable(False)
@@ -163,10 +169,7 @@ class GuiInstance(wx.Frame):
         self.globals_window = globals_window
         self.instructions_window = instructions_window
         self.breakpoints = {}
-            
-        self.timer = wx.Timer(self, -1)
-        self.Bind(wx.EVT_TIMER, self.on_timer, self.timer)
-
+        self.Bind(wx.EVT_CLOSE, self.on_exit)
         self.open_files()
 
         self.Show()
@@ -200,25 +203,6 @@ class GuiInstance(wx.Frame):
             display += "%0.10d: %s %0.2d %0.2d %0.10d\n"%(i, o.ljust(11), z, a, (b | label | literal))
         self.instructions_window.AddText(display)
     
-    def set_running(self):
-        self.running=True
-        self.reset.Enable(False)
-        self.tick.Enable(False)
-        self.into.Enable(False)
-        self.over.Enable(False)
-        self.run.Enable(False)
-        self.stop.Enable(True)
-        self.timer.Start(500)
-        self.thread.start()
-
-    def set_not_running(self):
-        self.running=False
-        self.reset.Enable(True)
-        self.tick.Enable(True)
-        self.into.Enable(True)
-        self.over.Enable(True)
-        self.run.Enable(True)
-        self.stop.Enable(False)
 
     def update_code(self, filename, lineno):
         for cw in self.file_windows.values():
@@ -248,6 +232,7 @@ class GuiInstance(wx.Frame):
                 return bits_to_double(value)
 
         return 0
+
 
     def update_locals(self):
         model = self.instance.model
@@ -302,9 +287,10 @@ class GuiInstance(wx.Frame):
         self.instructions_window.MarkerAdd(lineno, 0)
 
     def update_status(self):
-        self.statusbar.SetStatusText("step: " + str(self.parent.time), 0)
-        self.statusbar.SetStatusText("file: " + self.instance.model.get_file(), 1)
-        self.statusbar.SetStatusText("line: " + str(self.instance.model.get_line()), 2)
+        self.statusbar.SetStatusText("step: " + str(self.parent.chip.time), 0)
+        self.statusbar.SetStatusText("memory: " + str(self.instance.model.max_stack), 1)
+        self.statusbar.SetStatusText("file: " + self.instance.model.get_file(), 2)
+        self.statusbar.SetStatusText("line: " + str(self.instance.model.get_line()), 3)
 
     def update(self):
         filename=self.instance.model.get_file()
@@ -317,35 +303,26 @@ class GuiInstance(wx.Frame):
         self.update_instructions()
 
     def on_reset(self, arg):
-        self.wrap_sim(self.parent.simulation_reset)
+        self.wrap_sim(self.parent.chip.simulation_reset)
         self.parent.update()
 
     def on_tick(self, arg):
-        self.wrap_sim(self.parent.simulation_step)
+        self.wrap_sim(self.parent.chip.simulation_step)
         self.parent.update()
-
-    def on_timer(self, arg):
-        if not self.running:
-            self.timer.Stop()
-        self.parent.update()
-
 
     def on_over(self, arg):
 
         def over():
             model = self.instance.model
-            instruction = model.get_instruction()
-            l = model.get_line()
-            f = model.get_file()
-            fu = instruction["trace"].function
-            while 1:
-                self.wrap_sim(self.parent.simulation_step)
-                if fu is instruction["trace"].function:
-                    if model.get_line() != l or model.get_file() != f:
-                        break
-                if not self.running:
+            s = model.get_instruction()["trace"].statement
+            frame_val = model.get_registers().get(frame, 0)
+            while (s == model.get_instruction()["trace"].statement
+                or frame_val < model.get_registers().get(frame, 0)):
+                if self.wrap_sim(self.parent.chip.simulation_step):
                     break
-            self.set_not_running()
+                if not self.parent.running:
+                    break
+            self.parent.set_not_running()
 
         self.run_in_thread(over)
 
@@ -354,14 +331,13 @@ class GuiInstance(wx.Frame):
 
         def into():
             model = self.instance.model
-            l = model.get_line()
-            f = model.get_file()
-            while(l == model.get_line() and f == model.get_file()):
-                if self.wrap_sim(self.parent.simulation_step):
+            s = model.get_instruction()["trace"].statement
+            while s == model.get_instruction()["trace"].statement:
+                if self.wrap_sim(self.parent.chip.simulation_step):
                     break
-                if not self.running:
+                if not self.parent.running:
                     break
-            self.set_not_running()
+            self.parent.set_not_running()
 
         self.run_in_thread(into)
 
@@ -370,16 +346,16 @@ class GuiInstance(wx.Frame):
 
         def run():
             while 1:
-                if self.wrap_sim(self.parent.simulation_step):
+                if self.wrap_sim(self.parent.chip.simulation_step):
                     break
-                if not self.running:
+                if not self.parent.running:
                     break
-            self.set_not_running()
+            self.parent.set_not_running()
 
         self.run_in_thread(run)
 
     def on_stop(self, arg):
-        self.set_not_running()
+        self.parent.set_not_running()
 
     def on_set_breakpoint(self, filename, event):
         cw = event.GetEventObject()
@@ -397,12 +373,11 @@ class GuiInstance(wx.Frame):
         self.breakpoints[filename] = lines
 
     def on_exit(self, event):
-        print "deleting", self.parent.instance_windows.pop(id(self.instance))
         event.Skip()
 
     def run_in_thread(self, f):
-        self.thread=threading.Thread(target=f)
-        self.set_running()
+        self.parent.thread=threading.Thread(target=f)
+        self.parent.set_running()
 
     def wrap_sim(self, sim_function):
         """Wrap simulations in this function to prevent sim related exceptions getting out"""
