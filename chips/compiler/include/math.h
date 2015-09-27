@@ -171,13 +171,17 @@
     /* approximate sqrt using newton's method*/
 
     double sqrt(double n){
+
         double square, x, old;
-        x = n;
-        old = 0.0;
-        while(old != x){
+        long val_int = double_to_bits(n);
+        val_int -= 1 << 52; /* Subtract 2^m. */
+        val_int >>= 1; /* Divide by 2. */
+        val_int += 1 << 61; /* Add ((b + 1) / 2) * 2^m. */
+        x = bits_to_double(val_int);
+        do{
             old = x;
             x = (x + n/x)*0.5;
-        }
+        } while (old != x);
         return x;
     }
 

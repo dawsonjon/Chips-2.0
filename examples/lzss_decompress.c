@@ -27,7 +27,7 @@ unsigned get_bits(unsigned bits){
 /*Decompress a stream of lzss compressed data, 
 and generate a stream of raw data*/
 
-void decompress(){
+void main(){
     unsigned i, pointer, distance, length, data;
     unsigned buffer[N];
 

@@ -1,4 +1,4 @@
-void consumer(){
+void main(){
     unsigned a = input("a");
 	assert(fgetc(a)==1);
 	assert(fgetc(a)==2);

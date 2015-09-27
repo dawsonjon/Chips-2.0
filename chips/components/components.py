@@ -5,7 +5,7 @@ def async(chip, a, out=None):
     if out is None:
         out = Wire(chip)
     async = Component(
-    """void async(){
+    """void main(){
         int in = input("in");
         int out = output("out");
         int data;
@@ -109,7 +109,7 @@ def constant(chip, value, type_="int", out=None):
         C_file = """
             #include <stdio.h>
             int out = output("out");
-            void constant(){
+            void main(){
                 while(1){
                     fput_%s(%s, out);
                 }
@@ -134,7 +134,7 @@ def cycle(chip, args, type_="int", out=None):
     c_component = """
         #include <stdio.h>
         int out = output("out");
-        void cycle(){
+        void main(){
             %s list[%i] = {%s};
             int i;
             %s data;
@@ -170,7 +170,7 @@ def report_all(chip, stream, type_="int"):
     """
         #include <stdio.h>
         int in = input("in");
-        void report_all(){
+        void main(){
             while(1){
                 report(fget_%s(in));
             }
@@ -189,7 +189,7 @@ def tee(chip, a, out1=None, out2=None):
         int out1 = output("out1");
         int out2 = output("out2");
         int in = input("in");
-        void tee(){
+        void main(){
             int data;
             while(1){
                 data = fgetc(in);
@@ -214,7 +214,7 @@ def delay(chip, a, initial = 0, type_="int", out=None):
         #include <stdio.h>
         int out = output("out");
         int in = input("in");
-        void delay(){
+        void main(){
             fput_%s(INITIAL, out);
             while(1){
                 fput_%s(fget_%s(in), out);
@@ -239,7 +239,7 @@ def _arithmetic(chip, a, b, operation, type_="int", out=None):
         int out = output("out");
         int in1 = input("in1");
         int in2 = input("in2");
-        void arithmetic(){
+        void main(){
             while(1){
                 fput_%s(fget_%s(in1) %s fget_%s(in2), out);
             }
@@ -272,7 +272,7 @@ def _comparison(chip, a, b, operation, type_="int", out=None):
         int out = output("out");
         int in1 = input("in1");
         int in2 = input("in2");
-        void delay(){
+        void main(){
             while(1){
                 fput_int(fget_%s(in1) %s fget_%s(in2), out);
             }
@@ -336,7 +336,7 @@ def line_arbiter(chip, streams, out=None):
             int in2 = input("in2");
             int out = output("out");
 
-            void arbiter(){
+            void main(){
                 int temp;
 
                 while(1){
@@ -648,7 +648,7 @@ def discard(chip, a):
 
         C_file = """/* Discard Component */
         int in = input("in");
-        void discard(){
+        void main(){
             while(1){
                 fgetc(in);
             }
@@ -700,7 +700,7 @@ def assert_all(chip, a):
 
         C_file = """/* Discard Component */
         int in = input("in");
-        void discard(){
+        void main(){
             while(1){
                 assert(fgetc(in));
             }

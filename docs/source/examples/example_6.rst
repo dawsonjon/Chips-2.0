@@ -75,7 +75,7 @@ spectrum of a 64 point sine wave.
     unsigned out = output("z");
     unsigned kernel_in = input("k");
     
-    void fir_filter(){
+    void main(){
         unsigned i = 0;
         unsigned inp = 0;
         float delay[N];

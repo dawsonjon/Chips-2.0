@@ -1,5 +1,5 @@
 #include <stdio.h>
-void consumer(){
+void main(){
     unsigned a = input("a");
 	report(fget_long(a));
 	assert(fget_long(a)==2);

@@ -509,7 +509,7 @@ int a(){
     goto label;
     return 1;
 }
-int b(){
+int main(){
     return 2;
     a();
     label: return 6;
@@ -5535,19 +5535,6 @@ int main(){
 #
 #""")
 #
-test("main not main",
-"""
-int main(){
-  assert(0);
-  return 0;
-}
-
-//last function is always main
-int real_main(){
-  return 0;
-}
-""")
-
 test("recursion 1",
 """int factorial(unsigned int i)
 {

@@ -311,7 +311,7 @@ unsigned kernel_in = input("k");
 
 const int N = 10;
 
-void fir_filter(){
+void main(){
     unsigned i = 0;
     unsigned inp = 0;
     float delay[N];
@@ -412,7 +412,7 @@ void send_bits(unsigned data, unsigned bits){
 /*A function that reads a stream of uncompressed data, 
 and creates a stream of compressed data*/
 
-void compress(){
+void main(){
 
     unsigned pointer, match, match_length, longest_match, longest_match_length;
     unsigned buffer[N];
@@ -502,7 +502,7 @@ unsigned get_bits(unsigned bits){
 /* Decompress a stream of lzss compressed data, 
 and generate a stream of raw data*/
 
-void decompress(){
+void main(){
     unsigned i, pointer, distance, length, data;
     unsigned buffer[N];
 

@@ -1,5 +1,5 @@
 #include <stdio.h>
-void consumer(){
+void main(){
     unsigned a = input("a");
 	assert(fget_float(a)==1);
 	assert(fget_float(a)==2);
