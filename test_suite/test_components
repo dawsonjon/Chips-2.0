@@ -1,0 +1,2 @@
+#!/bin/sh
+python ../chips/components/components.py
