@@ -5,7 +5,7 @@ def async(chip, a, out=None):
     if out is None:
         out = Wire(chip)
     async = Component(
-    """void asynch(){
+    """void main(){
         int in = input("in");
         int out = output("out");
         int data;
@@ -25,7 +25,7 @@ def async(chip, a, out=None):
             outputs = {"out":out},
             parameters = {}
     )
-    return wire
+    return out
 
 def constant(chip, value, type_="int", out=None):
     if out is None:
@@ -109,7 +109,7 @@ def constant(chip, value, type_="int", out=None):
         C_file = """
             #include <stdio.h>
             int out = output("out");
-            void constant(){
+            void main(){
                 while(1){
                     fput_%s(%s, out);
                 }
@@ -134,7 +134,7 @@ def cycle(chip, args, type_="int", out=None):
     c_component = """
         #include <stdio.h>
         int out = output("out");
-        void cycle(){
+        void main(){
             %s list[%i] = {%s};
             int i;
             %s data;
@@ -170,7 +170,7 @@ def report_all(chip, stream, type_="int"):
     """
         #include <stdio.h>
         int in = input("in");
-        void report_all(){
+        void main(){
             while(1){
                 report(fget_%s(in));
             }
@@ -189,7 +189,7 @@ def tee(chip, a, out1=None, out2=None):
         int out1 = output("out1");
         int out2 = output("out2");
         int in = input("in");
-        void tee(){
+        void main(){
             int data;
             while(1){
                 data = fgetc(in);
@@ -214,7 +214,7 @@ def delay(chip, a, initial = 0, type_="int", out=None):
         #include <stdio.h>
         int out = output("out");
         int in = input("in");
-        void delay(){
+        void main(){
             fput_%s(INITIAL, out);
             while(1){
                 fput_%s(fget_%s(in), out);
@@ -228,7 +228,7 @@ def delay(chip, a, initial = 0, type_="int", out=None):
             outputs = {"out":out},
             parameters = {"INITIAL":initial}
     )
-    return wire
+    return out
 
 def _arithmetic(chip, a, b, operation, type_="int", out=None):
     if out is None:
@@ -239,7 +239,7 @@ def _arithmetic(chip, a, b, operation, type_="int", out=None):
         int out = output("out");
         int in1 = input("in1");
         int in2 = input("in2");
-        void arithmetic(){
+        void main(){
             while(1){
                 fput_%s(fget_%s(in1) %s fget_%s(in2), out);
             }
@@ -267,16 +267,17 @@ def div(chip, a, b, type_="int", out=None):
 def _comparison(chip, a, b, operation, type_="int", out=None):
     if out is None:
         out = Wire(chip)
-    comparison = Component("""
+    code = """
         #include <stdio.h>
         int out = output("out");
         int in1 = input("in1");
         int in2 = input("in2");
-        void delay(){
+        void main(){
             while(1){
                 fput_int(fget_%s(in1) %s fget_%s(in2), out);
             }
-        }"""%(type_, operation, type_), inline=True)
+        }"""%(type_, operation, type_)
+    comparison = Component(code, inline=True)
     comparison(
             chip,
             inputs = {"in1":a, "in2":b},
@@ -335,7 +336,7 @@ def line_arbiter(chip, streams, out=None):
             int in2 = input("in2");
             int out = output("out");
 
-            void arbiter(){
+            void main(){
                 int temp;
 
                 while(1){
@@ -647,7 +648,7 @@ def discard(chip, a):
 
         C_file = """/* Discard Component */
         int in = input("in");
-        void discard(){
+        void main(){
             while(1){
                 fgetc(in);
             }
@@ -658,7 +659,7 @@ def discard(chip, a):
         module {name} (input_in_ack,clk,rst,input_in,input_in_stb,exception);
           input clk;
           input rst;
-          input input_in;
+          input [31:0] input_in;
           input input_in_stb;
           output input_in_ack;
           output exception;
@@ -699,7 +700,7 @@ def assert_all(chip, a):
 
         C_file = """/* Discard Component */
         int in = input("in");
-        void discard(){
+        void main(){
             while(1){
                 assert(fgetc(in));
             }
@@ -728,7 +729,7 @@ def tree_combine(chip, component, args, out):
     component(chip, inputs={"in1":children.pop(), "in2":children.pop(0)}, outputs={"out":out}, parameters = {})
 
 if __name__ == "__main__":
-    from chips.api.gui import GuiChip
+    from chips.api.api import Chip
     from chips.compiler.exceptions import C2CHIPError, ChipsAssertionFail
 
     def test_chip(chip, test_name):
@@ -755,7 +756,7 @@ if __name__ == "__main__":
         return True
 
     #Test Arbiter
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     first = [0, 1, 2, 3, 4, 5, 6]
     second = [10, 11, 12, 13, 14, 15, 16]
     expected = [0, 10, 1, 11, 2, 12, 3, 13, 4, 15, 6, 16]
@@ -763,56 +764,211 @@ if __name__ == "__main__":
     stream_2 = cycle(chip, second)
     stream_3 = cycle(chip, expected)
     assert_all(chip, eq(chip, arbiter(chip, [stream_1, stream_2]), stream_3))
-    test_chip(chip, "Test Arbiter")
-    
-    #Test Adder
-    chip = GuiChip("test_chip")
-    assert_all(chip, 
-        eq(chip,
-            add(chip,
-                constant(chip, 100), 
-                constant(chip, 100)
-            ),
-            constant(chip, 200)
-        )
-    )
-    test_chip(chip, "integer adder")
+    test_chip(chip, "arbiter")
 
-    chip = GuiChip("test_chip")
-    assert_all(chip, 
-        eq(chip,
-            add(chip,
-                constant(chip, 100.0, type_="float"), 
-                constant(chip, 100.0, type_="float"),
-                type_="float",
-            ),
-            constant(chip, 200.0, type_="float"),
-        ),
-    )
-    test_chip(chip, "float adder")
+    #Test Asynch
+    #chip = Chip("test_chip")
+    #report_all(chip, eq(chip, async(chip, constant(chip, 123)), constant(chip, 123)))
+    #test_chip(chip, "async")
 
-    chip = GuiChip("test_chip")
-    assert_all(chip, 
-        eq(chip,
-            add(chip,
-                constant(chip, 100.0, type_="double"), 
-                constant(chip, 100.0, type_="double"),
-                type_="double",
-            ),
-            constant(chip, 200.0, type_="double"),
-        ),
-    )
-    test_chip(chip, "double adder")
+    #Test Delay
+    test = [1, 2, 3, 0]
+    expected = [0, 1, 2, 3]
+    chip = Chip("test_chip")
+    assert_all(chip, eq(chip, delay(chip, cycle(chip, test)), cycle(chip, expected)))
+    test_chip(chip, "delay")
 
-    chip = GuiChip("test_chip")
+    test = [1, 2, 3, 0]
+    expected = [0, 1, 2, 3]
+    chip = Chip("test_chip")
+    assert_all(chip, eq(chip, delay(chip, cycle(chip, test, type_="float")), cycle(chip, expected, type_="float"), type_="float"))
+    test_chip(chip, "float delay")
+
+    test = [1, 2, 3, 0]
+    expected = [0, 1, 2, 3]
+    chip = Chip("test_chip")
     assert_all(chip, 
-        eq(chip,
-            add(chip,
-                constant(chip, 100, type_="long"), 
-                constant(chip, 100, type_="long"),
-                type_="long",
-            ),
-            constant(chip, 200, type_="long"),
-        ),
+            eq(chip, 
+                delay(chip, 
+                    cycle(chip, test, type_="double"),
+                    type_="double",
+                ), 
+                cycle(chip, expected, type_="double"), 
+                type_="double"
+            )
     )
-    test_chip(chip, "long adder")
+    test_chip(chip, "double delay")
+
+    test = [1, 2, 3, 0]
+    expected = [0, 1, 2, 3]
+    chip = Chip("test_chip")
+    assert_all(chip, 
+            eq(chip, 
+                delay(chip, 
+                    cycle(chip, test, type_="long"),
+                    type_="long",
+                ), 
+                cycle(chip, expected, type_="long"), 
+                type_="long"
+            )
+    )
+    test_chip(chip, "long delay")
+
+    #Test Tee/Discard
+    chip = Chip("test_chip")
+    expected = [0, 1, 2, 3]
+    a, b = tee(chip,
+            cycle(chip, expected),
+    );
+    discard(chip, b);
+    assert_all(chip, 
+            eq(chip,
+                a, 
+                cycle(chip, expected),
+            )
+    )
+    test_chip(chip, "tee discard")
+
+    chip = Chip("test_chip")
+    expected = [0, 1, 2, 3]
+    a, b = tee(chip,
+            cycle(chip, expected),
+    );
+    assert_all(chip, 
+            eq(chip,
+                b, 
+                cycle(chip, expected),
+            )
+    )
+    assert_all(chip, 
+            eq(chip,
+                a, 
+                cycle(chip, expected),
+            )
+    )
+    test_chip(chip, "tee")
+
+    #Test Constant
+    chip = Chip("test_chip")
+    first = [1, 1]
+    expected = 1
+    stream_1 = cycle(chip, first)
+    stream_3 = constant(chip, expected)
+    assert_all(chip, eq(chip, stream_1, stream_3))
+    test_chip(chip, "constant")
+
+    chip = Chip("test_chip")
+    first = [2, 2]
+    expected = 2
+    stream_1 = cycle(chip, first, type_="float")
+    stream_3 = constant(chip, expected, type_="float")
+    assert_all(chip, eq(chip, stream_1, stream_3, type_="float"))
+    test_chip(chip, "float constant")
+
+    chip = Chip("test_chip")
+    first = [2, 2]
+    expected = 2
+    stream_1 = cycle(chip, first, type_="double")
+    stream_3 = constant(chip, expected, type_="double")
+    assert_all(chip, eq(chip, stream_1, stream_3, type_="double"))
+    test_chip(chip, "double constant")
+
+    chip = Chip("test_chip")
+    first = [2, 2]
+    expected = 2
+    stream_1 = cycle(chip, first, type_="long")
+    stream_3 = constant(chip, expected, type_="long")
+    assert_all(chip, eq(chip, stream_1, stream_3, type_="long"))
+    test_chip(chip, "long constant")
+
+    #Test Arithmetic
+    test_vectors = {
+            "add":[ 
+                [100.0, 100.0],
+                [-100.0, 100.0],
+                [0.0, 200.0],
+            ],
+            "sub":[ 
+                [100.0, 100.0],
+                [-100.0, 100.0],
+                [200.0, 0.0],
+            ],
+            "mul":[ 
+                [100.0,100.0],
+                [-100.0,-2.0],
+                [-10000.0,-200.0],
+            ],
+            "div":[ 
+                [100.0,],
+                [-100.0,],
+                [-1.0,],
+            ],
+    }
+
+    for f, fname in zip([add, sub, mul, div], ["add", "sub", "mul", "div"]):
+        for type_ in ["float", "double", "int", "long"]:
+
+            a, b, c = test_vectors[fname]
+            chip = Chip("test_chip")
+            assert_all(chip, 
+                eq(chip,
+                    f(chip,
+                        cycle(chip, a, type_=type_), 
+                        cycle(chip, b, type_=type_),
+                        type_=type_,
+                    ),
+                    cycle(chip, c, type_=type_),
+                ),
+            )
+            test_chip(chip, type_ + " " +fname)
+
+    #Test Comparators
+    test_vectors = {
+            "eq":[ 
+                [100.0, 100.0],
+                [-100.0, 100.0],
+                [0, 1],
+            ],
+            "ne":[ 
+                [100.0, 100.0],
+                [-100.0, 100.0],
+                [1, 0],
+            ],
+            "gt":[ 
+                [100.0,100.0, 0.0, 0.0],
+                [-100.0,-2.0, -1.0, 0.0],
+                [1,1,1,0],
+            ],
+            "ge":[ 
+                [100.0,100.0, 0.0, 0.0],
+                [-100.0,-2.0, -1.0, 0.0],
+                [1,1,1,1],
+            ],
+            "lt":[ 
+                [100.0,100.0, 0.0, 0.0, -1.0],
+                [-100.0,-2.0, -1.0, 0.0, 0.0],
+                [0,0,0,0, 1],
+            ],
+            "le":[ 
+                [100.0,100.0, 0.0, 0.0],
+                [-100.0,-2.0, -1.0, 0.0],
+                [0,0,0,1],
+            ],
+    }
+
+    for f, fname in zip([eq, ne, gt, ge, lt, le], ["eq", "ne", "gt", "ge", "lt", "le"]):
+        for type_ in ["float", "double", "int", "long"]:
+
+            a, b, c = test_vectors[fname]
+            chip = Chip("test_chip")
+            assert_all(chip, 
+                eq(chip,
+                    f(chip,
+                        cycle(chip, a, type_=type_), 
+                        cycle(chip, b, type_=type_),
+                        type_=type_,
+                    ),
+                    cycle(chip, c),
+                ),
+            )
+            test_chip(chip, type_ + " " +fname)

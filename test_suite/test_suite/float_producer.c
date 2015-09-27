@@ -1,5 +1,5 @@
 #include <stdio.h>
-void producer(){
+void main(){
     unsigned z = output("z");
 	fput_float(1, z);
 	fput_float(2, z);

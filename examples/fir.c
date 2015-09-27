@@ -7,7 +7,7 @@ unsigned in = input("a");
 unsigned out = output("z");
 unsigned kernel_in = input("k");
 
-void fir_filter(){
+void main(){
     unsigned i = 0;
     unsigned inp = 0;
     float delay[N];

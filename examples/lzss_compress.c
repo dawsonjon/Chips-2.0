@@ -23,7 +23,7 @@ void send_bits(unsigned data, unsigned bits){
 /*A function that reads a stream of uncompressed data, 
 and creates a stream of compressed data*/
 
-void compress(){
+void main(){
 
     unsigned pointer, match, match_length, longest_match, longest_match_length;
     unsigned buffer[N];

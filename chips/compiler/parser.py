@@ -45,6 +45,14 @@ class Parser:
                 self.parse_typedef_struct()
             else:
                 process.functions.append(self.parse_function())
+
+        for function in process.functions:
+            if hasattr(function, "name") and function.name == "main":
+                self.main = function
+                break
+        if not hasattr(self, "main"):
+            self.tokens.error("Function main has not been defined")
+
         process.main = self.main
         process.scope = self.scope
         self.main.referenced = True
@@ -281,9 +289,6 @@ class Parser:
         #
         self.function = self.global_scope
         self.scope = stored_scope
-
-        #the last function to be compiled is considered the main function
-        self.main = function
 
         return function
 

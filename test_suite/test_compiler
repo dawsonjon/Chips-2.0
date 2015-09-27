@@ -509,7 +509,7 @@ int a(){
     goto label;
     return 1;
 }
-int b(){
+int main(){
     return 2;
     a();
     label: return 6;
@@ -718,6 +718,50 @@ void main(){
 
     assert(&a[4] - &a[0] == 4);
 
+}
+"""
+)
+
+test("array initialise 1",
+"""
+int store[2] = {100, 200};
+
+void main(){
+    assert( store[0] == 100);
+    assert( store[1] == 200);
+}
+"""
+)
+
+test("array initialise 2",
+"""
+long store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array initialise 3",
+"""
+float store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array initialise 4",
+"""
+double store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
 }
 """
 )
@@ -5491,19 +5535,6 @@ int main(){
 #
 #""")
 #
-test("main not main",
-"""
-int main(){
-  assert(0);
-  return 0;
-}
-
-//last function is always main
-int real_main(){
-  return 0;
-}
-""")
-
 test("recursion 1",
 """int factorial(unsigned int i)
 {

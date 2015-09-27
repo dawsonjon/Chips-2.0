@@ -1,4 +1,4 @@
-void producer(){
+void main(){
     unsigned z = output("z");
 	fputc(1, z);
 	fputc(2, z);

@@ -5,7 +5,7 @@ unsigned frequency_in = input("frequency");
 unsigned sin_out = output("sin");
 unsigned cos_out = output("cos");
 
-void dds(){
+void main(){
     float sin_x, cos_x, new_sin, new_cos, si, sr, frequency;
     int i;
 

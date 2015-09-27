@@ -1,4 +1,4 @@
-void producer(){
+void main(){
     unsigned z = output("z");
 	wait_clocks(1000);
 	fputc(1, z);

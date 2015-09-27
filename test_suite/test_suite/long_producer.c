@@ -1,5 +1,5 @@
 #include <stdio.h>
-void producer(){
+void main(){
     unsigned z = output("z");
 	fput_long(1, z);
 	fput_long(2l, z);
