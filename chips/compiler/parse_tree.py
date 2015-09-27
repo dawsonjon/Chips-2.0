@@ -698,7 +698,7 @@ class LocalVariable:
                         self.trace,
                         instructions, 
                         n=size_of(expression)//4, 
-                        offset=self.offset + index, 
+                        offset=self.offset + (index*size_of(expression)//4), 
                         local=True
                     )
             else:
@@ -747,7 +747,7 @@ class GlobalVariable:
                         self.trace,
                         instructions, 
                         n=size_of(expression)//4, 
-                        offset=self.offset + index, 
+                        offset=self.offset + (index*size_of(expression)//4), 
                         local=False
                     )
             else:

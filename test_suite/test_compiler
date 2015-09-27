@@ -722,6 +722,50 @@ void main(){
 """
 )
 
+test("array initialise 1",
+"""
+int store[2] = {100, 200};
+
+void main(){
+    assert( store[0] == 100);
+    assert( store[1] == 200);
+}
+"""
+)
+
+test("array initialise 2",
+"""
+long store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array initialise 3",
+"""
+float store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array initialise 4",
+"""
+double store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
 test("array passing 1",
 """
 int store[100];
