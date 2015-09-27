@@ -11,7 +11,7 @@ from numpy import int64
 import sys
 import math
 import register_map
-from chips.compiler.exceptions import StopSim, BreakSim, ChipsAssertionFail
+from chips.compiler.exceptions import StopSim, BreakSim, ChipsAssertionFail, NoProfile
 from utils import unique, calculate_jumps, bits_to_double, double_to_bits
 from utils import bits_to_float, float_to_bits, split_word, join_words
 

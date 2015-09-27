@@ -14,6 +14,7 @@ from chips.compiler.register_map import rregmap, frame, tos
 import chips.compiler.profiler as profiler
 
 from chips.utils.gui_instance import GuiInstance
+from chips.utils.gui_report import GuiReport
 
 image_dir = os.path.join(os.path.dirname(__file__), "icons")
 
@@ -68,7 +69,7 @@ class Debugger(wx.Frame):
             i.over.Enable(False)
             i.run.Enable(False)
             i.stop.Enable(True)
-        self.timer.Start(500)
+        self.timer.Start(1000)
         self.thread.start()
 
     def set_not_running(self):
@@ -99,3 +100,24 @@ class Debugger(wx.Frame):
 
         for window in self.instance_windows.values():
             window.update()
+
+    def report_memory_usage(self, event):
+        report = GuiReport(self, "memory usage report")
+        report.report("memory usage report for %s\n"%self.chip.name, 0)
+        report.report("data memory:", 0)
+        for instance in self.chip.instances:
+            report_line = "%20s : %4u KiB + %4u bytes (%4u 32 bit words)"%(
+                instance.component_name,
+                (instance.model.max_stack*4) // 1024,
+                (instance.model.max_stack*4) % 1024,
+                instance.model.max_stack,
+            )
+            report.report(report_line, 0)
+
+if __name__ == "__main__":
+    from chips.components.components import *
+    chip = Chip("a chip")
+    discard(chip, constant(chip, 0))
+    discard(chip, constant(chip, 0))
+    discard(chip, constant(chip, 0))
+    Debugger(chip)

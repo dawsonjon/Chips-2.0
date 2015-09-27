@@ -3,7 +3,6 @@
 import sys
 import os
 import threading
-from math import log
 
 import wx
 import wx.aui
@@ -198,26 +197,18 @@ class GuiInstance(wx.Frame):
         self.file_mapping = {}
         code_files = sorted(profiler.code_files(self.instance.model.instructions))
         for i, f in enumerate(code_files):
-
             #use a keyword argument to force argument to be bound now
             def call_handler(event, ff = f):
                 return self.on_set_breakpoint(ff, event)
-
             def context_menu(event, ff = f):
-                menu = wx.Menu("File options")
-                annotate_menu_item = wx.MenuItem(menu, wx.NewId(), 'Annotate Code Coverage')
-                menu.AppendItem(annotate_menu_item)
-                self.Bind(wx.EVT_MENU, lambda evt:self.annotate_coverage(ff), annotate_menu_item)
-                self.PopupMenu(menu)
-
+                return self.on_set_breakpoint(ff, event)
             cw = wx.py.editwindow.EditWindow(self.code,  -1)
             cw.Bind(wx.EVT_LEFT_DCLICK, call_handler)
-            cw.Bind(wx.EVT_RIGHT_DOWN, context_menu)
+            cw.Bind(wx.EVT_RIGHT_CLICK, context_menu)
             self.file_windows[f] = cw
             self.code.AddPage(cw, f)
             ff = open(f, "r")
             cw.AddText(ff.read())
-            cw.SetReadOnly(True)
             ff.close()
             cw.setDisplayLineNumbers(True)
             self.file_mapping[f] = i
@@ -404,6 +395,7 @@ class GuiInstance(wx.Frame):
         self.breakpoints[filename] = lines
 
     def on_exit(self, event):
+        print "deleting window references"
         self.parent.instance_windows.pop(id(self.instance))
         event.Skip()
 
@@ -439,47 +431,26 @@ class GuiInstance(wx.Frame):
                 100.0 * float(executed)/float(included)
             ), float(executed)/float(included))
 
-        total = 0
-        for f in sorted(profiler.code_files(instructions)):
-            lines = files.get(f, {})
-            for lines, count in lines.iteritems():
-                total += count
-
-        for filename in sorted(code_files(instructions)):
-            lines = files.get(filename, {})
-            for line, count in sorted(lines.items(), key=operator.itemgetter(1), reverse=True):
-                report.report("%s %s %s" %(
-                filename.ljust(100),
-                str(line).center(10),
-                print 100.0 * float(count) / float(total)
-
     def annotate_coverage(self, filename):
         report = GuiReport(self, "Annotated Code Coverage")
-        
+
         files = self.instance.model.get_profile()
         instructions = self.instance.model.instructions
-        total = 0.0
-        for f in sorted(profiler.code_files(instructions)):
-            lines = files.get(f, {})
-            for lines, count in lines.iteritems():
-                total += count
-
-        source = open(filename)
-        included = profiler.code_lines(filename, instructions)
         lines = files.get(filename, {})
-
-        for lineno, line in enumerate(source):
-            report_line = str(lineno+1) + " "
-            report_line += str(lines.get(lineno+1, 0)).ljust(10) + " "
-            if lineno+1 in lines:
-                report_line += "> "
-                status = log(lines[lineno + 1])/log(total)
-            else:
-                if lineno+1 in included:
-                    report_line += "! "
-                    status = 0
+        source = open(filename)
+        included = code_lines(filename, instructions)
+        
+        for filename, cw in self.file_windows.iteritems():
+            for lineno, line in enumerate(source):
+                report_line = lineno + " "
+                if lineno+1 in lines:
+                    report_line += "> "
+                    status = 1
                 else:
-                    report_line += "- "
-                    status = 0
-
-            report.report(report_line + line.strip(), status)
+                    if lineno+1 in included:
+                        report_line += "! "
+                        status = 1
+                    else:
+                        report_line += "- "
+                        status = 0
+                report.report(report_line + line.strip(), status)

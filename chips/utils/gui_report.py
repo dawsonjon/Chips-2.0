@@ -27,7 +27,7 @@ class GuiReport(wx.Frame):
         vsizer = wx.BoxSizer(wx.VERTICAL)
 
         report_window = wx.TextCtrl(panel,  -1, style=wx.TE_MULTILINE|wx.TE_RICH)
-        font1 = wx.Font(12, wx.TELETYPE, wx.NORMAL, wx.NORMAL, False)
+        font1 = wx.Font(10, wx.TELETYPE, wx.NORMAL, wx.NORMAL, False)
         report_window.SetFont(font1)
         report_window.SetEditable(False)
         self.report_window = report_window
@@ -44,7 +44,9 @@ class GuiReport(wx.Frame):
         self.Show()
 
     def report(self, text, highlight):
-        self.report_window.SetDefaultStyle(wx.TextAttr(wx.BLACK, (255, 255 - highlight * 255, 255)))
+        level = 255 - highlight * 255
+        bg = (level, 255, level)
+        self.report_window.SetDefaultStyle(wx.TextAttr(wx.BLACK, bg))
         self.report_window.AppendText(text + "\n")
 
 
