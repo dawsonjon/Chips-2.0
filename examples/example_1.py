@@ -6,11 +6,11 @@ import sys
 from math import pi
 from chips.api.api import Chip, Stimulus, Response, Wire, Component
 
-try:
-    from matplotlib import pyplot
-except ImportError:
-    print "You need matplotlib to run this script!"
-    exit(0)
+#try:
+from matplotlib import pyplot
+#except ImportError:
+    #print "You need matplotlib to run this script!"
+    #exit(0)
 
 def test():
 
