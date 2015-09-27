@@ -729,7 +729,7 @@ def tree_combine(chip, component, args, out):
     component(chip, inputs={"in1":children.pop(), "in2":children.pop(0)}, outputs={"out":out}, parameters = {})
 
 if __name__ == "__main__":
-    from chips.api.gui import GuiChip
+    from chips.api.api import Chip
     from chips.compiler.exceptions import C2CHIPError, ChipsAssertionFail
 
     def test_chip(chip, test_name):
@@ -756,7 +756,7 @@ if __name__ == "__main__":
         return True
 
     #Test Arbiter
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     first = [0, 1, 2, 3, 4, 5, 6]
     second = [10, 11, 12, 13, 14, 15, 16]
     expected = [0, 10, 1, 11, 2, 12, 3, 13, 4, 15, 6, 16]
@@ -767,26 +767,26 @@ if __name__ == "__main__":
     test_chip(chip, "arbiter")
 
     #Test Asynch
-    #chip = GuiChip("test_chip")
+    #chip = Chip("test_chip")
     #report_all(chip, eq(chip, async(chip, constant(chip, 123)), constant(chip, 123)))
     #test_chip(chip, "async")
 
     #Test Delay
     test = [1, 2, 3, 0]
     expected = [0, 1, 2, 3]
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     assert_all(chip, eq(chip, delay(chip, cycle(chip, test)), cycle(chip, expected)))
     test_chip(chip, "delay")
 
     test = [1, 2, 3, 0]
     expected = [0, 1, 2, 3]
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     assert_all(chip, eq(chip, delay(chip, cycle(chip, test, type_="float")), cycle(chip, expected, type_="float"), type_="float"))
     test_chip(chip, "float delay")
 
     test = [1, 2, 3, 0]
     expected = [0, 1, 2, 3]
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     assert_all(chip, 
             eq(chip, 
                 delay(chip, 
@@ -801,7 +801,7 @@ if __name__ == "__main__":
 
     test = [1, 2, 3, 0]
     expected = [0, 1, 2, 3]
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     assert_all(chip, 
             eq(chip, 
                 delay(chip, 
@@ -815,7 +815,7 @@ if __name__ == "__main__":
     test_chip(chip, "long delay")
 
     #Test Tee/Discard
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     expected = [0, 1, 2, 3]
     a, b = tee(chip,
             cycle(chip, expected),
@@ -829,7 +829,7 @@ if __name__ == "__main__":
     )
     test_chip(chip, "tee discard")
 
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     expected = [0, 1, 2, 3]
     a, b = tee(chip,
             cycle(chip, expected),
@@ -849,7 +849,7 @@ if __name__ == "__main__":
     test_chip(chip, "tee")
 
     #Test Constant
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     first = [1, 1]
     expected = 1
     stream_1 = cycle(chip, first)
@@ -857,7 +857,7 @@ if __name__ == "__main__":
     assert_all(chip, eq(chip, stream_1, stream_3))
     test_chip(chip, "constant")
 
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     first = [2, 2]
     expected = 2
     stream_1 = cycle(chip, first, type_="float")
@@ -865,7 +865,7 @@ if __name__ == "__main__":
     assert_all(chip, eq(chip, stream_1, stream_3, type_="float"))
     test_chip(chip, "float constant")
 
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     first = [2, 2]
     expected = 2
     stream_1 = cycle(chip, first, type_="double")
@@ -873,7 +873,7 @@ if __name__ == "__main__":
     assert_all(chip, eq(chip, stream_1, stream_3, type_="double"))
     test_chip(chip, "double constant")
 
-    chip = GuiChip("test_chip")
+    chip = Chip("test_chip")
     first = [2, 2]
     expected = 2
     stream_1 = cycle(chip, first, type_="long")
@@ -909,7 +909,7 @@ if __name__ == "__main__":
         for type_ in ["float", "double", "int", "long"]:
 
             a, b, c = test_vectors[fname]
-            chip = GuiChip("test_chip")
+            chip = Chip("test_chip")
             assert_all(chip, 
                 eq(chip,
                     f(chip,
@@ -960,7 +960,7 @@ if __name__ == "__main__":
         for type_ in ["float", "double", "int", "long"]:
 
             a, b, c = test_vectors[fname]
-            chip = GuiChip("test_chip")
+            chip = Chip("test_chip")
             assert_all(chip, 
                 eq(chip,
                     f(chip,

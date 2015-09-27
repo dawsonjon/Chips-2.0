@@ -7,14 +7,14 @@ function pointers
 static etc
 multiple arguments
 pointers to pointers                  - done
-correct handling of signed types
+correct handling of signed types      - done
 fix ternary expression                - done
 typedefs
 add a profiler                        - done
 interactive debug                     - done
 fix line numbers                      - done
 report stack usage                    - done
-enter maximum stack size
+enter maximum stack size              - done
 trap stack overflow
-conserve memory
+conserve memory                       - done
 stdlib
