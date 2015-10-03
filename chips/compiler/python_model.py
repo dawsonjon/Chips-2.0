@@ -253,7 +253,8 @@ class PythonModel:
            else:
                result = uint32(0x00000000)
         elif instruction["op"] == "int_to_float":
-           f = float(self.a_lo)
+           f = float(int32(self.a_lo))
+           print f
            self.a_lo = float_to_bits(f)
         elif instruction["op"] == "float_to_int":
            i = bits_to_float(self.a_lo)
@@ -262,7 +263,7 @@ class PythonModel:
            else:
                self.a_lo = int32(i)
         elif instruction["op"] == "long_to_double":
-           double = float(join_words(self.a_hi, self.a_lo))
+           double = float(int64(join_words(self.a_hi, self.a_lo)))
            if math.isnan(double):
                self.a_hi, self.a_lo = split_word(0, 0)
            else:

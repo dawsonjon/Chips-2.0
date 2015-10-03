@@ -12,3 +12,23 @@ unsigned long rand(){
 	seed = (a*seed+c);
 	return seed;
 }
+
+    /* return absolute value of an int */
+
+    int abs(int x){
+        if (x < 0) {
+            return - x;
+        } else {
+            return x;
+        }
+    }
+
+    /* return absolute value of a long*/
+
+    long labs(long x){
+        if (x < 0) {
+            return - x;
+        } else {
+            return x;
+        }
+    }

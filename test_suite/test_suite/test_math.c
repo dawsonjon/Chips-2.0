@@ -74,15 +74,34 @@ void test_sqrt(){
     }
 }
 
+void test_exp(){
+    double x, step;
+    for(x=-10.0; x <= 10.0; x += 0.1){
+       file_write(x, "x_6");
+       file_write(exp(x), "exp_x");
+    }
+}
+
+void test_log(){
+    double x, step;
+    for(x=0.1; x <= 10.0; x += 0.1){
+       report(x);
+       file_write(x, "x_7");
+       file_write(log(x), "log_x");
+    }
+}
+
 void main(){
 
     //Test Ceil Function
-    test_ceil();
-    test_floor();
-    test_trig();
-    test_inverse_tan();
-    test_inverse_trig();
-    test_htrig();
-    test_sqrt();
+    //test_ceil();
+    //test_floor();
+    //test_trig();
+    //test_inverse_tan();
+    //test_inverse_trig();
+    //test_htrig();
+    //test_sqrt();
+    //test_exp();
+    test_log();
 
 }

@@ -131,7 +131,8 @@ class Parser:
                 if self.tokens.peek() != "]":
                     size_expression = self.parse_ternary_expression()
                     if size_expression.type_() not in integer_like:
-                        self.tokens.error("Array size must be an integer like expression")
+                        self.tokens.error(
+                        "Array size must be an integer like expression")
                     try:
                         type_specifier.type_.dimensions.append(size_expression.value())
                     except NotConstant:
@@ -143,7 +144,8 @@ class Parser:
             #Encapsulate elements in arrays, starting from the right most
             for number_of_elements in type_specifier.type_.dimensions[1:]:
                 if number_of_elements is None:
-                    self.tokens.error("Inner array range must be specified")
+                    self.tokens.error(
+                    "Inner array range must be specified")
 
             type_specifier.type_.dimensions.reverse()
 
@@ -909,9 +911,10 @@ class Parser:
             true_expression = constant_fold(Trace(self), self.parse_or_expression())
             self.tokens.expect(":")
             false_expression = constant_fold(Trace(self), self.parse_or_expression())
-            true_expression, false_expression = self.coerce_integer_types(
+            true_expression, false_expression = self.coerce_types(
                     true_expression, 
-                    false_expression
+                    false_expression,
+                    ":"
             )
             expression = Ternary(Trace(self), expression, true_expression, false_expression)
         return expression
@@ -1042,7 +1045,6 @@ class Parser:
                     right.type_(),
                     ))
 
-
         elif left.type_() != right.type_():
             self.tokens.error("Incompatible types : %s %s"%(
                 left.type_(),
@@ -1078,7 +1080,8 @@ class Parser:
 
     def parse_binary_expression(self, operators):
 
-        """binary_expression := unary_expression operator *unary_expression"""
+        """binary_expression := unary_expression operator 
+        *unary_expression"""
 
         operator_precedence = {
                 "|": ["^"],

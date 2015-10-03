@@ -150,7 +150,7 @@ class Tokens:
                 elif token[0].isdigit():
                     if char.upper() in "0123456789ABCDEFXUL.":
                         token += char
-                    elif token.upper().endswith("E") and char=="-":
+                    elif token.upper().endswith("E") and char in ["+", "-"]:
                         token += char
                     else:
                         tokens.append((self.filename, self.lineno, token))
