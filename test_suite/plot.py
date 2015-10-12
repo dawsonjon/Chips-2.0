@@ -6,7 +6,6 @@ from sys import exit
 def decimal_places(f_expected, f_actual):
     error = abs(f_expected - f_actual)
     fraction_error = error / abs(f_expected)
-    print error[0], fraction_error[0], f_actual[0], f_expected[0] 
     return -log10(fraction_error)
 
 x = fromfile("x", dtype="float", count=-1, sep="\n")
@@ -46,19 +45,9 @@ x_7 = fromfile("x_7", dtype="float", count=-1, sep="\n")
 log_x = fromfile("log_x", dtype="float", count=-1, sep="\n")
 log_x_error = decimal_places(log(x_7), log_x)
 
-print "cos", min(cos_x_error)
-print "sin", min(sin_x_error)
-print "tan", min(tan_x_error)
-print "hcos", min(cosh_x_error)
-print "hsin", min(sinh_x_error)
-print "htan", min(tanh_x_error)
-print "sqrt", min(sqrt_x_error)
-print "exp", min(exp_x_error)
-
 pyplot.xticks(
     [-2.0*pi, -pi, 0, pi,  2.0*pi],
     [r'$-2\pi$', r"$-\pi$", r'$0$', r'$\pi$', r'$2\pi$'])
-
 
 pyplot.figure(1)
 

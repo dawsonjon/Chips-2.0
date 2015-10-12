@@ -4,6 +4,7 @@ __version__ = "0.1"
 
 import os.path
 import StringIO
+import subprocess
 
 from chips.compiler.exceptions import C2CHIPError
 
@@ -24,7 +25,9 @@ class Tokens:
         self.definitions = []
         self.filename = None
         self.lineno = None
-        self.scan(os.path.join(os.path.dirname(__file__), "builtins.h"))
+        self.scan(
+            os.path.join(os.path.dirname(__file__), "builtins.h"),
+            external_preprocessor=False)
         self.scan(os.path.abspath(filename))
 
         tokens = []
@@ -36,16 +39,31 @@ class Tokens:
                 tokens.append(token)
         self.tokens = tokens
 
-    def scan(self, filename, input_file=None, parameters = {}):
+    def scan(self, 
+            filename, 
+            input_file=None, 
+            parameters = {}, 
+            external_preprocessor=True):
 
         """Convert the test file into tokens"""
+
         self.filename = filename
 
-        if input_file is None:
-            try:
-                input_file = open(self.filename)
-            except IOError:
-                raise C2CHIPError("Cannot open file: "+self.filename)
+        if external_preprocessor:
+
+            directory = os.path.abspath(__file__)
+            directory = os.path.dirname(directory)
+            directory = os.path.join(directory, "include")
+
+            cpp_commands = [ "cpp", "-nostdinc", "-isystem", directory, filename]
+            pipe = subprocess.Popen(cpp_commands, stdout=subprocess.PIPE)
+            input_file = pipe.stdout
+        else:
+            if input_file is None:
+                try:
+                    input_file = open(self.filename)
+                except IOError:
+                    raise C2CHIPError("Cannot open file: "+self.filename)
 
         token = []
         tokens = []
@@ -61,6 +79,17 @@ class Tokens:
                 if line.strip().startswith("#else"):
                     jump = False
                 self.lineno += 1
+                continue
+
+            elif external_preprocessor and line.strip().startswith("#"):
+                l = line.strip()
+                l = l.lstrip("#")
+                l = l.split('"')
+                lineno = int(l[0].strip())
+                self.lineno = lineno
+                filename = l[1].strip().strip('"')
+                self.filename = filename
+                flags = l[2].strip().split()
                 continue
                 
             elif line.strip().startswith("#include"):
