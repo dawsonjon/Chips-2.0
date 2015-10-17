@@ -1,3 +1,7 @@
+
+C Libraries
+===========
+
 math.h
 ------
 
@@ -487,7 +491,7 @@ Returns
 +++++++
 
    The atan2 function returns the arc tangent of y/x , in the range
-   [+PI, +PI] radians.
+   [-PI, +PI] radians.
 
 
 The asin function

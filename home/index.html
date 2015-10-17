@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>&lt;no title&gt; &mdash; Chips 2.0.1 documentation</title>
+    <title>Introduction &mdash; Chips 2.0.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -28,7 +28,7 @@
     <link rel="shortcut icon" href="../_static/chips.ico"/>
     <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
     <link rel="next" title="Examples" href="../examples/index.html" />
-    <link rel="prev" title="Indices and tables" href="../index.html" /> 
+    <link rel="prev" title="Contents" href="../index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -38,10 +38,13 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="../examples/index.html" title="Examples"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="../index.html" title="Indices and tables"
+          <a href="../index.html" title="Contents"
              accesskey="P">previous</a> |</li>
         <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
@@ -52,7 +55,59 @@
         <div class="bodywrapper">
           <div class="body">
             
-  
+  <div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p><em>Chips</em> is a high level, FPGA design tool inspired by <em>Python</em>.</p>
+<div class="section" id="design-components-in-c-design-fpgas-in-python">
+<h2>Design components in C, design FPGAs in Python<a class="headerlink" href="#design-components-in-c-design-fpgas-in-python" title="Permalink to this headline">¶</a></h2>
+<p>In Chips, a design resembles a network of computers implemented in a single
+chip. A chip consists of many interconnected components operating in parallel.
+Each component acts like a computer running a C program.</p>
+<p>Components communicate with each other sending messages across buses. The
+design of a chip - the components and the connections between them - is carried
+out programatically in Python.</p>
+<p>Chips come in three parts:</p>
+<ol class="arabic simple">
+<li>A Python library to build and simulate chips by connecting together digital components using high speed buses.</li>
+<li>A collection of ready made digital components.</li>
+<li>A C-to-hardware compiler to make new digital components in the C programming language.</li>
+</ol>
+</div>
+<div class="section" id="work-at-a-higher-level-of-abstraction">
+<h2>Work at a higher level of abstraction<a class="headerlink" href="#work-at-a-higher-level-of-abstraction" title="Permalink to this headline">¶</a></h2>
+<p>In Chips, the details of gates, clocks, resets, finite-state machines and
+flow-control are handled by the tool, this leaves the designer free to think
+about the architecture and the algorithms. This has some benefits:</p>
+<ul class="simple">
+<li>Designs are simpler.</li>
+<li>Simpler designs take much less time to get working.</li>
+<li>Simpler designs are much less likely to have bugs.</li>
+</ul>
+</div>
+<div class="section" id="with-chips-the-batteries-are-included">
+<h2>With Chips the batteries <em>are</em> included<a class="headerlink" href="#with-chips-the-batteries-are-included" title="Permalink to this headline">¶</a></h2>
+<p>With traditional Hardware Description Languages, there are many restrictions on
+what can be translated into hardware and implemented in a chip.</p>
+<p>With Chips almost all legal code can be translated into hardware. This includes
+division, single and double precision IEEE floating point, maths functions,
+trig-functions, timed waits, pseudo-random numbers and recursive function
+calls.</p>
+</div>
+<div class="section" id="python-is-a-rich-verification-environment">
+<h2>Python is a rich verification environment<a class="headerlink" href="#python-is-a-rich-verification-environment" title="Permalink to this headline">¶</a></h2>
+<p>Chips provides the ability to simulate designs natively in Python.  Python is
+an excellent programming language with extensive libraries covering many
+application domains. This makes it the perfect environment to verify a chip.</p>
+<p><a class="reference external" href="http://www.numpy.org/">NumPy</a> , <a class="reference external" href="http://scipy.org/">SciPy</a>  and
+<a class="reference external" href="http://http://matplotlib.org/">MatPlotLib</a>  will be of interest to
+engineers, but thats just the <a class="reference external" href="https://pypi.python.org/pypi">start</a> .</p>
+</div>
+<div class="section" id="try-it-out">
+<h2>Try it out<a class="headerlink" href="#try-it-out" title="Permalink to this headline">¶</a></h2>
+<p>Why not try the <a class="reference external" href="http://dawsonjon.pythonanywhere.com">Chips</a> web app.</p>
+</div>
+</div>
+
 
           </div>
         </div>
@@ -62,9 +117,21 @@
             <p class="logo"><a href="../index.html">
               <img class="logo" src="../_static/chips.png" alt="Logo"/>
             </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Introduction</a><ul>
+<li><a class="reference internal" href="#design-components-in-c-design-fpgas-in-python">Design components in C, design FPGAs in Python</a></li>
+<li><a class="reference internal" href="#work-at-a-higher-level-of-abstraction">Work at a higher level of abstraction</a></li>
+<li><a class="reference internal" href="#with-chips-the-batteries-are-included">With Chips the batteries <em>are</em> included</a></li>
+<li><a class="reference internal" href="#python-is-a-rich-verification-environment">Python is a rich verification environment</a></li>
+<li><a class="reference internal" href="#try-it-out">Try it out</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="../index.html"
-                        title="previous chapter">Indices and tables</a></p>
+                        title="previous chapter">Contents</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="../examples/index.html"
                         title="next chapter">Examples</a></p>
@@ -97,10 +164,13 @@
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="../examples/index.html" title="Examples"
              >next</a> |</li>
         <li class="right" >
-          <a href="../index.html" title="Indices and tables"
+          <a href="../index.html" title="Contents"
              >previous</a> |</li>
         <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>

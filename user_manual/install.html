@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Download &mdash; Chips 2.0.1 documentation</title>
+    <title>Installation &mdash; Chips 2.0.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -26,7 +26,10 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/chips.ico"/>
-    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference Manual" href="index.html" />
+    <link rel="next" title="Python API" href="python_api.html" />
+    <link rel="prev" title="Reference Manual" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +38,17 @@
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_api.html" title="Python API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Reference Manual"
+             accesskey="P">previous</a> |</li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -44,28 +57,53 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="download">
-<h1>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="download-github">
+<h2>Download (github)<a class="headerlink" href="#download-github" title="Permalink to this headline">¶</a></h2>
 <p>You can download the
 <a class="reference external" href="https://github.com/dawsonjon/Chips-2.0/archive/master.zip">source</a>
 from the
 <a class="reference external" href="https://github.com/dawsonjon/Chips-2.0">Git Hub</a>
 homepage. Alternatively clone the project using git:</p>
-<div class="highlight-python"><pre>~$ git clone https://github.com/dawsonjon/Chips-2.0.git</pre>
+<div class="highlight-python"><pre>~$ git clone --recursive https://github.com/dawsonjon/Chips-2.0.git</pre>
 </div>
 </div>
-<div class="section" id="install">
-<h1>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h1>
-<ol class="arabic simple">
-<li>First <a class="reference external" href="http://python.org/download">install Python</a>. You need <em>Python</em> 2.6 or later, but not <em>Python</em> 3.</li>
-<li>In the Linux console, or the Windows command line (you will need administrator privileges):</li>
-</ol>
-<div class="highlight-python"><pre>~$ cd Chips-2.0
-~$ python setup.py install</pre>
+<div class="section" id="install-from-github">
+<h2>Install from github<a class="headerlink" href="#install-from-github" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>$ cd Chips-2.0
+$ sudo python setup install</pre>
 </div>
+</div>
+<div class="section" id="install-from-pypi">
+<h2>Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><pre>$ pip-install chips</pre>
+</div>
+</div>
+<div class="section" id="icarus-verilog">
+<h2>Icarus Verilog<a class="headerlink" href="#icarus-verilog" title="Permalink to this headline">¶</a></h2>
+<p>Chips can automatically simulate the verilog it generates, to simulate verilog
+you will need the <a class="reference external" href="http://iverilog.icarus.com/">Icarus Verilog</a></p>
 <blockquote>
-<div>Chips can automatically simulate the verilog it generates, to simulate verilog you will need the <a class="reference external" href="http://iverilog.icarus.com/">Icarus Verilog</a>
-simulator. This will need to be installed in your command path.</div></blockquote>
+<div>simulator. This will need to be installed in your command path.</div></blockquote>
+</div>
+<div class="section" id="c-preprocessor">
+<h2>C Preprocessor<a class="headerlink" href="#c-preprocessor" title="Permalink to this headline">¶</a></h2>
+<p>Chips uses an external C processor. Make sure you have a c preprocessor <cite>cpp</cite>
+installed in your path</p>
+</div>
+<div class="section" id="other-packages">
+<h2>Other packages<a class="headerlink" href="#other-packages" title="Permalink to this headline">¶</a></h2>
+<p>While not strictly speaking dependencies, you may want to install the following
+packages to use all the libraries and examples:</p>
+<ul class="simple">
+<li>numpy</li>
+<li>scipy</li>
+<li>matplotlib</li>
+<li>pil</li>
+<li>wxpython</li>
+</ul>
+</div>
 </div>
 
 
@@ -79,10 +117,23 @@ simulator. This will need to be installed in your command path.</div></blockquot
             </a></p>
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Download</a></li>
-<li><a class="reference internal" href="#install">Install</a></li>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#download-github">Download (github)</a></li>
+<li><a class="reference internal" href="#install-from-github">Install from github</a></li>
+<li><a class="reference internal" href="#install-from-pypi">Install from PyPi</a></li>
+<li><a class="reference internal" href="#icarus-verilog">Icarus Verilog</a></li>
+<li><a class="reference internal" href="#c-preprocessor">C Preprocessor</a></li>
+<li><a class="reference internal" href="#other-packages">Other packages</a></li>
+</ul>
+</li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Reference Manual</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="python_api.html"
+                        title="next chapter">Python API</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="../_sources/user_manual/install.txt"
@@ -111,7 +162,17 @@ simulator. This will need to be installed in your command path.</div></blockquot
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_api.html" title="Python API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Reference Manual"
+             >previous</a> |</li>
+        <li><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li><a href="index.html" >Reference Manual</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

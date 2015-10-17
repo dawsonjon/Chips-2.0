@@ -37,9 +37,9 @@ Any type may be used to form an array, including `struct` s and arrays. Arrays
 may be nested arbitrarily to form arrays of arrays.  `struct` s may be
 assigned, passed to and returned from functions.
 
-Arrays may be passed to functions, in this case the array is not coppied, but a
+Arrays may be passed to functions, in this case the array is not copied, but a
 reference is passed. Any modification made to the array within the called
-function wil also be reflected within the calling function.
+function will also be reflected within the calling function.
 
 Missing Features
 ----------------
@@ -47,17 +47,15 @@ Missing Features
 Chips is getting close to supporting the whole C language. The following
 features have not been done yet.
 
-+ Pointers
-+ Function pointers
 + `union` s
-+ Function Prototypes
-+ `goto` statment
++ `enum` s
++ Variadic Functions
 
 
 Functions
 ---------
 
-Reccursion is permitted, but it should be remebered that memory is at a premium
+Recursion is permitted, but it should be remembered that memory is at a premium
 in FPGAs. It may be better to avoid recursive functions so that the memory
 usage can be predicted at compile time.  Only a fixed number of arguments is
 supported, optional arguments are not permitted.
@@ -106,9 +104,9 @@ input and blocking execution, you can check if data is ready.
        temp = fgetc(spam);
     }
 
-There is no equivalent function to check if an output is ready to receive data,
-this could cause deadlocks if both the sending and receiving end were waiting
-for one another. 
+There is an equivilent `output_ready` function to check whether an output,
+is waiting for data. Care should be taken to avoid deadlocks which might arise
+if both the sender and receiver are waiting for the other to be waiting.
 
 Timed Waits
 -----------
@@ -174,28 +172,6 @@ occur if there are no more value in the file.
 C Preprocessor
 --------------
 
-The C preprocessor currently has only limited capabilities, and currently only
-the `#include` feature is supported.
-
-c2verilog
----------
-
-For simple designs with only one C component, the simplest way to generate Verilog is by using the c2verilog utility.
-The utility accepts C files as input, and generates Verilog files as output.
-
-::
-
-    ~$ c2verilog input_file.c
-
-You may automatically compile the output using Icarus Verilog by adding the
-`iverilog` option. You may also run the Icarus Verilog simulation using the
-`run` option.
-
-::
-
-    ~$ c2verilog iverilog run input_file.c
-
-You can also influence the way the Verilog is generated. By default, a low area
-solution is implemented. If you can specify a design optimised for speed using
-the `speed` option.
+Chips uses an external C pre-processor, you will need to make sure that Chips
+can see the `cpp` command in its command path.
 
