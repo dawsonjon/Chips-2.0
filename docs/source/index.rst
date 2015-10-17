@@ -4,7 +4,7 @@ Contents
 
 .. toctree::
    home/index.rst
-   install/install.rst
+   user_manual/install.rst
    examples/index.rst
    user_manual/index.rst
 

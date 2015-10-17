@@ -333,7 +333,6 @@ class Parser:
         self.function = self.global_scope
         self.scope = stored_scope
 
->>>>>>> development
         return function
 
     def parse_break(self):
