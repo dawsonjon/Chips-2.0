@@ -19,13 +19,11 @@ in Python.
 
 Chips come in three parts:
 
-1. A Python library to build and simulate chips by connecting together digital
-components using high speed buses.
+1. A Python library to build and simulate chips by connecting together digital components using high speed buses.
 
 2. A collection of ready made digital components.
 
-3. A C-to-hardware compiler to make new digital components in the C programming
-language.
+3. A C-to-hardware compiler to make new digital components in the C programming language.
 
 Work at a higher level of abstraction 
 -------------------------------------
@@ -67,14 +65,18 @@ Why not try the `Chips <http://dawsonjon.pythonanywhere.com>`_ web app.
 
 Install from github
 -------------------
+
 ::
+
         $ git clone --recursive https://github.com/dawsonjon/Chips-2.0.git
         $ cd Chips-2.0
         $ sudo python setup install
 
 Install from PyPi
 -----------------
+
 ::
+
         $ pip-install chips
 
 
