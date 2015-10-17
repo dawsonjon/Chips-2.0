@@ -36,6 +36,9 @@ while 1:
 
     ifn = open("version")
     major, minor, revision = ifn.read().split(".")
+    major = int(major)
+    minor = int(minor)
+    revision = int(revision)
     ifn.close()
     print "version", major, minor, revision
 
