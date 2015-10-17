@@ -1,11 +1,12 @@
 from graphviz import Digraph
 
+
 class BlockDiagram():
 
     def __init__(self, chip):
         self.chip = chip
 
-        g = Digraph(self.chip.name, graph_attr = {"rankdir":"LR"})
+        g = Digraph(self.chip.name, graph_attr={"rankdir": "LR"})
 
         sources = {}
         sinks = {}
@@ -18,9 +19,11 @@ class BlockDiagram():
             for port, wire in instance.outputs.iteritems():
                 sources[str(id(wire))] = str(id(instance)) + ":" + port
 
-            inputs = "|".join(["<%s> %s"%(i, i) for i in instance.inputs.keys()])
-            outputs = "|".join(["<%s> %s"%(i, i) for i in instance.outputs.keys()])
-            label = "{{%s}|%s|{%s}}"%(
+            inputs = "|".join(["<%s> %s" % (i, i)
+                              for i in instance.inputs.keys()])
+            outputs = "|".join(["<%s> %s" % (i, i)
+                               for i in instance.outputs.keys()])
+            label = "{{%s}|%s|{%s}}" % (
                 inputs,
                 instance.component_name,
                 outputs
@@ -51,7 +54,7 @@ class BlockDiagram():
 if __name__ == "__main__":
     from chips.api.api import *
     from chips.components.components import *
-    c =  Chip("my_chip")
+    c = Chip("my_chip")
     a = Input(c, "a")
     b = Input(c, "b")
     d = Input(c, "d")
@@ -61,4 +64,3 @@ if __name__ == "__main__":
     discard(c, y)
     b = BlockDiagram(c)
     b.view()
-

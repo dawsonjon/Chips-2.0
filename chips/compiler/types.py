@@ -4,34 +4,35 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
-def is_double(expression):
 
+def is_double(expression):
     """ Expression object is of type double """
 
     return expression.type_() == "double"
 
-def is_float(expression):
 
+def is_float(expression):
     """ Expression object is of type float """
 
     return expression.type_() == "float"
 
-def is_long(expression):
 
+def is_long(expression):
     """ Expression object is of type long """
 
     return expression.type_() == "long"
 
-def is_int(expression):
 
+def is_int(expression):
     """ Expression object is of type int """
 
     return expression.type_() == "int"
 
+
 class ArrayOf():
 
     """ Class to represent Arrays of types """
-    
+
     def __init__(self, type_, dimensions=[]):
         self.type_ = type_
         self.dimensions = dimensions
@@ -65,9 +66,8 @@ class ArrayOf():
     def __repr__(self):
         string = repr(self.type_)
         for i in self.dimensions:
-            string += "[%s]"%i
+            string += "[%s]" % i
         return string
-
 
     def _size_(self):
         size = type_size(self.type_)
@@ -80,16 +80,17 @@ class ArrayOf():
     def _arg_size_(self):
         return 4
 
-def is_array_of(thing):
 
+def is_array_of(thing):
     """ Is thing an Array? """
 
     return hasattr(thing.type_(), "is_array_of")
 
+
 class PointerTo():
 
     """ Class to represent pointers to types """
-    
+
     def __init__(self, type_):
         self.type_ = type_
         self.is_pointer_to = True
@@ -120,11 +121,12 @@ class PointerTo():
     def _arg_size_(self):
         return 4
 
-def is_pointer_to(thing):
 
+def is_pointer_to(thing):
     """ Is thing a Pointer? """
 
     return hasattr(thing.type_(), "is_pointer_to")
+
 
 class StructOf():
 
@@ -159,7 +161,7 @@ class StructOf():
         for name, type_ in zip(self.names, self.types):
             if name == member:
                 break
-            offset += type_size(type_)//4
+            offset += type_size(type_) // 4
         return offset
 
     def _size_(self):
@@ -171,14 +173,14 @@ class StructOf():
     def _arg_size_(self):
         return self._size_()
 
-def is_struct_of(thing):
 
+def is_struct_of(thing):
     """ Is thing a Struct? """
 
     return hasattr(thing.type_(), "is_struct_of")
 
-def type_size(type_):
 
+def type_size(type_):
     """ Given a type object, return the size """
 
     if type_ in ["void"]:
@@ -189,8 +191,8 @@ def type_size(type_):
         return 8
     return type_._size_()
 
-def type_arg_size(type_):
 
+def type_arg_size(type_):
     """ Given a type object, return the size """
 
     if type_ in ["void"]:
@@ -202,28 +204,30 @@ def type_arg_size(type_):
 
     return type_._arg_size_()
 
-def size_of(thing):
 
+def size_of(thing):
     """ Given on object that supports the "type_" method return the size """
 
     type_ = thing.type_()
     return type_size(type_)
 
-def arg_size_of(thing):
 
+def arg_size_of(thing):
     """ Given on object that supports the "type_" method return the size """
 
     type_ = thing.type_()
     return type_arg_size(type_)
 
+
 class TypeSpecifier:
+
     def __init__(self, type_, signed, const):
         self.type_ = type_
         self.signed = signed
         self.const = const
 
-def compatible(left, right):
 
+def compatible(left, right):
     """ Compare expected and actual type in function arguments """
 
     if left.type_() == right.type_():

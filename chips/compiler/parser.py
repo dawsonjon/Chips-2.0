@@ -168,7 +168,7 @@ class Parser:
                     self.tokens.error(
                         "Inner array range must be specified")
 
-            #force inner dimension to None so that size is 4 for array args
+            # force inner dimension to None so that size is 4 for array args
             type_specifier.type_.dimensions[0] = None
             type_specifier.type_.dimensions.reverse()
 
@@ -192,18 +192,18 @@ class Parser:
 
         msg = [dedent(i) for i in [
 
-        "%s was previously declared, but was not a function.",
+               "%s was previously declared, but was not a function.",
 
-        """Function type differs from previous function declaration
+               """Function type differs from previous function declaration
         expected: %s got: %s""",
 
-        """Function signedness differs from previous function declaration 
+               """Function signedness differs from previous function declaration
         expected: %s got: %s""",
 
-        """Argument constness differs from previous function declaration 
+               """Argument constness differs from previous function declaration
         expected: %s got: %s""",
 
-        ]]
+               ]]
 
         if name in self.scope:
             allready_defined = True
@@ -256,19 +256,19 @@ class Parser:
 
         msg = [dedent(i) for i in [
 
-        """Function has a different number of arguments to previous 
+               """Function has a different number of arguments to previous
         declaration""",
 
-        """Argument type differs from previous function declaration 
+               """Argument type differs from previous function declaration
         expected: %s got: %s""",
 
-        """Argument signedness differs from previous function declaration 
+               """Argument signedness differs from previous function declaration
         expected: %s got: %s""",
 
-        """Argument constness differs from previous function declaration 
+               """Argument constness differs from previous function declaration
         expected: %s got: %s""",
 
-        ]]
+               ]]
 
         # arguments look like a series of declarations, for each argument
         # create an instance - like a local variable.
@@ -281,7 +281,6 @@ class Parser:
             if len(function.arguments) != len(arguments):
                 self.tokens.error(msg[0])
 
-
         function.arguments = []
         for argument, argument_declaration in arguments:
             # The name of an argument may differ from a previous declaration
@@ -293,7 +292,7 @@ class Parser:
                 old_const = old_argument.const()
                 if argument_declaration.type_ != old_type:
                     self.tokens.error(msg[1] % (
-                        argument_declaration.type_, 
+                        argument_declaration.type_,
                         old_type
                     ))
                 if argument_declaration.signed != old_signed:
@@ -489,9 +488,9 @@ class Parser:
             #
             operator = self.tokens.get()
             if operator == "=":
-                expression = self.parse_ternary_expression()
+                expression = self.parse_assignment()
             else:
-                expression = self.parse_ternary_expression()
+                expression = self.parse_assignment()
                 expression = self.binary(operator[:-1], lvalue, expression)
 
             # Promote numeric types

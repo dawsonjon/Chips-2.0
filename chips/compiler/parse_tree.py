@@ -32,7 +32,6 @@ class Trace:
 
 
 def flatten(sequence):
-
     """Turn a list containing other lists into a single list"""
 
     try:
@@ -45,7 +44,6 @@ def flatten(sequence):
 
 
 def constant_fold(trace, expression):
-
     """Replace an expression with a constant if possible"""
 
     try:
@@ -2250,7 +2248,7 @@ class Variable(Object):
 
     def address(self):
         instructions = []
-        #if is_array_of(self) and self.instance.argument:
+        # if is_array_of(self) and self.instance.argument:
         #    instructions.append(
         #        {"trace": self.trace,
         #         "op": "addl",

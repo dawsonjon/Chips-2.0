@@ -1,26 +1,13 @@
 #!/usr/bin/env python
 
 from distutils.core import setup
+version = open("version").read()
+long_description = open("README.rst").read()
 
 setup(name="Chips",
-      version="0.1.2",
+      version=version,
       description="Design hardware with Python",
-      long_description="""\
-
-Chips
------
-
-The Chips library allows hardware devices to be designed in python and C
-
-Features
-
-- Design components in C
-
-- Connect components together using a python API to generate a chip
-
-- Automatic generation of synthesisable Verilog.
-
-""",
+      long_description=long_description,
 
       author="Jon Dawson",
       author_email="chips@jondawson.org.uk",

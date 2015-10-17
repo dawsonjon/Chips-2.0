@@ -4,7 +4,9 @@ __version__ = "0.1"
 
 import os
 
+
 class C2CHIPError(Exception):
+
     def __init__(self, message, filename=None, lineno=None):
         self.message = message
         if filename is not None:
@@ -14,9 +16,14 @@ class C2CHIPError(Exception):
         self.lineno = lineno
 
     def __str__(self):
-        return self.message + " in line %s at file %s"%(self.lineno, self.filename)
+        return self.message + " in line %s at file %s" % (
+            self.lineno,
+            self.filename
+        )
+
 
 class ChipsAssertionFail(Exception):
+
     def __init__(self, filename=None, lineno=None):
         self.message = "Assertion failed"
         if filename is not None:
@@ -26,38 +33,43 @@ class ChipsAssertionFail(Exception):
         self.lineno = lineno
 
     def __str__(self):
-        return self.message + " in line %s at file %s"%(self.lineno, self.filename)
+        return self.message + " in line %s at file %s" % (
+            self.lineno,
+            self.filename
+        )
+
 
 class StopSim(Exception):
 
-    """A process has terminated
-    
+    """
+    A process has terminated
     """
 
     pass
+
 
 class BreakSim(Exception):
 
-    """A breakpoint has been reached
-    
+    """
+    A breakpoint has been reached
     """
 
     pass
+
 
 class NoProfile(Exception):
 
-    """A function requires profiling information, but none is available
-    
+    """
+    A function requires profiling information, but none is available
     """
 
     pass
+
 
 class NotConstant(Exception):
 
     """This expression gets raised when a non-constant ...
-    
     Expression is evaluated at compile time.
-
     """
 
     pass

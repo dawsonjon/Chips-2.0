@@ -6,16 +6,14 @@ __copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
 __version__ = "0.1"
 
 import sys
-import os
 
 from chips.compiler.parser import Parser
 from chips.compiler.exceptions import C2CHIPError
-from chips.compiler.optimizer import cleanup_functions
 from chips.compiler.macro_expander import expand_macros
-from chips.compiler.tokens import Tokens
 from chips.compiler.verilog_area import generate_CHIP as generate_CHIP_area
 from chips.compiler.python_model import generate_python_model
 import fpu
+
 
 def generate_library():
     output_file = open("chips_lib.v", "w")
@@ -33,6 +31,7 @@ def generate_library():
     output_file.write(fpu.double_to_float)
     output_file.close()
 
+
 def comp(input_file, options={}, parameters={}, sn=0):
 
     reuse = "no_reuse" not in options
@@ -40,25 +39,32 @@ def comp(input_file, options={}, parameters={}, sn=0):
     generate_library()
 
     try:
-            #Optimize for area
+            # Optimize for area
             parser = Parser(input_file, reuse, initialize_memory, parameters)
             process = parser.parse_process()
-            name = process.main.name + "_%s"%sn
+            name = process.main.name + "_%s" % sn
             instructions = process.generate()
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
                 for i in instructions:
-                    print i.get("op", "-"), i.get("z", "-"), i.get("a", "-"), i.get("b", "-"), i.get("literal", "-"), i.get("trace")
+                    print (
+                        i.get("op", "-"),
+                        i.get("z", "-"),
+                        i.get("a", "-"),
+                        i.get("b", "-"),
+                        i.get("literal", "-"),
+                        i.get("trace"),
+                    )
             output_file = name + ".v"
             output_file = open(output_file, "w")
             inputs, outputs = generate_CHIP_area(
-                    input_file,
-                    name,
-                    instructions,
-                    output_file,
-                    parser.allocator,
-                    initialize_memory,
-                    options.get("memory_size",4096))
+                input_file,
+                name,
+                instructions,
+                output_file,
+                parser.allocator,
+                initialize_memory,
+                options.get("memory_size", 4096))
             output_file.close()
 
     except C2CHIPError as err:
@@ -66,27 +72,27 @@ def comp(input_file, options={}, parameters={}, sn=0):
         print err.message
         sys.exit(-1)
 
-
     return name, inputs, outputs, ""
 
+
 def compile_python_model(
-        input_file, 
-        options={}, 
-        parameters = {}, 
-        inputs = {}, 
-        outputs = {},
-        debug = False,
-        profile = False,
-        sn = 0,
-        ):
+        input_file,
+        options={},
+        parameters={},
+        inputs={},
+        outputs={},
+        debug=False,
+        profile=False,
+        sn=0,
+):
 
     generate_library()
 
     try:
-            #Optimize for area
+            # Optimize for area
             parser = Parser(input_file, False, False, parameters)
             process = parser.parse_process()
-            name = process.main.name  + "_%u"%sn
+            name = process.main.name + "_%u" % sn
             instructions = process.generate()
             instructions = expand_macros(instructions, parser.allocator)
             if "dump" in options:
@@ -96,19 +102,23 @@ def compile_python_model(
             debug = debug or ("debug" in options)
             profile = profile or ("profile" in options)
             model = generate_python_model(
-                    debug,
-                    input_file,
-                    name,
-                    instructions,
-                    parser.allocator, 
-                    inputs, 
-                    outputs,
-                    profile)
+                debug,
+                input_file,
+                name,
+                instructions,
+                parser.allocator,
+                inputs,
+                outputs,
+                profile)
 
-            return model, parser.allocator.input_names.values(), parser.allocator.output_names.values(), name
+            return (
+                model,
+                parser.allocator.input_names.values(),
+                parser.allocator.output_names.values(),
+                name
+            )
 
     except C2CHIPError as err:
         print "Error in file:", err.filename, "at line:", err.lineno
         print err.message
         sys.exit(-1)
-
