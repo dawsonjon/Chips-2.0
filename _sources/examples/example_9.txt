@@ -20,7 +20,7 @@ is referred to as the window.
     unsigned raw_in = input("raw_in");
     unsigned compressed_out = output("compressed_out");
     
-    /*Create a to send data of an arbitrary bit length*/
+    /*Send data of an arbitrary bit length*/
     unsigned packed, stored = 0;
     void send_bits(unsigned data, unsigned bits){
         unsigned i;
@@ -39,7 +39,7 @@ is referred to as the window.
     /*A function that reads a stream of uncompressed data, 
     and creates a stream of compressed data*/
     
-    void compress(){
+    void main(){
     
         unsigned pointer, match, match_length, longest_match, longest_match_length;
         unsigned buffer[N];
@@ -108,12 +108,12 @@ window, for example a window size of 1024 requires the pointers to be 10 bits ea
 .. code-block:: c
 
     /*LZSS Decmpression Component*/
-    /* Jonathan P Dawson 2014-07-10*/
+    /*Jonathan P Dawson 2014-07-10*/
     
     unsigned raw_out = output("raw_out");
     unsigned compressed_in = input("compressed_in");
     
-    /* A function to get data of an arbtrary bit length data */
+    /*A function to get data of an arbitrary bit length*/
     
     unsigned stored = 0;
     unsigned packed;
@@ -133,10 +133,10 @@ window, for example a window size of 1024 requires the pointers to be 10 bits ea
     }
     
     
-    /* Decompress a stream of lzss compressed data, 
+    /*Decompress a stream of lzss compressed data, 
     and generate a stream of raw data*/
     
-    void decompress(){
+    void main(){
         unsigned i, pointer, distance, length, data;
         unsigned buffer[N];
     

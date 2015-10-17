@@ -197,7 +197,7 @@ function is also synthesised using the identity <img class="math" src="../_image
 <h2>Implement Quicksort<a class="headerlink" href="#implement-quicksort" title="Permalink to this headline">¶</a></h2>
 <p>This example sorts an array of data using the
 <a class="reference external" href="http://en.wikipedia.org/wiki/Quicksort">Quick Sort algorithm</a></p>
-<p>The quick-sort algorithm is a recurrsive algorithm, but <em>Chips</em> does not
+<p>The quick-sort algorithm is a recursive algorithm, but <em>Chips</em> does not
 support recursive functions. Since the level of recursion is bounded, it is
 possible to implement the function using an explicitly created stack.</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/* sort.c */</span>
@@ -574,7 +574,7 @@ spectrum of a 64 point sine wave.</p>
 <span class="kt">unsigned</span> <span class="n">out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;z&quot;</span><span class="p">);</span>
 <span class="kt">unsigned</span> <span class="n">kernel_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;k&quot;</span><span class="p">);</span>
 
-<span class="kt">void</span> <span class="nf">fir_filter</span><span class="p">(){</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
     <span class="kt">unsigned</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="kt">unsigned</span> <span class="n">inp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="kt">float</span> <span class="n">delay</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
@@ -636,7 +636,7 @@ angle just once. From there, subsequent samples can be found using multipliers.<
 <span class="kt">unsigned</span> <span class="n">sin_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;sin&quot;</span><span class="p">);</span>
 <span class="kt">unsigned</span> <span class="n">cos_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;cos&quot;</span><span class="p">);</span>
 
-<span class="kt">void</span> <span class="nf">dds</span><span class="p">(){</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
     <span class="kt">float</span> <span class="n">sin_x</span><span class="p">,</span> <span class="n">cos_x</span><span class="p">,</span> <span class="n">new_sin</span><span class="p">,</span> <span class="n">new_cos</span><span class="p">,</span> <span class="n">si</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">frequency</span><span class="p">;</span>
     <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
 
@@ -755,7 +755,7 @@ is referred to as the window.</p>
 <span class="kt">unsigned</span> <span class="n">raw_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;raw_in&quot;</span><span class="p">);</span>
 <span class="kt">unsigned</span> <span class="n">compressed_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;compressed_out&quot;</span><span class="p">);</span>
 
-<span class="cm">/*Create a to send data of an arbitrary bit length*/</span>
+<span class="cm">/*Send data of an arbitrary bit length*/</span>
 <span class="kt">unsigned</span> <span class="n">packed</span><span class="p">,</span> <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="kt">void</span> <span class="nf">send_bits</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">data</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">bits</span><span class="p">){</span>
     <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
@@ -774,7 +774,7 @@ is referred to as the window.</p>
 <span class="cm">/*A function that reads a stream of uncompressed data,</span>
 <span class="cm">and creates a stream of compressed data*/</span>
 
-<span class="kt">void</span> <span class="nf">compress</span><span class="p">(){</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
 
     <span class="kt">unsigned</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">match_length</span><span class="p">,</span> <span class="n">longest_match</span><span class="p">,</span> <span class="n">longest_match_length</span><span class="p">;</span>
     <span class="kt">unsigned</span> <span class="n">buffer</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
@@ -841,12 +841,12 @@ sent, and the distance indicates the length of the matching sequence. The
 size of the distance and length pointers will depend on the size of the
 window, for example a window size of 1024 requires the pointers to be 10 bits each.</p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/*LZSS Decmpression Component*/</span>
-<span class="cm">/* Jonathan P Dawson 2014-07-10*/</span>
+<span class="cm">/*Jonathan P Dawson 2014-07-10*/</span>
 
 <span class="kt">unsigned</span> <span class="n">raw_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;raw_out&quot;</span><span class="p">);</span>
 <span class="kt">unsigned</span> <span class="n">compressed_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;compressed_in&quot;</span><span class="p">);</span>
 
-<span class="cm">/* A function to get data of an arbtrary bit length data */</span>
+<span class="cm">/*A function to get data of an arbitrary bit length*/</span>
 
 <span class="kt">unsigned</span> <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
 <span class="kt">unsigned</span> <span class="n">packed</span><span class="p">;</span>
@@ -866,10 +866,10 @@ window, for example a window size of 1024 requires the pointers to be 10 bits ea
 <span class="p">}</span>
 
 
-<span class="cm">/* Decompress a stream of lzss compressed data,</span>
+<span class="cm">/*Decompress a stream of lzss compressed data,</span>
 <span class="cm">and generate a stream of raw data*/</span>
 
-<span class="kt">void</span> <span class="nf">decompress</span><span class="p">(){</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
     <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">data</span><span class="p">;</span>
     <span class="kt">unsigned</span> <span class="n">buffer</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
 
