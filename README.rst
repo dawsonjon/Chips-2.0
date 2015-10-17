@@ -1,4 +1,4 @@
-.. image:: https://travis-ci.org/dawsonjon/Chips-2.0.svg?branch=development
+.. image:: https://travis-ci.org/dawsonjon/Chips-2.0.svg?branch=master
     :target: https://travis-ci.org/dawsonjon/Chips-2.0`
 
 Chips - 2.0
@@ -15,7 +15,7 @@ Each component acts like a computer running a C program.
 
 Components communicate with each other sending messages across buses. The
 design of a chip - the components and the connections between them - is carried
-out programatically in Python. 
+in Python. 
 
 Chips come in three parts:
 
@@ -76,3 +76,5 @@ Install from PyPi
 -----------------
 ::
         $ pip-install chips
+
+

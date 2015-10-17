@@ -256,7 +256,6 @@ class PythonModel:
                 result = uint32(0x00000000)
         elif instruction["op"] == "int_to_float":
             f = float(int32(self.a_lo))
-            print f
             self.a_lo = float_to_bits(f)
         elif instruction["op"] == "float_to_int":
             i = bits_to_float(self.a_lo)

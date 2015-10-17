@@ -238,8 +238,9 @@ class Tokens:
         """
         Return the next token in the stream, but don't consume it.
         """
-        if len(self.tokens) > depth:
-            return self.tokens[depth][2]
+
+        if self.tokens:
+            return self.tokens[0][2]
         else:
             return ""
 
@@ -254,9 +255,7 @@ class Tokens:
             return ""
 
     def get(self):
-        """
-        Return the next token in the stream, and consume it.
-        """
+        """Return the next token in the stream, and consume it."""
 
         if self.tokens:
             self.lineno = self.tokens[0][1]
@@ -268,17 +267,13 @@ class Tokens:
         return token
 
     def end(self):
-        """
-        Return True if all the tokens have been consumed.
-        """
+        """Return True if all the tokens have been consumed."""
 
         return not self.tokens
 
     def expect(self, expected):
-        """
-        Consume the next token in the stream,
-        generate an error if it is not as expected.
-        """
+        """Consume the next token in the stream,
+        generate an error if it is not as expected."""
 
         try:
             filename, lineno, actual = self.tokens.pop(0)

@@ -137,7 +137,7 @@ class Chip:
         input_d = Input(mychip, "d")
         output_z = Output(mychip, "z")
         four_input_adder(mychip, input_a, input_b, input_c, input_d, output_z)
-      
+
 
     A diagrammatic representation of the `Chip` is shown below.
 
@@ -158,7 +158,7 @@ class Chip:
     Functions provide a means to build more complex components out of simple
     ones, but it doesn't stop there. By providing the basic building blocks,
     you can use all the features of the Python language to build chips.
-    
+
     Ideas:
 
         + Create multiple instances using loops.
@@ -171,8 +171,8 @@ class Chip:
     ----------
 
     There are two ways to transfer data between the python environment, and the
-    `Chip` simulation. 
-    
+    `Chip` simulation.
+
     The first and most flexible method is to subclass the `Input` and `Output`
     classes, overriding the data_source and data_sink methods. By defining your
     own data_source and data_sink methods, you can interface to other Python
@@ -184,7 +184,7 @@ class Chip:
     The `Stimulus` class is provided with a Python sequence object for example
     a list, and iterator or a generator at the time it is created created. The
     `Response` class store data as the simulation progresses, and is itself a
-    sequence object.  
+    sequence object.
 
     It is simple to run the simulation, which should be initiated with a reset:
 
@@ -238,7 +238,7 @@ class Chip:
     method. You can also specify the simulation run time in clock cycles.
 
     .. code-block:: python
-     
+
         mychip.generate_testbench(1000) #1000 clocks
 
     To compile the design in Icarus Verilog, use the `compile_iverilog` method.
@@ -246,7 +246,7 @@ class Chip:
     `compile_iverilog` function. This is most useful to verify that chips
     components match their native python simulations. I most cases Verilog
     simulations will only be needed to by `Chips` developers.
-      
+
     .. code-block:: python
 
         mychip.compile_iverilog(True)
@@ -257,7 +257,6 @@ class Chip:
     """
 
     def __init__(self, name):
-
         """
 
         Synopsis:
@@ -269,7 +268,7 @@ class Chip:
 
         Description:
 
-           Create a `Chip`. 
+           Create a `Chip`.
 
         Arguments:
 
@@ -291,7 +290,6 @@ class Chip:
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def generate_verilog(self):
-
         """
 
         Synopsis:
@@ -309,11 +307,10 @@ class Chip:
             None
 
         Returns:
-            
+
             None
 
         """
-
 
         for component in self.components.values():
             component.generate_verilog()
@@ -389,7 +386,6 @@ class Chip:
         output_file.close()
 
     def generate_testbench(self, stop_clocks=None):
-
         """
 
         Synopsis:
@@ -399,7 +395,7 @@ class Chip:
                chip.generate_testbench(stop_clocks=None)
 
         Description:
-            
+
             Generate a Verilog testbench.
 
         Arguments:
@@ -463,7 +459,6 @@ class Chip:
         output_file.close()
 
     def compile_iverilog(self, run=False):
-
         """
 
         Synopsis:
@@ -497,7 +492,6 @@ class Chip:
             return os.system("vvp %s" % (self.name + "_tb"))
 
     def simulation_reset(self):
-
         """
 
         Synopsis:
@@ -541,7 +535,6 @@ class Chip:
             output.simulation_reset()
 
     def simulation_step(self):
-
         """
 
         Synopsis:
@@ -587,7 +580,6 @@ class Chip:
         self.time += 1
 
     def simulation_run(self):
-
         """
 
         Synopsis:
@@ -669,7 +661,6 @@ class Component:
     """
 
     def __init__(self, C_file, options={}, inline=False):
-
         """
 
         Synopsis:
@@ -729,10 +720,10 @@ class Component:
             .. code-block:: python
 
                component_instance(chip, inputs, output, parameters={}, debug=False,
-               profile=False) 
+               profile=False)
 
         Description:
-            
+
             Instance a component.
 
         Arguments:
@@ -848,7 +839,6 @@ class _Instance:
                                   (i, component_name), i.filename, i.lineno)
 
     def generate_verilog(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_reset() instead
@@ -882,7 +872,6 @@ class Wire:
     """
 
     def __init__(self, chip):
-
         """
         Synopsis:
 
@@ -917,7 +906,6 @@ class Wire:
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_reset() instead
@@ -926,7 +914,6 @@ class Wire:
         self.q = False
 
     def simulation_update(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_update() instead
@@ -971,9 +958,7 @@ class Input:
 
     """
 
-
     def __init__(self, chip, name):
-
         """
         Synopsis:
 
@@ -1008,7 +993,6 @@ class Input:
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_reset() instead
@@ -1018,7 +1002,6 @@ class Input:
         self.q = self.data_source()
 
     def simulation_step(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_step() instead
@@ -1027,7 +1010,6 @@ class Input:
         self.update_data = self.src_rdy and self.dst_rdy
 
     def simulation_update(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_update() instead
@@ -1090,7 +1072,7 @@ class Output:
           name: The name of the output (used in Verilog code)
 
         Returns:
-            
+
             An `Output` instance.
 
         """
@@ -1105,7 +1087,6 @@ class Output:
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_reset() instead
@@ -1114,7 +1095,6 @@ class Output:
         pass
 
     def simulation_step(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_step() instead
@@ -1124,7 +1104,6 @@ class Output:
             self.data_sink(self.q)
 
     def simulation_update(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_update() instead
@@ -1160,11 +1139,10 @@ class Stimulus(Input):
 
         mychip.simulation_reset()
         mychip.simulation_run()
-    
+
     """
 
     def __init__(self, chip, name, type_, sequence):
-
         """
         Synopsis:
 
@@ -1183,7 +1161,7 @@ class Stimulus(Input):
 
           name: The name of the output (used in Verilog code)
 
-          type_: The data type of the stimulus, "int", "long", "float" 
+          type_: The data type of the stimulus, "int", "long", "float"
           or "double"
 
           sequence: A sequence object for example a list or an generator function
@@ -1201,7 +1179,6 @@ class Stimulus(Input):
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_reset() instead
@@ -1212,7 +1189,6 @@ class Stimulus(Input):
         Input.simulation_reset(self)
 
     def data_source(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         """
@@ -1249,7 +1225,6 @@ class Stimulus(Input):
                 return low
 
     def __iter__(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         __iter__() provides an iterator like interface so that you can use
@@ -1259,7 +1234,6 @@ class Stimulus(Input):
         return iter(self.sequence)
 
     def __len__(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         __len__() allows the len() function to be used.
@@ -1291,12 +1265,11 @@ class Response(Output):
         mychip.simulation_reset()
         mychip.simulation_run()
 
-        plot(sinx) 
+        plot(sinx)
 
     """
 
     def __init__(self, chip, name, type_):
-
         """
         Synopsis:
 
@@ -1307,7 +1280,7 @@ class Response(Output):
 
         Description:
 
-            Create a `Response` within a `Chip`  
+            Create a `Response` within a `Chip`
 
         Arguments:
 
@@ -1315,7 +1288,7 @@ class Response(Output):
 
           name: The name of the output (used in Verilog code)
 
-          type_: The data type of the stimulus, "int", "long", "float" 
+          type_: The data type of the stimulus, "int", "long", "float"
           or "double"
 
         Returns:
@@ -1330,7 +1303,6 @@ class Response(Output):
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def simulation_reset(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         Use Chip.simulation_reset() instead
@@ -1342,11 +1314,9 @@ class Response(Output):
         self.high_word = False
 
     def data_sink(self, value):
-
         """
         This is a private function, you shouldn't need to call this directly.
         """
-
 
         if self.type_ == "int":
 
@@ -1379,7 +1349,6 @@ class Response(Output):
                 self.low = value
 
     def __iter__(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         __iter__() provides an iterator like interface so that you can use
@@ -1389,7 +1358,6 @@ class Response(Output):
         return iter(self.l)
 
     def __len__(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         __len__() allows the len() function to be used.
@@ -1410,7 +1378,7 @@ class VerilogComponent(Component):
     the user to supply Verilog directly. This is useful on occasions when
     hand-crafted Verilog is needed in a performance critical section, or if
     some pre-existing Verilog code needs to be employed.
-  
+
     .. code-block:: python
 
         my_component = Adder(C_file="adder.c", V_file="adder.v")
@@ -1476,7 +1444,7 @@ class VerilogComponent(Component):
             .. code-block:: python
 
                component_instance(chip, inputs, output, parameters={}, debug=False,
-               profile=False) 
+               profile=False)
 
         Description:
 
@@ -1499,7 +1467,7 @@ class VerilogComponent(Component):
           profile: (optional) Boolean enable profiling.
 
         Returns:
-            
+
             A verilog component instance.
 
         """
@@ -1527,7 +1495,6 @@ class _Verilog_Instance(_Instance):
         _, self.filename, self.lineno, _, _, _ = inspect.stack()[1]
 
     def generate_verilog(self):
-
         """
         This is a private function, you shouldn't need to call this directly.
         """

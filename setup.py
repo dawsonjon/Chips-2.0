@@ -11,9 +11,10 @@ setup(name="Chips",
 
       author="Jon Dawson",
       author_email="chips@jondawson.org.uk",
-      url="http://github.com/dawsonjon/Chips-2.0",
-      keywords=["Verilog", "FPGA", "C", "HDL", "Synthesis"],
-      install_requires=["numpy"]
+      url="http://pyandchips.org",
+      download_url="http://github.com/dawsonjon/Chips-2.0",
+      keywords=["Verilog", "FPGA", "C", "HDL", "Synthesis", "VHDL"],
+      install_requires=["numpy"],
       classifiers = [
           "Programming Language :: Python",
           "License :: OSI Approved :: MIT License",

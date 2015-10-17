@@ -461,10 +461,6 @@ class Parser:
             return self.parse_goto()
         elif self.tokens.peek() == "wait_clocks":
             return self.parse_wait_clocks()
-        elif self.tokens.peek() == "goto":
-            return self.parse_goto();
-        elif self.tokens.peek(1) == ":":
-            return self.parse_labeled_statement()
         else:
             expression = self.parse_discard()
             self.tokens.expect(";")
@@ -472,23 +468,6 @@ class Parser:
 
     def parse_discard(self):
         return DiscardExpression(Trace(self), self.parse_expression())
-
-    def parse_labeled_statement(self):
-        name = self.tokens.get()
-        self.tokens.expect(":")
-        label = Label(name, self.parse_statement() )
-        if name in self.function.labels_in_scope:
-            self.tokens.error(
-                    "label %s was already declared in this function"%name)
-        self.function.labels_in_scope[name] = label
-        return label
-
-    def parse_goto(self):
-        self.tokens.expect("goto")
-        name = self.tokens.get()
-        self.tokens.expect(";")
-
-        return Goto(name, self.function, self.tokens.filename, self.tokens.lineno)
 
     def parse_assignment(self):
         assignment_operators = [
@@ -694,7 +673,7 @@ class Parser:
         while self.tokens.peek() != "}":
             block.statements.append(self.parse_statement())
         self.tokens.expect("}")
-        self.leave_scope() #now we are done parsing the block, restore the previous scope
+        self.scope = stored_scope
         return block
 
     def parse_struct_body(self):
@@ -717,7 +696,7 @@ class Parser:
         declaration = self.parse_struct_body()
         name = self.tokens.get()
         self.tokens.expect(";")
-        self.add_to_scope(name,declaration)
+        self.scope[name] = declaration
         self.structs.append(name)
 
     def parse_define_struct(self):
@@ -725,7 +704,7 @@ class Parser:
         name = self.tokens.get()
         declaration = self.parse_struct_body()
         self.tokens.expect(";")
-        self.add_to_scope(name,declaration)
+        self.scope[name] = declaration
 
     def parse_struct_declaration(self):
         self.tokens.expect("struct")
