@@ -3,31 +3,58 @@
 import subprocess
 import atexit
 from math import pi
+from chips.api.api import Chip, Stimulus, Response, Wire, Component
 
 try:
     from matplotlib import pyplot
 except ImportError:
     print "You need matplotlib to run this script!"
     exit(0)
-
-children = []
-def cleanup():
-    for child in children:
-        print "Terminating child process"
-        child.terminate()
-atexit.register(cleanup)
-
-def run_c(file_name):
-    process = subprocess.Popen(["../c2verilog", "iverilog", "run", str(file_name)])
-    children.append(process)
-    process.wait()
-    children.remove(process)
+try:
+    from numpy import arange
+except ImportError:
+    print "You need numpy to run this script!"
+    exit(0)
 
 def test():
     run_c("taylor.c")
     x = [float(i) for i in open("x")]
     sin_x = [float(i) for i in open("sin_x")]
     cos_x = [float(i) for i in open("cos_x")]
+
+def test():
+
+    chip = Chip("taylor")
+
+    stimulus = arange(-2*pi, 2.0*pi, pi/25)
+    x = Stimulus(chip, "x", "double", stimulus)
+    sin_x = Response(chip, "sin_x", "double")
+    cos_x = Response(chip, "cos_x", "double")
+    
+    #create a filter component using the C code
+    sqrt = Component("taylor.c")
+
+    #add an instance to the chip
+    sqrt(
+        chip, 
+        inputs = {
+            "x":x,
+        },
+        outputs = {
+            "sin_x":sin_x,
+            "cos_x":cos_x,
+        },
+    )
+
+    #run the simulation
+    chip.simulation_reset()
+    while len(cos_x) < len(x):
+        chip.simulation_step()
+
+    x = list(x)
+    sin_x = list(sin_x)[:100]
+    cos_x = list(cos_x)[:100]
+
     pyplot.xticks(
         [-2.0*pi, -pi, 0, pi,  2.0*pi],
         [r'$-2\pi$', r"$-\pi$", r'$0$', r'$\pi$', r'$2\pi$'])
@@ -49,7 +76,7 @@ def generate_docs():
     documentation = """
 
 Approximating Sine and Cosine functions using Taylor Series
------------------------------------------------------------
+===========================================================
 
 In this example, we calculate an approximation of the cosine functions using
 the `Taylor series <http://en.wikipedia.org/wiki/Taylor_series>`_:

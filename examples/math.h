@@ -5,13 +5,13 @@
 
 
 /* globals */
-const float M_PI=3.14159265359;
+const double M_PI=3.14159265359;
 
 /*Taylor series approximation of Cosine function*/
 
-float taylor(float angle){
+double taylor(double angle){
 
-    float old, approximation, sign, power, fact;
+    double old, approximation, sign, power, fact;
     unsigned count, i;
 
     approximation = 1.0;
@@ -39,25 +39,25 @@ float taylor(float angle){
 
 /*return cos of angle in radians*/
 
-float cos(float angle){
+double cos(double angle){
     return taylor(angle);
 }
 
 /*return sin of angle in radians*/
 
-float sin(float angle){
+double sin(double angle){
     return cos(angle-(M_PI/2));
 }
 
 /*return tan of angle in radians*/
 
-float tan(float n){
+double tan(double n){
     return sin(n) / cos(n);
 }
 
-/* Return absolute value of a float n*/
+/* Return absolute value of a double n*/
 
-float fabs(float n){
+double fabs(double n){
     if (n < 0.0) {
         return - n;
     } else {
@@ -77,13 +77,13 @@ int abs(int n){
 
 /* return e ** x */
 
-float exp(float x){
+double exp(double x){
 
-    float result = 1.0;
+    double result = 1.0;
     unsigned n = 1;
-    float power = 1.0;
-    float factorial = 1.0;
-    float old = 0.0;
+    double power = 1.0;
+    double factorial = 1.0;
+    double old = 0.0f;
 
     while(fabs(old - result) > 0.000001){
         old = result;
@@ -99,8 +99,8 @@ float exp(float x){
 
 /* return log_e(n) */
 
-float log(float n){
-    float antilog, x, old;
+double log(double n){
+    double antilog, x, old;
     x = 10.0;
     old = 0.0;
     while(fabs(old - x) > 0.000001){
@@ -113,12 +113,12 @@ float log(float n){
 
 /* return log_10(n) */
 
-float log10(float n){
+double log10(double n){
     return log(n)/log(10);
 }
 
 /* return log_2(n) */
 
-float log2(float n){
+double log2(double n){
     return log(n)/log(2);
 }

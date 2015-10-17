@@ -1,0 +1,358 @@
+#!/usr/bin/env python
+"""A C to Verilog compiler - Command line interface"""
+
+__author__ = "Jon Dawson"
+__copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
+__version__ = "0.1"
+
+import sys
+import os
+import subprocess
+import cmd
+
+from chips.compiler.compiler import compile_python_model
+from chips.compiler.exceptions import NoProfile, StopSim, ChipsAssertionFail
+import chips.compiler.profiler as profiler
+from chips.compiler.register_map import rregmap, frame, tos
+from chips.compiler.types import size_of
+
+if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
+    print "Usage: csim [options] <input_file>"
+    print
+    sys.exit(-1)
+
+input_file = sys.argv[-1]
+options = sys.argv[1:-1] + ["profile"]
+model, inputs, outputs, name = compile_python_model(input_file, options)
+model.simulation_reset()
+
+
+def clear():
+    subprocess.call("cls" if os.name == "nt" else "clear")
+
+def print_file_line(filename, lineno):
+    lines = open(filename).read().splitlines()
+
+    #show file and line number
+    print "\033[34m\033[1mFile:", filename
+    print "Line:", "[", lineno, "of", len(lines), "]"
+    print "\033[0m",
+    print "\033[39m"
+
+    #Print a fragment of the file to show in context
+    for i in range(lineno - 10, lineno + 10):
+        if i < 1:
+            print
+        elif i > len(lines):
+            print
+        elif i == lineno:
+            print "\033[33m\033[1m", str(i).rjust(4), "\033[32m->", lines[i-1], "\033[0m\033[39m"
+        else:
+            print "\033[33m\033[1m", str(i).rjust(4), "\033[0m\033[39m  ", lines[i-1]
+
+def print_process_state():
+
+    filename = model.get_file()
+    lineno = model.get_line()
+    print_file_line(filename, lineno)
+   
+
+class command_interpreter(cmd.Cmd):
+
+   intro="""
+   Chips-2.0 Interactive Debug
+   Copyright (C) Jonathan P Dawson 2015
+   """
+   prompt=">>> "
+
+   def do_exit(self, line): 
+
+      """Exit the interpreter session"""
+
+      sys.exit(-1)
+
+   def do_reset(self, line): 
+
+      """Reset the simulation"""
+
+      clear()
+      model.simulation_reset()
+      print_process_state()
+
+   def do_run(self, line): 
+
+      """Run the simulation until the process terminated"""
+
+      clear()
+      while True:
+        try:
+            model.simulation_step()
+        except StopSim:
+            break
+      print_process_state()
+
+   def do_into(self, line): 
+
+      """Step *into* a nested statement"""
+
+      clear()
+      try:
+          model.step_into()
+      except StopSim:
+          print "Process has completed"
+      print_process_state()
+
+   def do_over(self, line): 
+
+      """Step *over* a nested statement"""
+
+      clear()
+      try:
+          model.step_over()
+      except StopSim:
+          print "Process has completed"
+      print_process_state()
+
+   def do_set_breakpoint(self, line): 
+
+      """Set the breakpoint to a line in a file"""
+
+      clear()
+      try:
+          #print list of files
+          print "Code Files:"
+          code_files = sorted(profiler.code_files(model.instructions))
+          for i, f in enumerate(code_files):
+              print "[%u] %s"%(i, f)
+
+          #get user selection
+          print "\nEnter file:"
+          selection = raw_input()
+          f = code_files[int(selection)]
+
+          line = 0
+          while 1:
+              clear()
+              print_file_line(f, line)
+              print 
+              print "n=next, p=prev, j=down, k=up, blank=enter"
+              command = raw_input()
+              if command == "n":
+                  line = abs(line + 10)
+              elif command == "n":
+                  line = abs(line - 10)
+              elif command == "j":
+                  line = abs(line + 1)
+              elif command == "k":
+                  line = abs(line - 1)
+              elif command == "":
+                  break
+
+          model.set_breakpoint(f, line)
+
+      except StopSim:
+          print "Process has completed"
+      except (ValueError, IndexError):
+          print "Invalid selection"
+
+   def do_stack_use(self, line): 
+
+      """Print the maximum stack usage"""
+
+      print "Maximum Stack Usage: %s"%model.max_stack
+
+   def do_registers(self, line): 
+
+      """Print the state of machine registers"""
+
+      clear()
+      registers = model.get_registers()
+      for number in range(16):
+          register = registers.get(number, 0)
+          print "%0.10d:"%number, "%0.10u"%register, rregmap.get(number, "reserved")
+
+   def do_instructions(self, line): 
+
+      """Print the machine code instructions"""
+
+      clear()
+      instructions = model.instructions
+      for i, instruction in enumerate(instructions):
+          if i == model.get_program_counter():
+              print "->", 
+          else:
+              print "  ", 
+
+          z = instruction.get("z", 0)
+          a = instruction.get("a", 0)
+          b = instruction.get("b", 0)
+          o = instruction.get("op", "unknown")
+          literal = instruction.get("literal", 0)
+          label = instruction.get("label", 0)
+
+          print "%0.10d:"%i, o.ljust(11), "%0.2d"%z, "%0.2d"%a, "%0.10d"%(b | label | literal)
+
+   def do_locals(self, line): 
+
+      """Print the values of local variables"""
+
+      clear()
+      instruction = model.get_instruction()
+      trace = instruction["trace"]
+      function = trace.function
+      registers = model.get_registers()
+      frameval = registers.get(frame, 0)
+      memory = model.get_memory()
+
+      variables = function.local_variables
+
+      print "locals"
+      print "======"
+      for name, instance in variables.iteritems():
+          offset = instance.offset
+          print offset
+          size = size_of(instance)
+          if size == 4:
+              print name, ":", memory.get(frameval+offset, 0)
+          elif size == 8:
+              print name, ":", memory.get(frameval+offset+1, 0) << 32 | memory.get(frameval+offset, 0)
+          else:
+              print name, ":"
+              for i in range((size//4+8)//8):
+                  print "%4x:"%(i*8),
+                  for j in range(8):
+                      print "%08x"%memory.get(frameval+offset+8*i+j, 0), 
+                  print 
+
+   def do_globals(self, line): 
+
+      """Print the values of global variables"""
+
+      clear()
+      instruction = model.get_instruction()
+      trace = instruction["trace"]
+      global_scope = trace.global_scope
+      memory = model.get_memory()
+
+      print "globals"
+      print "======="
+      for name, instance in global_scope.global_variables.iteritems():
+          offset = instance.offset
+          size = size_of(instance)
+          if size == 4:
+              print name, ":", memory.get(offset, 0)
+          elif size == 8:
+              print name, ":", memory.get(offset+1, 0) << 32 | memory.get(tos+offset, 0)
+          else:
+              print name, ":"
+              for i in range((size//4)//8):
+                  print "%4x:"%(i*8),
+                  for j in range(8):
+                      print "%08x"%memory.get(offset+8*i+j, 0), 
+                  print 
+
+
+
+   def do_memory(self, line): 
+
+      """Print the contents of the memory"""
+
+      clear()
+      registers = model.get_registers()
+      memory = model.get_memory()
+      start_of_frame = registers.get(frame, None)
+      end_of_frame = registers.get(tos, 0)
+      for number in range(end_of_frame):
+          if number == end_of_frame:
+              break
+          if number == start_of_frame:
+              print "->", 
+          else:
+              print "  ", 
+
+          location = memory.get(number, 0)
+          print "%0.10d:"%number, "%0.10d"%location, "%0.8x"%location
+
+   def do_run_to_breakpoint(self, line): 
+
+      """Run simulation until the breakpoint is encountered"""
+
+      clear()
+      try:
+          model.run_to_breakpoint()
+      except StopSim:
+          pass
+      print_process_state()
+
+   def do_mstep(self, line): 
+
+      """step the simulator by a single machine instruction"""
+
+      clear()
+      try:
+          model.simulation_step()
+      except StopSim:
+            "process completed"
+      print_process_state()
+
+   def do_coverage(self, line): 
+
+      """Print a summary of the code coverage"""
+
+      clear()
+      try:
+          profile = model.get_profile()
+          profiler.report_coverage(profile, model.instructions)
+      except NoProfile:
+          print "Profiling must be enabled to use this feature"
+
+   def do_profile(self, line): 
+
+      """Print proportion of execution time in each code line"""
+
+      clear()
+      try:
+          profile = model.get_profile()
+          profiler.report_profile(profile, model.instructions)
+      except NoProfile:
+          print "Profiling must be enabled to use this feature"
+
+   def do_annotate(self, line): 
+
+      """Annotate a source file showing which files have been executed"""
+
+      clear()
+      try:
+
+          #print list of files
+          print "Code Files:"
+          code_files = sorted(profiler.code_files(model.instructions))
+          for i, f in enumerate(code_files):
+              print "[%u] %s"%(i, f)
+
+          #get user selection
+          print "\nEnter file:"
+          selection = raw_input()
+          f = code_files[int(selection)]
+
+          #annotate
+          profile = model.get_profile()
+          profiler.annotate_coverage(f, profile, model.instructions)
+
+      except NoProfile:
+          print "Profiling must be enabled to use this feature"
+      except (ValueError, IndexError):
+          print "Invalid selection"
+
+if "interactive" in options:
+    command_interpreter().cmdloop()
+else:
+    while True:
+        try:
+            model.simulation_step()
+        except StopSim:
+            break
+        except ChipsAssertionFail as e:
+            print e
+            exit(1)
+            break

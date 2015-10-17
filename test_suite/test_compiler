@@ -1,0 +1,5595 @@
+#!/usr/bin/env python2
+import os
+import sys
+import subprocess
+from random import randint
+from numpy import uint64, int64
+
+thoroughness = 100
+sn = 1
+
+def test(test, code, no_init=False, check_output=""):
+
+  global sn
+
+  #run only selected tests
+  if "selection" in sys.argv[1:] and test not in sys.argv[1:]:
+      return False
+
+  f = open("test.c", 'w')
+  f.write(code)
+  f.close()
+
+  if "coverage" in sys.argv[1:]:
+      #Test using csim compiler
+      python_process = subprocess.Popen(["coverage2", "run", "-p", "../csim", "test.c"], stdout=subprocess.PIPE)
+
+      #Test using c2verilog compiler
+      if no_init:
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+      else:
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+  else:
+      #Test using csim compiler
+      python_process = subprocess.Popen(["../csim", "test.c"], stdout=subprocess.PIPE)
+
+      #Test using c2verilog compiler
+      if no_init:
+          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+      else:
+          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+
+
+  result = python_process.wait()
+  quit = False
+  if result != 0:
+    print test, "csim ...fail"
+    quit = True
+
+  if check_output:
+      output = python_process.stdout.read()
+      if check_output not in output:
+         print test, "csim ...fail"
+         print "expected", check_output, "actual", output
+         quit = True
+
+  result = verilog_process.wait()
+  if result != 0:
+    print test, "verilog ...fail"
+    quit = True
+
+  if check_output:
+      output = verilog_process.stdout.read()
+      if check_output not in output:
+         print test, "verilog ...fail"
+         print "expected", check_output, "actual", output
+         quit = True
+
+  if quit:
+    sys.exit(-1)
+
+  for i in ["main", "arbiter", "real_main"]:
+      if(os.path.exists(i)):
+          os.remove(i)
+      if(os.path.exists(i+".v")):
+          os.remove(i+".v")
+
+  print sn, test, "...pass"
+  sn += 1
+  return True
+
+def test_fails(test, code, no_init=False):
+
+  global sn
+
+  #run only selected tests
+  if "selection" in sys.argv[1:] and test not in sys.argv[1:]:
+      return False
+
+  #Test using c2verilog compiler
+  f = open("test.c", 'w')
+  f.write(code)
+  f.close()
+  if "coverage" in sys.argv[1:]:
+      if no_init:
+          result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+      else:
+          result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
+  else:
+      if no_init:
+          result = os.system("../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+      else:
+          result = os.system("../c2verilog iverilog run test.c > /dev/null")
+
+  if result == 0:
+    print test, "...fail"
+    sys.exit(-1)
+  else:
+    print sn, test, "...pass"
+
+  #Test using csim compiler
+  if "coverage" in sys.argv[1:]:
+      result = os.system("coverage2 run -p ../csim test.c > /dev/null")
+  else:
+      result = os.system("../csim test.c > /dev/null")
+
+  if result == 0:
+    print test, "...fail"
+    sys.exit(-1)
+  else:
+    print sn, test, "...pass"
+    sn += 1
+
+
+class InvalidStimulus:
+    pass
+
+def long_function(type_, operator, a, b):
+    if operator == "*":
+        return int64(a) * int64(b)
+    if operator == "+":
+        return uint64((int(a) + int(b)) & 0xffffffffffffffff)
+    if operator == "-":
+        return uint64((int(a) - int(b)) & 0xffffffffffffffff)
+    if operator == "|":
+        return int64(a) | int64(b)
+    if operator == "&":
+        return int64(a) & int64(b)
+    if operator == "^":
+        return int64(a) ^ int64(b)
+    if operator == ">":
+        if type_.startswith("unsigned"):
+            return uint64(a) > uint64(b)
+        else:
+            return int64(a) > int64(b)
+    if operator == ">=":
+        if type_.startswith("unsigned"):
+            return uint64(a) >= uint64(b)
+        else:
+            return int64(a) >= int64(b)
+    if operator == "==":
+        return int64(a) == int64(b)
+    if operator == "!=":
+        return int64(a) != int64(b)
+    if operator == "<":
+        if type_.startswith("unsigned"):
+            return uint64(a) < uint64(b)
+        else:
+            return int64(a) < int64(b)
+    if operator == "<=":
+        if type_.startswith("unsigned"):
+            return uint64(a) <= uint64(b)
+        else:
+            return int64(a) <= int64(b)
+    if operator == "<<":
+        if b >= 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        return int64(a) << int64(b)
+    if operator == ">>":
+        if b >= 64:
+            raise InvalidStimulus
+        if b < 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) >> uint64(b)
+        else:
+            return int64(a) >> int64(b)
+    if operator == "/":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a)//uint64(b)
+        else:
+            negative = (a < 0) ^ (b < 0)
+            value = abs(a) // abs(b)
+            return uint64(-value) if negative else uint64(value)
+    if operator == "%":
+        if b == 0:
+            raise InvalidStimulus
+        if type_.startswith("unsigned"):
+            return uint64(a) % uint64(b)
+        else:
+            negative = (a < 0)
+            value = abs(a) % abs(b)
+            return int64(-value) if negative else int64(value)
+
+def test_corner_cases(operator, type_):
+
+    program = """
+    void main(){
+        %s i;
+        %s j;
+    """%(type_, type_)
+    i=0
+    for a in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
+        for b in [0, 1, -1, 31, 32, 33, 63, 64, 0x80000000, (2**63)-1, -(2**63)]:
+
+            #generate test program
+            try:
+                program += """
+                    i = 0x%xul;
+                    j = 0x%xul;
+                    assert((i %s j) == %su);
+                """%(uint64(a), 
+                     uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator, a, b)))
+            except InvalidStimulus:
+                pass
+
+    program += "}\n"
+    test("corner cases %s %s %u"%(type_, operator, i), program)
+
+def test_random(operator, type_):
+
+    for i in range(thoroughness/10):
+        program = """
+        void main(){
+            %s i;
+            %s j;
+        """%(type_, type_)
+        
+        for j in range(10):
+
+            #generate random stimulus
+            a = randint(-(2**63), (2**63)-1)
+            if operator in ["<<", ">>"]:
+                b = randint(0, (2**6)-1)
+            else:
+                b = randint(-(2**63), (2**63)-1)
+
+            #generate test program
+            try:
+                program += """
+                    i = 0x%xul;
+                    j = 0x%xul;
+                    assert((i %s j) == %su);
+                """%(uint64(a), 
+                     uint64(b), 
+                     operator,
+                     hex(long_function(type_, operator, a, b)))
+            except InvalidStimulus:
+                pass
+
+        program += "}\n"
+        test("random %s %s %u"%(type_, operator, i), program)
+
+
+def test_long_arithmetic():
+    for type_ in ["long", "unsigned long"]:
+        for operator in ["*", "+", "-", "&", "|", "^", ">", ">=", "==", "!=", "<", "<=", "<<", ">>", "%", "/"]:
+            test_corner_cases(operator, type_)
+            test_random(operator, type_)
+
+
+test("type conversion 1",
+"""
+void main(){
+    double x;
+    long y = -4;
+    x = y;
+    assert(x==-4);
+}
+"""
+)
+
+test("type conversion 2",
+"""
+void main(){
+    float x;
+    int y = -4;
+    x = y;
+    assert(x==-4);
+}
+"""
+)
+
+test("function proto 1",
+"""
+int foo(int y);
+int foo(int x){return 3*x;}
+void main(){
+    assert(foo(2)==6);
+}
+"""
+)
+
+test("function proto 2",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+int foo(int z, int arry[]);
+void main(){
+    int arr[3];
+    arr[1]=4;
+    assert(foo(2,arr)==4);
+}
+"""
+)
+
+test_fails("function proto 3",
+"""
+int foo(int y, int arry[]);
+int foo(int x, float arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 4",
+"""
+void foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 5",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr){
+    return arr;
+}
+"""
+)
+
+test_fails("function proto 6",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arry[1];
+}
+"""
+)
+
+test_fails("function proto 7",
+"""
+int foo(int y, int arry[]);
+void main(){
+    int arr[3];
+    foo(0,arr);
+}
+"""
+)
+
+test_fails("function proto 8",
+"""
+int foo(int y, int arry[]);
+int foo(int x, int arr[]){
+    return arr[1];
+}
+int foo(int x, int arr[]){
+    return arr[1];
+}
+"""
+)
+
+test_fails("function proto 9",
+"""
+int foo(int y, long arry[]);
+int foo(int x, int arr[]){
+    return arr;
+}
+"""
+)
+
+test_fails("function proto 10",
+"""
+int foo(int y);
+int foo(long x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 11",
+"""
+int foo(int y);
+int foo(unsigned int x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 12",
+"""
+int foo(int y);
+int foo(const int x){
+    return x;
+}
+"""
+)
+
+test_fails("function proto 13",
+"""
+int foo(int y[]);
+int foo(unsigned int x[]){
+    return x[0];
+}
+"""
+)
+test_fails("function proto 14",
+"""
+int foo(int y[]);
+unsigned int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 15",
+"""
+int foo(int y[]);
+long int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 16",
+"""
+int foo(int y[]);
+const int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 17",
+"""
+int foo(int y[]);
+float foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 18",
+"""
+int foo(int y[], int z);
+int foo(int x[]){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 19",
+"""
+int foo(int y[]);
+int foo(int x[], int z){
+    return x[0];
+}
+"""
+)
+
+test_fails("function proto 20",
+"""
+int foo;
+int foo(int x[], int z){
+    return x[0];
+}
+"""
+)
+
+
+test("goto 1",
+"""
+int something(){
+    int i=0;
+    while(i<100){
+        i++;
+        if(i==5){
+            goto fail;
+        }
+    }
+    return 0;
+    fail:
+        return 1;
+}
+void main(){
+  assert(something() == 1);
+}
+"""
+)
+
+test_fails("goto 2",
+"""
+void main(){
+    label1: report(1);
+    label1: report(1);
+}
+"""
+)
+
+test("goto 3",
+"""
+int a(){
+    goto label;
+    return 1;
+    label: return 5;
+}
+int b(){
+    goto label;
+    return 2;
+    label: return 6;
+}
+void main(){
+    assert(a()==5);
+    assert(b()==6);
+}
+"""
+)
+
+test_fails("goto 4",
+"""
+int a(){
+    goto label;
+    return 1;
+}
+int main(){
+    return 2;
+    a();
+    label: return 6;
+}
+"""
+)
+
+test("goto 5",
+"""
+void main(){
+    int x=0;
+    loop:
+        x++;
+        if(x<5)
+            goto loop;
+    assert(x==5);
+}
+"""
+)
+
+test("pointers 1",
+"""
+void main(){
+    int a = 10;
+    int b = 20;
+    int* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 2",
+"""
+void main(){
+    long a = 10;
+    long b = 20;
+    long* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 3",
+"""
+void main(){
+    float a = 10;
+    float b = 20;
+    float* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 4",
+"""
+void main(){
+    double a = 10;
+    double b = 20;
+    double* c, d;
+
+    c = &a;
+    d = &b;
+
+    *c = 30;
+    *d = 40;
+
+    assert(a==30);
+    assert(b==40);
+
+}
+"""
+)
+
+test("pointers 5",
+"""
+typedef struct{int a; int b; int c;} mytype;
+
+void main(){
+    mytype a, b;
+    mytype* pa, pb;
+
+    a.a=10;
+    a.b=20;
+    a.c=30;
+    a.a=40;
+    a.b=50;
+    a.c=60;
+
+    pa = &a;
+    pb = &b;
+
+    (*pa).a=70;
+    (*pa).b=80;
+    (*pa).c=90;
+
+    (*pb).a=100;
+    (*pb).b=110;
+    (*pb).c=120;
+
+    assert(a.a==70);
+    assert(a.b==80);
+    assert(a.c==90);
+    assert(b.a==100);
+    assert(b.b==110);
+    assert(b.c==120);
+
+}
+"""
+)
+
+test("pointers 6",
+"""
+typedef struct{int a; int b; int c;} mytype;
+
+void main(){
+    mytype a, b;
+    mytype* pa, pb;
+
+    a.a=10;
+    a.b=20;
+    a.c=30;
+    a.a=40;
+    a.b=50;
+    a.c=60;
+
+    pa = &a;
+    pb = &b;
+
+    pa->a=70;
+    pa->b=80;
+    pa->c=90;
+
+    pb->a=100;
+    pb->b=110;
+    pb->c=120;
+
+    assert(a.a==70);
+    assert(a.b==80);
+    assert(a.c==90);
+    assert(b.a==100);
+    assert(b.b==110);
+    assert(b.c==120);
+
+}
+"""
+)
+
+test("pointers 7",
+"""
+void main(){
+    double a[5];
+    double* pa;
+
+    pa = a;
+
+    a[0] = 0;
+    a[1] = 1;
+    a[2] = 2;
+    a[3] = 3;
+    a[4] = 4;
+
+    assert(*pa == 0);
+    assert(*pa+1 == 1);
+    assert(*pa+2 == 2);
+    assert(*pa+3 == 3);
+    assert(*pa+4 == 4);
+
+    assert(&a[4] - &a[0] == 4);
+
+}
+"""
+)
+
+test("pointers 8",
+"""
+typedef struct{int a; int b; int c;} mytype;
+void main(){
+    mytype a[5];
+
+    assert(&a[4] - &a[0] == 4);
+
+}
+"""
+)
+
+test("array initialise 1",
+"""
+int store[2] = {100, 200};
+
+void main(){
+    assert( store[0] == 100);
+    assert( store[1] == 200);
+}
+"""
+)
+
+test("array initialise 2",
+"""
+long store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array initialise 3",
+"""
+float store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array initialise 4",
+"""
+double store[2] = {100, 200};
+
+void main(){
+    assert (store[0] == 100);
+    assert (store[1] == 200);
+}
+"""
+)
+
+test("array passing 1",
+"""
+int store[100];
+
+void fill(){
+    int i;
+    for(i=0; i<100; i++){
+        store[i] = i;
+    }
+}
+
+void check(long localstore[]){
+    int i;
+    for(i=0; i<20; i++){
+        localstore[i] = 0xaaaa;
+    }
+    for(i=0; i<100; i++){
+        assert(store[i] == i);
+    }
+}
+
+void main(){
+    int i;
+    long localstore[20];
+    fill();
+    check(localstore);
+}
+"""
+)
+
+test("array of structs 1",
+"""
+typedef struct{int a; int b; int c;} mytype;
+
+void main(){
+    mytype a[10][10];
+    mytype b[10][10];
+
+    a[0][0].a = 10;
+    a[0][0].b = 20;
+    a[0][0].c = 30;
+    a[0][1].a = 40;
+    a[0][1].b = 50;
+    a[0][1].c = 60;
+    a[1][0].a = 70;
+    a[1][0].b = 80;
+    a[1][0].c = 90;
+    b[0][0].a = 110;
+    b[0][0].b = 120;
+    b[0][0].c = 130;
+    b[0][1].a = 140;
+    b[0][1].b = 150;
+    b[0][1].c = 160;
+    b[1][0].a = 170;
+    b[1][0].b = 180;
+    b[1][0].c = 190;
+
+    assert(a[0][0].a == 10);
+    assert(a[0][0].b == 20);
+    assert(a[0][0].c == 30);
+    assert(a[0][1].a == 40);
+    assert(a[0][1].b == 50);
+    assert(a[0][1].c == 60);
+    assert(a[1][0].a == 70);
+    assert(a[1][0].b == 80);
+    assert(a[1][0].c == 90);
+    assert(b[0][0].a == 110);
+    assert(b[0][0].b == 120);
+    assert(b[0][0].c == 130);
+    assert(b[0][1].a == 140);
+    assert(b[0][1].b == 150);
+    assert(b[0][1].c == 160);
+    assert(b[1][0].a == 170);
+    assert(b[1][0].b == 180);
+    assert(b[1][0].c == 190);
+}
+"""
+)
+
+#test("array of structs 2",
+#"""
+#struct{int a; int b; int c;} mytype;
+#
+#void main(){
+#    struct mytype a[10][10];
+#    struct mytype b[10][10];
+#
+#    a[0][0].a = 10;
+#    a[0][0].b = 20;
+#    a[0][0].c = 30;
+#    a[0][1].a = 40;
+#    a[0][1].b = 50;
+#    a[0][1].c = 60;
+#    a[1][0].a = 70;
+#    a[1][0].b = 80;
+#    a[1][0].c = 90;
+#    b[0][0].a = 110;
+#    b[0][0].b = 120;
+#    b[0][0].c = 130;
+#    b[0][1].a = 140;
+#    b[0][1].b = 150;
+#    b[0][1].c = 160;
+#    b[1][0].a = 170;
+#    b[1][0].b = 180;
+#    b[1][0].c = 190;
+#
+#    assert(a[0][0].a == 10);
+#    assert(a[0][0].b == 20);
+#    assert(a[0][0].c == 30);
+#    assert(a[0][1].a == 40);
+#    assert(a[0][1].b == 50);
+#    assert(a[0][1].c == 60);
+#    assert(a[1][0].a == 70);
+#    assert(a[1][0].b == 80);
+#    assert(a[1][0].c == 90);
+#    assert(b[0][0].a == 110);
+#    assert(b[0][0].b == 120);
+#    assert(b[0][0].c == 130);
+#    assert(b[0][1].a == 140);
+#    assert(b[0][1].b == 150);
+#    assert(b[0][1].c == 160);
+#    assert(b[1][0].a == 170);
+#    assert(b[1][0].b == 180);
+#    assert(b[1][0].c == 190);
+#}
+#"""
+#)
+
+test("double_to_bits 1",
+"""
+void main(){
+    double b, c;
+    b = -1.0 * 0.0;
+    c = 0.0;
+    assert(double_to_bits(b) == 0x8000000000000000ul);
+    assert(double_to_bits(-1.0 * 0.0) == 0x8000000000000000ul);
+    assert(double_to_bits(c) == 0x0000000000000000ul);
+    assert(double_to_bits(0.0) == 0x0000000000000000ul);
+}
+"""
+)
+
+test("float_to_bits 1",
+"""
+void main(){
+    float b, c;
+    b = -1.0 * 0.0;
+    c = 0.0;
+    assert(float_to_bits(b) == 0x80000000u);
+    assert(float_to_bits(-1.0 * 0.0) == 0x80000000u);
+    assert(float_to_bits(c) == 0x00000000u);
+    assert(float_to_bits(0.0) == 0x00000000u);
+}
+"""
+)
+
+test("bits_to_double 1",
+"""
+void main(){
+    long b, c;
+    b = 0x8000000000000000ul;
+    c = 0x0000000000000000ul;
+    assert(bits_to_double(b) == -1.0 * 0.0);
+    assert(bits_to_double(0x8000000000000000ul) == -1.0 * 0.0);
+    assert(bits_to_double(c) == 0.0);
+    assert(bits_to_double(0x0000000000000000ul) == 0.0);
+}
+"""
+)
+
+test("bits_to_double 2",
+"""
+void main(){
+    double d = 1.0;
+    for(d=1.0; d<100000000.0; d*=10){
+        assert(bits_to_double(double_to_bits(d)) == d);
+    }
+    double d = 1.0;
+    for(d=1.0; d>0.0000000001; d/=10){
+        assert(bits_to_double(double_to_bits(d)) == d);
+    }
+}
+"""
+)
+
+test("bits_to_double 3",
+"""
+void main(){
+    assert(bits_to_double(0x405ec00000000000ul) == 123.0);
+}
+"""
+)
+
+test("bits_to_float 1",
+"""
+void main(){
+    int b, c;
+    b = 0x80000000ul;
+    c = 0x00000000ul;
+    assert(bits_to_float(b) == -1.0 * 0.0);
+    assert(bits_to_float(0x80000000ul) == -1.0 * 0.0);
+    assert(bits_to_float(c) == 0.0);
+    assert(bits_to_float(0x00000000ul) == 0.0);
+}
+"""
+)
+
+test("bits_to_float 2",
+"""
+void main(){
+    float d = 1.0;
+    for(d=1.0; d<100000000.0; d*=10){
+        assert(bits_to_float(float_to_bits(d)) == d);
+    }
+    for(d=1.0; d>0.0000000001; d/=10){
+        assert(bits_to_float(float_to_bits(d)) == d);
+    }
+}
+"""
+)
+
+test("long array 1",
+"""
+void main(){
+    long int a[1024], b[1024], c;
+    a[0] = 2;
+    b[0] = 1;
+    assert(b[0] == 1);
+}
+"""
+)
+
+if test("file write 1",
+"""
+void main(){
+    file_write(123, "test_file");
+}
+"""
+):
+
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("123")
+    test_file.close()
+
+if test("file write 2",
+"""
+void main(){
+    file_write(456u, "test_file");
+}
+"""
+):
+
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("456")
+    test_file.close()
+
+if test("file write 3",
+"""
+void main(){
+    file_write(123ul, "test_file");
+}
+"""
+):
+
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("123")
+    test_file.close()
+
+if test("file write 4",
+"""
+void main(){
+    file_write(456.7f, "test_file");
+}
+"""
+):
+
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("456.7")
+    test_file.close()
+
+if test("file write 5",
+"""
+void main(){
+    file_write(123.4, "test_file");
+}
+"""
+):
+
+    test_file = open("test_file")
+    assert test_file.read().strip().startswith("123.4")
+    test_file.close()
+
+test("report 1",
+"""
+void main(){
+    int a = 123;
+    report(a);
+}
+""",
+check_output = "123")
+
+test("report 2",
+"""
+void main(){
+    unsigned int a = 123;
+    report(a);
+}
+""",
+check_output = "123")
+
+test("report 3",
+"""
+void main(){
+    long unsigned int a = 123;
+    report(a);
+}
+""",
+check_output = "123")
+
+test("report 4",
+"""
+void main(){
+    long int a = 123;
+    report(a);
+}
+""",
+check_output = "123")
+
+test("report 5",
+"""
+void main(){
+    float a = 123.0;
+    report(a);
+}
+""",
+check_output = "123.0")
+
+test("report 6",
+"""
+void main(){
+    double a = 123.0;
+    report(a);
+}
+""", 
+check_output = "123.0")
+
+test("report 7",
+"""
+void main(){
+    float a = 0.0;
+    report(a);
+}
+""",
+check_output = "0.0")
+
+test("report 8",
+"""
+void main(){
+    double a = 0.0 * -1.0;
+    report(a);
+}
+""",
+check_output = "-0.0")
+
+test("report 9",
+"""
+void main(){
+    float a = bits_to_float(0x7f800000u); //inf
+    report(a);
+}
+""",
+check_output = "inf")
+
+test("report 10",
+"""
+void main(){
+    float a = bits_to_float(0xff800000u); //-inf
+    report(a);
+}
+""",
+check_output = "-inf")
+
+test("report 11",
+"""
+void main(){
+    float a = bits_to_float(0x7fc00000u); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("report 12",
+"""
+void main(){
+    float a = bits_to_float(0xffc00000u); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("report 13",
+"""
+void main(){
+    double a = bits_to_double(0x7ff0000000000000ul); //inf
+    report(a);
+}
+""",
+check_output = "inf")
+
+test("report 14",
+"""
+void main(){
+    double a = bits_to_double(0xfff0000000000000ul); //-inf
+    report(a);
+}
+""",
+check_output = "-inf")
+
+test("report 15",
+"""
+void main(){
+    double a = bits_to_double(0x7ff8000000000000ul); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("report 16",
+"""
+void main(){
+    double a = bits_to_double(0xfff8000000000000ul); //nan
+    report(a);
+}
+""",
+check_output = "nan")
+
+test("types 1",
+"""
+void main(){
+    float a;
+    a = 1.0;
+    assert(a == 1.0);
+}
+"""
+)
+
+test("types 2",
+"""
+void main(){
+    float a;
+    a = 1.0f;
+    assert(a == 1.0f);
+}
+"""
+)
+
+test("types 3",
+"""
+void main(){
+    float a;
+    a = 0.5;
+    assert(a == 0.5);
+}
+"""
+)
+
+test("types 4",
+"""
+void main(){
+    float a;
+    a = 0.5f;
+    assert(a == 0.5f);
+}
+"""
+)
+
+test("types 5",
+"""
+void main(){
+    float a;
+    a = 0.0;
+    assert(a == 0.0);
+}
+"""
+)
+
+test("types 6",
+"""
+void main(){
+    float a;
+    a = 0.0f;
+    assert(a == 0.0f);
+}
+"""
+)
+
+test("types 7",
+"""
+void main(){
+    float a;
+    a = -0.0;
+    assert(a == 0.0);
+}
+"""
+)
+
+test("types 8",
+"""
+void main(){
+    float a;
+    a = 0.0f;
+    assert(a == 0.0f);
+}
+"""
+)
+
+test("types 9",
+"""
+void main(){
+    float a;
+    a = 1ul;
+    assert(a == 1ul);
+}
+"""
+)
+
+test("types 10",
+"""
+void main(){
+    float a;
+    a = 10ul;
+    assert(a == 10ul);
+}
+"""
+)
+
+test("types 11",
+"""
+void main(){
+    float a;
+    a = 1u;
+    assert(a == 1u);
+}
+"""
+)
+
+test("types 12",
+"""
+void main(){
+    float a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test("types 13",
+"""
+void main(){
+    double a;
+    a = 1ul;
+    assert(a == 1ul);
+}
+"""
+)
+
+test("types 14",
+"""
+void main(){
+    double a;
+    a = 10ul;
+    assert(a == 10ul);
+}
+"""
+)
+
+test("types 15",
+"""
+void main(){
+    double a;
+    a = 1u;
+    assert(a == 1u);
+}
+"""
+)
+
+test("types 16",
+"""
+void main(){
+    double a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test("types 17",
+"""
+void main(){
+    long a;
+    a = 1u;
+    assert(a == 1u);
+}
+"""
+)
+
+test("types 18",
+"""
+void main(){
+    long a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test("types 19",
+"""
+void main(){
+    unsigned long a;
+    a = 10u;
+    assert(a == 10u);
+}
+"""
+)
+
+test_fails("types 20",
+"""
+/*Check that you can't call a variable*/
+int a;
+long b;
+float c;
+double d;
+void main(){
+    a();
+    b();
+    c();
+    d();
+}
+"""
+)
+
+
+
+test("long not 1",
+"""
+void main(){
+    unsigned long int a = 0xaaaaaaaaaaaaaaaaul;
+    assert(~a == 0x5555555555555555ul);
+}
+"""
+)
+
+test("long not 2",
+"""
+void main(){
+    long int a = 0x5555555555555555l;
+    assert(~a == ~0x5555555555555555l);
+}
+"""
+)
+
+test("inplace double 2",
+"""
+void main(){
+    double test = 1.0;
+    test += 2.0;
+    assert(test == 3.0);
+    test += 2.0;
+    assert(test == 5.0);
+    test += 2.0;
+    assert(test == 7.0);
+}
+"""
+)
+
+test("inplace double 3",
+"""
+void main(){
+    double test = 1.0;
+    test -= 2.0;
+    assert(test == -1.0);
+    test -= 2.0;
+    assert(test == -3.0);
+    test -= 2.0;
+    assert(test == -5.0);
+}
+"""
+)
+
+test("inplace double 4",
+"""
+void main(){
+    double test = 1.0;
+    test /= 2.0;
+    assert(test == 0.5);
+    test /= 2.0;
+    assert(test == 0.25);
+    test /= 2.0;
+    assert(test == 0.125);
+}
+"""
+)
+
+test("inplace double 5",
+"""
+void main(){
+    double test = 1.0;
+    test *= 2;
+    assert(test == 2.0);
+    test *= 2;
+    assert(test == 4.0);
+    test *= 2;
+    assert(test == 8.0);
+}
+"""
+)
+
+test("inplace double 6",
+"""
+void main(){
+    double test = 1.0;
+    test += 2;
+    assert(test == 3.0);
+    test += 2;
+    assert(test == 5.0);
+    test += 2;
+    assert(test == 7.0);
+}
+"""
+)
+
+test("inplace double 7",
+"""
+void main(){
+    double test = 1.0;
+    test -= 2;
+    assert(test == -1.0);
+    test -= 2;
+    assert(test == -3.0);
+    test -= 2;
+    assert(test == -5.0);
+}
+"""
+)
+
+test("inplace double 8",
+"""
+void main(){
+    double test = 1.0;
+    test /= 2;
+    assert(test == 0.5);
+    test /= 2;
+    assert(test == 0.25);
+    test /= 2;
+    assert(test == 0.125);
+}
+"""
+)
+
+test("double 1",
+"""
+void main(){
+    double test = 0.0;
+    assert(test == 0.0);
+}
+"""
+)
+test("double 2",
+"""
+void main(){
+    double test = 1.0;
+    assert(test > 0.0);
+}
+"""
+)
+test("double 3",
+"""
+void main(){
+    double test = 0.0;
+    assert(test < 1.0);
+}
+"""
+)
+test("double 4",
+"""
+void main(){
+    double test = 0.0;
+    double a = -1.0;
+    double b = -2.0;
+    double c = 2.0;
+    double d = 2.0;
+    assert(test > -1.0);
+    assert(a > b);
+    assert(b < a);
+    assert(c >= d);
+    assert(c <= d);
+}
+"""
+)
+test("double 5",
+"""
+void main(){
+    double test = 0.0;
+    assert(test == 0.0);
+}
+"""
+)
+test("double 6",
+"""
+void main(){
+    double blah[10];
+    blah[0] = 0.0;
+    blah[1] = 1.0;
+    blah[2] = 2.0;
+    blah[3] = 3.0;
+    assert(blah[0] == 0.0);
+    assert(blah[1] == 1.0);
+    assert(blah[2] == 2.0);
+    assert(blah[3] == 3.0);
+}
+"""
+)
+
+test("double 7",
+"""
+void main(){
+    double a = 2.0;
+    assert(a == 1.0 + 1.0);
+}
+"""
+)
+
+test("double 8",
+"""
+void main(){
+    double a = 2.0;
+    double b = 2.0;
+    assert(a+b == 4.0);
+}
+"""
+)
+
+test("double 9",
+"""
+void main(){
+    double a = -2.0;
+    double b = -2.0;
+    assert(a+b == -4.0);
+}
+"""
+)
+
+test("double 10",
+"""
+void main(){
+    double a = 2.0;
+    double b = 2.0;
+    assert(a-b == 0.0);
+}
+"""
+)
+
+test("double 11",
+"""
+void main(){
+    double a = 2.0;
+    double b = 4.0;
+    assert(a-b == -2.0);
+}
+"""
+)
+
+test("double 12",
+"""
+void main(){
+    double a = 1.0;
+    double b = 1.0;
+    assert(a*b == 1.0);
+}
+"""
+)
+
+test("double 13",
+"""
+void main(){
+    double a = 1.0;
+    double b = -1.0;
+    assert(a*b == -1.0);
+}
+"""
+)
+
+test("double 14",
+"""
+void main(){
+    double a = -1.0;
+    double b = -1.0;
+    assert(a*b == 1.0);
+}
+"""
+)
+
+test("double 15",
+"""
+void main(){
+    double a = -7.0;
+    double b = 6.0;
+    assert(a*b == -42.0);
+}
+"""
+)
+
+test("double 16",
+"""
+void main(){
+    double a = 6.0;
+    double b = 6.0;
+    assert(a/b == 1.0);
+}
+"""
+)
+
+test("double 17",
+"""
+void main(){
+    double a = 12.0;
+    double b = 6.0;
+    assert(a/b == 2.0);
+}
+"""
+)
+
+test("double 18",
+"""
+void main(){
+    int a = 2;
+    double b = 2.0;
+    assert(a+b == 4.0);
+}
+"""
+)
+
+test("double 19",
+"""
+void main(){
+    int a;
+    double b = 2.0;
+    a = b + 1.0;
+    assert(a == 3);
+}
+"""
+)
+
+test("double 20",
+"""
+void main(){
+    int a = 2;
+    double b;
+    b = a + 1.0;
+    assert(b == 3.0);
+}
+"""
+)
+
+test("double 21",
+"""
+typedef struct {double a; double b;} mystruct;
+void main(){
+    mystruct a;
+    a.a = 2.0;
+    a.b = 3.0;
+    assert(a.a == 2.0);
+    assert(a.b == 3.0);
+    assert(a.a + a.b == 5.0);
+}
+"""
+)
+test("double 22",
+"""
+typedef struct {double a; double b;} mystruct;
+
+void test(mystruct a){
+    assert(a.a == 2.0);
+    assert(a.b == 3.0);
+    assert(a.a + a.b == 5.0);
+}
+
+void main(){
+    mystruct a;
+    a.a = 2.0;
+    a.b = 3.0;
+    test(a);
+}
+"""
+)
+
+test("double 23",
+"""
+void test(double b){
+    assert(b/6.0 == 2.0);
+}
+
+void main(){
+    int a = 12.0;
+    test(a);
+}
+"""
+)
+
+test("double 24",
+"""
+double test(){
+    return 6.0;
+}
+
+void main(){
+    int a = 12.0;
+    assert(a/test() == 2.0);
+}
+"""
+)
+
+test("double 25",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a + b + c == 6.0);
+  return 0;
+}
+
+""")
+
+test("double 26",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a - b - c == -4.0);
+  return 0;
+}
+
+""")
+
+test("double 27",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a - (b - c) == 2.0);
+  return 0;
+}
+
+""")
+
+test("double 28",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 3.0;
+  assert(a * b * c == 6.0);
+  return 0;
+}
+
+""")
+
+test("double 29",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  double c = 4.0;
+  assert(a/b/c == 0.125);
+  return 0;
+}
+
+""")
+
+test("double 30",
+"""
+int main(){
+  double a = 1.0;
+  double b = 2.0;
+  assert(a - - b == 3.0);
+  return 0;
+}
+
+""")
+
+test("double 31",
+"""
+int main(){
+  double b = 0.01;
+  assert(0 + b == 0.01);
+  return 0;
+}
+
+""")
+
+test("double 32",
+"""
+int main(){
+  double b = 0.01;
+  assert(b - 0 == 0.01);
+  return 0;
+}
+
+""")
+
+test("double 33",
+"""
+int main(){
+  double b = 0.01;
+  assert(b * 1.0 == 0.01);
+  return 0;
+}
+
+""")
+
+test("double 34",
+"""
+int main(){
+  double b = 0.01;
+  assert(b / 1.0 == 0.01);
+  return 0;
+}
+
+""")
+
+test("long inplace 0",
+"""
+int main(){
+  long int a = 1;
+  a += 1;
+  assert(a == 2);
+  a -= 1;
+  assert(a == 1);
+  a *= 2;
+  assert(a == 2);
+  a /= 2;
+  assert(a == 1);
+  a |= 2;
+  assert(a == 3);
+  a &= 2;
+  assert(a == 2);
+  a <<= 1;
+  assert(a == 4);
+  a >>= 1;
+  assert(a == 2);
+  return 0;
+}
+""")
+
+test("short_to_long 0",
+"""
+void main(){
+    int i = -1;
+    long j;
+    j = i;
+    assert(j == -1);
+}
+"""
+)
+
+test("short_to_long 1",
+"""
+void main(){
+    int i = 0;
+    long j;
+    j = i;
+    assert(j == 0);
+}
+"""
+)
+
+
+#test left shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("left_shift %i"%n,
+    """
+    void main(){
+        int i = 10;
+        int j = %i;
+        assert(i << j == %s);
+    }
+    """%(i, hex((10 << i) & 0xffffffff) + "u")
+    )
+
+test("left_shift 6",
+"""
+void main(){
+    int i = 10;
+    int j = -1;
+    i = i << j;
+}
+"""
+)
+
+#test right shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("right_shift %i"%n,
+    """
+    void main(){
+        int i = 0xffffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((-1 >> i) & 0xffffffff) + "u")
+    )
+
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("right_shift %i"%(n + 6),
+    """
+    void main(){
+        int i = 0x7fffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0x7fffffff >> i) & 0xffffffff) + "u")
+    )
+
+test("right_shift 12",
+"""
+void main(){
+    int i = 10;
+    int j = -1;
+    i = i >> j;
+}
+"""
+)
+
+#test right shift macro
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("unsigned_right_shift %i"%n,
+    """
+    void main(){
+        unsigned int i = 0xffffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0xffffffff >> i) & 0xffffffff) + "u")
+    )
+
+for n, i in enumerate([0, 1, 2, 30, 31, 32]):
+    test("unsigned_right_shift %i"%(n + 6),
+    """
+    void main(){
+        unsigned int i = 0x7fffffffu;
+        int j = %i;
+        assert(i >> j == %s);
+    }
+    """%(i, hex((0x7fffffff >> i) & 0xffffffff) + "u")
+    )
+
+test("unsigned_right_shift 12",
+"""
+void main(){
+    int i = 10;
+    int j = -1;
+    i = i >> j;
+}
+"""
+)
+
+test("float_function 1",
+"""
+float a(){
+    return 2.0;
+}
+
+float b(){
+    return 4.0;
+}
+
+void main(){
+    assert(a() - b() == -2.0);
+}
+"""
+)
+
+test("float_function 2",
+"""
+float a(){
+    return 2;
+}
+
+float b(){
+    return 4;
+}
+
+void main(){
+    assert(a() - b() == -2.0);
+}
+"""
+)
+
+test("long if 0",
+"""
+void main(){
+    if(0x100000000l){
+        //should be true
+    } else {
+        assert(0);
+    }
+}
+"""
+)
+
+test("long if 1",
+"""
+void main(){
+    long a = 0x1000000000l;
+    if(a){
+        //should be true
+    } else {
+        assert(0);
+    }
+}
+"""
+)
+
+test("long if 2",
+"""
+void main(){
+    if(0x00000000l){
+        assert(0);
+    } else {
+    }
+}
+"""
+)
+
+test("long if 3",
+"""
+void main(){
+    long a = 0x0000000000l;
+    if(a){
+        assert(0);
+    } else {
+    }
+}
+"""
+)
+
+#test("float file 1",
+#"""
+#void main(){
+    #file_write(1.0, "test_file");
+    #file_write(-1.0, "test_file");
+    #file_write(2.0, "test_file");
+    #file_write(-2.0, "test_file");
+#}
+#"""
+#)
+
+#test("float file 2",
+#"""
+#void main(){
+    #assert(file_read("test_file") == 1.0);
+    #assert(file_read("test_file") == -1.0);
+    #assert(file_read("test_file") == 2.0);
+    #assert(file_read("test_file") == -2.0);
+#}
+#"""
+#)
+
+test_fails("array size1",
+"""
+int size(){
+    return 10;
+}
+void main(){
+    int blah[size()];
+}
+"""
+)
+
+test("array size2",
+"""
+void main(){
+    const int b = 10;
+    int a[b];
+}
+"""
+)
+
+test_fails("const 1",
+"""
+void main(){
+    const int blah = 10;
+    blah = 12;
+}
+"""
+)
+
+test("const 2",
+"""
+void main(){
+    const int blah = 10;
+    assert(blah == 10);
+}
+"""
+)
+
+test_fails("const 3",
+"""
+void main(){
+    const float blah = 10;
+    blah = 12;
+}
+"""
+)
+
+test("const 4",
+"""
+void main(){
+    const float blah = 10;
+    assert(blah == 10.0);
+}
+"""
+)
+
+test_fails("scope 1",
+"""
+void test(){
+    int test_var = 1;
+}
+
+void main(){
+    int blah = test_var;
+}
+"""
+)
+
+test("inplace float 1",
+"""
+void main(){
+    float test = 1.0f;
+    test *= 2.0f;
+    assert(test == 2.0f);
+    test *= 2.0f;
+    assert(test == 4.0f);
+    test *= 2.0f;
+    assert(test == 8.0f);
+}
+"""
+)
+
+test("inplace float 2",
+"""
+void main(){
+    float test = 1.0f;
+    test += 2.0f;
+    assert(test == 3.0f);
+    test += 2.0f;
+    assert(test == 5.0f);
+    test += 2.0f;
+    assert(test == 7.0f);
+}
+"""
+)
+
+test("inplace float 3",
+"""
+void main(){
+    float test = 1.0f;
+    test -= 2.0;
+    assert(test == -1.0f);
+    test -= 2.0;
+    assert(test == -3.0f);
+    test -= 2.0;
+    assert(test == -5.0f);
+}
+"""
+)
+
+test("inplace float 4",
+"""
+void main(){
+    float test = 1.0f;
+    test /= 2.0f;
+    assert(test == 0.5f);
+    test /= 2.0f;
+    assert(test == 0.25f);
+    test /= 2.0f;
+    assert(test == 0.125f);
+}
+"""
+)
+
+test("inplace float 5",
+"""
+void main(){
+    float test = 1.0f;
+    test *= 2;
+    assert(test == 2.0f);
+    test *= 2;
+    assert(test == 4.0f);
+    test *= 2;
+    assert(test == 8.0f);
+}
+"""
+)
+
+test("inplace float 6",
+"""
+void main(){
+    float test = 1.0f;
+    test += 2;
+    assert(test == 3.0f);
+    test += 2;
+    assert(test == 5.0f);
+    test += 2;
+    assert(test == 7.0f);
+}
+"""
+)
+
+test("inplace float 7",
+"""
+void main(){
+    float test = 1.0f;
+    test -= 2;
+    assert(test == -1.0f);
+    test -= 2;
+    assert(test == -3.0f);
+    test -= 2;
+    assert(test == -5.0f);
+}
+"""
+)
+
+test("inplace float 8",
+"""
+void main(){
+    float test = 1.0f;
+    test /= 2;
+    assert(test == 0.5f);
+    test /= 2;
+    assert(test == 0.25f);
+    test /= 2;
+    assert(test == 0.125f);
+}
+"""
+)
+
+test("float 1",
+"""
+void main(){
+    float test = 0.0f;
+    assert(test == 0.0f);
+}
+"""
+)
+test("float 2",
+"""
+void main(){
+    float test = 1.0f;
+    assert(test > 0.0f);
+}
+"""
+)
+test("float 3",
+"""
+void main(){
+    float test = 0.0f;
+    assert(test < 1.0f);
+}
+"""
+)
+test("float 4",
+"""
+void main(){
+    float test = 0.0f;
+    float a = -1.0f;
+    float b = -2.0f;
+    float c = 2.0f;
+    float d = 2.0f;
+    assert(test > -1.0f);
+    assert(a > b);
+    assert(b < a);
+    assert(c >= d);
+    assert(c <= d);
+}
+"""
+)
+test("float 5",
+"""
+void main(){
+    float test = 0.0f;
+    assert(test == 0.0f);
+}
+"""
+)
+test("float 6",
+"""
+void main(){
+    float blah[10];
+    blah[0] = 0.0f;
+    blah[1] = 1.0f;
+    blah[2] = 2.0f;
+    blah[3] = 3.0f;
+    assert(blah[0] == 0.0f);
+    assert(blah[1] == 1.0f);
+    assert(blah[2] == 2.0f);
+    assert(blah[3] == 3.0f);
+}
+"""
+)
+
+test("float 7",
+"""
+void main(){
+    float a = 2.0f;
+    assert(a == 1.0f + 1.0f);
+}
+"""
+)
+
+test("float 8",
+"""
+void main(){
+    float a = 2.0f;
+    float b = 2.0f;
+    assert(a+b == 4.0f);
+}
+"""
+)
+
+test("float 9",
+"""
+void main(){
+    float a = -2.0f;
+    float b = -2.0f;
+    assert(a+b == -4.0f);
+}
+"""
+)
+
+test("float 10",
+"""
+void main(){
+    float a = 2.0f;
+    float b = 2.0f;
+    assert(a-b == -0.0f);
+}
+"""
+)
+
+test("float 11",
+"""
+void main(){
+    float a = 2.0f;
+    float b = 4.0f;
+    assert(a-b == -2.0f);
+}
+"""
+)
+
+test("float 12",
+"""
+void main(){
+    float a = 1.0f;
+    float b = 1.0f;
+    assert(a*b == 1.0f);
+}
+"""
+)
+
+test("float 13",
+"""
+void main(){
+    float a = 1.0f;
+    float b = -1.0f;
+    assert(a*b == -1.0f);
+}
+"""
+)
+
+test("float 14",
+"""
+void main(){
+    float a = -1.0f;
+    float b = -1.0f;
+    assert(a*b == 1.0f);
+}
+"""
+)
+
+test("float 15",
+"""
+void main(){
+    float a = -7.0f;
+    float b = 6.0f;
+    assert(a*b == -42.0f);
+}
+"""
+)
+
+test("float 16",
+"""
+void main(){
+    float a = 6.0f;
+    float b = 6.0f;
+    assert(a/b == 1.0f);
+}
+"""
+)
+
+test("float 17",
+"""
+void main(){
+    float a = 12.0f;
+    float b = 6.0f;
+    assert(a/b == 2.0f);
+}
+"""
+)
+
+test("float 18",
+"""
+void main(){
+    int a = 2;
+    float b = 2.0f;
+    assert(a+b == 4.0f);
+}
+"""
+)
+
+test("float 19",
+"""
+void main(){
+    int a;
+    float b = 2.0f;
+    a = b + 1.0f;
+    assert(a == 3);
+}
+"""
+)
+
+test("float 20",
+"""
+void main(){
+    int a = 2;
+    float b;
+    b = a + 1.0f;
+    assert(b == 3.0f);
+}
+"""
+)
+
+test("float 21",
+"""
+typedef struct {float a; float b;} mystruct;
+void main(){
+    mystruct a;
+    a.a = 2.0f;
+    a.b = 3.0f;
+    assert(a.a == 2.0f);
+    assert(a.b == 3.0f);
+    assert(a.a + a.b == 5.0f);
+}
+"""
+)
+test("float 22",
+"""
+typedef struct {float a; float b;} mystruct;
+
+void test(mystruct a){
+    assert(a.a == 2.0f);
+    assert(a.b == 3.0f);
+    assert(a.a + a.b == 5.0f);
+}
+
+void main(){
+    mystruct a;
+    a.a = 2.0f;
+    a.b = 3.0f;
+    test(a);
+}
+"""
+)
+
+test("float 23",
+"""
+void test(float b){
+    assert(b/6.0f == 2.0f);
+}
+
+void main(){
+    int a = 12.0f;
+    test(a);
+}
+"""
+)
+
+test("float 24",
+"""
+float test(){
+    return 6.0f;
+}
+
+void main(){
+    int a = 12.0f;
+    assert(a/test() == 2.0f);
+}
+"""
+)
+
+test("float 25",
+"""
+int main(){
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a + b + c == 6.0f);
+  return 0;
+}
+
+""")
+
+test("float 26",
+"""
+int main(){
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a - b - c == -4.0f);
+  return 0;
+}
+
+""")
+
+test("float 27",
+"""
+int main(){
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a - (b - c) == 2.0f);
+  return 0;
+}
+
+""")
+
+test("float 28",
+"""
+int main(){
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 3.0f;
+  assert(a * b * c == 6.0f);
+  return 0;
+}
+
+""")
+
+test("float 29",
+"""
+int main(){
+  float a = 1.0f;
+  float b = 2.0f;
+  float c = 4.0f;
+  assert(a/b/c == 0.125f);
+  return 0;
+}
+
+""")
+
+test("float 30",
+"""
+int main(){
+  float a = 1.0f;
+  float b = 2.0f;
+  assert(a - - b == 3.0f);
+  return 0;
+}
+
+""")
+
+test_fails("bad struct size",
+"""
+
+typedef struct {int a; int b;} mystruct;
+
+void main(){
+    assert(sizeof mystruct == 8);
+}
+"""
+)
+
+test("struct_size 2",
+"""
+
+typedef struct {long int a; int b;} mystruct;
+
+void main(){
+    mystruct a;
+    assert(sizeof a == 12);
+}
+"""
+)
+
+test("struct_size 3",
+"""
+
+typedef struct {long int a; int b;} struct_1;
+typedef struct {long int a; struct_1 b;} mystruct;
+
+void main(){
+    mystruct a;
+    assert(sizeof a == 20);
+}
+"""
+)
+
+test("struct_size 4",
+"""
+
+typedef struct {long int a; int b[2];} mystruct;
+
+void main(){
+    mystruct a;
+    assert(sizeof a == 16);
+}
+"""
+)
+
+test("struct_passing 1",
+"""
+
+typedef struct {int a; int b;} mystruct;
+
+void test(mystruct mine){
+    assert(mine.a == 1);
+    assert(mine.b == 2);
+}
+
+void main(){
+    mystruct an;
+    an.a = 1;
+    an.b = 2;
+    test(an);
+}
+"""
+)
+
+test("struct_passing 2",
+"""
+
+typedef struct {long int a; int b;} struct_1;
+typedef struct {long int a; struct_1 b;} mystruct;
+
+void test(mystruct my){
+    assert(my.a == 1);
+    assert(my.b.a == 2);
+    assert(my.b.b == 3);
+}
+
+void main(){
+    mystruct blah;
+    blah.a = 1;
+    blah.b.a = 2;
+    blah.b.b = 3;
+    test(blah);
+}
+"""
+)
+
+test("struct_passing 3",
+"""
+
+typedef struct {long int a; int b[10];} struct_1;
+typedef struct {long int a; struct_1 b;} mystruct;
+
+void test(mystruct my){
+    assert(my.a == 1);
+    assert(my.b.a == 2);
+    assert(my.b.b[0] == 3);
+}
+
+void main(){
+    mystruct blah;
+    blah.a = 1;
+    blah.b.a = 2;
+    blah.b.b[0] = 3;
+    test(blah);
+}
+"""
+)
+
+test("struct_return 1",
+"""
+
+typedef struct {long int a; int b;} struct_1;
+
+struct_1 test(){
+    struct_1 my;
+    my.a = 1;
+    my.b = 2;
+    return my;
+}
+
+void main(){
+    struct_1 blah;
+    blah = test();
+    assert(blah.a == 1);
+    assert(blah.b == 2);
+}
+"""
+)
+
+test("unsigned divide 1",
+"""
+void main(){
+  unsigned a = 10;
+  unsigned b = 5;
+  assert(a/b==2);
+}
+"""
+)
+
+test("divide 1",
+"""
+void main(){
+  int a = 10;
+  int b = 5;
+  assert(a/b==2);
+}
+"""
+)
+
+test("long 1",
+"""
+void main(){
+  long a = 100000L;
+  assert(a==100000L);
+}
+"""
+)
+
+test("long 2",
+"""
+void main(){
+  long a = 100000L;
+  assert(sizeof a == 8);
+}
+"""
+)
+
+test("long 3",
+"""
+void main(){
+  long a = 0xffffL;
+  assert(a+1 != 0);
+  assert(a+1 == 0x10000L);
+}
+"""
+)
+
+test("long 4",
+"""
+void main(){
+  long a = 0xffffL;
+  long b = 0xffffL;
+  assert(a+b == 0x1fffeL);
+}
+"""
+)
+test("long 5",
+"""
+void main(){
+  long a = 0xffffffffffffffffUL;
+  long b = 0x0;
+  assert(a < b);
+}
+"""
+)
+test("long 6",
+"""
+void main(){
+  unsigned long a = 0xffffffffUL;
+  long b = 0x0;
+  assert(a > b);
+}
+"""
+)
+
+test("long 7",
+"""
+void test_long(long a){
+    assert(a+1 != 0);
+    assert(a+1 == 0x10000L);
+}
+
+void main(){
+  long a = 0xffffL;
+  test_long(a);
+}
+"""
+)
+
+test("long 8",
+"""
+void test_long(unsigned long a){
+    assert(a > 0);
+}
+
+void main(){
+  unsigned long a = 0xffffffffUL;
+  test_long(a);
+}
+"""
+)
+
+test("long 9",
+"""
+void test_long(long a){
+    assert(a < 0);
+}
+
+void main(){
+  unsigned long a = 0xffffffffffffffffUL;
+  test_long(a);
+}
+"""
+)
+
+test("long 10",
+"""
+void test_long(unsigned long a){
+    assert(a > 0);
+}
+
+void main(){
+  long a = 0xffffffffUL;
+  test_long(a);
+}
+"""
+)
+
+test("long 11",
+"""
+void main(){
+  long a[2];
+  a[0] = 0xffffffffUL;
+  a[1] = 0xffffffffUL;
+  assert(a[1] == 0xffffffffUL);
+}
+"""
+)
+
+test("long 12",
+"""
+void main(){
+  long a[2];
+  int b[2];
+  a[0] = 1;
+  b[0] = 2;
+  a[1] = 3;
+  b[1] = 4;
+  assert(a[0] == 1);
+  assert(b[0] == 2);
+  assert(a[1] == 3);
+  assert(b[1] == 4);
+}
+"""
+)
+
+test("void 1",
+"""
+void func(unsigned i){
+}
+void main(){
+  int a = 1;
+  assert(a++ == 1);
+  assert(a++ == 2);
+  assert(a == 3);
+  assert(a-- == 3);
+  assert(a-- == 2);
+  assert(a == 1);
+}
+"""
+)
+
+test("postfix 1",
+"""
+int main(){
+  int a = 1;
+  assert(a++ == 1);
+  assert(a++ == 2);
+  assert(a == 3);
+  assert(a-- == 3);
+  assert(a-- == 2);
+  assert(a == 1);
+  return 0;
+}
+"""
+)
+
+
+test("sizeof 1",
+"""
+int main(){
+  unsigned a = 0xffffU;
+  unsigned b = 0x7fff;
+  unsigned c[4];
+  unsigned d[] = "asdfg";
+  assert(sizeof a == 4);
+  assert(sizeof b == 4);
+  assert(sizeof c == 16);
+  assert(sizeof d == 24);
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 1",
+"""
+int main(){
+  unsigned a = 0xffffU;
+  unsigned b = 0x7fff;
+  assert(a==0xffffU);
+  assert(a > b);
+
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 2",
+"""
+int main(){
+  unsigned a = 0xffffU;
+  unsigned b = 0x7fff;
+  assert(a==0xffffU);
+  assert(b < a);
+
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 3",
+"""
+int test(unsigned a){
+    return a;
+}
+  
+int main(){
+  assert(test(3) == 3);
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 4",
+"""
+int main(){
+  int a = 1;
+  unsigned b = 1;
+  assert(a == b);
+  return 0;
+}
+"""
+)
+
+test("type_unsigned 5",
+"""
+int main(){
+  int a = 1;
+  assert(a == 1);
+  return 0;
+}
+"""
+)
+test("type_unsigned 6",
+"""
+int main(){
+  int a = 1;
+  assert(1 == a);
+  return 0;
+}
+"""
+)
+test("type_unsigned 7",
+"""
+int main(){
+  unsigned b = 1;
+  assert(1 == b);
+  return 0;
+}
+"""
+)
+test("type_unsigned 8",
+"""
+int main(){
+  unsigned b = 1;
+  assert(b == 1);
+  return 0;
+}
+"""
+)
+
+test("type_compatibility 1",
+"""
+int main(){
+  int a = 4;
+  char b = 6;
+  b = a;
+  assert(b==4);
+  return 0;
+}
+"""
+)
+
+test_fails("type_compatibility 2",
+"""
+int main(){
+  int a[2];
+  char b[2];
+  b = a;
+  return 0;
+}
+"""
+)
+
+test("string 1 a",
+"""
+int main(){
+  int c[4] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""")
+
+test("string 1 b",
+"""
+int main(){
+  int c[4] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""", True)
+
+test("string 2a",
+"""
+int main(){
+  int c[] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""")
+
+test("string 2b",
+"""
+int main(){
+  int c[] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""", True)
+
+test_fails("string 3",
+"""
+int main(){
+  int c[];
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+
+""")
+
+test("string 4a",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  c[0] = 'b';
+  c[1] = 'B';
+  c[2] = '2';
+  c[3] = 0;
+  return 0;
+}
+int main(){
+  char c[] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  test(c);
+  assert(c[0] == 'b');
+  assert(c[1] == 'B');
+  assert(c[2] == '2');
+  assert(c[3] == 0);
+  return 0;
+}
+
+""")
+
+test("string 4b",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  c[0] = 'b';
+  c[1] = 'B';
+  c[2] = '2';
+  c[3] = 0;
+  return 0;
+}
+int main(){
+  char c[] = "aA1";
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  test(c);
+  assert(c[0] == 'b');
+  assert(c[1] == 'B');
+  assert(c[2] == '2');
+  assert(c[3] == 0);
+  return 0;
+}
+
+""", True)
+
+test_fails("string 5",
+"""
+int main(){
+  int c[] "\\n";
+  assert(c[0] == 10);
+  assert(c[1] == 0);
+  return 0;
+}
+
+""")
+
+test("string 6a",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+int main(){
+  test("aA1");
+  return 0;
+}
+""")
+
+test("string 6b",
+"""
+int test(char c[]){
+  assert(c[0] == 97);
+  assert(c[1] == 65);
+  assert(c[2] == 49);
+  assert(c[3] == 0);
+  return 0;
+}
+int main(){
+  test("aA1");
+  return 0;
+}
+""", True)
+
+test("string 7a",
+"""
+int main(){
+  char c[] = "a\\n";
+  assert(c[0] == 97);
+  assert(c[1] == 10);
+  assert(c[2] == 0);
+  return 0;
+}
+""")
+
+test("string 7b",
+"""
+int main(){
+  char c[] = "a\\n";
+  assert(c[0] == 97);
+  assert(c[1] == 10);
+  assert(c[2] == 0);
+  return 0;
+}
+""", True)
+
+test("char 1",
+"""
+int main(){
+  int c = 'a';
+  assert(c == 97);
+  return 0;
+}
+
+""")
+test("char 2",
+"""
+int main(){
+  int c = 'A';
+  assert(c == 65);
+  return 0;
+}
+
+""")
+test("char 3",
+"""
+int main(){
+  int c = '1';
+  assert(c == 49);
+  return 0;
+}
+
+""")
+test("char 4",
+"""
+int main(){
+  int c = '\\n';
+  assert(c == 10);
+  return 0;
+}
+
+""")
+
+test("unsigned modulo 1",
+"""
+unsigned int main(){
+  unsigned int a = 3;
+  unsigned int b = 4;
+  assert(a%b == 3);
+  return 0;
+}
+
+""")
+
+test("unsigned modulo 3",
+"""
+unsigned int main(){
+  unsigned int a = 7;
+  unsigned int b = 8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("unsigned modulo 4",
+"""
+unsigned int main(){
+  unsigned int a = 15;
+  unsigned int b = 8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("unsigned modulo 9",
+"""
+unsigned int main(){
+  unsigned int a = 32766;
+  unsigned int b = 0;
+  assert(a%b == 32766);
+  return 0;
+}
+
+""")
+
+test("unsigned division 1",
+"""
+unsigned int main(){
+  unsigned int a = 15;
+  unsigned int b = 3;
+  assert(a/b == 5);
+  return 0;
+}
+
+""")
+
+
+test("unsigned division 2",
+"""
+unsigned int main(){
+  unsigned int a = 12;
+  unsigned int b = 4;
+  assert(a/b == 3);
+  return 0;
+}
+
+""")
+
+test("unsigned division 3",
+"""
+unsigned int main(){
+  unsigned int a = 1;
+  unsigned int b = 1;
+  assert(a/b == 1);
+  return 0;
+}
+
+""")
+
+test("unsigned division 6",
+"""
+unsigned int main(){
+  unsigned int a = 0;
+  unsigned int b = 1;
+  assert(a/b == 0);
+  return 0;
+}
+
+""")
+
+test("unsigned division 7",
+"""
+unsigned int main(){
+  unsigned int a = 5;
+  unsigned int b = 2;
+  assert(a/b == 2);
+  return 0;
+}
+
+""")
+
+test("unsigned division 9",
+"""
+unsigned int main(){
+  unsigned int a = 0;
+  unsigned int b = 32767;
+  assert(a/b == 0);
+  return 0;
+}
+
+""")
+
+test("unsigned division 10",
+"""
+unsigned int main(){
+  unsigned int a = 32767;
+  unsigned int b = 1;
+  assert(a/b == 32767);
+  return 0;
+}
+
+""")
+
+test("unsigned division 11",
+"""
+unsigned int main(){
+  unsigned int a = 32767;
+  unsigned int b = 2;
+  assert(a/b == 16383);
+  return 0;
+}
+
+""")
+
+test("unsigned division 12",
+"""
+unsigned int main(){
+  unsigned int a = 32767;
+  unsigned int b = 32767;
+  assert(a/b == 1);
+  return 0;
+}
+
+""")
+
+test("modulo 1",
+"""
+int main(){
+  int a = 3;
+  int b = 4;
+  assert(a%b == 3);
+  return 0;
+}
+
+""")
+
+test("modulo 2",
+"""
+int main(){
+  int a = -3;
+  int b = 4;
+  assert(a%b == -3);
+  return 0;
+}
+
+""")
+
+test("modulo 3",
+"""
+int main(){
+  int a = 7;
+  int b = 8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 4",
+"""
+int main(){
+  int a = 15;
+  int b = 8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 5",
+"""
+int main(){
+  int a = -7;
+  int b = 8;
+  assert(a%b == -7);
+  return 0;
+}
+
+""")
+
+test("modulo 6",
+"""
+int main(){
+  int a = -15;
+  int b = 8;
+  assert(a%b == -7);
+  return 0;
+}
+
+""")
+
+test("modulo 7",
+"""
+int main(){
+  int a = 7;
+  int b = -8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 8",
+"""
+int main(){
+  int a = 15;
+  int b = -8;
+  assert(a%b == 7);
+  return 0;
+}
+
+""")
+
+test("modulo 9",
+"""
+int main(){
+  int a = 32766;
+  int b = 0;
+  assert(a%b == 32766);
+  return 0;
+}
+
+""")
+
+test("division 1",
+"""
+int main(){
+  int a = 15;
+  int b = 3;
+  assert(a/b == 5);
+  return 0;
+}
+
+""")
+
+
+test("division 2",
+"""
+int main(){
+  int a = 12;
+  int b = 4;
+  assert(a/b == 3);
+  return 0;
+}
+
+""")
+
+test("division 3",
+"""
+int main(){
+  int a = 1;
+  int b = 1;
+  assert(a/b == 1);
+  return 0;
+}
+
+""")
+
+test("division 4",
+"""
+int main(){
+  int a = 1;
+  int b = -1;
+  assert(a/b == -1);
+  return 0;
+}
+
+""")
+
+test("division 5",
+"""
+int main(){
+  int a = -1;
+  int b = 1;
+  assert(a/b == -1);
+  return 0;
+}
+
+""")
+
+test("division 6",
+"""
+int main(){
+  int a = 0;
+  int b = 1;
+  assert(a/b == 0);
+  return 0;
+}
+
+""")
+
+test("division 7",
+"""
+int main(){
+  int a = 5;
+  int b = 2;
+  assert(a/b == 2);
+  return 0;
+}
+
+""")
+
+test("division 8",
+"""
+int main(){
+  int a = -5;
+  int b = 2;
+  assert(a/b == -2);
+  return 0;
+}
+
+""")
+
+test("division 9",
+"""
+int main(){
+  int a = 0;
+  int b = 32767;
+  assert(a/b == 0);
+  return 0;
+}
+
+""")
+
+test("division 10",
+"""
+int main(){
+  int a = 32767;
+  int b = 1;
+  assert(a/b == 32767);
+  return 0;
+}
+
+""")
+
+test("division 11",
+"""
+int main(){
+  int a = 32767;
+  int b = 2;
+  assert(a/b == 16383);
+  return 0;
+}
+
+""")
+
+test("division 12",
+"""
+int main(){
+  int a = 32767;
+  int b = 32767;
+  assert(a/b == 1);
+  return 0;
+}
+
+""")
+
+test("division 13",
+"""
+int main(){
+  int a = -32767-1;
+  int b = -32767-1;
+  assert(a/b == 1);
+  return 0;
+}
+
+""")
+
+test("division 14",
+"""
+int main(){
+  int a = -32767;
+  int b = -1;
+  assert(a/b == 32767);
+  return 0;
+}
+
+""")
+
+test("struct with array 1",
+"""
+typedef struct {int a; int b; int c[2];} blah;
+blah myblah;
+
+void test(){
+  assert(myblah.a == 1);
+  assert(myblah.b == 2);
+  assert(myblah.c[0] == 3);
+  assert(myblah.c[1] == 4);
+  myblah.a = 5;
+  myblah.b = 6;
+  myblah.c[0] = 7;
+  myblah.c[1] = 8;
+}
+  
+void main(){
+  myblah.a = 1;
+  myblah.b = 2;
+  myblah.c[0] = 3;
+  myblah.c[1] = 4;
+  test();
+  assert(myblah.a == 5);
+  assert(myblah.b == 6);
+  assert(myblah.c[0] == 7);
+  assert(myblah.c[1] == 8);
+}
+"""
+)
+
+test("global variables 1",
+"""
+int a;
+
+void test(){
+  assert(a==12);
+  a = 24;
+}
+
+void main(){
+  a = 12;
+  test();
+  assert(a==24);
+}
+
+"""
+)
+
+test("global variables 2",
+"""
+int a[10];
+
+void test(){
+  assert(a[0] == 0);
+  assert(a[1] == 1);
+  assert(a[2] == 2);
+  assert(a[3] == 3);
+  a[0] = 4;
+  a[1] = 5;
+  a[2] = 6;
+  a[3] = 7;
+}
+
+void main(){
+  a[0] = 0;
+  a[1] = 1;
+  a[2] = 2;
+  a[3] = 3;
+  test();
+  assert(a[0] == 4);
+  assert(a[1] == 5);
+  assert(a[2] == 6);
+  assert(a[3] == 7);
+}
+
+"""
+)
+
+test("global variables 3",
+"""
+int a=0, b=1, c=2;
+
+void test(){
+  assert(a == 3);
+  assert(b == 4);
+  assert(c == 5);
+  a=6;
+  b=7;
+  c=8;
+}
+
+void main(){
+  assert(a == 0);
+  assert(b == 1);
+  assert(c == 2);
+  a=3;
+  b=4;
+  c=5;
+  test();
+  assert(a == 6);
+  assert(b == 7);
+  assert(c == 8);
+}
+
+"""
+)
+
+test("global variables 4",
+"""
+typedef struct {int a; int b; int c;} blah;
+blah myblah;
+
+void test(){
+  assert(myblah.a == 1);
+  assert(myblah.b == 2);
+  assert(myblah.c == 3);
+  myblah.a = 4;
+  myblah.b = 5;
+  myblah.c = 6;
+}
+  
+void main(){
+  myblah.a = 1;
+  myblah.b = 2;
+  myblah.c = 3;
+  test();
+  assert(myblah.a == 4);
+  assert(myblah.b == 5);
+  assert(myblah.c == 6);
+}
+"""
+)
+
+test("void functions 1",
+"""
+void main(){
+  int a;
+  int b;
+  b = a;
+}
+
+"""
+)
+
+test("void functions 2",
+"""
+void test(){
+  return;
+}
+
+void main(){
+  test();
+}
+
+"""
+)
+
+test_fails("void functions 3",
+"""
+void test(){
+  return;
+}
+
+void main(){
+  int a;
+  a = test();
+}
+
+"""
+)
+
+test_fails("void functions 4",
+"""
+void test(){
+  return 10;
+}
+
+void main(){
+  int a;
+  a = test();
+}
+
+"""
+)
+
+test_fails("type_checking 1",
+"""
+int main(){
+  int a[4];
+  int b;
+  b = a;
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 2",
+"""
+int main(){
+  int a[4];
+  int b[4];
+  b[a]=12;
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 3",
+"""
+int main(){
+  int a[4];
+  int b;
+  if(a) b=12;
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 4",
+"""
+int main(){
+  int a[4];
+  int b;
+  while(a) b=12;
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 5",
+"""
+int main(){
+  int a[4];
+  int b;
+  for(;a;) b=12;
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 6",
+"""
+int main(){
+  int a[4];
+  int b;
+  switch(a){}
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 7",
+"""
+int main(){
+  int a[4];
+  int b;
+  switch(b){case a:b=12;}
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 8",
+"""
+int test(int a[]){
+  return 0;
+}
+
+int main(){
+  int b;
+  test(b);
+  return 0;
+}
+
+"""
+)
+
+test_fails("type_checking 9",
+"""
+int test(int a){
+  return 0;
+}
+
+int main(){
+  int b[4];
+  test(b);
+  return 0;
+}
+
+"""
+)
+
+test("array passing 1",
+"""
+
+int test(int a[]){
+    assert(a[0] == 0);
+    assert(a[1] == 1);
+    assert(a[2] == 2);
+    assert(a[3] == 3);
+    a[0] = 4;
+    a[1] = 5;
+    a[2] = 6;
+    a[3] = 7;
+    return 0;
+}
+
+int main(){
+  int a[4];
+  a[0] = 0;
+  a[1] = 1;
+  a[2] = 2;
+  a[3] = 3;
+  test(a);
+  assert(a[0] == 4);
+  assert(a[1] == 5);
+  assert(a[2] == 6);
+  assert(a[3] == 7);
+  return 0;
+}
+
+"""
+)
+test("array passing 2",
+"""
+
+int test(int a[], int b, int c){
+    assert(a[0] == 0);
+    assert(a[1] == 1);
+    assert(a[2] == 2);
+    assert(a[3] == 3);
+    assert(b == 4);
+    assert(c == 5);
+    a[0] = 4;
+    a[1] = 5;
+    a[2] = 6;
+    a[3] = 7;
+    b = 8;
+    c = 9;
+    return 0;
+}
+
+int main(){
+  int a[4];
+  int b, c;
+  a[0] = 0;
+  a[1] = 1;
+  a[2] = 2;
+  a[3] = 3;
+  b=4;c=5;
+  test(a, b, c);
+  assert(a[0] == 4);
+  assert(a[1] == 5);
+  assert(a[2] == 6);
+  assert(a[3] == 7);
+  assert(b == 4);
+  assert(c == 5);
+  return 0;
+}
+
+"""
+)
+
+test("array passing 3",
+"""void test(int grid[][3]){
+    int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            grid[j][i] = n++;
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid[j][i] == n++);
+        }
+    }
+
+}
+void test1(int grid[3][3]){
+    int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            grid[j][i] = n++;
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid[j][i] == n++);
+        }
+    }
+
+}
+void main(){
+    int grid[3][3] = {{1, 2, 3},{4, 5, 6}, {7, 8, 9}};
+    test(grid);
+    test1(grid);
+}
+
+"""
+)
+
+test("struct 1",
+"""
+struct blah {int a; int b; int c;};
+int main(){
+  struct blah myblah;
+  myblah.a = 1;
+  myblah.b = 2;
+  myblah.c = 3;
+  assert(myblah.a == 1);
+  assert(myblah.b == 2);
+  assert(myblah.c == 3);
+  return 0;
+}
+"""
+)
+test("struct 2",
+"""
+struct as {int a; int b; int c;};
+int main(){
+  struct as asa;
+  struct as asb;
+  asa.a = 1;
+  asb.a = 3;
+  asa.b = 2;
+  asb.b = 2;
+  asa.c = 3;
+  asb.c = 1;
+  assert(asa.a == 1);
+  assert(asb.a == 3);
+  assert(asa.b == 2);
+  assert(asb.b == 2);
+  assert(asa.c == 3);
+  assert(asb.c == 1);
+  return 0;
+}
+"""
+)
+test("struct 3",
+"""
+typedef struct {int a; int b; int c;} blah;
+int main(){
+  blah myblah;
+  myblah.a = 1;
+  myblah.b = 2;
+  myblah.c = 3;
+  assert(myblah.a == 1);
+  assert(myblah.b == 2);
+  assert(myblah.c == 3);
+  return 0;
+}
+"""
+)
+test("struct 4",
+"""
+typedef struct{int a; int b; int c;} mytype;
+typedef struct{mytype a;} othertype;
+int main(){
+  othertype a;
+  othertype b;
+  a.a.a = 1;
+  b.a.a = 2;
+  a.a.b = 3;
+  b.a.b = 4;
+  a.a.c = 5;
+  b.a.c = 6;
+  assert(a.a.a == 1);
+  assert(b.a.a == 2);
+  assert(a.a.b == 3);
+  assert(b.a.b == 4);
+  assert(a.a.c == 5);
+  assert(b.a.c == 6);
+  return 0;
+}
+"""
+)
+test("include 1",
+"""#include "test_include.c"
+int main(){
+  assert(include_function()==12);
+  return 0;
+}
+"""
+)
+test("switch 1",
+     """int main(){
+        switch(0){
+            case 0: return 3;
+            case 1: return 2;
+            case 2: return 1;
+            default: return 0;
+        }
+     }
+     """
+)
+test("switch 2",
+     """int main(){
+        switch(2){
+            case 0: return 3;
+            case 1: return 2;
+            case 2: return 1;
+            default: return 0;
+        }
+     }
+     """
+)
+test("switch 3",
+     """int main(){
+        switch(5){
+            case 0: return 3;
+            case 1: return 2;
+            case 2: return 1;
+            default: return 0;
+        }
+     }
+     """
+)
+test("switch 4",
+     """int main(){
+        int a = 0;
+        switch(0){
+            case 0: a = 1;
+            case 1: a = 2;
+            case 2: a = 3;
+            default: a = 4;
+        }
+        return a;
+     }
+     """
+)
+test("switch 5",
+     """int main(){
+        int a = 0;
+        switch(1){
+            case 0: a = 1;
+            case 1: a = 2;
+            case 2: a = 3;
+            default: a = 4;
+        }
+        return a;
+     }
+     """
+)
+test("switch 6",
+     """int main(){
+        int a = 1;
+        switch(10){
+            case 0: a = 1;
+            case 1: a = 2;
+            case 2: a = 3;
+            default: a = 4;
+        }
+        return a;
+     }
+     """
+)
+test("switch 7",
+     """int main(){
+        int a = 1;
+        switch(0){
+            case 0: a = 1; break;
+            case 1: a = 2; break;
+            case 2: a = 3; break;
+            default: a = 4; break;
+        }
+        return a;
+     }
+     """
+)
+test("switch 8",
+     """int main(){
+        int a = 1;
+        switch(2){
+            case 0: a = 1; break;
+            case 1: a = 2; break;
+            case 2: a = 3; break;
+            default: a = 4; break;
+        }
+        return a;
+     }
+     """
+)
+test("switch 9",
+"""int test(int a, int b)
+{
+   int value = 0;
+   switch(a) {
+
+      case 10:
+         value = 5;
+         switch(b) {
+            case 10:
+             value = 1;
+             break;
+            case 20:
+             value = 2;
+             break;
+         }
+         break;
+
+      case 20:
+         value = 6;
+         switch(b) {
+            case 10:
+            value = 3;
+            break;
+            case 20:
+            value = 4;
+            break;
+         }
+         break;
+
+   }
+   return value;
+}
+
+void main(){
+    assert(test(0,0)==0);
+    assert(test(10,0)==5);
+    assert(test(10,10)==1);
+    assert(test(10,20)==2);
+    assert(test(20,0)==6);
+    assert(test(20,10)==3);
+    assert(test(20,20)==4);
+}
+"""
+)
+test("switch 9",
+"""int main(){
+int a = 1;
+switch(9){
+    case 0: a = 1; break;
+    case 1: a = 2; break;
+    case 2: a = 3; break;
+    default: a = 4; break;
+}
+return a;
+}
+"""
+)
+test("long switch 1",
+"""void main(){
+long int a = 0x1000000000l;
+int b = 123;
+switch(a){
+    case 0: assert(0); break;
+    case 0x1000000000l: b = 321; break;
+    default: break; break;
+}
+assert(b == 321);
+}
+"""
+)
+test("long switch 2",
+"""int test(long a, long b)
+{
+   int value = 0;
+   switch(a) {
+
+      case 10:
+         value = 5;
+         switch(b) {
+            case 10:
+             value = 1;
+             break;
+            case 0x1000000000l:
+             value = 2;
+             break;
+         }
+         break;
+
+      case 0x1000000000l:
+         value = 6;
+         switch(b) {
+            case 10:
+            value = 3;
+            break;
+            case 0x1000000000l:
+            value = 4;
+            break;
+         }
+         break;
+
+   }
+   return value;
+}
+
+void main(){
+    assert(test(0,0)==0);
+    assert(test(10,0)==5);
+    assert(test(10,10)==1);
+    assert(test(10,0x1000000000l)==2);
+    assert(test(0x1000000000l,0)==6);
+    assert(test(0x1000000000l,10)==3);
+    assert(test(0x1000000000l,0x1000000000l)==4);
+}
+"""
+)
+
+test("break 0",
+"""
+int main(){
+  int a;
+  while(1){
+    break;
+    assert(0);
+  }
+  return 0;
+}
+""")
+test("break 1",
+"""
+int main(){
+  int a;
+  for(a=0; a<20; a++){
+    if(a == 10){
+      break;
+    }
+  }
+  assert(a == 10);
+  return 0;
+}
+""")
+test("continue 0",
+"""
+int main(){
+  int a;
+  for(a=1; a<=10; a++){
+    if(a <= 5){
+      continue; 
+    } 
+    assert(a > 5);
+  }
+  return 0;
+}
+""")
+test("ternary 0",
+"""
+int main(){
+  int a;
+  int b=2;
+  int c=3;
+  assert((1?2:3) == 2);
+  assert((0?2:3) == 3);
+  a = 1;
+  assert((a?b:c) == 2);
+  a = 0;
+  assert((a?b:c) == 3);
+  assert((1?b:c) == 2);
+  assert((0?b:c) == 3);
+  return 0;
+}
+""")
+test("ternary 1",
+"""
+int main(){
+  long a;
+  long b=2;
+  long c=3;
+  a = 1;
+  assert((a?b:c) == 2);
+  a = 0;
+  assert((a?b:c) == 3);
+  a = 0x1000000000l;
+  assert((a?b:c) == 2);
+  a = 0;
+  assert((a?b:c) == 3);
+  return 0;
+}
+""")
+
+test("inplace 0",
+"""
+int main(){
+  int a = 1;
+  a += 1;
+  assert(a == 2);
+  a -= 1;
+  assert(a == 1);
+  a *= 2;
+  assert(a == 2);
+  a /= 2;
+  assert(a == 1);
+  a |= 2;
+  assert(a == 3);
+  a &= 2;
+  assert(a == 2);
+  a <<= 1;
+  assert(a == 4);
+  a >>= 1;
+  assert(a == 2);
+  return 0;
+}
+""")
+
+test("inplace 1",
+"""
+int main(){
+  int a[100];
+  a[0] = 1;
+  a[20] = 1;
+  a[20] += 1;
+  assert(a[20] == 2);
+  a[20] -= 1;
+  assert(a[20] == 1);
+  a[20] *= 2;
+  assert(a[20] == 2);
+  a[20] /= 2;
+  assert(a[20] == 1);
+  a[20] |= 2;
+  assert(a[20] == 3);
+  a[20] &= 2;
+  assert(a[20] == 2);
+  a[20] <<= 1;
+  assert(a[20] == 4);
+  a[20] >>= 1;
+  assert(a[20] == 2);
+  assert(a[0] == 1);
+  return 0;
+}
+""")
+
+test("increment",
+"""
+int main(){
+  int a = 1;
+  a++;
+  assert(a == 2);
+  a--;
+  assert(a == 1);
+  return 0;
+}
+
+""")
+
+test("assert 0",
+"""int main(){
+  assert(1);
+  return 0;
+}
+""")
+test_fails("assert 1",
+"""int main(){
+  assert(0);
+  return 0;
+}
+""")
+test("assign",
+"""int main(){
+  int a;
+  int b;
+  int c;
+  a = 10;
+  b = 20;
+  c = a + b;
+  assert(a == 10);
+  assert(b == 20);
+  assert(c == 30);
+  return 0;
+}
+""")
+test("while",
+"""int main(){
+  int a = 10;
+  int b = 0;
+  while(a){
+    a = a - 1;
+    b = b + 1;
+  }
+  assert(b == 10);
+  return 0;
+}
+""")
+test("while 1",
+"""int main(){
+  int a = 0;
+  while(1){
+    a = a + 1;
+    if(a == 10){
+      return 0;
+    }
+  }
+}
+""")
+test("while 2",
+"""int main(){
+  while(0){
+    assert(0);
+  }
+  return 0;
+}
+""")
+test("while 3",
+"""void main(){
+  int a = 5;
+  while(0x1000000000l){
+    a = 10;
+    break;
+    assert(0);
+  }
+  assert(a==10);
+}
+""")
+test("while 4",
+"""void main(){
+  unsigned long a = 0x8000000000000000ul;
+  int i = 0;
+  while(a){
+    a >>= 1;
+    i++;
+  }
+  assert(i==64);
+}
+""")
+test("do while 1",
+"""void main(){
+    int counter = 5;
+    int factorial = 1;
+    do {
+          factorial *= counter--;
+    } while (counter > 0);
+    assert(factorial==120);
+}
+""")
+test("if",
+"""int main(){
+  int a = 0;
+  int b = 0;
+  if(a){
+    b = 10;
+    assert(0);
+  } else {
+    b = 20;
+  }
+  assert(b == 20);
+  return 0;
+}
+""")
+test("if 1",
+"""int main(){
+  int a = 1;
+  int b = 0;
+  if(a){
+    b = 10;
+  } else {
+    b = 20;
+    assert(0);
+  }
+  assert(b == 10);
+  return 0;
+}
+""")
+test("if 2",
+"""int main(){
+  int b = 0;
+  if(0){
+    b = 10;
+    assert(0);
+  } else {
+    b = 20;
+  }
+  assert(b == 20);
+  return 0;
+}
+""")
+test("if 3",
+"""int main(){
+  int b = 0;
+  if(1){
+    b = 10;
+  } else {
+    b = 20;
+    assert(0);
+  }
+  assert(b == 10);
+  return 0;
+}
+""")
+test("if 4",
+"""int main(){
+  int b = 0;
+  if(0){
+    b = 10;
+    assert(0);
+  }
+  assert(b == 0);
+  return 0;
+}
+""")
+test("for 0",
+"""int main(){
+  int a = 0;
+  int b;
+  int c = 1;
+  for(a=0; a<10; a++){
+   b = b + 1;
+   c = c + 1;
+  }
+  assert(b == 10);
+  assert(c == 11);
+  return 0;
+}
+""")
+test("for 1",
+"""int main(){
+  int a = 0;
+  int b;
+  int c = 1;
+  for(; a<10; a++){
+   b = b + 1;
+   c = c + 1;
+  }
+  assert(b == 10);
+  assert(c == 11);
+  return 0;
+}
+""")
+test("for 2",
+"""int main(){
+  int a = 0;
+  int b;
+  int c = 1;
+  for(;a<10;){
+   b = b + 1;
+   c = c + 1;
+   a++;
+  }
+  assert(b == 10);
+  assert(c == 11);
+  return 0;
+}
+""")
+test("for 3",
+"""int main(){
+  int a = 0;
+  int b;
+  int c = 1;
+  for(;;){
+   if(a>=10) break;
+   b = b + 1;
+   c = c + 1;
+   a++;
+  }
+  assert(b == 10);
+  assert(c == 11);
+  return 0;
+}
+""")
+test("number 0",
+"""int main(){
+  return 1;
+}
+""")
+test("report 0",
+"""int main(){
+  int a = 0;
+  int b = 1;
+  int c = 2;
+  report(a);
+  report(b);
+  report(c);
+  return 0;
+}
+""")
+test("declare 0",
+"""int main(){
+  int a = 10;
+  int b = 20, c = 30;
+  int d[100], e[200];
+  assert(a==10);
+  assert(b==20);
+  assert(c==30);
+  return 0;
+}
+""")
+test("wait_clocks 0",
+"""int main(){
+  int a = 10;
+  wait_clocks(a);
+  wait_clocks(10);
+  return 0;
+}
+""")
+test("function",
+"""
+
+int func(int a){
+  return a + 10;
+}
+
+int main(){
+  int a = func(10);
+  assert(a == 20);
+  return 0;
+}
+
+""")
+test("function 1",
+"""
+
+int func(int a){
+  assert(a == 20);
+  return 0;
+}
+
+int main(){
+  func(20);
+  return 0;
+}
+
+""")
+
+test("function 2",
+"""
+
+int func(int a, int b, int c){
+  return a;
+}
+
+int main(){
+  assert(func(1, 2, 3) == 1);
+  return 0;
+}
+
+""")
+
+test("function 3",
+"""
+
+int func(int a, int b, int c){
+  return b;
+}
+
+int main(){
+  assert(func(1, 2, 3) == 2);
+  return 0;
+}
+
+""")
+
+test("function 4",
+"""
+
+int func(int a, int b, int c){
+  return c;
+}
+
+int main(){
+  assert(func(1, 2, 3) == 3);
+  return 0;
+}
+
+""")
+
+test("function 5",
+"""
+
+int another(int a){
+  return a + 1;
+}
+
+int func(int a){
+  return another(a) + 1;
+}
+
+int main(){
+  assert(func(0) == 2);
+  return 0;
+}
+
+""")
+
+test_fails("function 6",
+"""
+
+int func(int a, int b){
+  return b;
+}
+
+int main(){
+  assert(func(1, 2, 3) == 3);
+  return 0;
+}
+
+""")
+test("function 7",
+"""
+
+int func(long a){
+  assert(a == -1l);
+  return a;
+}
+
+int main(){
+  assert(func(-1) == -1);
+  return 0;
+}
+
+""")
+test("expression 1",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(a + b + c == 6);
+  return 0;
+}
+
+""")
+test("expression 2",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(a - b - c == -4);
+  return 0;
+}
+
+""")
+test("expression 3",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(a - (b - c) == 2);
+  return 0;
+}
+
+""")
+test("expression 4",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(a * b * c == 6);
+  return 0;
+}
+
+""")
+test("expression 5",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(a/b/c == 0);
+  return 0;
+}
+
+""")
+test("expression 6",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(a%b%c == 1);
+  return 0;
+}
+
+""")
+test("expression 7",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  int c = 3;
+  assert(-a - (b - c) == 0);
+  return 0;
+}
+
+""")
+test("expression 8",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  int a = 0 && fail();
+  return 0;
+}
+
+""")
+test("expression 9",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  int a = 1 || fail();
+  return 0;
+}
+
+""")
+test("expression 10",
+"""
+int main(){
+  int a = 1;
+  assert(a << 2 == 4);
+  return 0;
+}
+
+""")
+test("expression 11",
+"""
+int main(){
+  int a = 1;
+  int b = 2;
+  assert(a << b == 4);
+  return 0;
+}
+
+""")
+test("expression 12",
+"""
+int main(){
+  int a = 4;
+  assert(a >> 2 == 1);
+  return 0;
+}
+
+""")
+test("expression 13",
+"""
+int main(){
+  int a = 4;
+  int b = 2;
+  assert(a >> b == 1);
+  return 0;
+}
+
+""")
+test("expression 14",
+"""
+int main(){
+  int a = -1;
+  assert(~a == 0);
+  return 0;
+}
+
+""")
+test("expression 15",
+"""
+int main(){
+  int a = 1;
+  assert(!a == 0);
+  int a = 0;
+  assert(!a == 1);
+  return 0;
+}
+
+""")
+test("expression 16",
+"""
+int main(){
+  int a = 0xA;
+  int b = 0x5;
+  assert((a | b) == 0xF);
+  assert((a ^ b) == 0xf);
+  assert((a & b) == 0);
+  return 0;
+}
+
+""")
+test("expression 17",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  int b = 0;
+  int a = b && fail();
+  return 0;
+}
+
+""")
+test("expression 18",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  assert(~1);
+  return 0;
+}
+
+""")
+test("expression 19",
+"""
+int main(){
+  assert(-1 < 1);
+  assert(-1 < 0);
+  assert(0 <= 0);
+  assert(0 >= 0);
+  assert(1 >= 0);
+  assert(1 >= -1);
+  assert(1 > -1);
+  assert(1 > 0);
+  assert(12 != 13);
+  assert(100 == 100);
+  return 0;
+}
+
+""")
+test("expression 20",
+"""
+int main(){
+  int a = -1;
+  assert(a >> 2 == -1);
+  return 0;
+}
+
+""")
+test("expression 21",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  long int a;
+  a = 0 && fail();
+  return 0;
+}
+
+""")
+test("expression 22",
+"""
+int fail(){
+  assert(0);
+  return 0;
+}
+int main(){
+  long int a;
+  a = 0x1000000000l || fail();
+  return 0;
+}
+
+""")
+test("comment 0",
+"""
+int main(){
+  //assert(0);
+  //assert(0);
+  //assert(0);
+  return 0;
+}
+
+""")
+test("comment 1",
+"""
+int main(){
+  /*assert(0);
+  assert(0);
+  assert(0);*/
+  return 0;
+}
+
+""")
+test("array 0",
+"""
+int main(){
+  int a [1024];
+  int b [1024];
+  a[0] = 1;
+  a[1] = 2;
+  a[3] = 3;
+  assert(a[0] == 1);
+  assert(a[1] == 2);
+  assert(a[3] == 3);
+  return 0;
+}
+
+""")
+
+test("array 1",
+"""
+int main(){
+  int a [1024];
+  int b [1024];
+  a[0] = 10;
+  b[0] = 20;
+  a[1] = 30;
+  b[1] = 40;
+  a[3] = 50;
+  b[3] = 60;
+  assert(a[0] == 10);
+  assert(b[0] == 20);
+  assert(a[1] == 30);
+  assert(b[1] == 40);
+  assert(a[3] == 50);
+  assert(b[3] == 60);
+  return 0;
+}
+
+""")
+
+test("array 2",
+"""void main(){ 
+    int grid[10][20]; 
+    int grid2[10][20]; 
+    int i, j, n; 
+ 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            grid[i][j] = n++; 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            grid2[i][j] = n++; 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            assert(grid[i][j]==n++); 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            assert(grid2[i][j]==n++); 
+        } 
+    } 
+ 
+    assert((sizeof grid) == 800); 
+    assert((sizeof grid2) == 800); 
+}
+
+""")
+
+test("array 3",
+"""int grid2[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+int grid3[][3]  = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+void main(){
+    int grid[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    int grid1[][3]  = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    int i, j, n;
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid[j][i] == n++);
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid1[j][i] == n++);
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid2[j][i] == n++);
+        }
+    }
+
+    n = 1;
+    for(j=0; j<3; j++){
+        for(i=0; i<3; i++){
+            assert(grid3[j][i] == n++);
+        }
+    }
+}
+
+""")
+
+test("array 4",
+"""void main(){ 
+    long grid[10][20]; 
+    long grid2[10][20]; 
+    int i, j, n; 
+ 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            grid[i][j] = n++; 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            grid2[i][j] = n++; 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            assert(grid[i][j]==n++); 
+        } 
+    } 
+    n=0; 
+    for(i=0; i<10; i++){ 
+        for(j=0; j<20; j++){ 
+            assert(grid2[i][j]==n++); 
+        } 
+    } 
+ 
+    assert((sizeof grid) == 1600); 
+    assert((sizeof grid2) == 1600); 
+}
+
+""")
+
+test_fails("error 0",
+"""
+int main(){
+  int a;
+  a = c;
+  return 0;
+}
+
+""")
+
+test_fails("error 1",
+"""
+int main(){
+  int a;
+}
+
+""")
+
+test_fails("error 2",
+"""
+int main(){
+  int a blah;
+}
+
+""")
+
+test_fails("error 3",
+"""
+int main(){
+  int a;
+  b = a;
+}
+
+""")
+
+test_fails("error 4",
+"""
+int main(){
+  int a;
+  a = c();
+}
+
+""")
+
+test_fails("error 5",
+"""
+int main(){
+  int a;
+  a==;
+}
+
+""")
+test_fails("error 6",
+"""
+int main(){
+  int a;
+  a=00x;
+}
+
+""")
+test_fails("error 7",
+"""
+int main(){
+  switch(1){
+    case 0:
+    default:
+    default:
+  }
+  return 0;
+}
+""")
+test_fails("error 8",
+"""
+int main(){
+  default:
+  return 0;
+}
+""")
+test_fails("error 9",
+"""
+int main(){
+  case 1:
+  return 0;
+}
+""")
+test_fails("error 10",
+"""
+int main(){
+  int a = 12;
+  switch(a){
+    case a + 1:
+    a++;
+  }
+  return 0;
+}
+""")
+test_fails("error 11",
+"""
+int myfunction(){
+  return 0;
+}
+int main(){
+  int a = 12;
+  myfunction()=10;
+  return 0;
+}
+""")
+
+test_fails("error 12",
+"""
+
+typedef struct {long int a; int b;} struct_1;
+typedef struct {long int a; struct_1 b;} mystruct;
+
+void test(mystruct my){
+    assert(mystruct.a == 1);
+    assert(mystruct.b.a == 2);
+    assert(mystruct.b.b == 3);
+}
+
+void main(){
+    mystruct blah;
+    blah.a = 1;
+    blah.b.a = 2;
+    blah.b.b = 3;
+    test(blah);
+}
+"""
+)
+
+test("input 1",
+"""
+int main(){
+  int b;
+  unsigned a = input("a");
+  b = fgetc(a);
+  return 0;
+}
+
+""")
+
+test("output 1",
+"""
+int main(){
+  unsigned a = output("a");
+  fputc(12, a);
+  return 0;
+}
+
+""")
+
+#test("input output 1",
+#"""
+#int main(){
+  #unsigned a = input("a");
+  #unsigned b = input("b");
+  #unsigned select = input("select");
+  #unsigned z = output("z");
+  #if (fgetc(select)){
+    #fputc(fgetc(a), z);
+  #} else {
+    #fputc(fgetc(b), z);
+  #}
+  #return 0;
+#}
+
+#""")
+#
+#test("input output 2",
+#"""
+#int arbiter(){
+  #unsigned a = input("a");
+  #unsigned b = input("b");
+  #unsigned z = output("z");
+  #while(1){
+    #if(ready(a)) fputc(fgetc(a), z);
+    #if(ready(a)) fputc(fgetc(b), z);
+  #}
+  #return 0;
+#}
+#
+#""")
+#
+test("recursion 1",
+"""int factorial(unsigned int i)
+{
+   if(i <= 1)
+   {
+      return 1;
+   }
+   return i * factorial(i - 1);
+}
+void main()
+{
+    assert(factorial(15) == 2004310016);
+}
+""")
+
+test("recursion 2",
+"""int fibonaci(int i)
+{
+   if(i == 0)
+   {
+      return 0;
+   }
+   if(i == 1)
+   {
+      return 1;
+   }
+   return fibonaci(i-1) + fibonaci(i-2);
+}
+
+void main()
+{
+   assert(fibonaci(9)==34);
+}
+""")
+
+test_long_arithmetic()

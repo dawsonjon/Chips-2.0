@@ -2,24 +2,26 @@
 /* Jonathan P Dawson */
 /* 2013-12-23 */
 
+#include <stdio.h>
+
 /* globals */
-float pi=3.14159265359;
+double pi=3.14159265359;
 
 /* approximate the cosine function using Taylor series */
 
-float taylor(float angle){
+double taylor(double angle){
 
-    float old, approximation, sign, power, fact;
+    double old, approximation, sign, power, fact;
     unsigned count, i;
 
-    approximation = 1.0;
+    approximation = angle;
     old = 0.0;
     sign = -1.0;
     count = 1;
     power = 1.0;
     fact = 1.0;
 
-    for(i=2; approximation!=old; i+=2){
+    for(i=3; approximation!=old; i+=2){
         old = approximation;
 
         while(count<=i){
@@ -35,28 +37,36 @@ float taylor(float angle){
     return approximation;
 }
 
-/* return the cosine of angle in radians */
-
-float cos(float angle){
-    return taylor(angle);
-}
 
 /* return the sine of angle in radians */
 
-float sin(float angle){
-    return cos(angle-(pi/2));
+double sin(double angle){
+
+    return taylor(angle);
+
+}
+
+/* return the cosine of angle in radians */
+
+double cos(double angle){
+    
+    return sin(angle+(pi/2));
+
 }
 
 
 /* test routine */
+const int x_in = input("x");
+const int sin_x_out = output("sin_x");
+const int cos_x_out = output("cos_x");
 
 void main(){
-    float x;
-    float step=pi/25;
+    double x;
 
-    for(x=-2*pi; x <= 2*pi; x += step){
-       file_write(x, "x");
-       file_write(cos(x), "cos_x");
-       file_write(sin(x), "sin_x");
+    while(1){
+        x = fget_double(x_in);
+        fput_double(sin(x), sin_x_out);
+        fput_double(cos(x), cos_x_out);
     }
+
 }

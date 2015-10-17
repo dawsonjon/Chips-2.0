@@ -1,12 +1,15 @@
 *.pyc
-components
 .coverage*
 main.v
 test_suite/main.v
 test_suite/arbiter.v
 test_suite/real_main.v
 test_suite/test.c
+test.c
 build
 chips_lib.v
 *.bak
 *,cover
+play*.v
+.*
+*.v

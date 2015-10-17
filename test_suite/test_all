@@ -1,0 +1,47 @@
+#!/usr/bin/env python2
+import os
+import sys
+from random import randint
+from numpy import uint64, int64
+
+os.system("coverage2 erase")
+
+
+result = os.system("./test_api.py")
+
+if result == 0:
+  print "...pass"
+else:
+  print "...fail"
+  sys.exit(0)
+
+result = os.system("./test_components")
+
+if result == 0:
+  print "...pass"
+else:
+  print "...fail"
+  sys.exit(0)
+
+result = os.system("./test_compiler")
+
+if result == 0:
+  print "...pass"
+else:
+  print "...fail"
+  sys.exit(0)
+
+#os.system("coverage2 run -p ../c2verilog dump_raw test.c")
+#os.system("coverage2 run -p ../c2verilog dump_optimised test.c")
+os.system("coverage2 combine")
+os.system("coverage2 report > coverage_report")
+os.system("coverage2 annotate ../c2verilog")
+os.system("coverage2 annotate ../csim")
+os.system("coverage2 annotate ../chips/compiler/parser.py")
+os.system("coverage2 annotate ../chips/compiler/compiler.py")
+os.system("coverage2 annotate ../chips/compiler/macro_expander.py")
+os.system("coverage2 annotate ../chips/compiler/optimizer.py")
+os.system("coverage2 annotate ../chips/compiler/tokens.py")
+os.system("coverage2 annotate ../chips/compiler/allocator.py")
+os.system("coverage2 annotate ../chips/compiler/compiler.py")
+os.system("coverage2 annotate ../chips/compiler/verilog_area.py")

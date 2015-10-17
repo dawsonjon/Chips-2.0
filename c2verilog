@@ -23,23 +23,23 @@ if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     print
     print "compile options:"
     print "  no_reuse      : prevent register resuse"
-    print "  no_concurrent : prevent concurrency"
     print "  no_initialize_memory : don't initialize memory"
-    print "  speed : optimize for speed (defaults to area)"
     print
     print "tool options:"
     print "  iverilog      : compiles using the icarus verilog compiler"
     print "  run           : runs compiled code, used with ghdl or modelsimoptions"
+    print "  profile       : run the profiler during simulation"
+    print "  debug         : run the debugger during simulation"
     sys.exit(-1)
 
 input_file = sys.argv[-1]
-options = sys.argv[1:-1]
+options = dict(zip(sys.argv[1:-1], [True for i in sys.argv[1:-1]]))
 name, inputs, outputs, documentation = comp(input_file, options)
 
 
 
 #run the compiled design using the simulator of your choice.
-if "iverilog" in sys.argv:
+if "iverilog" or "run" in sys.argv:
     verilog_file = os.path.abspath("%s.v"%name)
     process = subprocess.Popen(["iverilog", "-o", str(name), str(verilog_file), "chips_lib.v"])
     children.append(process)

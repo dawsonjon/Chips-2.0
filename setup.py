@@ -1,26 +1,13 @@
 #!/usr/bin/env python2
 
 from distutils.core import setup
+version = open("version").read()
+long_description = open("README.rst").read()
 
 setup(name="Chips",
-      version="0.1.2",
+      version=version,
       description="Design hardware with Python",
-      long_description="""\
-
-Chips
------
-
-The Chips library allows hardware devices to be designed in python and C
-
-Features
-
-- Design components in C
-
-- Connect components together using a python API to generate a chip
-
-- Automatic generation of synthesisable Verilog.
-
-""",
+      long_description=long_description,
 
       author="Jon Dawson",
       author_email="chips@jondawson.org.uk",
@@ -39,10 +26,30 @@ Features
       ],
       packages=[
           "chips",
+          "chips.chipsweb",
           "chips.compiler",
-          "chips.api"
+          "chips.api",
+          "chips.components",
+          "chips.utils"
       ],
+      package_data = {
+          "chips.compiler":[
+              "builtins.h",
+              "include/*.h",
+          ],
+          "chips.utils":[
+              "icons/*.png",
+          ],
+          "chips.chipsweb":[
+              "templates/*.html",
+              "static/*",
+          ],
+          "chips.components":[
+              "verilog/*.v",
+          ]
+      },
       scripts=[
-          "c2verilog"
+          "c2verilog",
+          "csim"
       ]
 )

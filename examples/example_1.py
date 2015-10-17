@@ -2,7 +2,9 @@
 
 import subprocess
 import atexit
+import sys
 from math import pi
+from chips.api.api import Chip, Stimulus, Response, Wire, Component
 
 try:
     from matplotlib import pyplot
@@ -10,24 +12,33 @@ except ImportError:
     print "You need matplotlib to run this script!"
     exit(0)
 
-children = []
-def cleanup():
-    for child in children:
-        print "Terminating child process"
-        child.terminate()
-atexit.register(cleanup)
-
-def run_c(file_name):
-    process = subprocess.Popen(["../c2verilog", "iverilog", "run", str(file_name)])
-    children.append(process)
-    process.wait()
-    children.remove(process)
-
 def test():
-    run_c("sqrt.c")
-    x = [float(i) for i in open("x")]
-    sqrt_x = [float(i) for i in open("sqrt_x")]
-    pyplot.plot(x, sqrt_x)
+
+    chip = Chip("square_root")
+
+    test_in = Stimulus(chip, "input", "float", [i*0.1 for i in range(100)])
+    test_out = Response(chip, "output", "float")
+    
+    #create a filter component using the C code
+    sqrt = Component("sqrt.c")
+
+    #add an instance to the chip
+    sqrt(
+        chip, 
+        inputs = {
+            "x":test_in,
+        },
+        outputs = {
+            "sqrt_x":test_out,
+        },
+    )
+
+    #run the simulation
+    chip.simulation_reset()
+    while len(test_out) < 100:
+        chip.simulation_step()
+
+    pyplot.plot(list(test_in), list(test_out))
     pyplot.xlim(0, 10.1)
     pyplot.title("Square Root of x")
     pyplot.xlabel("x")
@@ -43,7 +54,7 @@ def generate_docs():
     documentation = """
 
 Calculate Square Root using Newton's Method
--------------------------------------------
+===========================================
 
 In this example, we calculate the sqrt of a number using `Newton's method
 <http://en.wikipedia.org/wiki/Newton's_method#Square_root_of_a_number>`_.
