@@ -3,12 +3,17 @@ import os
 while 1:
     ifn = open("version")
     major, minor, revision = ifn.read().split(".")
+    major = int(major)
+    minor = int(minor)
+    revision = int(revision)
     ifn.close()
     print "version", major, minor, revision
 
     print "Increment Major version ?"
     if raw_input().upper() == "Y":
         major += 1
+        minor = 0
+        revision = 0
         ofn = open("version", "w")
         ofn.write("%u.%u.%u" % (major, minor, revision))
         ofn.close()
@@ -17,6 +22,7 @@ while 1:
     print "Increment Minor version ?"
     if raw_input().upper() == "Y":
         minor += 1
+        revision = 0
         ofn = open("version", "w")
         ofn.write("%u.%u.%u" % (major, minor, revision))
         ofn.close()
@@ -112,11 +118,11 @@ while 1:
 
     print "tag version ?"
     if raw_input().upper() == "Y":
-        os.system("git tag "+version)
+        os.system("git tag %u.%u.%u"%(major, minor, revision))
 
     print "push ?"
     if raw_input().upper() == "Y":
-        os.system("git tag "+version)
+        os.system("git push origin master")
 
     print "Version Control OK ?"
     if raw_input().upper() == "Y":
