@@ -38,48 +38,44 @@ A quick example
         from chips.api.api import *
         
         #create a new chip
-        chip = Chip("lfsr_example")
+        chip = Chip("knight_rider")
 
-        #define counter component in C
-        lfsr = Component(C_file = """
+        #define a component in C
+        scanner = Component(C_file = """
 
-            unsigned out = output("out");
+            /* Knight Rider */
+            unsigned leds = output("leds");
             void main (){
-                unsigned bit, lfsr=0xaaaa;
-                while(1){
-                    bit =  lfsr;
-                    bit ^= lfsr >> 2;
-                    bit ^= lfsr >> 3;
-                    bit ^= lfsr >> 5;
-                    bit &= 1;
-                    lfsr >>= 1;
-                    lfsr |= (bit << 15);
-                    fputc(lfsr, out);
+                unsigned i;
+                while(1)
+                {
+                    for(i=1; i<=0x80; i<<=1) fputc(i, leds);
+                    for(i=0x80; i>=1; i>>=1) fputc(i, leds);
                 }
             }
 
         """, inline=True)
 
         #capture simulation output in Python
-        lfsr_output = Response(chip, "lfsr_output", "int")
+        scanner_output = Response(chip, "scanner", "int")
         
-        #connect counter
-        lfsr(chip, inputs = {}, outputs = {"out":lfsr_output})
+        #add scanner to chip and connect
+        scanner(chip, inputs = {}, outputs = {"leds":scanner_output})
 
         #generate synthesisable verilog code
         chip.generate_verilog()
 
-        #run simulation in python
+        #run simulation in Python
         chip.simulation_reset()
-        while len(lfsr_output) < 10:
+        while len(scanner_output) < 16:
             chip.simulation_step()
 
         #check the results
-        print list(lfsr_output)
+        print list(scanner_output)
 
 .. testoutput::
 
-        [21845, 10922, 5461, 2730, 1365, 682, 341, 170, 85, 42]
+        [1, 2, 4, 8, 16, 32, 64, 128, 128, 64, 32, 16, 8, 4, 2, 1]
 
 ..        
 
