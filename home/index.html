@@ -65,7 +65,7 @@ chip. A chip consists of many interconnected components operating in parallel.
 Each component acts like a computer running a C program.</p>
 <p>Components communicate with each other sending messages across buses. The
 design of a chip - the components and the connections between them - is carried
-out programatically in Python.</p>
+out in Python.</p>
 <p>Chips come in three parts:</p>
 <ol class="arabic simple">
 <li>A Python library to build and simulate chips by connecting together digital components using high speed buses.</li>
@@ -78,47 +78,43 @@ out programatically in Python.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="c">#create a new chip</span>
-<span class="n">chip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;lfsr_example&quot;</span><span class="p">)</span>
+<span class="n">chip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;knight_rider&quot;</span><span class="p">)</span>
 
-<span class="c">#define counter component in C</span>
-<span class="n">lfsr</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">C_file</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="c">#define a component in C</span>
+<span class="n">scanner</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">C_file</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
 
-<span class="s">    unsigned out = output(&quot;out&quot;);</span>
+<span class="s">    /* Knight Rider */</span>
+<span class="s">    unsigned leds = output(&quot;leds&quot;);</span>
 <span class="s">    void main (){</span>
-<span class="s">        unsigned bit, lfsr=0xaaaa;</span>
-<span class="s">        while(1){</span>
-<span class="s">            bit =  lfsr;</span>
-<span class="s">            bit ^= lfsr &gt;&gt; 2;</span>
-<span class="s">            bit ^= lfsr &gt;&gt; 3;</span>
-<span class="s">            bit ^= lfsr &gt;&gt; 5;</span>
-<span class="s">            bit &amp;= 1;</span>
-<span class="s">            lfsr &gt;&gt;= 1;</span>
-<span class="s">            lfsr |= (bit &lt;&lt; 15);</span>
-<span class="s">            fputc(lfsr, out);</span>
+<span class="s">        unsigned i;</span>
+<span class="s">        while(1)</span>
+<span class="s">        {</span>
+<span class="s">            for(i=1; i&lt;=0x80; i&lt;&lt;=1) fputc(i, leds);</span>
+<span class="s">            for(i=0x80; i&gt;=1; i&gt;&gt;=1) fputc(i, leds);</span>
 <span class="s">        }</span>
 <span class="s">    }</span>
 
 <span class="s">&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="c">#capture simulation output in Python</span>
-<span class="n">lfsr_output</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="s">&quot;lfsr_output&quot;</span><span class="p">,</span> <span class="s">&quot;int&quot;</span><span class="p">)</span>
+<span class="n">scanner_output</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="s">&quot;scanner&quot;</span><span class="p">,</span> <span class="s">&quot;int&quot;</span><span class="p">)</span>
 
-<span class="c">#connect counter</span>
-<span class="n">lfsr</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;out&quot;</span><span class="p">:</span><span class="n">lfsr_output</span><span class="p">})</span>
+<span class="c">#add scanner to chip and connect</span>
+<span class="n">scanner</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="n">inputs</span> <span class="o">=</span> <span class="p">{},</span> <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;leds&quot;</span><span class="p">:</span><span class="n">scanner_output</span><span class="p">})</span>
 
 <span class="c">#generate synthesisable verilog code</span>
 <span class="n">chip</span><span class="o">.</span><span class="n">generate_verilog</span><span class="p">()</span>
 
-<span class="c">#run simulation in python</span>
+<span class="c">#run simulation in Python</span>
 <span class="n">chip</span><span class="o">.</span><span class="n">simulation_reset</span><span class="p">()</span>
-<span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">lfsr_output</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">:</span>
+<span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">scanner_output</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">16</span><span class="p">:</span>
     <span class="n">chip</span><span class="o">.</span><span class="n">simulation_step</span><span class="p">()</span>
 
 <span class="c">#check the results</span>
-<span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">lfsr_output</span><span class="p">)</span>
+<span class="k">print</span> <span class="nb">list</span><span class="p">(</span><span class="n">scanner_output</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-none"><div class="highlight"><pre>[21845, 10922, 5461, 2730, 1365, 682, 341, 170, 85, 42]
+<div class="highlight-none"><div class="highlight"><pre>[1, 2, 4, 8, 16, 32, 64, 128, 128, 64, 32, 16, 8, 4, 2, 1]
 </pre></div>
 </div>
 </div>
