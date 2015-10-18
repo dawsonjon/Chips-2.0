@@ -125,7 +125,7 @@ while 1:
 
     print "push ?"
     if raw_input().upper() == "Y":
-        os.system("git push origin master")
+        os.system("git push --tags origin master")
 
     print "Version Control OK ?"
     if raw_input().upper() == "Y":
