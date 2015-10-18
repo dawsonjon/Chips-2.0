@@ -33,7 +33,7 @@ Chips come in three parts:
 A quick example
 ---------------
 
-.. testcode::
+::
 
         from chips.api.api import *
         
