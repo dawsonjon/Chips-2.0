@@ -1,13 +1,13 @@
 C Compiler
 ==========
 
-The heart of Chips is the C compiler and simulator. The C compiler takes allows
+The heart of Chips is the C compiler and simulator. The C compiler allows
 you to define new hardware components using the C language. Components written
 in C can be simulated, or converted automatically into Verilog components.
 These Verilog components may then be implemented in an FPGA using tools
 provided by FPGA vendors.
 
-The flavour of C used in Chips has been made as standard as possible. This
+The C dialect used in Chips has been made as standard as possible. This
 section of the manual describes the subset of the C language that is available
 in *Chips*.
 
