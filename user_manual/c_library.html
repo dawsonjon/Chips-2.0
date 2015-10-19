@@ -117,12 +117,13 @@ Then determination is based on the type of the argument.</div></blockquote>
 <div class="section" id="the-isnormal-macro">
 <h3>The isnormal macro<a class="headerlink" href="#the-isnormal-macro" title="Permalink to this headline">¶</a></h3>
 <p>Synopsis:</p>
-<div class="highlight-c"><pre>    #include &lt;math.h&gt;
-    int isnormal(real-floating x);
-
-For the isnan macro, the type for determination does not matter unless the implementation supports
-NaNs in the evaluation type but not in the semantic type.</pre>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isnormal</span><span class="p">(</span><span class="n">real</span><span class="o">-</span><span class="n">floating</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
 </div>
+<blockquote>
+<div>For the isnan macro, the type for determination does not matter unless the implementation supports
+NaNs in the evaluation type but not in the semantic type.</div></blockquote>
 <p>Description:</p>
 <blockquote>
 <div>The isnormal macro determines whether its argument value is normal (neither
