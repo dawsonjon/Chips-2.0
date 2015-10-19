@@ -4,7 +4,7 @@ Python API
 ==========
 
 The Python API provides the ability to build systems from C components. Designs
-can be simulated using python as a rich verification environment. Designs can
+can be simulated using Python as a rich verification environment. Designs can
 be converted into Verilog and targeted to FPGAs using the FPGA vendors
 synthesis tools.
 
@@ -244,7 +244,7 @@ class Chip:
     To compile the design in Icarus Verilog, use the `compile_iverilog` method.
     You can also run the code directly if you pass `True` to the
     `compile_iverilog` function. This is most useful to verify that chips
-    components match their native python simulations. I most cases Verilog
+    components match their native python simulations. In most cases Verilog
     simulations will only be needed to by `Chips` developers.
 
     .. code-block:: python
@@ -1250,8 +1250,8 @@ class Response(Output):
     --------
 
     Response is a subclass of Output. A Response output provides a convenient
-    means to extract data to the Chips simulation. A reponse behaves as a
-    python iterator.
+    means to extract data to the Chips simulation. A response behaves as a
+    Python iterator.
 
     .. code-block:: python
 

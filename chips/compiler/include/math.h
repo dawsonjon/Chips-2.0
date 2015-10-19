@@ -39,16 +39,14 @@ double log(double n);
 ///The isfinite macro
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///        #include <math.h>
-///        int isfinite(real+floating x);
+///        int isfinite(real-floating x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///    The isfinite macro determines whether its argument has a finite value (zero,
 ///    subnormal, or normal, and not infinite or NaN). First, an argument represented in a
@@ -58,8 +56,7 @@ double log(double n);
 ///    know the type that classification is based on. For example, a normal long double value might
 ///    become subnormal when converted to double, and zero when converted to float.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///The isfinite macro returns a nonzero value if and only if its argument has a finite
 ///value.
@@ -75,26 +72,23 @@ int isfinite(double x){
 ///The isinf macro
 ///***************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///    #include <math.h>
-///    int isinf(real+floating x);
+///    int isinf(real-floating x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///    The isinf macro determines whether its argument value is an infinity (positive or
 ///    negative). First, an argument represented in a format wider than its semantic type is
 ///    converted to its semantic type. Then determination is based on the type of the argument.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///    The isinf macro returns a nonzero value if and only if its argument has an infinite
-///    value.double log(double x);
+///    value.
 ///
 ///
 
@@ -107,23 +101,20 @@ int isinf(double x){
 ///The isnan macro
 ///***************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///        #include <math.h>
-///        int isnan(real+floating x);
+///        int isnan(real-floating x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///    The isnan macro determines whether its argument value is a NaN. First, an argument
 ///    represented in a format wider than its semantic type is converted to its semantic type.
 ///    Then determination is based on the type of the argument.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///    The isnan macro returns a nonzero value if and only if its argument has a NaN value.
 ///
@@ -138,8 +129,7 @@ int isnan(double x){
 ///The isnormal macro
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
@@ -149,16 +139,14 @@ int isnan(double x){
 ///    For the isnan macro, the type for determination does not matter unless the implementation supports
 ///    NaNs in the evaluation type but not in the semantic type.
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///    The isnormal macro determines whether its argument value is normal (neither
 ///    zero, subnormal, infinite, nor NaN). First, an argument
 ///    represented in a format wider than its semantic type is converted to its
 ///    semantic type. Then determination is based on the type of the argument.
 ///
-///Returns
-///++++++++
+///Returns:
 ///
 ///    The isnormal macro returns a nonzero value if and only if its argument has a
 ///    normal value.
@@ -174,21 +162,18 @@ int isnormal(double x){
 ///The signbit macro (not in C89)
 ///******************************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///    #include <math.h>
 ///    int signbit(real-floating x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///    The signbit macro determines whether the sign of its argument value is negative.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///    The signbit macro returns a nonzero value if and only if the sign of its argument value
 ///    is negative.
@@ -202,22 +187,19 @@ int signbit(double x){
 ///The fabs function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double fabs(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The fabs function computes the absolute value of a floating+point
-///   number x .
+///   The fabs function computes the absolute value of a floating-point
+///   number x.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The fabs function returns the absolute value of x.  
 ///
@@ -231,25 +213,22 @@ double fabs(double n){
 ///The modf function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double modf(double value, double *iptr);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The modf function breaks the argument value into integral and
 ///   fractional parts, each of which has the same sign as the argument.  It
 ///   stores the integral part as a double in the object pointed to by iptr.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
-///   The modf function returns the signed fractional part of value .  
+///   The modf function returns the signed fractional part of value.  
 ///
 ///
 
@@ -293,26 +272,23 @@ double modf(double x, double *int_part){
 ///The fmod function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double fmod(double x, double y);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The fmod function computes the floating+point remainder of x/y .  
+///   The fmod function computes the floating-point remainder of x/y.  
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The fmod function returns the value x i y , for some integer i such
 ///   that, if y is nonzero, the result has the same sign as x and magnitude
-///   less than the magnitude of y .  If y is zero, whether a domain error
-///   occurs or the fmod function returns zero is implementation+defined.
+///   less than the magnitude of y.  If y is zero, whether a domain error
+///   occurs or the fmod function returns zero is implementation-defined.
 ///
 ///
 
@@ -333,22 +309,19 @@ double fmod(double x, double y)
 ///The exp function
 ///****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double exp(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The exp function computes the exponential function of x .  A range
+///   The exp function computes the exponential function of x.  A range
 ///   error occurs if the magnitude of x is too large.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The exp function returns the exponential value.  
 ///
@@ -393,22 +366,19 @@ double exp(double x){
 ///The sqrt function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double sqrt(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The sqrt function computes the nonnegative square root of x .  A
+///   The sqrt function computes the nonnegative square root of x.  A
 ///   domain error occurs if the argument is negative.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The sqrt function returns the value of the square root.  
 ///
@@ -436,26 +406,23 @@ double sqrt(double n){
 ///The pow function
 ///****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double pow(double x, double y);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The pow function computes x raised to the power y .  A domain error
+///   The pow function computes x raised to the power y.  A domain error
 ///   occurs if x is negative and y is not an integer.  A domain error
 ///   occurs if the result cannot be represented when x is zero and y is
 ///   less than or equal to zero.  A range error may occur.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
-///   The pow function returns the value of x raised to the power y .  
+///   The pow function returns the value of x raised to the power y.  
 ///
 ///
 
@@ -466,25 +433,22 @@ double pow(double x, double y){
 ///The ldexp function
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double ldexp(double x, int exp);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The ldexp function multiplies a floating+point number by an
+///   The ldexp function multiplies a floating-point number by an
 ///   integral power of 2.  A range error may occur.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The ldexp function returns the value of x times 2 raised to the
-///   power exp .
+///   power exp.
 ///
 ///
 
@@ -517,27 +481,24 @@ double ldexp(double x, int exp){
 ///The frexp function
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double frexp(double value, int *exp);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The frexp function breaks a floating+point number into a normalized
+///   The frexp function breaks a floating-point number into a normalized
 ///   fraction and an integral power of 2.  It stores the integer in the int
-///   object pointed to by exp .
+///   object pointed to by exp.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The frexp function returns the value x , such that x is a double
 ///   with magnitude in the interval [1/2, 1) or zero, and value equals x
-///   times 2 raised to the power *exp .  If value is zero, both parts of
+///   times 2 raised to the power *exp.  If value is zero, both parts of
 ///   the result are zero.
 ///
 ///
@@ -572,22 +533,19 @@ double frexp(double value, int *exp){
 ///The floor function
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double floor(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The floor function computes the largest integral value not greater
-///than x .
+///than x.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The floor function returns the largest integral value not greater
 ///   than x , expressed as a double.
@@ -621,21 +579,18 @@ double floor( double x)
 ///The ceil function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double ceil(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The ceil function computes the smallest integral value not less than x .  
+///   The ceil function computes the smallest integral value not less than x.  
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The ceil function returns the smallest integral value not less than
 ///   x , expressed as a double.
@@ -665,23 +620,20 @@ double ceil(double x)
 ///The cos function
 ///****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double cos(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The cos function computes the cosine of x (measured in radians).  A
 ///   large magnitude argument may yield a result with little or no
 ///   significance.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The cos function returns the cosine value.  
 ///
@@ -716,23 +668,20 @@ double cos(double x){
 ///The sin function
 ///****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double sin(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The sin function computes the sine of x (measured in radians).  A
 ///   large magnitude argument may yield a result with little or no
 ///   significance.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The sin function returns the sine value.  
 ///
@@ -745,21 +694,18 @@ double sin(double angle){
 ///The tan function
 ///****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double tan(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The tan function returns the tangent of x (measured in radians).  A large magnitude argument may yield a result with little or no significance.  
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The tan function returns the tangent value.  
 ///
@@ -804,23 +750,20 @@ double tan(double x){
 ///The atan function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double atan(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The atan function computes the principal value of the arc tangent of x.  
 ///
-///Returns
-///+++++++
+///Returns:
 ///
-///   The atan function returns the arc tangent in the range [+PI/2, +PI/2]
+///   The atan function returns the arc tangent in the range [-PI/2, +PI/2]
 ///   radians.
 ///
 ///
@@ -868,24 +811,21 @@ double atan(double x){
 ///The atan2 function
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double atan2(double y, double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The atan2 function computes the principal value of the arc tangent
 ///   of y/x , using the signs of both arguments to determine the quadrant
 ///   of the return value.  A domain error may occur if both arguments are
 ///   zero.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The atan2 function returns the arc tangent of y/x , in the range
 ///   [-PI, +PI] radians.
@@ -904,24 +844,21 @@ double atan2(double y, double x){
 ///The asin function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double asin(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The asin function computes the principal value of the arc sine of x.
-///   A domain error occurs for arguments not in the range [+1, +1].
+///   A domain error occurs for arguments not in the range [-1, +1].
 ///
-///Returns
-///+++++++
+///Returns:
 ///
-///   The asin function returns the arc sine in the range [+PI/2, +PI/2]
+///   The asin function returns the arc sine in the range [-PI/2, +PI/2]
 ///   radians.
 ///
 ///
@@ -934,22 +871,19 @@ double asin(double x){
 ///The acos function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///  #include <math.h>
 ///  double acos(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///  The acos function computes the principal value of the arc cosine of x.
-///  A domain error occurs for arguments not in the range [+1, +1].
+///  A domain error occurs for arguments not in the range [-1, +1].
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///  The acos function returns the arc cosine in the range [0, PI] radians.  
 ///
@@ -964,21 +898,18 @@ double acos(double x){
 ///The sinh function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double sinh(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The sinh function computes the hyperbolic sine of x .  A range error occurs if the magnitude of x is too large.  
+///   The sinh function computes the hyperbolic sine of x.  A range error occurs if the magnitude of x is too large.  
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The sinh function returns the hyperbolic sine value.  
 ///
@@ -993,22 +924,19 @@ double sinh(double x){
 ///The cosh function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double cosh(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The cosh function computes the hyperbolic cosine of x.  A range
 ///   error occurs if the magnitude of x is too large.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The cosh function returns the hyperbolic cosine value.  
 ///
@@ -1023,21 +951,18 @@ double cosh(double x){
 ///The tanh function
 ///*****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double tanh(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The tanh function computes the hyperbolic tangent of x .  
+///   The tanh function computes the hyperbolic tangent of x.  
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The tanh function returns the hyperbolic tangent value.  
 ///
@@ -1071,23 +996,20 @@ double atanh(double x){
 ///The log function
 ///****************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double log(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
 ///   The log function computes the natural logarithm of x.  A domain
 ///   error occurs if the argument is negative.  A range error occurs if the
 ///   argument is zero and the logarithm of zero cannot be represented.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
 ///   The log function returns the natural logarithm.  
 /// 
@@ -1123,25 +1045,22 @@ double log(double n){
 ///The log10 function
 ///******************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double log10(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The log10 function computes the base+ten logarithm of x .  A domain
+///   The log10 function computes the base-ten logarithm of x.  A domain
 ///   error occurs if the argument is negative.  A range error occurs if the
 ///   argument is zero and the logarithm of zero cannot be represented.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
-///   The log10 function returns the base+ten logarithm.  
+///   The log10 function returns the base-ten logarithm.  
 ///
 ///
 
@@ -1152,25 +1071,22 @@ double log10(double n){
 ///The log2 function (Not in C89 standard)
 ///***************************************
 ///
-///Synopsis
-///++++++++
+///Synopsis:
 ///
 ///.. code-block:: c
 ///
 ///         #include <math.h>
 ///         double log2(double x);
 ///
-///Description
-///+++++++++++
+///Description:
 ///
-///   The log2 function computes the base+two logarithm of x .  A domain
+///   The log2 function computes the base-two logarithm of x.  A domain
 ///   error occurs if the argument is negative.  A range error occurs if the
 ///   argument is zero and the logarithm of zero cannot be represented.
 ///
-///Returns
-///+++++++
+///Returns:
 ///
-///   The log2 function returns the base+two logarithm.  
+///   The log2 function returns the base-two logarithm.  
 ///
 ///
 
