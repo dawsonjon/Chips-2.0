@@ -404,6 +404,7 @@ char *asctime(tm *timeptr)
 	 result_[22] = ret.quot + '0';
 	 result_[23] = ret.rem + '0';
 	 result_[24] = '\n';
+	 result_[25] = 0;
 
          return result_;
 }
