@@ -45,7 +45,6 @@ def flatten(sequence):
 
 def constant_fold(trace, expression):
     """Replace an expression with a constant if possible"""
-
     try:
         return Constant(
             trace,
@@ -53,6 +52,8 @@ def constant_fold(trace, expression):
             expression.type_(),
             expression.signed()
         )
+    except AttributeError:
+        trace.error("Not a valid expression")
     except NotConstant:
         return expression
 
@@ -412,6 +413,7 @@ class WaitClocks:
              "op": "wait_clocks",
              "a": result})
         return instructions
+
 
 
 class If:
@@ -1250,7 +1252,6 @@ class Binary(Expression):
 
         # implement pointer arithmetic
         if is_pointer_to(self.right) and is_pointer_to(self.left):
-            assert self.operator == "-"
             size = type_size(self.right.type_().base_type())
             if size > 4:
                 locations = size // 4
@@ -1818,10 +1819,14 @@ class Dereference(Object):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__(
-            self,
-            expression.type_().base_type(),
-            expression.signed())
+        try:
+            Expression.__init__(
+                self,
+                expression.type_().base_type(),
+                expression.signed())
+        except AttributeError:
+            trace.error("Cannot dereference a non pointer")
+
 
     def address(self):
         instructions = []
@@ -2016,6 +2021,40 @@ class FileWrite(Expression):
                  "a": result,
                  "file_name": self.name})
 
+        return instructions
+
+class TimerLow(Expression):
+
+    """ return timer low value """
+
+    def __init__(self, trace):
+        self.trace = trace
+        Expression.__init__(self, "int", False)
+
+    def generate(self):
+        instructions = []
+        instructions.append({
+            "trace": self.trace,
+            "op": "timer_low",
+            "z":result
+        })
+        return instructions
+
+class TimerHigh(Expression):
+
+    """ return timer high value """
+
+    def __init__(self, trace):
+        self.trace = trace
+        Expression.__init__(self, "int", False)
+
+    def generate(self):
+        instructions = []
+        instructions.append({
+            "trace": self.trace,
+            "op": "timer_low",
+            "z":result
+        })
         return instructions
 
 

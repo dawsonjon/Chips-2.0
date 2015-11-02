@@ -136,6 +136,8 @@ int isnan(double x){
 ///        #include <math.h>
 ///        int isnormal(real-floating x);
 ///
+///..
+///
 ///    For the isnan macro, the type for determination does not matter unless the implementation supports
 ///    NaNs in the evaluation type but not in the semantic type.
 ///

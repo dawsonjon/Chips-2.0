@@ -141,6 +141,7 @@ def generate_declarations(
     # create list of signals
     signals = [
         ("timer", 32),
+        ("timer_clock", 64),
         ("program_counter", 16),
         ("program_counter_1", 16),
         ("program_counter_2", 16),
@@ -1054,6 +1055,14 @@ def generate_CHIP(input_file,
             output_file.write("          timer <= operand_a;\n")
             output_file.write("          state <= wait_state;\n")
 
+        elif instruction["op"] == "timer_low":
+            output_file.write("          result <= timer_clock[31:0];\n")
+            output_file.write("          write_enable <= 1;\n")
+
+        elif instruction["op"] == "timer_high":
+            output_file.write("          result <= timer_clock[63:32];\n")
+            output_file.write("          write_enable <= 1;\n")
+
         elif instruction["op"] == "report":
             output_file.write('          $display ("%%d (report (int) at line: %s in file: %s)", $signed(a_lo));\n' % (
                 instruction["line"],
@@ -1247,6 +1256,7 @@ def generate_CHIP(input_file,
     # Reset program counter and control signals
     output_file.write("    if (rst == 1'b1) begin\n")
     output_file.write("      timer <= 0;\n")
+    output_file.write("      timer_clock <= 0;\n")
     output_file.write("      program_counter <= 0;\n")
     output_file.write("      address_z_3 <= 0;\n")
     output_file.write("      result <= 0;\n")

@@ -5,7 +5,7 @@ report.write("\n")
 report.write("C Libraries\n")
 report.write("===========\n")
 report.write("\n")
-for i in ["math.h", "stdio.h"]:
+for i in sorted(["math.h", "stdio.h", "ctype.h", "stdlib.h"]):
     input_file = os.path.join("chips/compiler/include", i)
     inf = open(input_file)
     for line in inf:

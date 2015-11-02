@@ -415,6 +415,20 @@ class Parser:
         wait_clocks.line = self.tokens.lineno
         return wait_clocks
 
+    def parse_timer_low(self):
+        timer = TimerLow(Trace(self))
+        self.tokens.expect("(")
+        self.tokens.expect(")")
+        timer.line = self.tokens.lineno
+        return timer
+
+    def parse_timer_high(self):
+        timer = TimerHigh(Trace(self))
+        self.tokens.expect("(")
+        self.tokens.expect(")")
+        timer.line = self.tokens.lineno
+        return timer
+
     def parse_statement(self):
         self.statement += 1
 
@@ -1052,8 +1066,8 @@ class Parser:
             right = self.to_long(right)
             left = self.to_long(left)
         elif is_pointer_to(left) and is_pointer_to(right):
-            if operation != "-":
-                self.tokens.error("Only subtraction is permitted for two pointers : %s %s" % (
+            if operation not in ["-", "!=", "==", "<", ">", ">=", "<="]:
+                self.tokens.error("Operation is permitted for two pointers : %s %s" % (
                     left.type_(),
                     right.type_(),
                 ))
@@ -1345,6 +1359,10 @@ class Parser:
                 expression = self.parse_bits_to_double()
             elif name == "bits_to_float":
                 expression = self.parse_bits_to_float()
+            elif name == "timer_high":
+                expression = self.parse_timer_high()
+            elif name == "timer_low":
+                expression = self.parse_timer_low()
             else:
                 if name not in self.scope:
                     self.tokens.error(

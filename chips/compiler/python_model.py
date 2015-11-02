@@ -105,6 +105,7 @@ class PythonModel:
         self.b_hi = 0
         self.max_stack = 0
         self.timer = 0
+        self.clock = 0
 
         self.files = {}
 
@@ -402,6 +403,10 @@ class PythonModel:
                 self.program_counter = literal
         elif instruction["op"] == "goto":
             self.program_counter = literal
+        elif instruction["op"] == "timer_low":
+            result = uint32(self.clock&0xffffffff)
+        elif instruction["op"] == "timer_high":
+            result = uint32(self.clock>>32)
         elif instruction["op"] == "file_read":
             value = self.input_files[instruction["filename"]].getline()
             result = uint32(value)
@@ -581,3 +586,5 @@ class PythonModel:
         # manipulate stack pointer
         if wait:
             self.program_counter = this_instruction
+
+        self.clock += 1
