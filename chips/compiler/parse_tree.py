@@ -2052,7 +2052,7 @@ class TimerHigh(Expression):
         instructions = []
         instructions.append({
             "trace": self.trace,
-            "op": "timer_low",
+            "op": "timer_high",
             "z":result
         })
         return instructions

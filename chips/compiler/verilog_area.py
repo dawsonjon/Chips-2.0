@@ -653,6 +653,7 @@ def generate_CHIP(input_file,
     output_file.write("  \n  always @(posedge clk)\n")
     output_file.write("  begin\n\n")
     output_file.write("  write_enable <= 0;\n")
+    output_file.write("  timer_clock <= timer_clock + 1;\n")
     output_file.write("  case(state)\n\n")
     output_file.write("    //instruction_fetch\n")
     output_file.write("    instruction_fetch: begin\n")

@@ -77,6 +77,7 @@ typedef struct {
 
 /* forward declarations */
 tm *localtime(time_t *timer);
+time_t mktime(tm *timeptr);
 
 ///Globals
 ///*****
@@ -91,35 +92,36 @@ int tz_offset = 0;
 
 int _is_dst(tm t){
 
-  time_t t;
-
   time_t end_of_dst;
   tm last_sunday_in_october;
-  last_sunday_in_october -> tm_year = t.tm_year;
-  last_sunday_in_october -> tm_mon = 9;
-  last_sunday_in_october -> tm_mday = 31;
-  last_sunday_in_october -> tm_hour = 1;
-  last_sunday_in_october -> tm_min = 0;
-  last_sunday_in_october -> tm_sec = 0;
-  last_sunday_in_october -> tm_is_dst = 0;
-  mktime(&last_sunday_october);
-  last_sunday_in_october -> tm_mday -= last_sunday_in_october.wday;
-  end_of_dst = mktime(&last_sunday_october);
+  last_sunday_in_october.tm_year = t.tm_year;
+  last_sunday_in_october.tm_mon = 9;
+  last_sunday_in_october.tm_mday = 31;
+  last_sunday_in_october.tm_hour = 1;
+  last_sunday_in_october.tm_min = 0;
+  last_sunday_in_october.tm_sec = 0;
+  last_sunday_in_october.tm_isdst = 0;
+  mktime(&last_sunday_in_october);
+  last_sunday_in_october.tm_mday -= last_sunday_in_october.tm_wday;
+  end_of_dst = mktime(&last_sunday_in_october);
 
   time_t start_of_dst;
   tm last_sunday_in_march;
-  last_sunday_in_march -> tm_year = t.tm_year;
-  last_sunday_in_march -> tm_mon = 9;
-  last_sunday_in_march -> tm_mday = 31;
-  last_sunday_in_march -> tm_hour = 1;
-  last_sunday_in_march -> tm_min = 0;
-  last_sunday_in_march -> tm_sec = 0;
-  last_sunday_in_october -> tm_is_dst = 0;
-  mktime(&last_sunday_march);
-  last_sunday_in_march -> tm_mday -= last_sunday_in_march.wday;
-  start_of_dst = mktime(&last_sunday_march);
+  last_sunday_in_march.tm_year = t.tm_year;
+  last_sunday_in_march.tm_mon = 9;
+  last_sunday_in_march.tm_mday = 31;
+  last_sunday_in_march.tm_hour = 1;
+  last_sunday_in_march.tm_min = 0;
+  last_sunday_in_march.tm_sec = 0;
+  last_sunday_in_october.tm_isdst = 0;
+  mktime(&last_sunday_in_march);
+  last_sunday_in_march.tm_mday -= last_sunday_in_march.tm_wday;
+  start_of_dst = mktime(&last_sunday_in_march);
 
-  return start_of_dst < t && t < end_of_dst;
+  time_t t0;
+  t0 = mktime(&t);
+
+  return start_of_dst < t0 && t0 < end_of_dst;
 
 }
 
@@ -148,8 +150,8 @@ int _is_dst(tm t){
 
 clock_t clock(){
 
-    unsigned low = timer_low();
-    unsigned high = timer_high();
+    unsigned long low = timer_low();
+    unsigned long high = timer_high();
     unsigned long t;
 
     /*check for low half of timer wrapping round*/
@@ -175,12 +177,12 @@ clock_t clock(){
 ///Description:
 ///
 ///   The difftime function computes the difference between two calendar
-///   times: time1 - time0 .
+///   times: time1 - time0.
 ///
 ///Returns:
 ///
 ///   The difftime function returns the difference expressed in seconds
-///   as a double .
+///   as a double.
 ///
 
 double difftime(time_t time1, time_t time0){
@@ -215,8 +217,8 @@ double difftime(time_t time1, time_t time0){
 ///Returns:
 ///
 ///   The mktime function returns the specified calendar time encoded as
-///   a value of type time_t .  If the calendar time cannot be represented,
-///   the function returns the value (time_t)-1 .
+///   a value of type time_t.  If the calendar time cannot be represented,
+///   the function returns the value (time_t)-1.
 ///
 
 unsigned _is_leap_year(unsigned year){
@@ -562,7 +564,7 @@ tm *localtime(time_t *timer){
 ///conversion specification is replaced by appropriate characters as
 ///described in the following list.  The appropriate characters are
 ///determined by the program's locale and by the values contained in the
-///structure pointed to by timeptr .
+///structure pointed to by timeptr.
 ///
 ///"%a" is replaced by the locale's abbreviated weekday name.  
 ///"%A" is replaced by the locale's full weekday name.  
@@ -575,7 +577,7 @@ tm *localtime(time_t *timer){
 ///"%j" is replaced by the day of the year as a decimal number (001-366 ).  
 ///"%m" is replaced by the month as a decimal number (01-12).  
 ///"%M" is replaced by the minute as a decimal number (00-59).  
-///"%p" is replaced by the locale's equivalent of either AM or PM .  
+///"%p" is replaced by the locale's equivalent of either AM or PM.  
 ///"%S" is replaced by the second as a decimal number (00-60).  
 ///"%U" is replaced by the week number of the year (ithe first Sunday as the 
 ///     first day of week 1) as a decimal number (00-53).  
