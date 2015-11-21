@@ -260,9 +260,9 @@ time_t mktime(tm *timeptr){
     time += timeptr->tm_sec;
 
     if (timeptr -> tm_isdst > 0){
-        time += 3600;
+        time -= 3600;
     } else if (timeptr->tm_isdst < 0){
-        time += _is_dst(*timeptr) ? 3600 : 0;
+        time -= _is_dst(*timeptr) ? 3600 : 0;
     }
 
     time -= tz_offset;

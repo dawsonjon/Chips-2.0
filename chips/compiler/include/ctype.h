@@ -195,7 +195,7 @@ unsigned ispunct(char c){
 ///
 
 unsigned isspace(char c){
-	return (c == ' ' || c == '\\t' || c == '\\v' || c == '\\n' || c == '\\r' || c == '\\f');
+	return (c == ' ' || c == '\t' || c == '\v' || c == '\n' || c == '\r' || c == '\f');
 }
 
 ///
