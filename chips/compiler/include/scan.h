@@ -1,11 +1,12 @@
 #ifndef __scan_h__
 #define __scan_h__
 #include <ctype.h>
+#include <stdio.h>
 
 unsigned hex2nibble_(char hex){
     if(hex >= '0' && hex <= '9') return hex - '0';
-    if(hex >= 'a' && hex <= 'f') return hex - 'a';
-    if(hex >= 'A' && hex <= 'F') return hex - 'A';
+    if(hex >= 'a' && hex <= 'f') return hex - 'a' + 0xa;
+    if(hex >= 'A' && hex <= 'F') return hex - 'A' + 0xa;
     return 10;
 }
 
@@ -145,6 +146,30 @@ double fscan_double(unsigned f){
 
     return sign * value;
 
+}
+
+unsigned scan_uhex(){
+    return fscan_uhex(stdin);
+}
+
+unsigned scan_udecimal(){
+    return fscan_udecimal(stdin);
+}
+
+int scan_hex(){
+    return fscan_hex(stdin);
+}
+
+int scan_decimal(){
+    return fscan_decimal(stdin);
+}
+
+float scan_float(){
+    return fscan_float(stdin);
+}
+
+double scan_double(){
+    return fscan_double(stdin);
 }
 
 #endif
