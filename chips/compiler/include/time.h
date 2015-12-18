@@ -76,6 +76,9 @@ typedef struct {
 } tm;
 
 /* forward declarations */
+tm unix_to_human(time_t unix);
+time_t human_to_unix(tm human);
+tm *gmtime(time_t *timer);
 tm *localtime(time_t *timer);
 time_t mktime(tm *timeptr);
 
@@ -90,38 +93,45 @@ time_t mktime(tm *timeptr);
 ///
 int tz_offset = 0;
 
-int _is_dst(tm t){
+
+int _is_dst_human(tm human){
 
   time_t end_of_dst;
   tm last_sunday_in_october;
-  last_sunday_in_october.tm_year = t.tm_year;
+  last_sunday_in_october.tm_year = human.tm_year;
   last_sunday_in_october.tm_mon = 9;
   last_sunday_in_october.tm_mday = 31;
   last_sunday_in_october.tm_hour = 1;
   last_sunday_in_october.tm_min = 0;
   last_sunday_in_october.tm_sec = 0;
   last_sunday_in_october.tm_isdst = 0;
-  mktime(&last_sunday_in_october);
+  end_of_dst = human_to_unix(last_sunday_in_october);
+  last_sunday_in_october = unix_to_human(end_of_dst);
   last_sunday_in_october.tm_mday -= last_sunday_in_october.tm_wday;
-  end_of_dst = mktime(&last_sunday_in_october);
+  end_of_dst = human_to_unix(last_sunday_in_october);
 
   time_t start_of_dst;
   tm last_sunday_in_march;
-  last_sunday_in_march.tm_year = t.tm_year;
+  last_sunday_in_march.tm_year = human.tm_year;
   last_sunday_in_march.tm_mon = 9;
   last_sunday_in_march.tm_mday = 31;
   last_sunday_in_march.tm_hour = 1;
   last_sunday_in_march.tm_min = 0;
   last_sunday_in_march.tm_sec = 0;
   last_sunday_in_october.tm_isdst = 0;
-  mktime(&last_sunday_in_march);
+  start_of_dst = human_to_unix(last_sunday_in_march);
+  last_sunday_in_october = unix_to_human(start_of_dst);
   last_sunday_in_march.tm_mday -= last_sunday_in_march.tm_wday;
-  start_of_dst = mktime(&last_sunday_in_march);
+  start_of_dst = human_to_unix(last_sunday_in_march);
 
-  time_t t0;
-  t0 = mktime(&t);
+  time_t unix_time = human_to_unix(human);
+  return start_of_dst < unix_time && unix_time < end_of_dst;
 
-  return start_of_dst < t0 && t0 < end_of_dst;
+}
+
+int _is_dst_unix(time_t unix_time){
+
+  return _is_dst_human(unix_to_human(unix_time));
 
 }
 
@@ -235,40 +245,60 @@ unsigned _days_in_month(unsigned year, unsigned month){
     return 31;
 }
 
-time_t mktime(tm *timeptr){
-
-    time_t time;
+time_t human_to_unix(tm human){
+    time_t unix_time;
     unsigned year, month, temp;
 
-    time = 0;
+    unix_time = 0;
     year = 1970;
-    temp = timeptr->tm_year;
+    temp = human.tm_year;
     while(1){
         if(year == temp+1900) break;
-        time += _days_in_year(year) * 86400;
+        unix_time += _days_in_year(year) * 86400;
 	year++;
     }
     month = 0;
     while(1){
-        if(month == timeptr->tm_mon) break;
-        time += _days_in_month(year, month) * 86400;
+        if(month == human.tm_mon) break;
+        unix_time += _days_in_month(year, month) * 86400;
 	month++;
     }
-    time += (timeptr->tm_mday - 1) * 86400;
-    time += timeptr->tm_hour * 3600;
-    time += timeptr->tm_min * 60;
-    time += timeptr->tm_sec;
+    unix_time += (human.tm_mday - 1) * 86400;
+    unix_time += human.tm_hour * 3600;
+    unix_time += human.tm_min * 60;
+    unix_time += human.tm_sec;
 
-    if (timeptr -> tm_isdst > 0){
-        time += 3600;
-    } else if (timeptr->tm_isdst < 0){
-        time += _is_dst(*timeptr) ? 3600 : 0;
+    return unix_time;
+}
+
+time_t mktime(tm *timeptr){
+
+    tm human;
+    time_t unix_time, local_time;
+
+    human = *timeptr;
+    unix_time = human_to_unix(human);
+
+    if (human.tm_isdst > 0){
+        local_time = unix_time + 3600;
+    } else if (human.tm_isdst < 0){
+        local_time = unix_time + _is_dst_human(human)?3600:0;
+    } else {
+	local_time = unix_time;
     }
 
-    time -= tz_offset;
-    *timeptr = *localtime(&time);
+    local_time -= tz_offset;
+    *timeptr = unix_to_human(local_time);
 
-    return time;
+    if (human.tm_isdst > 0){
+        timeptr->tm_isdst=1;
+    } else if (human.tm_isdst < 0){
+        timeptr->tm_isdst = _is_dst_human(human)?3600:0;
+    } else {
+        timeptr->tm_isdst=0;
+    }
+
+    return local_time;
 
 }
 
@@ -457,57 +487,64 @@ char *asctime(tm *timeptr)
 ///   pointer if UTC is not available.
 ///
 
+/* Convert unix time to broken down time*/
+tm unix_to_human(time_t unix_time){
 
-tm time_;
-
-tm *gmtime(time_t *timer){
-
+    tm human;
     unsigned temp, days;
-    time_t time = *timer;
     div_t res;
 
-    time_.tm_year = 1970;
-    time_.tm_wday = 4;
+    human.tm_year = 1970;
+    human.tm_wday = 4;
     while(1){
-        temp = _days_in_year(time_.tm_year) * 86400;
-        if(temp > time) break;
-        time_.tm_year++;
-        time_.tm_wday+=temp;
-        time-=temp;
+        temp = _days_in_year(human.tm_year) * 86400;
+        if(temp > unix_time) break;
+        human.tm_year++;
+        human.tm_wday+=temp;
+        unix_time-=temp;
     }
 
-    time_.tm_mon = 0;
-    time_.tm_yday = 0;
+    human.tm_mon = 0;
+    human.tm_yday = 0;
     while(1){
-        days = _days_in_month(time_.tm_year, time_.tm_mon);
+        days = _days_in_month(human.tm_year, human.tm_mon);
         temp = days * 86400;
-        if(temp > time) break;
-        time_.tm_mon++;
-        time_.tm_wday+=days;
-        time_.tm_yday+=days;
-        time -= temp;
+        if(temp > unix_time) break;
+        human.tm_mon++;
+        human.tm_wday+=days;
+        human.tm_yday+=days;
+        unix_time -= temp;
     }
-    time_.tm_year-=1900;
+    human.tm_year-=1900;
 
-    res = div(time, 86400);
-    time_.tm_mday = res.quot + 1;
-    time_.tm_wday += res.quot;
-    time_.tm_wday %= 7;
-    time_.tm_yday += res.quot;
-    time = res.rem;
+    res = div(unix_time, 86400);
+    human.tm_mday = res.quot + 1;
+    human.tm_wday += res.quot;
+    human.tm_wday %= 7;
+    human.tm_yday += res.quot;
+    unix_time = res.rem;
 
-    res = div(time, 3600);
-    time_.tm_hour = res.quot;
-    time = res.rem;
+    res = div(unix_time, 3600);
+    human.tm_hour = res.quot;
+    unix_time = res.rem;
 
-    res = div(time, 60);
-    time_.tm_min = res.quot;
-    time = res.rem;
+    res = div(unix_time, 60);
+    human.tm_min = res.quot;
+    unix_time = res.rem;
 
-    time_.tm_sec = time;
+    human.tm_sec = unix_time;
 
+    return human;
+}
+
+
+tm time_;
+tm *gmtime(time_t *timer){
+    time_t unix_time;
+    tm human;
+    unix_time = *timer;
+    time_ = unix_to_human(unix_time); 
     return &time_;
-
 }
 
 ///The localtime function
@@ -531,10 +568,18 @@ tm *gmtime(time_t *timer){
 ///
 
 tm *localtime(time_t *timer){
- 
-    time_t local_time = *timer + tz_offset;
-    return gmtime(&local_time);
+    time_t unix_time, local_time;
+    time_t dst_offset = 0;
+    tm human;
 
+    unix_time = *timer;
+    if (_is_dst_unix(unix_time)){
+	    dst_offset = 3600;
+    }
+    local_time = unix_time + tz_offset + dst_offset;
+    time_ = unix_to_human(local_time);
+    time_.tm_isdst = _is_dst_unix(unix_time);
+    return &time_;
 }
 
 ///
@@ -545,6 +590,7 @@ tm *localtime(time_t *timer){
 ///    ..code-block:: c
 ///
 ///         #include <time.h>
+///         size_t strftime(char *s, size_t maxsize,
 ///         size_t strftime(char *s, size_t maxsize,
 ///                  const char *format, const struct tm *timeptr);
 ///

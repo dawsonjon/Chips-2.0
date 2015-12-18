@@ -32,10 +32,23 @@ void main(){
 
     t4 = 1445539690;
     t = gmtime(&t4);
+    report(t->tm_year);
     assert(t->tm_year == 115);
     assert(t->tm_mon == 9);
     assert(t->tm_mday == 22);
     assert(t->tm_hour == 18);
+    assert(t->tm_min == 48);
+    assert(t->tm_sec == 10);
+    assert(t->tm_yday == 294);
+    assert(t->tm_wday == 4);
+
+    t4 = 1445539690;
+    t = localtime(&t4);
+    report(t->tm_year);
+    assert(t->tm_year == 115);
+    assert(t->tm_mon == 9);
+    assert(t->tm_mday == 22);
+    assert(t->tm_hour == 19);
     assert(t->tm_min == 48);
     assert(t->tm_sec == 10);
     assert(t->tm_yday == 294);
