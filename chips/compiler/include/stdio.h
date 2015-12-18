@@ -82,7 +82,7 @@ void puts(unsigned string[]){
 ///
 
 unsigned getc(){
-        return fgetc(stdout);
+        return fgetc(stdin);
 }
 
 ///The `putc` writes a single character to stdout.
