@@ -3,7 +3,6 @@ __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
 import struct
-from itertools import chain
 from register_map import *
 from instruction_utils import *
 from instruction_utils import _return
@@ -11,27 +10,28 @@ from exceptions import C2CHIPError, NotConstant
 from utils import bits_to_double, bits_to_float
 from types import *
 
+
 class Trace:
 
-    """A trace object is used to keep track of the source code 
+    """A trace object is used to keep track of the source code
     throughout the compilation process.
     """
 
     def __init__(self, parser):
-        self.lineno=parser.tokens.lineno
-        self.filename=parser.tokens.filename
-        self.function=parser.function
-        self.global_scope=parser.global_scope
-        self.statement=parser.statement
+        self.lineno = parser.tokens.lineno
+        self.filename = parser.tokens.filename
+        self.function = parser.function
+        self.global_scope = parser.global_scope
+        self.statement = parser.statement
 
     def __repr__(self):
-        return "%s : %s"%(self.filename, self.lineno)
+        return "%s : %s" % (self.filename, self.lineno)
 
     def error(self, string):
         raise C2CHIPError(string + "\n", self.filename, self.lineno)
 
-def flatten(sequence):
 
+def flatten(sequence):
     """Turn a list containing other lists into a single list"""
 
     try:
@@ -42,26 +42,28 @@ def flatten(sequence):
         l = sequence
     return l
 
-def constant_fold(trace,  expression):
 
+def constant_fold(trace, expression):
     """Replace an expression with a constant if possible"""
-
     try:
         return Constant(
             trace,
-            expression.value(), 
-            expression.type_(), 
+            expression.value(),
+            expression.type_(),
             expression.signed()
         )
+    except AttributeError:
+        trace.error("Not a valid expression")
     except NotConstant:
         return expression
+
 
 class Process:
 
     """A process is a whole C program.
-    
+
     Within a chip there may more than one process.
-    
+
     """
 
     def __init__(self, trace):
@@ -71,6 +73,7 @@ class Process:
 
         called_functions = []
         referenced_globals = []
+
         def find_functions(function):
             if function not in called_functions:
                 called_functions.append(function)
@@ -83,33 +86,48 @@ class Process:
         find_functions(self.main)
 
         instructions = []
-        instructions.append({"trace":self.trace, "op":"literal", "z":tos, "literal":0})
-        instructions.append({"trace":self.trace, "op":"literal", "z":frame, "literal":0})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "literal",
+             "z": tos,
+             "literal": 0})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "literal",
+             "z": frame,
+             "literal": 0})
 
-        #reserve stack space for global objects and function return values
+        # reserve stack space for global objects and function return values
         globals_and_functions = set(called_functions + referenced_globals)
         global_size = sum([size_of(i) for i in globals_and_functions])
         if global_size:
-            instructions.append({"trace":self.trace, "op":"addl", "z":tos, "a":tos, "literal":global_size//4})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "addl",
+                 "z": tos,
+                 "a": tos,
+                 "literal": global_size // 4})
         offset = 0
         for global_object in globals_and_functions:
             instructions.extend(global_object.initialise(offset))
-            offset += size_of(global_object)//4
+            offset += size_of(global_object) // 4
 
-        #start with a call to main
-        call(self.trace, instructions, "function_%s"%id(self.main))
+        # start with a call to main
+        call(self.trace, instructions, "function_%s" % id(self.main))
 
-        #then stop
-        instructions.append({"trace":self.trace, "op":"stop"})
+        # then stop
+        instructions.append({"trace": self.trace, "op": "stop"})
 
-        #then generate functions. This will ensure that memory has been
-        #reserved for globals before functions are compiled.
+        # then generate functions. This will ensure that memory has been
+        # reserved for globals before functions are compiled.
         for function in called_functions:
             instructions.extend(function.generate())
 
-        #instructions.append({"trace":self.trace, "op":"return", "a":return_address})
+        # instructions.append({"trace":self.trace, "op":"return",
+        # "a":return_address})
 
         return instructions
+
 
 class GlobalScope:
 
@@ -142,20 +160,22 @@ class Function:
 
     def generate(self):
         if not hasattr(self, "statement"):
-            self.trace.error("Function %s has been declared, but not defined"%self.name)
+            self.trace.error(
+                "Function %s has been declared, but not defined" %
+                self.name)
 
         instructions = []
         instructions.append({
-            "trace":self.trace,
-            "op":"label", 
-            "label":"function_%s"%id(self),
+            "trace": self.trace,
+            "op": "label",
+            "label": "function_%s" % id(self),
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   :"addl",
-            "z" : tos,
-            "a" : tos,
-            "literal":self.offset,
+            "trace": self.trace,
+            "op": "addl",
+            "z": tos,
+            "a": tos,
+            "literal": self.offset,
         })
         instructions.extend(self.statement.generate())
         if not hasattr(self, "return_statement"):
@@ -179,62 +199,66 @@ class Function:
         """Potentially meaningless"""
         return self._const
 
+
 class Label:
 
     """A labelled statement that may be the target of a goto"""
 
     def __init__(self, trace, statement):
-        self.trace=trace
-        self.statement=statement
+        self.trace = trace
+        self.statement = statement
 
-    def generate(self): 
+    def generate(self):
         instructions = []
         instructions.append({
-            "trace":self.trace,
-            "op":"label", 
-            "label":"goto_label_%s"%id(self),
+            "trace": self.trace,
+            "op": "label",
+            "label": "goto_label_%s" % id(self),
         })
         instructions.extend(self.statement.generate())
         return instructions
+
 
 class Goto:
 
     """A goto statement"""
 
     def __init__(self, trace, goto_labels, label_name):
-        self.trace=trace
-        self.goto_labels=goto_labels
-        self.label_name=label_name
+        self.trace = trace
+        self.goto_labels = goto_labels
+        self.label_name = label_name
 
-    def generate(self): 
+    def generate(self):
 
-        #labels can be declared after gotos, so
-        #need to put off checking until code generation
+        # labels can be declared after gotos, so
+        # need to put off checking until code generation
         try:
             label = self.goto_labels[self.label_name]
         except KeyError:
-            self.trace.error("label %s is not defined"%self.label_name)
+            self.trace.error("label %s is not defined" % self.label_name)
 
         instructions = []
         instructions.append({
-            "trace":self.trace,
-            "op":"goto", 
-            "label":"goto_label_%s"%id(label),
+            "trace": self.trace,
+            "op": "goto",
+            "label": "goto_label_%s" % id(label),
         })
         return instructions
+
 
 class Break:
 
     """Exit a loop or case statement"""
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
-    def generate(self): return [{
-        "trace":self.trace,
-        "op":"goto", 
-        "label":"break_%s"%id(self.loop)
-    }]
+    def generate(self):
+        return [{
+                "trace": self.trace,
+                "op": "goto",
+                "label": "break_%s" % id(self.loop)
+                }]
 
 
 class Continue:
@@ -242,13 +266,14 @@ class Continue:
     """go straight to the next loop iteration"""
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
-    def generate(self): return [{
-        "trace":self.trace,
-        "op":"goto", 
-        "label":"continue_%s"%id(self.loop)
-     }]
+    def generate(self):
+        return [{
+                "trace": self.trace,
+                "op": "goto",
+                "label": "continue_%s" % id(self.loop)
+                }]
 
 
 class Assert:
@@ -256,16 +281,16 @@ class Assert:
     """ if an expression evaluates to false, raise an error """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = self.expression.generate()
         instructions.append({
-            "trace":self.trace,
-            "op":"assert",
-            "a":result,
-            "line":self.line,
-            "file":self.filename,
+            "trace": self.trace,
+            "op": "assert",
+            "a": result,
+            "line": self.line,
+            "file": self.filename,
         })
 
         return instructions
@@ -276,7 +301,7 @@ class Return:
     """ return from a function """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = []
@@ -284,8 +309,8 @@ class Return:
             instructions.extend(self.expression.generate())
             store_object(
                 self.trace,
-                instructions, 
-                n=size_of(self.function)//4, 
+                instructions,
+                n=size_of(self.function) // 4,
                 offset=self.function.return_pointer,
                 local=False
             )
@@ -299,76 +324,76 @@ class Report:
     """ report the value of an expression - simulation only """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = self.expression.generate()
 
         if size_of(self.expression) == 4:
             instructions.append({
-                "trace":self.trace,
-                "op":"a_lo",
-                "z":result,
-                "a":result,
+                "trace": self.trace,
+                "op": "a_lo",
+                "z": result,
+                "a": result,
             })
             if self.expression.type_() == "float":
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"float_report",
-                    "line":self.line,
-                    "file":self.filename
+                    "trace": self.trace,
+                    "op": "float_report",
+                    "line": self.line,
+                    "file": self.filename
                 })
             else:
                 if self.expression.signed():
                     instructions.append({
-                        "trace":self.trace,
-                        "op":"report",
-                        "line":self.line,
-                        "file":self.filename,
+                        "trace": self.trace,
+                        "op": "report",
+                        "line": self.line,
+                        "file": self.filename,
                     })
                 else:
                     instructions.append({
-                        "trace":self.trace,
-                        "op":"unsigned_report",
-                        "line":self.line,
-                        "file":self.filename,
+                        "trace": self.trace,
+                        "op": "unsigned_report",
+                        "line": self.line,
+                        "file": self.filename,
                     })
 
         elif size_of(self.expression) == 8:
 
             instructions.append({
-                "trace":self.trace,
-                "op":"a_hi",
-                "a":result_hi,
-                "z":result_hi,
+                "trace": self.trace,
+                "op": "a_hi",
+                "a": result_hi,
+                "z": result_hi,
             })
             instructions.append({
-                "trace":self.trace,
-                "op":"a_lo",
-                "a":result,
-                "z":result,
+                "trace": self.trace,
+                "op": "a_lo",
+                "a": result,
+                "z": result,
             })
             if self.expression.type_() == "double":
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"long_float_report",
-                    "line":self.line,
-                    "file":self.filename,
+                    "trace": self.trace,
+                    "op": "long_float_report",
+                    "line": self.line,
+                    "file": self.filename,
                 })
             else:
                 if self.expression.signed():
                     instructions.append({
-                        "trace":self.trace,
-                        "op":"long_report",
-                        "line":self.line,
-                        "file":self.filename,
+                        "trace": self.trace,
+                        "op": "long_report",
+                        "line": self.line,
+                        "file": self.filename,
                     })
                 else:
                     instructions.append({
-                        "trace":self.trace,
-                        "op":"long_unsigned_report",
-                        "line":self.line,
-                        "file":self.filename,
+                        "trace": self.trace,
+                        "op": "long_unsigned_report",
+                        "line": self.line,
+                        "file": self.filename,
                     })
 
         return instructions
@@ -379,12 +404,16 @@ class WaitClocks:
     """ stop execution for n clock cycles """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = self.expression.generate()
-        instructions.append({"trace":self.trace, "op":"wait_clocks", "a":result})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "wait_clocks",
+             "a": result})
         return instructions
+
 
 
 class If:
@@ -392,7 +421,7 @@ class If:
     """ if statement """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         try:
@@ -409,28 +438,34 @@ class If:
             instructions.extend(self.expression.generate())
             if size_of(self.expression) == 8:
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"or",
-                    "z":result,
-                    "a":result,
-                    "b":result_hi,
+                    "trace": self.trace,
+                    "op": "or",
+                    "z": result,
+                    "a": result,
+                    "b": result_hi,
                 })
             instructions.append({
-                "trace":self.trace,
-                "op"    : "jmp_if_false",
-                "a"     : result,
-                "label" : "else_%s"%id(self),
+                "trace": self.trace,
+                "op": "jmp_if_false",
+                "a": result,
+                "label": "else_%s" % id(self),
             })
             instructions.extend(self.true_statement.generate())
             instructions.append({
-                "trace":self.trace,
-                "op":"goto", 
-                "label":"end_%s"%id(self)
+                "trace": self.trace,
+                "op": "goto",
+                "label": "end_%s" % id(self)
             })
-            instructions.append({"trace":self.trace, "op":"label", "label":"else_%s"%id(self)})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "label",
+                 "label": "else_%s" % id(self)})
             if self.false_statement:
                 instructions.extend(self.false_statement.generate())
-            instructions.append({"trace":self.trace, "op":"label", "label":"end_%s"%id(self)})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "label",
+                 "label": "end_%s" % id(self)})
             return instructions
 
 
@@ -439,7 +474,7 @@ class Switch:
     """ switch statement """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = []
@@ -447,80 +482,83 @@ class Switch:
         if size_of(self.expression) == 4:
             for value, case in self.cases.iteritems():
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"literal",
-                    "z":temp,
-                    "literal" : value & 0xffffffff,
+                    "trace": self.trace,
+                    "op": "literal",
+                    "z": temp,
+                    "literal": value & 0xffffffff,
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"equal",
-                    "a":result,
-                    "b":temp,
-                    "z":temp
+                    "trace": self.trace,
+                    "op": "equal",
+                    "a": result,
+                    "b": temp,
+                    "z": temp
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"jmp_if_true",
-                    "label":"case_%s"%id(case),
-                    "a":temp,
+                    "trace": self.trace,
+                    "op": "jmp_if_true",
+                    "label": "case_%s" % id(case),
+                    "a": temp,
                 })
         else:
             for value, case in self.cases.iteritems():
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"literal",
-                    "z":temp,
-                    "literal" : value & 0xffffffff,
+                    "trace": self.trace,
+                    "op": "literal",
+                    "z": temp,
+                    "literal": value & 0xffffffff,
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"literal",
-                    "z":temp1,
-                    "literal" : (value >> 32) & 0xffffffff,
+                    "trace": self.trace,
+                    "op": "literal",
+                    "z": temp1,
+                    "literal": (value >> 32) & 0xffffffff,
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"equal",
-                    "a":result,
-                    "b":temp,
-                    "z":temp
+                    "trace": self.trace,
+                    "op": "equal",
+                    "a": result,
+                    "b": temp,
+                    "z": temp
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"equal",
-                    "a":result_hi,
-                    "b":temp1,
-                    "z":temp1
+                    "trace": self.trace,
+                    "op": "equal",
+                    "a": result_hi,
+                    "b": temp1,
+                    "z": temp1
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"and",
-                    "a":temp,
-                    "b":temp1,
-                    "z":temp
+                    "trace": self.trace,
+                    "op": "and",
+                    "a": temp,
+                    "b": temp1,
+                    "z": temp
                 })
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"jmp_if_true",
-                    "label":"case_%s"%id(case),
-                    "a":temp,
+                    "trace": self.trace,
+                    "op": "jmp_if_true",
+                    "label": "case_%s" % id(case),
+                    "a": temp,
                 })
 
         if hasattr(self, "default"):
             instructions.append({
-                "trace":self.trace,
-                "op":"goto",
-                "label":"case_%s"%id(self.default)
+                "trace": self.trace,
+                "op": "goto",
+                "label": "case_%s" % id(self.default)
             })
         instructions.append({
-            "trace":self.trace,
-            "op":"goto",
-            "label":"break_%s"%id(self),
+            "trace": self.trace,
+            "op": "goto",
+            "label": "break_%s" % id(self),
         })
 
         instructions.extend(self.statement.generate())
-        instructions.append({"trace":self.trace, "op":"label", "label":"break_%s"%id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "break_%s" % id(self)})
         return instructions
 
 
@@ -529,14 +567,14 @@ class Case:
     """ case statement """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = []
         instructions.append({
-            "trace":self.trace,
-            "op":"label",
-            "label":"case_%s"%id(self),
+            "trace": self.trace,
+            "op": "label",
+            "label": "case_%s" % id(self),
         })
         return instructions
 
@@ -546,10 +584,14 @@ class Default:
     """ default case statement """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
-        return [{"trace":self.trace, "op":"label", "label":"case_%s"%id(self)}]
+        return [{
+            "trace": self.trace,
+            "op": "label",
+            "label": "case_%s" % id(self)
+        }]
 
 
 class Loop:
@@ -557,61 +599,85 @@ class Loop:
     """ A loop while or do-while are synthesised from this """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
-        instructions = [{"trace":self.trace, "op":"label", "label":"begin_%s"%id(self)}]
-        instructions.append({"trace":self.trace, "op":"label", "label":"continue_%s"%id(self)})
+        instructions = [{
+            "trace": self.trace,
+            "op": "label",
+            "label": "begin_%s" % id(self)
+        }]
+        instructions.append({
+            "trace": self.trace,
+                            "op": "label",
+                            "label": "continue_%s" % id(self)
+                            })
         instructions.extend(self.statement.generate())
         instructions.append({
-            "trace":self.trace,
-            "op":"goto", 
-            "label":"begin_%s"%id(self)
+            "trace": self.trace,
+            "op": "goto",
+            "label": "begin_%s" % id(self)
         })
-        instructions.append({"trace":self.trace, "op":"label", "label":"break_%s"%id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "break_%s" % id(self)})
         return instructions
+
 
 class For:
 
     """ A for loop """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = []
         if hasattr(self, "statement1"):
             instructions.extend(self.statement1.generate())
-        instructions.append({"trace":self.trace, "op":"label", "label":"begin_%s"%id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "begin_%s" % id(self)})
         if hasattr(self, "expression"):
 
             instructions.extend(self.expression.generate())
             if size_of(self.expression) == 8:
                 instructions.append({
-                    "trace":self.trace,
-                    "op":"or",
-                    "z":result,
-                    "a":result,
-                    "b":result_hi,
-                    })
-            instructions.append({
-                "trace":self.trace,
-                "op":"jmp_if_false",
-                "a":result,
-                "label":"end_%s"%id(self)
+                    "trace": self.trace,
+                    "op": "or",
+                    "z": result,
+                    "a": result,
+                    "b": result_hi,
                 })
+            instructions.append({
+                "trace": self.trace,
+                "op": "jmp_if_false",
+                "a": result,
+                "label": "end_%s" % id(self)
+            })
 
         instructions.extend(self.statement3.generate())
-        instructions.append({"trace":self.trace, "op":"label", "label":"continue_%s"%id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "continue_%s" % id(self)})
         if hasattr(self, "statement2"):
             instructions.extend(self.statement2.generate())
         instructions.append({
-            "trace":self.trace,
-            "op":"goto", 
-            "label":"begin_%s"%id(self)
+            "trace": self.trace,
+            "op": "goto",
+            "label": "begin_%s" % id(self)
         })
-        instructions.append({"trace":self.trace, "op":"label", "label":"end_%s"%id(self)})
-        instructions.append({"trace":self.trace, "op":"label", "label":"break_%s"%id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "end_%s" % id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "break_%s" % id(self)})
         return instructions
 
 
@@ -620,7 +686,7 @@ class Block:
     """ A block of statements enclosed by braces """
 
     def __init__(self, trace):
-        self.trace=trace
+        self.trace = trace
 
     def generate(self):
         instructions = []
@@ -639,8 +705,9 @@ class CompoundDeclaration:
     def generate(self):
         instructions = []
         for declaration in self.declarations:
-            instructions.extend(declaration.generate());
+            instructions.extend(declaration.generate())
         return instructions
+
 
 class Argument:
 
@@ -656,7 +723,7 @@ class Argument:
         self.argument = True
 
         self.offset = function.offset
-        function.offset += arg_size_of(self)//4
+        function.offset += arg_size_of(self) // 4
 
     def reference(self, trace):
         return Variable(trace, self)
@@ -669,6 +736,7 @@ class Argument:
 
     def const(self):
         return self._const
+
 
 class LocalVariable:
 
@@ -684,10 +752,10 @@ class LocalVariable:
         self.argument = False
 
         self.offset = function.offset
-        function.offset += size_of(self)//4
+        function.offset += size_of(self) // 4
 
     def generate(self):
-        #generate is used for local variables each time a function is called
+        # generate is used for local variables each time a function is called
         assert self.local
         instructions = []
         if self.initializer is not None:
@@ -696,14 +764,20 @@ class LocalVariable:
                     instructions.extend(expression.generate())
                     store_object(
                         self.trace,
-                        instructions, 
-                        n=size_of(expression)//4, 
-                        offset=self.offset + (index*size_of(expression)//4), 
+                        instructions,
+                        n=size_of(expression) // 4,
+                        offset=self.offset +
+                        (index * size_of(expression) // 4),
                         local=True
                     )
             else:
                 instructions.extend(self.initializer.generate())
-                store_object(self.trace, instructions, n=size_of(self)//4, offset=self.offset, local=True)
+                store_object(
+                    self.trace,
+                    instructions,
+                    n=size_of(self) // 4,
+                    offset=self.offset,
+                    local=True)
         return instructions
 
     def reference(self, trace):
@@ -717,6 +791,7 @@ class LocalVariable:
 
     def const(self):
         return self._const
+
 
 class GlobalVariable:
 
@@ -732,10 +807,10 @@ class GlobalVariable:
         self.argument = False
 
         self.offset = function.offset
-        function.offset += size_of(self)//4
+        function.offset += size_of(self) // 4
 
     def initialise(self, offset):
-        #initialise is used for global variables before program starts
+        # initialise is used for global variables before program starts
         assert not self.local
         self.offset = offset
         instructions = []
@@ -745,14 +820,20 @@ class GlobalVariable:
                     instructions.extend(expression.generate())
                     store_object(
                         self.trace,
-                        instructions, 
-                        n=size_of(expression)//4, 
-                        offset=self.offset + (index*size_of(expression)//4), 
+                        instructions,
+                        n=size_of(expression) // 4,
+                        offset=self.offset +
+                        (index * size_of(expression) // 4),
                         local=False
                     )
             else:
                 instructions.extend(self.initializer.generate())
-                store_object(self.trace, instructions, n=size_of(self)//4, offset=self.offset, local=False)
+                store_object(
+                    self.trace,
+                    instructions,
+                    n=size_of(self) // 4,
+                    offset=self.offset,
+                    local=False)
         return instructions
 
     def reference(self, trace):
@@ -783,18 +864,18 @@ class Expression:
 
     """ A base class from which expressions can be derived.
 
-    All expression have a value method 
+    All expression have a value method
     (but it will raise an exception if it is not a constant)
 
     All expressions have a type and a size, they may be signed or unsigned.
 
     Expressions have a generate method which moves their value onto the stack.
-    
+
     """
 
     def __init__(self, t, signed):
-        self.type_var=t
-        self.signed_var=signed
+        self.type_var = t
+        self.signed_var = signed
 
     def type_(self):
         return self.type_var
@@ -806,14 +887,13 @@ class Expression:
         return self.size()
 
     def discard(self):
+        """In some instances, the value of an expression is discarded, this can
+        be achieved by removing the correct amount of data from the stack.
 
-        """In some instances, the value of an expression is discarded, this
-        can be achieved by removing the correct amount of data from the stack.
-
-        A derived class can provide discard functionality directly by overriding
-        this function, this can result in efficiencies because it may not be
-        necessary to place a value onto the stack in the first place.
-        """
+        A derived class can provide discard functionality directly by
+        overriding this function, this can result in efficiencies because it
+        may not be necessary to place a value onto the stack in the first
+        place.  """
 
         instructions = self.generate()
         if size_of(self) == 4:
@@ -821,11 +901,15 @@ class Expression:
         elif size_of(self) == 8:
             pass
         else:
-            instructions.append({"trace":self.trace, "op":"addl", "z":tos, "a":tos, "literal":-size_of(self)//4})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "addl",
+                 "z": tos,
+                 "a": tos,
+                 "literal": -size_of(self) // 4})
         return instructions
 
     def value(self):
-
         """return an representation of an expression
 
         May be an integer or floating point value.
@@ -840,7 +924,6 @@ class Expression:
         return True
 
     def int_value(self):
-
         """return an integer representation of an expression
 
         Even if the expression is not an integer.
@@ -851,7 +934,7 @@ class Expression:
 
         if self.type_() == "double":
             byte_value = struct.pack(">d", self.value())
-            value  = ord(byte_value[0]) << 56
+            value = ord(byte_value[0]) << 56
             value |= ord(byte_value[1]) << 48
             value |= ord(byte_value[2]) << 40
             value |= ord(byte_value[3]) << 32
@@ -862,7 +945,7 @@ class Expression:
             return value
         elif self.type_() == "float":
             byte_value = struct.pack(">f", self.value())
-            value  = ord(byte_value[0]) << 24
+            value = ord(byte_value[0]) << 24
             value |= ord(byte_value[1]) << 16
             value |= ord(byte_value[2]) << 8
             value |= ord(byte_value[3])
@@ -896,23 +979,23 @@ class Object(Expression):
 
 
 def AND(trace, left, right):
-
     """Pseudo class, to represent a logical and function"""
 
     return ANDOR(trace, left, right, "jmp_if_false")
 
 
 def OR(trace, left, right):
-
     """Pseudo class, to represent a logical or function"""
 
     return ANDOR(trace, left, right, "jmp_if_true")
 
+
 class MultiExpression(Expression):
 
     """Mainly used in for loops using comma operator.
-    
-    The value of first expression is used, other expressions are just discarded.
+
+    The value of first expression is used, other expressions are just
+    discarded.
 
     """
 
@@ -942,6 +1025,7 @@ class MultiExpression(Expression):
             pop(self.trace, instructions, result)
         return instructions
 
+
 class Ternary(Expression):
 
     """A ternary expression"""
@@ -961,15 +1045,40 @@ class Ternary(Expression):
         instructions = []
         instructions.extend(self.expression.generate())
         if size_of(self.expression) == 8:
-            instructions.append({"trace":self.trace, "op":"or", "z":temp, "a":result, "b":result_hi})
-            instructions.append({"trace":self.trace, "op":"jmp_if_false", "a":temp, "label":"false_%s"%id(self)})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "or",
+                 "z": temp,
+                 "a": result,
+                 "b": result_hi})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "jmp_if_false",
+                 "a": temp,
+                 "label": "false_%s" % id(self)})
         else:
-            instructions.append({"trace":self.trace, "op":"jmp_if_false", "a":result, "label":"false_%s"%id(self)})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "jmp_if_false",
+                 "a": result,
+                 "label": "false_%s" % id(self)})
         instructions.extend(self.true_expression.generate())
-        instructions.append({"trace":self.trace, "op":"goto", "a":result, "label":"end_%s"%id(self)})
-        instructions.append({"trace":self.trace, "op":"label", "label":"false_%s"%id(self), })
+        instructions.append(
+            {"trace": self.trace,
+             "op": "goto",
+             "a": result,
+             "label": "end_%s" % id(self)})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "false_%s" % id(self),
+             })
         instructions.extend(self.false_expression.generate())
-        instructions.append({"trace":self.trace, "op":"label", "label":"end_%s"%id(self), })
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "end_%s" % id(self),
+             })
         return instructions
 
     def value(self):
@@ -978,10 +1087,11 @@ class Ternary(Expression):
         else:
             return self.false_expression.value()
 
+
 class ANDOR(Expression):
 
     """The actual class used to implement AND and OR.
-    
+
     A common class is used to save code.
 
     """
@@ -991,7 +1101,7 @@ class ANDOR(Expression):
         self.left = constant_fold(trace, left)
         self.right = constant_fold(trace, right)
         self.op = op
-        type_ = "long" if "long" in (left.type_(), right.type_()) else "int" 
+        type_ = "long" if "long" in (left.type_(), right.type_()) else "int"
         Expression.__init__(
             self,
             type_,
@@ -1001,12 +1111,29 @@ class ANDOR(Expression):
         instructions = []
         instructions.extend(self.left.generate())
         if size_of(self) == 8:
-            instructions.append({"trace":self.trace, "op":"or", "z":temp, "a":result, "b":result_hi})
-            instructions.append({"trace":self.trace, "op":self.op, "a":temp, "label":"end_%s"%id(self)})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "or",
+                 "z": temp,
+                 "a": result,
+                 "b": result_hi})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": self.op,
+                 "a": temp,
+                 "label": "end_%s" % id(self)})
         else:
-            instructions.append({"trace":self.trace, "op":self.op, "a":result, "label":"end_%s"%id(self)})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": self.op,
+                 "a": result,
+                 "label": "end_%s" % id(self)})
         instructions.extend(self.right.generate())
-        instructions.append({ "trace":self.trace, "op":"label", "label":"end_%s"%id(self), })
+        instructions.append(
+            {"trace": self.trace,
+             "op": "label",
+             "label": "end_%s" % id(self),
+             })
         return instructions
 
     def value(self):
@@ -1017,7 +1144,6 @@ class ANDOR(Expression):
 
 
 def get_binary_type(left, right, operator):
-
     """
     Given the type of the left and right hand operators, determine the type
     of the resulting value.
@@ -1034,6 +1160,7 @@ def get_binary_type(left, right, operator):
         signed = left.signed() and right.signed()
 
     return type_, signed
+
 
 class Binary(Expression):
 
@@ -1071,51 +1198,103 @@ class Binary(Expression):
                 pop(self.trace, instructions, result_b_hi)
             pop(self.trace, instructions, result_b)
         else:
-            instructions.extend(self.right.generate())
+            instructions.extend(self .right.generate())
 
-            #pointer arithmetic
+            # pointer arithmetic
             if is_pointer_to(self.left) and not is_pointer_to(self.right):
-                assert self.operator == "+"
+                assert self.operator in ["+", "-"]
                 size = type_size(self.left.type_().base_type())
                 if size > 4:
-                    instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size//4})
-                    instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
+                    instructions.append(
+                        {"trace": self.trace,
+                         "op": "literal",
+                         "z": temp,
+                         "literal": size // 4})
+                    instructions.append(
+                        {"trace": self.trace,
+                         "op": "multiply",
+                         "z": result,
+                         "a": result,
+                         "b": temp})
 
             push(self.trace, instructions, result)
             if size_of(self.right) == 8:
                 push(self.trace, instructions, result_hi)
             instructions.extend(self.left.generate())
 
-            #pointer arithmetic
+            # pointer arithmetic
             if is_pointer_to(self.right) and not is_pointer_to(self.left):
-                assert self.operator == "+"
+                assert self.operator in ["+", "-"]
                 size = type_size(self.right.type_().base_type())
                 if size > 4:
-                    instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size//4})
-                    instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
+                    instructions.append(
+                        {"trace": self.trace,
+                         "op": "literal",
+                         "z": temp,
+                         "literal": size // 4})
+                    instructions.append(
+                        {"trace": self.trace,
+                         "op": "multiply",
+                         "z": result,
+                         "a": result,
+                         "b": temp})
 
             if size_of(self.left) == 8:
                 pop(self.trace, instructions, result_b_hi)
             pop(self.trace, instructions, result_b)
 
-        instructions.append({"trace":self.trace,  "op":operation, "z":result, "a":result, "b":result_b})
+        instructions.append(
+            {"trace": self.trace,
+             "op": operation,
+             "z": result,
+             "a": result,
+             "b": result_b})
 
-        #implement pointer arithmetic
+        # implement pointer arithmetic
         if is_pointer_to(self.right) and is_pointer_to(self.left):
-            assert self.operator == "-"
             size = type_size(self.right.type_().base_type())
             if size > 4:
-                locations = size//4
-                #use multiply by the reciprocal * (2^32)
-                #use top half of product is quotient
-                reciprocal = int(round((2.0**32)/locations))
-                instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":reciprocal})
-                instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
-                instructions.append({"trace":self.trace, "op":"carry", "z":result_hi})
-                instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":0})
-                instructions.append({"trace":self.trace, "op":"literal", "z":temp1, "literal":0x80000000})
-                instructions.append({"trace":self.trace, "op":"add", "z":result, "a":result, "b":temp1 })
-                instructions.append({"trace":self.trace, "op":"add_with_carry", "z":result, "a":result_hi, "b":temp })
+                locations = size // 4
+                # use multiply by the reciprocal * (2^32)
+                # use top half of product is quotient
+                reciprocal = int(round((2.0 ** 32) / locations))
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "literal",
+                     "z": temp,
+                     "literal": reciprocal})
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "multiply",
+                     "z": result,
+                     "a": result,
+                     "b": temp})
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "carry",
+                     "z": result_hi})
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "literal",
+                     "z": temp,
+                     "literal": 0})
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "literal",
+                     "z": temp1,
+                     "literal": 0x80000000})
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "add",
+                     "z": result,
+                     "a": result,
+                     "b": temp1})
+                instructions.append(
+                    {"trace": self.trace,
+                     "op": "add_with_carry",
+                     "z": result,
+                     "a": result_hi,
+                     "b": temp})
 
         return instructions
 
@@ -1123,21 +1302,21 @@ class Binary(Expression):
 
         if self.type_() in ["int", "long"]:
 
-            return int(eval("%s %s %s"%(
+            return int(eval("%s %s %s" % (
                 self.left.value(),
                 self.operator,
                 self.right.value())))
 
         else:
 
-            return float(eval("%s %s %s"%(
+            return float(eval("float('%f') %s float('%f')" % (
                 self.left.value(),
                 self.operator,
-                self.right.value())))
+                self.right.value()
+            )))
 
 
 def SizeOf(trace, expression):
-
     """Instead of creating an expression class for sizeof operator...
 
     ... Just return a constant object
@@ -1146,9 +1325,11 @@ def SizeOf(trace, expression):
 
     return Constant(trace, size_of(expression))
 
+
 class DoubleToBits(Expression):
 
-    """Replace a Double precision floating point number with its integer representation
+    """Replace a Double precision floating point number with its integer
+    representation
 
     Doesn't actually "do anything" just changes the type.
 
@@ -1166,6 +1347,7 @@ class DoubleToBits(Expression):
 
     def value(self):
         return self.expression.int_value()
+
 
 class FloatToBits(Expression):
 
@@ -1188,6 +1370,7 @@ class FloatToBits(Expression):
     def value(self):
         return self.expression.int_value()
 
+
 class BitsToDouble(Expression):
 
     """Replace a long integer with the floating point number it represents
@@ -1208,6 +1391,7 @@ class BitsToDouble(Expression):
 
     def value(self):
         return bits_to_double(self.expression.value())
+
 
 class BitsToFloat(Expression):
 
@@ -1230,6 +1414,7 @@ class BitsToFloat(Expression):
     def value(self):
         return bits_to_float(self.expression.value())
 
+
 class IntToLong(Expression):
 
     """Extend an integer into a long one"""
@@ -1238,18 +1423,27 @@ class IntToLong(Expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "long", expression.signed())
+        Expression.__init__(self, "long", expression.signed())
 
     def generate(self):
         instructions = self.expression.generate()
         if self.expression.signed():
-            instructions.append({"trace":self.trace,  "op":"int_to_long", "z":result_hi, "a":result})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "int_to_long",
+                 "z": result_hi,
+                 "a": result})
         else:
-            instructions.append({"trace":self.trace, "op":"literal", "z":result_hi, "literal":0})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "literal",
+                 "z": result_hi,
+                 "literal": 0})
         return instructions
 
     def value(self):
         return self.expression.value()
+
 
 class LongToInt(Expression):
 
@@ -1259,7 +1453,7 @@ class LongToInt(Expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "int", expression.signed())
+        Expression.__init__(self, "int", expression.signed())
 
     def generate(self):
         instructions = self.expression.generate()
@@ -1268,38 +1462,39 @@ class LongToInt(Expression):
     def value(self):
         return self.expression.value()
 
+
 class IntToFloat(Expression):
 
     """Turn an integer into a floating point number with the same value
-    
+
     Used in casting and implicit type conversions
-    
+
     """
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "float", True)
+        Expression.__init__(self, "float", True)
 
     def generate(self):
         instructions = self.expression.generate()
 
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "a"   : result,
-            "z"   : result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "a": result,
+            "z": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "int_to_float",
+            "trace": self.trace,
+            "op": "int_to_float",
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "a"   : result,
-            "z"   : result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "a": result,
+            "z": result,
         })
 
         return instructions
@@ -1311,137 +1506,154 @@ class IntToFloat(Expression):
 class FloatToInt(Expression):
 
     """Turn an floating point number into an integer with the same value
-    
+
     Used in casting and implicit type conversions
-    
+
     """
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "int", True)
+        Expression.__init__(self, "int", True)
 
     def generate(self):
         instructions = self.expression.generate()
 
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "a"   : result,
-            "z"   : result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "a": result,
+            "z": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "float_to_int",
+            "trace": self.trace,
+            "op": "float_to_int",
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "a"   : result,
-            "z"   : result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "a": result,
+            "z": result,
         })
 
         return instructions
 
     def value(self):
         return int(self.expression.value())
+
+
+class PointerCast(Expression):
+
+    """Cast a pointer to a pointer of a different type"""
+
+    def __init__(self, trace, expression, type_):
+        self.expression = constant_fold(trace, expression)
+        self.trace = trace
+
+        Expression.__init__(self, type_, True)
+
+    def generate(self):
+        instructions = self.expression.generate()
+        return instructions
+
 
 class DoubleToLong(Expression):
 
     """Turn an double into an integer with the same value
-    
+
     Used in casting and implicit type conversions
-    
+
     """
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "long", True)
+        Expression.__init__(self, "long", True)
 
     def generate(self):
         instructions = self.expression.generate()
 
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_hi",
-            "z":result_hi,
-            "a":result_hi,
+            "trace": self.trace,
+            "op": "a_hi",
+            "z": result_hi,
+            "a": result_hi,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "z":result,
-            "a":result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "z": result,
+            "a": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "double_to_long"
+            "trace": self.trace,
+            "op": "double_to_long"
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "z":result,
-            "a":result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "z": result,
+            "a": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_hi",
-            "z":result_hi,
-            "a":result_hi,
+            "trace": self.trace,
+            "op": "a_hi",
+            "z": result_hi,
+            "a": result_hi,
         })
 
         return instructions
 
     def value(self):
         return int(self.expression.value())
+
 
 class LongToDouble(Expression):
 
     """Turn an integer into a double with the same value
-    
+
     Used in casting and implicit type conversions
-    
+
     """
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "double", True)
+        Expression.__init__(self, "double", True)
 
     def generate(self):
         instructions = self.expression.generate()
 
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_hi",
-            "z":result_hi,
-            "a":result_hi,
+            "trace": self.trace,
+            "op": "a_hi",
+            "z": result_hi,
+            "a": result_hi,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "z":result,
-            "a":result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "z": result,
+            "a": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "long_to_double",
+            "trace": self.trace,
+            "op": "long_to_double",
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "z":result,
-            "a":result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "z": result,
+            "a": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_hi",
-            "z":result_hi,
-            "a":result_hi,
+            "trace": self.trace,
+            "op": "a_hi",
+            "z": result_hi,
+            "a": result_hi,
         })
 
         return instructions
@@ -1449,44 +1661,45 @@ class LongToDouble(Expression):
     def value(self):
         return int(self.expression.value())
 
+
 class DoubleToFloat(Expression):
 
     """Turn a double into a float with the same value
-    
+
     Used in casting and implicit type conversions
-    
+
     """
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "float", True)
+        Expression.__init__(self, "float", True)
 
     def generate(self):
         instructions = self.expression.generate()
 
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_hi",
-            "z":result_hi,
-            "a":result_hi,
+            "trace": self.trace,
+            "op": "a_hi",
+            "z": result_hi,
+            "a": result_hi,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "z":result,
-            "a":result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "z": result,
+            "a": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "double_to_float",
+            "trace": self.trace,
+            "op": "double_to_float",
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "z":result,
-            "a":result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "z": result,
+            "a": result,
         })
 
         return instructions
@@ -1494,44 +1707,45 @@ class DoubleToFloat(Expression):
     def value(self):
         return float(self.expression.value())
 
+
 class FloatToDouble(Expression):
 
     """Turn a float into a double with the same value
-    
+
     Used in casting and implicit type conversions
-    
+
     """
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__( self, "double", True)
+        Expression.__init__(self, "double", True)
 
     def generate(self):
         instructions = self.expression.generate()
 
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "a"   : result,
-            "z"   : result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "a": result,
+            "z": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "float_to_double",
+            "trace": self.trace,
+            "op": "float_to_double",
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_lo",
-            "a"   : result,
-            "z"   : result,
+            "trace": self.trace,
+            "op": "a_lo",
+            "a": result,
+            "z": result,
         })
         instructions.append({
-            "trace":self.trace,
-            "op"   : "a_hi",
-            "a"   : result_hi,
-            "z"   : result_hi,
+            "trace": self.trace,
+            "op": "a_hi",
+            "a": result_hi,
+            "z": result_hi,
         })
 
         return instructions
@@ -1559,25 +1773,26 @@ class Unary(Expression):
 
         if size_of(self) == 8:
             instructions.extend([{
-                "trace":self.trace,
-                "op":"long_not",
-                }])
+                "trace": self.trace,
+                "op": "long_not",
+            }])
         else:
             instructions.extend([{
-                "trace":self.trace,
-                "op":"not",
-                "a":result,
-                "z":result,
-                }])
+                "trace": self.trace,
+                "op": "not",
+                "a": result,
+                "z": result,
+            }])
 
         return instructions
 
     def value(self):
-        return eval("%s%s"%(self.operator, self.expression.value()))
+        return eval("%s%s" % (self.operator, self.expression.value()))
+
 
 class Address(Expression):
 
-    """Unary oprerator &"""
+    """Unary operator &"""
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
@@ -1595,18 +1810,23 @@ class Address(Expression):
     def type_(self):
         return PointerTo(self.expression.type_())
 
+
 class Dereference(Object):
 
-    """Unary oprerator *"""
+    """Unary operator *"""
 
     def __init__(self, trace, expression):
         self.expression = constant_fold(trace, expression)
         self.trace = trace
 
-        Expression.__init__(
-            self,
-            expression.type_(),
-            expression.signed())
+        try:
+            Expression.__init__(
+                self,
+                expression.type_().base_type(),
+                expression.signed())
+        except AttributeError:
+            trace.error("Cannot dereference a non pointer")
+
 
     def address(self):
         instructions = []
@@ -1616,7 +1836,12 @@ class Dereference(Object):
     def generate(self):
         instructions = []
         instructions.extend(self.expression.generate())
-        load_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=False)
+        load_object(
+            self.trace,
+            instructions,
+            n=size_of(self) // 4,
+            offset=None,
+            local=False)
         return instructions
 
     def copy(self, expression, leave_on_stack=True):
@@ -1628,13 +1853,23 @@ class Dereference(Object):
             push(self.trace, instructions, result)
             push(self.trace, instructions, result_hi)
         instructions.extend(self.expression.generate())
-        instructions.append({"trace":self.trace, "op":"addl", "z":address, "a":result, "literal": 0})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "addl",
+             "z": address,
+             "a": result,
+             "literal": 0})
         if size_of(self) == 4:
             pop(self.trace, instructions, result)
         elif size_of(self) == 8:
             pop(self.trace, instructions, result_hi)
             pop(self.trace, instructions, result)
-        store_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=False)
+        store_object(
+            self.trace,
+            instructions,
+            n=size_of(self) // 4,
+            offset=None,
+            local=False)
         return instructions
 
     def type_(self):
@@ -1658,14 +1893,14 @@ class FunctionCall(Expression):
     def generate(self):
         instructions = []
 
-        #save non-volatile registers
+        # save non-volatile registers
         push(self.trace, instructions, return_address)
         push(self.trace, instructions, return_frame)
 
-        #put arguments on stack
+        # put arguments on stack
         argument_size = 0
         for expression in self.arguments:
-            #objects 2 or smaller are left in registers
+            # objects 2 or smaller are left in registers
             instructions.extend(expression.generate())
             argument_size += arg_size_of(expression)
             if arg_size_of(expression) == 4:
@@ -1674,32 +1909,32 @@ class FunctionCall(Expression):
                 push(self.trace, instructions, result)
                 push(self.trace, instructions, result_hi)
             else:
-                #objects larger than 2 are on stack by default
+                # objects larger than 2 are on stack by default
                 pass
 
-        #call the function
-        call(self.trace, instructions, "function_%s"%id(self.function))
+        # call the function
+        call(self.trace, instructions, "function_%s" % id(self.function))
 
-        #take the arguments off again
+        # take the arguments off again
         instructions.append({
-            "trace":self.trace,
-            "op":"addl",
-            "z":tos,
-            "a":tos,
-            "literal":-argument_size//4,
+            "trace": self.trace,
+            "op": "addl",
+            "z": tos,
+            "a": tos,
+            "literal": -argument_size // 4,
         })
 
-        #reload non-volatile registers
+        # reload non-volatile registers
         pop(self.trace, instructions, return_frame)
         pop(self.trace, instructions, return_address)
 
-        #retrieve the return value and place on the stack
+        # retrieve the return value and place on the stack
         if size_of(self.function):
             load_object(
                 self.trace,
-                instructions, 
-                n=size_of(self.function)//4, 
-                offset=self.function.return_pointer, 
+                instructions,
+                n=size_of(self.function) // 4,
+                offset=self.function.return_pointer,
                 local=False
             )
 
@@ -1721,7 +1956,11 @@ class Output(Expression):
         push(self.trace, instructions, result)
         instructions.extend(self.expression.generate())
         pop(self.trace, instructions, temp)
-        instructions.append({"trace":self.trace, "op":"write", "a":temp, "b":result})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "write",
+             "a": temp,
+             "b": result})
         return instructions
 
 
@@ -1740,18 +1979,82 @@ class FileWrite(Expression):
         instructions = self.expression.generate()
 
         if self.expression.type_() == "double":
-            instructions.append({"trace":self.trace, "op":"a_hi", "z":result_hi, "a":result_hi})
-            instructions.append({"trace":self.trace, "op":"a_lo", "z":result, "a":result})
-            instructions.append({"trace":self.trace, "op":"long_float_file_write", "file_name" : self.name})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "a_hi",
+                 "z": result_hi,
+                 "a": result_hi})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "a_lo",
+                 "z": result,
+                 "a": result})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "long_float_file_write",
+                 "file_name": self.name})
         elif self.expression.type_() == "float":
-            instructions.append({"trace":self.trace,  "op":"float_file_write", "a":result, "file_name":self.name})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "float_file_write",
+                 "a": result,
+                 "file_name": self.name})
         elif self.expression.type_() == "long":
-            instructions.append({"trace":self.trace, "op":"a_hi", "z":result_hi, "a":result_hi})
-            instructions.append({"trace":self.trace, "op":"a_lo", "z":result, "a":result})
-            instructions.append({"trace":self.trace, "op":"long_file_write", "file_name":self.name})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "a_hi",
+                 "z": result_hi,
+                 "a": result_hi})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "a_lo",
+                 "z": result,
+                 "a": result})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "long_file_write",
+                 "file_name": self.name})
         else:
-            instructions.append({"trace":self.trace, "op":"file_write", "a":result, "file_name" : self.name})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "file_write",
+                 "a": result,
+                 "file_name": self.name})
 
+        return instructions
+
+class TimerLow(Expression):
+
+    """ return timer low value """
+
+    def __init__(self, trace):
+        self.trace = trace
+        Expression.__init__(self, "int", False)
+
+    def generate(self):
+        instructions = []
+        instructions.append({
+            "trace": self.trace,
+            "op": "timer_low",
+            "z":result
+        })
+        return instructions
+
+class TimerHigh(Expression):
+
+    """ return timer high value """
+
+    def __init__(self, trace):
+        self.trace = trace
+        Expression.__init__(self, "int", False)
+
+    def generate(self):
+        instructions = []
+        instructions.append({
+            "trace": self.trace,
+            "op": "timer_high",
+            "z":result
+        })
         return instructions
 
 
@@ -1764,7 +2067,11 @@ class Input(Expression):
 
     def generate(self):
         instructions = self.handle.generate()
-        instructions.append({"trace":self.trace, "op":"read", "z":result, "a":result})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "read",
+             "z": result,
+             "a": result})
         return instructions
 
 
@@ -1777,7 +2084,11 @@ class FileRead(Expression):
 
     def generate(self):
         instructions = []
-        instructions.append({"trace":self.trace, "op":"file_read", "z":result, "file_name":self.name})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "file_read",
+             "z": result,
+             "file_name": self.name})
         return instructions
 
 
@@ -1790,9 +2101,14 @@ class Ready(Expression):
 
     def generate(self):
         instructions = self.handle.generate()
-        instructions.append({"trace":self.trace, "op":"ready", "z":result, "a":result})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "ready",
+             "z": result,
+             "a": result})
 
         return instructions
+
 
 class OutputReady(Expression):
 
@@ -1803,30 +2119,48 @@ class OutputReady(Expression):
 
     def generate(self):
         instructions = self.handle.generate()
-        instructions.append({"trace":self.trace, "op":"output_ready", "z":result, "a":result})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "output_ready",
+             "z": result,
+             "a": result})
 
         return instructions
+
 
 class StructMember(Object):
 
     def __init__(self, trace, struct, member):
         Object.__init__(self, struct)
-        self.trace=trace
-        self.struct=struct
-        self.member=member
-        self.struct_offset=struct.type_().member_offset(member)
+        self.trace = trace
+        self.struct = struct
+        self.member = member
+        self.struct_offset = struct.type_().member_offset(member)
 
     def address(self):
         instructions = []
         instructions.extend(self.struct.address())
-        instructions.append({"trace":self.trace, "op":"addl", "z":result, "a":result, "literal": self.struct_offset})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "addl",
+             "z": result,
+             "a": result,
+             "literal": self.struct_offset})
         return instructions
 
     def generate(self):
-        instructions = []
-        instructions.extend(self.address())
-        load_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=False)
-        return instructions
+        if is_array_of(self):
+            return self.address()
+        else:
+            instructions = []
+            instructions.extend(self.address())
+            load_object(
+                self.trace,
+                instructions,
+                n=size_of(self) // 4,
+                offset=None,
+                local=False)
+            return instructions
 
     def copy(self, expression, leave_on_stack=True):
         instructions = []
@@ -1837,17 +2171,29 @@ class StructMember(Object):
             push(self.trace, instructions, result)
             push(self.trace, instructions, result_hi)
         instructions.extend(self.address())
-        instructions.append({"trace":self.trace, "op":"addl", "z":address, "a":result, "literal": 0})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "addl",
+             "z": address,
+             "a": result,
+             "literal": 0})
         if size_of(self) == 4:
             pop(self.trace, instructions, result)
         elif size_of(self) == 8:
             pop(self.trace, instructions, result_hi)
             pop(self.trace, instructions, result)
-        store_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=False, leave_on_stack=leave_on_stack)
+        store_object(
+            self.trace,
+            instructions,
+            n=size_of(self) // 4,
+            offset=None,
+            local=False,
+            leave_on_stack=leave_on_stack)
         return instructions
 
     def type_(self):
         return self.struct.type_().member_type(self.member)
+
 
 class ArrayIndex(Object):
 
@@ -1858,81 +2204,152 @@ class ArrayIndex(Object):
 
     def address(self):
         instructions = []
-        instructions.extend(self.array.address())
+        if isinstance(self.array, ArrayIndex):
+            instructions.extend(self.array.address())
+        else:
+            instructions.extend(self.array.generate())
         push(self.trace, instructions, result)
         instructions.extend(self.index_expression.generate())
         pop(self.trace, instructions, address)
         if size_of(self) > 4:
-            instructions.append({"trace":self.trace, "op":"literal", "z":temp, "literal":size_of(self)//4})
-            instructions.append({"trace":self.trace, "op":"multiply", "z":result, "a":result, "b":temp})
-        instructions.append({"trace":self.trace, "op":"add", "z":result, "a":result, "b":address})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "literal",
+                 "z": temp,
+                 "literal": size_of(self) // 4})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "multiply",
+                 "z": result,
+                 "a": result,
+                 "b": temp})
+        instructions.append(
+            {"trace": self.trace,
+             "op": "add",
+             "z": result,
+             "a": result,
+             "b": address})
         return instructions
 
     def generate(self):
         instructions = []
         instructions.extend(self.address())
-        load_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=False)
+        load_object(
+            self.trace,
+            instructions,
+            n=size_of(self) // 4,
+            offset=None,
+            local=False)
         return instructions
 
     def copy(self, expression, leave_on_stack=True):
         instructions = []
         instructions.extend(expression.generate())
-        if size_of(self)==4:
+        if size_of(self) == 4:
             push(self.trace, instructions, result)
-        elif size_of(self)==8:
+        elif size_of(self) == 8:
             push(self.trace, instructions, result)
             push(self.trace, instructions, result_hi)
         instructions.extend(self.address())
-        instructions.append({"trace":self.trace, "op":"addl", "z":address, "a":result, "literal": 0})
-        if size_of(self)==4:
+        instructions.append(
+            {"trace": self.trace,
+             "op": "addl",
+             "z": address,
+             "a": result,
+             "literal": 0})
+        if size_of(self) == 4:
             pop(self.trace, instructions, result)
-        elif size_of(self)==8:
+        elif size_of(self) == 8:
             pop(self.trace, instructions, result_hi)
             pop(self.trace, instructions, result)
-        store_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=False, leave_on_stack=leave_on_stack)
+        store_object(
+            self.trace,
+            instructions,
+            n=size_of(self) // 4,
+            offset=None,
+            local=False,
+            leave_on_stack=leave_on_stack)
         return instructions
 
     def type_(self):
         return self.array.type_().base_type()
 
     def signed(self):
-        #This needs work
+        # This needs work
         return True
 
 
 class Variable(Object):
+
     def __init__(self, trace, instance):
         Object.__init__(self, instance)
-        self.trace=trace
+        self.trace = trace
 
     def address(self):
         instructions = []
-        if is_array_of(self) and self.instance.argument:
-            instructions.append({"trace":self.trace, "op":"addl", "z":result, "a":frame, "literal":self.instance.offset})
-            instructions.append({"trace":self.trace, "op":"load", "z":result, "a":result})
-        elif self.instance.local:
-            instructions.append({"trace":self.trace, "op":"addl", "z":result, "a":frame, "literal":self.instance.offset})
+        # if is_array_of(self) and self.instance.argument:
+        #    instructions.append(
+        #        {"trace": self.trace,
+        #         "op": "addl",
+        #         "z": result,
+        #         "a": frame,
+        #         "literal": self.instance.offset})
+        #    instructions.append(
+        #        {"trace": self.trace,
+        #         "op": "load",
+        #         "z": result,
+        #         "a": result})
+        if self.instance.local:
+            instructions.append({
+                "trace": self.trace,
+                "op": "addl",
+                "z": result,
+                "a": frame,
+                "literal": self.instance.offset})
         else:
-            instructions.append({"trace":self.trace, "op":"literal", "z":result, "literal":self.instance.offset})
+            instructions.append({
+                "trace": self.trace,
+                "op": "literal",
+                "z": result,
+                "literal": self.instance.offset})
         return instructions
 
     def generate(self):
-        if is_array_of(self):
-            return self.address()
+        instructions = []
+        instructions.extend(self.address())
+        if is_array_of(self) and not self.instance.argument:
+            return instructions
         else:
-            instructions = []
-            instructions.extend(self.address())
-            load_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=True)
+            load_object(
+                self.trace,
+                instructions,
+                n=size_of(self) // 4,
+                offset=None,
+                local=True)
             return instructions
 
     def copy(self, expression, leave_on_stack=True):
         instructions = []
         instructions.extend(expression.generate())
         if self.instance.local:
-            instructions.append({"trace":self.trace, "op":"addl", "z":address, "a":frame, "literal":self.instance.offset})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "addl",
+                 "z": address,
+                 "a": frame,
+                 "literal": self.instance.offset})
         else:
-            instructions.append({"trace":self.trace, "op":"literal", "z":address, "literal":self.instance.offset})
-        store_object(self.trace, instructions, n=size_of(self)//4, offset=None, local=True)
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "literal",
+                 "z": address,
+                 "literal": self.instance.offset})
+        store_object(
+            self.trace,
+            instructions,
+            n=size_of(self) // 4,
+            offset=None,
+            local=True)
         return instructions
 
     def const(self):
@@ -1956,9 +2373,9 @@ class Assignment(Expression):
     def discard(self):
         return self.lvalue.copy(self.expression, False)
 
-
     def generate(self):
         return self.lvalue.copy(self.expression, True)
+
 
 class Constant(Expression):
 
@@ -1972,10 +2389,22 @@ class Constant(Expression):
         int_value = self.int_value()
         instructions = []
         if size_of(self) == 4:
-            instructions.append({"trace":self.trace, "op":"literal", "z":result, "literal":int_value & 0xffffffff})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "literal",
+                 "z": result,
+                 "literal": int_value & 0xffffffff})
         elif size_of(self) == 8:
-            instructions.append({"trace":self.trace, "op":"literal", "z":result, "literal":int_value & 0xffffffff})
-            instructions.append({"trace":self.trace, "op":"literal", "z":result_hi, "literal":(int_value >> 32) & 0xffffffff})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "literal",
+                 "z": result,
+                 "literal": int_value & 0xffffffff})
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "literal",
+                 "z": result_hi,
+                 "literal": (int_value >> 32) & 0xffffffff})
         else:
             for i in self._value:
                 push(self.trace, instructions, i)
@@ -1984,25 +2413,26 @@ class Constant(Expression):
     def value(self):
         return self._value
 
+
 def select_binary_instruction(type_, left_signed, right_signed, operation):
     operation_names = {
-        "+"  : ("add", False, False),
-        "-"  : ("subtract", False, False),
-        "/"  : ("divide", False, True),
-        "*"  : ("multiply", False, False),
-        "%"  : ("modulo", False, False),
-        ">"  : ("greater", False, True),
-        ">=" : ("greater_equal", False, True),
-        "<"  : ("greater", True, True),
-        "<=" : ("greater_equal", True, True),
-        ">>" : ("shift_right", False, True),
-        "<<" : ("shift_left", False, False),
-        "&"  : ("and", False, False),
-        "|"  : ("or", False, False),
-        "^"  : ("xor", False, False),
-        "==" : ("equal", False, False),
-        "!=" : ("not_equal", False, False)
-        }
+        "+": ("add", False, False),
+        "-": ("subtract", False, False),
+        "/": ("divide", False, True),
+        "*": ("multiply", False, False),
+        "%": ("modulo", False, False),
+        ">": ("greater", False, True),
+        ">=": ("greater_equal", False, True),
+        "<": ("greater", True, True),
+        "<=": ("greater_equal", True, True),
+        ">>": ("shift_right", False, True),
+        "<<": ("shift_left", False, False),
+        "&": ("and", False, False),
+        "|": ("or", False, False),
+        "^": ("xor", False, False),
+        "==": ("equal", False, False),
+        "!=": ("not_equal", False, False)
+    }
 
     name, reverse_operands, sign_sensitive = operation_names[operation]
 
@@ -2020,10 +2450,11 @@ def select_binary_instruction(type_, left_signed, right_signed, operation):
 
     return name, reverse_operands
 
+
 def select_increment_instruction(type_, signed, operation):
     operation_names = {
-        "+"  : "add",
-        "-"  : "subtract"}
+        "+": "add",
+        "-": "subtract"}
 
     name = operation_names[operation]
 
@@ -2037,4 +2468,3 @@ def select_increment_instruction(type_, signed, operation):
         name = "long_" + name
 
     return name
-

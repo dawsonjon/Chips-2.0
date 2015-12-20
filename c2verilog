@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 """A C to Verilog compiler - Command line interface"""
 
 __author__ = "Jon Dawson"

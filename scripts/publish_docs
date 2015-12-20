@@ -8,4 +8,5 @@ cp -r docs/build/html/* ../chips_web/Chips-2.0
 cd ../chips_web/Chips-2.0
 git add .
 git commit -a -m "Update Documents"
-git push
+git pull origin gh-pages
+git push origin gh-pages

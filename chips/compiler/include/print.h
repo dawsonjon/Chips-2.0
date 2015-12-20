@@ -79,7 +79,7 @@ void fprint_decimal(int decimal, unsigned handle){
 void fprint_float(float f, handle){
     unsigned digit;
     unsigned print = 0;
-    float significance = 100000000.0;
+    float significance = 100000000.0f;
 
     if( f < 0.0f) {
         fputc('-', handle);
@@ -88,7 +88,7 @@ void fprint_float(float f, handle){
 
     while(significance >= 1.0f){
         digit = f / significance; 
-        if(significance < 10.0){
+        if(significance < 10.0f){
             print = 1;
         } else {
             print |= digit;
@@ -144,6 +144,14 @@ void fprint_double(double f, handle){
         significance /= 10.0;
         if(f == 0.0) break;
     }
+}
+
+void print_uhex(int hex){
+    fprint_uhex(hex, stdout);
+}
+
+void print_udecimal(int decimal){
+    fprint_udecimal(decimal, stdout);
 }
 
 void print_hex(int hex){

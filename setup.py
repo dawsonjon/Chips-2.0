@@ -1,31 +1,20 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 from distutils.core import setup
+version = open("version").read()
+long_description = open("README.rst").read()
 
 setup(name="Chips",
-      version="0.1.2",
+      version=version,
       description="Design hardware with Python",
-      long_description="""\
-
-Chips
------
-
-The Chips library allows hardware devices to be designed in python and C
-
-Features
-
-- Design components in C
-
-- Connect components together using a python API to generate a chip
-
-- Automatic generation of synthesisable Verilog.
-
-""",
+      long_description=long_description,
 
       author="Jon Dawson",
       author_email="chips@jondawson.org.uk",
-      url="http://github.com/dawsonjon/Chips-2.0",
-      keywords=["Verilog", "FPGA", "C", "HDL", "Synthesis"],
+      url="http://pyandchips.org",
+      download_url="http://github.com/dawsonjon/Chips-2.0",
+      keywords=["Verilog", "FPGA", "C", "HDL", "Synthesis", "VHDL"],
+      install_requires=["numpy"],
       classifiers = [
           "Programming Language :: Python",
           "License :: OSI Approved :: MIT License",

@@ -23,6 +23,14 @@ else:
   print "...fail"
   sys.exit(0)
 
+result = os.system("./test_stdlib")
+
+if result == 0:
+  print "...pass"
+else:
+  print "...fail"
+  sys.exit(0)
+
 result = os.system("./test_compiler")
 
 if result == 0:

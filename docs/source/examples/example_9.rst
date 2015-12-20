@@ -39,7 +39,7 @@ is referred to as the window.
     /*A function that reads a stream of uncompressed data, 
     and creates a stream of compressed data*/
     
-    void compress(){
+    void main(){
     
         unsigned pointer, match, match_length, longest_match, longest_match_length;
         unsigned buffer[N];
@@ -136,7 +136,7 @@ window, for example a window size of 1024 requires the pointers to be 10 bits ea
     /*Decompress a stream of lzss compressed data, 
     and generate a stream of raw data*/
     
-    void decompress(){
+    void main(){
         unsigned i, pointer, distance, length, data;
         unsigned buffer[N];
     

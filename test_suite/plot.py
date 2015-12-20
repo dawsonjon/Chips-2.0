@@ -1,44 +1,53 @@
 from matplotlib import pyplot
 from math import pi
-from numpy import sin, cos, tan, arctan, arccos, arcsin, sinh, cosh, tanh, sqrt
+from numpy import fromfile, sin, cos, tan, arctan, arccos, arcsin, sinh, cosh, tanh, sqrt, exp, abs, log10, log
+from sys import exit
 
-x = [float(i) for i in open("x")]
-sin_x = [float(i) for i in open("sin_x")]
-sin_x_error = sin(x) - sin_x
-cos_x = [float(i) for i in open("cos_x")]
-cos_x_error = cos(x) - cos_x
-tan_x = [float(i) for i in open("tan_x")]
-tan_x_error = tan(x) - tan_x
+def decimal_places(f_expected, f_actual):
+    error = abs(f_expected - f_actual)
+    fraction_error = error / abs(f_expected)
+    return -log10(fraction_error)
 
-x_2 = [float(i) for i in open("x_2")]
-atan_x = [float(i) for i in open("atan_x")]
-atan_x_error = arctan(x_2) - atan_x
-x_3 = [float(i) for i in open("x_3")]
-asin_x = [float(i) for i in open("asin_x")]
-asin_x_error = arcsin(x_3) - asin_x
-acos_x = [float(i) for i in open("acos_x")]
-acos_x_error = arccos(x_3) - acos_x
+x = fromfile("x", dtype="float", count=-1, sep="\n")
+sin_x = fromfile("sin_x", dtype="float", count=-1, sep="\n")
+sin_x_error = decimal_places(sin(x), sin_x)
+cos_x = fromfile("cos_x", dtype="float", count=-1, sep="\n")
+cos_x_error = decimal_places(cos(x), cos_x)
+tan_x = fromfile("tan_x", dtype="float", count=-1, sep="\n")
+tan_x_error = decimal_places(tan(x), tan_x)
 
-x_4 = [float(i) for i in open("x_4")]
-sinh_x = [float(i) for i in open("sinh_x")]
-sinh_x_error = sinh(x_4) - sinh_x
-cosh_x = [float(i) for i in open("cosh_x")]
-cosh_x_error = cosh(x_4) - cosh_x
-tanh_x = [float(i) for i in open("tanh_x")]
-tanh_x_error = tanh(x_4) - tanh_x
+x_2 = fromfile("x_2", dtype="float", count=-1, sep="\n")
+atan_x = fromfile("atan_x", dtype="float", count=-1, sep="\n")
+atan_x_error = decimal_places(arctan(x_2), atan_x)
+x_3 = fromfile("x_3", dtype="float", count=-1, sep="\n")
+asin_x = fromfile("asin_x", dtype="float", count=-1, sep="\n")
+asin_x_error = decimal_places(arcsin(x_3), asin_x)
+acos_x = fromfile("acos_x", dtype="float", count=-1, sep="\n")
+acos_x_error = decimal_places(arccos(x_3), acos_x)
 
-x_5 = [float(i) for i in open("x_5")]
-sqrt_x = [float(i) for i in open("sqrt_x")]
-sqrt_x_error = sqrt(x_5) - sqrt_x
+x_4 = fromfile("x_4", dtype="float", count=-1, sep="\n")
+sinh_x = fromfile("sinh_x", dtype="float", count=-1, sep="\n")
+sinh_x_error = decimal_places(sinh(x_4), sinh_x)
+cosh_x = fromfile("cosh_x", dtype="float", count=-1, sep="\n")
+cosh_x_error = decimal_places(cosh(x_4), cosh_x)
+tanh_x = fromfile("tanh_x", dtype="float", count=-1, sep="\n")
+tanh_x_error = decimal_places(tanh(x_4), tanh_x)
 
-print "cosine max error", max(cos_x_error)
-print "sine max error", max(sin_x_error)
-print "tangent max error", max(tan_x_error)
+x_5 = fromfile("x_5", dtype="float", count=-1, sep="\n")
+sqrt_x = fromfile("sqrt_x", dtype="float", count=-1, sep="\n")
+sqrt_x_error = decimal_places(sqrt(x_5), sqrt_x)
+
+x_6 = fromfile("x_6", dtype="float", count=-1, sep="\n")
+exp_x = fromfile("exp_x", dtype="float", count=-1, sep="\n")
+exp_x_error = decimal_places(exp(x_6), exp_x)
+
+x_7 = fromfile("x_7", dtype="float", count=-1, sep="\n")
+log_x = fromfile("log_x", dtype="float", count=-1, sep="\n")
+log_x_error = decimal_places(log(x_7), log_x)
 
 pyplot.xticks(
     [-2.0*pi, -pi, 0, pi,  2.0*pi],
     [r'$-2\pi$', r"$-\pi$", r'$0$', r'$\pi$', r'$2\pi$'])
-
 
 pyplot.figure(1)
 
@@ -47,7 +56,7 @@ pyplot.plot(x, cos_x)
 ax2 = ax.twinx()
 ax2.plot(x, cos_x_error, "0.75")
 pyplot.ylim(-5.5, 5.5)
-ax2.set_ylim(-2e-12, 2e-12)
+ax2.set_ylim(0, 16)
 pyplot.xlim(-2.2 * pi, 2.2 * pi)
 pyplot.title("cos(x)")
 pyplot.xlabel("x (radians)")
@@ -57,7 +66,7 @@ pyplot.plot(x, sin_x)
 ax2 = ax.twinx()
 ax2.plot(x, sin_x_error, "0.75")
 pyplot.ylim(-5.5, 5.5)
-ax2.set_ylim(-2e-12, 2e-12)
+ax2.set_ylim(0, 16)
 pyplot.xlim(-2.2 * pi, 2.2 * pi)
 pyplot.title("sin(x)")
 pyplot.xlabel("x (radians)")
@@ -67,7 +76,7 @@ pyplot.plot(x, tan_x)
 ax2 = ax.twinx()
 ax2.plot(x, tan_x_error, "0.75")
 ax.set_ylim(-5.5, 5.5)
-ax2.set_ylim(-2e-11, 2e-11)
+ax2.set_ylim(0, 16)
 pyplot.xlim(-2.2 * pi, 2.2 * pi)
 pyplot.title("tan(x)")
 pyplot.xlabel("x (radians)")
@@ -78,7 +87,7 @@ ax2 = ax.twinx()
 ax2.plot(x_2, atan_x_error, "0.75")
 ax.set_xlim(-5.5, 5.5)
 ax.set_ylim(-2, 2)
-ax2.set_ylim(-2e-13, 2e-13)
+ax2.set_ylim(0, 16)
 pyplot.title("atan(x)")
 pyplot.xlabel("x (radians)")
 
@@ -88,7 +97,7 @@ ax2 = ax.twinx()
 ax2.plot(x_3, asin_x_error, "0.75")
 ax.set_xlim(-1.1, 1.1)
 ax.set_ylim(-2, 2)
-ax2.set_ylim(-2e-13, 2e-13)
+ax2.set_ylim(0, 16)
 pyplot.title("asin(x)")
 pyplot.xlabel("x (radians)")
 
@@ -98,7 +107,7 @@ ax2 = ax.twinx()
 ax2.plot(x_3, acos_x_error, "0.75")
 ax.set_xlim(-1.1, 1.1)
 ax.set_ylim(-0.5, 3.5)
-ax2.set_ylim(-2e-13, 2e-13)
+ax2.set_ylim(0, 16)
 pyplot.title("acos(x)")
 pyplot.xlabel("x (radians)")
 
@@ -108,7 +117,7 @@ ax = pyplot.subplot(231)
 pyplot.plot(x_4, cosh_x)
 ax2 = ax.twinx()
 ax2.plot(x_4, cosh_x_error, "0.75")
-ax2.set_ylim(-4e-6, 4e-6)
+ax2.set_ylim(0, 16)
 pyplot.xlim(-15, 15)
 pyplot.title("cosh(x)")
 pyplot.xlabel("x (radians)")
@@ -117,7 +126,7 @@ ax = pyplot.subplot(232)
 pyplot.plot(x_4, sinh_x)
 ax2 = ax.twinx()
 ax2.plot(x_4, sinh_x_error, "0.75")
-ax2.set_ylim(-4e-6, 4e-6)
+ax2.set_ylim(0, 16)
 pyplot.xlim(-15, 15)
 pyplot.title("sinh(x)")
 pyplot.xlabel("x (radians)")
@@ -126,7 +135,7 @@ ax = pyplot.subplot(233)
 pyplot.plot(x_4, tanh_x)
 ax2 = ax.twinx()
 ax2.plot(x_4, tanh_x_error, "0.75")
-ax2.set_ylim(-4e-6, 4e-6)
+ax2.set_ylim(0, 16)
 pyplot.xlim(-15, 15)
 pyplot.title("tanh(x)")
 pyplot.xlabel("x (radians)")
@@ -134,11 +143,33 @@ pyplot.xlabel("x (radians)")
 pyplot.figure(3)
 
 pyplot.plot(x_5, sqrt_x)
-ax2 = ax.twinx()
+ax2 = pyplot.twinx()
 ax2.plot(x_5, sqrt_x_error, "0.75")
-ax2.set_ylim(-4e-6, 4e-6)
+ax2.set_ylim(0, 16)
 pyplot.xlim(0, 10)
 pyplot.title("sqrt(x)")
+pyplot.xlabel("x")
+
+pyplot.figure(4)
+
+pyplot.plot(x_6, exp_x)
+ax2 = pyplot.twinx()
+ax2.plot(x_6, exp_x_error, "0.75")
+ax2.set_xlim(0, 10)
+ax2.set_ylim(0, 16)
+pyplot.xlim(-10, 10)
+pyplot.title("exp(x)")
+pyplot.xlabel("x")
+
+pyplot.figure(5)
+
+pyplot.plot(x_7, log_x)
+ax2 = pyplot.twinx()
+ax2.plot(x_7, log_x_error, "0.75")
+ax2.set_xlim(0, 10)
+ax2.set_ylim(0, 16)
+pyplot.xlim(0, 10)
+pyplot.title("log(x)")
 pyplot.xlabel("x")
 
 pyplot.show()

@@ -1,57 +1,151 @@
-Chips
-=====
-
-.. image:: https://travis-ci.org/dawsonjon/Chips-2.0.svg?branch=development
+.. image:: https://travis-ci.org/dawsonjon/Chips-2.0.svg?branch=master
     :target: https://travis-ci.org/dawsonjon/Chips-2.0`
 
-Introduction
-------------
+Chips - 2.0
+===========
 
-*Chips* makes FPGA design quicker and easier. *Chips* isn't an HDL like VHDL or
-Verilog, its a different way of doing things. In *Chips*, you design components
-using a simple subset of the C programming language. There's a Python API to
-connect C components together using fast data streams to form complex, parallel
-systems all in a single chip. You don't need to worry about clocks, resets,
-or timing. You don't need to follow special templates to make your code
-synthesisable. All that's done for you!
+*Chips* is a high level, FPGA design tool inspired by *Python*.
+
+Try it out
+----------
 
 Why not try the `Chips <http://dawsonjon.pythonanywhere.com>`_ web app. 
 
-Test
-----
+Design components in C, design FPGAs in Python
+----------------------------------------------
+
+In Chips, a design resembles a network of computers implemented in a single
+chip. A chip consists of many interconnected components operating in parallel.
+Each component acts like a computer running a C program. 
+
+Components communicate with each other sending messages across buses. The
+design of a chip - the components and the connections between them - is carried
+in Python. 
+
+Chips come in three parts:
+
+1. A Python library to build and simulate chips by connecting together digital components using high speed buses.
+
+2. A collection of ready made digital components.
+
+3. A C-to-hardware compiler to make new digital components in the C programming language.
+
+A quick example
+---------------
 
 ::
 
-        $ cd test_suite
-        $ test_c_compiler
+        from chips.api.api import *
+        
+        #create a new chip
+        chip = Chip("knight_rider")
 
-Install
--------
+        #define a component in C
+        scanner = Component(C_file = """
+
+            /* Knight Rider */
+            unsigned leds = output("leds");
+            void main (){
+                unsigned i;
+                while(1)
+                {
+                    for(i=1; i<=0x80; i<<=1) fputc(i, leds);
+                    for(i=0x80; i>=1; i>>=1) fputc(i, leds);
+                }
+            }
+
+        """, inline=True)
+
+        #capture simulation output in Python
+        scanner_output = Response(chip, "scanner", "int")
+        
+        #add scanner to chip and connect
+        scanner(chip, inputs = {}, outputs = {"leds":scanner_output})
+
+        #generate synthesisable verilog code
+        chip.generate_verilog()
+
+        #run simulation in Python
+        chip.simulation_reset()
+        while len(scanner_output) < 16:
+            chip.simulation_step()
+
+        #check the results
+        print list(scanner_output)
+
+.. testoutput::
+
+        [1, 2, 4, 8, 16, 32, 64, 128, 128, 64, 32, 16, 8, 4, 2, 1]
+
+..        
+
+
+Work at a higher level of abstraction 
+-------------------------------------
+
+In Chips, the details of gates, clocks, resets, finite-state machines and
+flow-control are handled by the tool, this leaves the designer free to think
+about the architecture and the algorithms. This has some benefits:
+
++ Designs are simpler.
++ Simpler designs take much less time to get working.
++ Simpler designs are much less likely to have bugs.
+
+With Chips the batteries *are* included 
+---------------------------------------
+
+With traditional Hardware Description Languages, there are many restrictions on
+what can be translated into hardware and implemented in a chip.
+
+With Chips almost all legal code can be translated into hardware. This includes
+division, single and double precision IEEE floating point, maths functions,
+trig-functions, timed waits, pseudo-random numbers and recursive function
+calls.
+
+Python is a rich verification environment
+-----------------------------------------
+
+Chips provides the ability to simulate designs natively in Python.  Python is
+an excellent programming language with extensive libraries covering many
+application domains. This makes it the perfect environment to verify a chip.
+
+`NumPy <http://www.numpy.org/>`_ , `SciPy <http://scipy.org/>`_  and
+`MatPlotLib <http://http://matplotlib.org/>`_  will be of interest to
+engineers, but that's just the `start <https://pypi.python.org/pypi>`_ .
+
+Under the hood
+--------------
+
+Behind the scenes, Chips uses some novel techniques to generate compact and
+efficient logic - a hybrid of software and hardware. 
+
+Not only does the compiler translate the C code into CPU instructions, it also
+generates a customised pipelined RISC CPU on the fly. The CPU provides the
+optimal instruction set for any particular C program.
+
+By minimising the logic required to perform each concurrent task, designers can
+reduce power and area or cost. Performance gains can be achieved by increasing
+the number of concurrent tasks in a single device (tens in a small device to
+around a thousand or more large device).
+
+While the code generated by chips is compact and efficient, die hard FPGA
+designers will be pleased to know that they can still hand craft performance
+critical data paths if they need to. There are even a few hand crafted
+components thrown in!
+
+Install from github
+-------------------
 
 ::
 
+        $ git clone --recursive https://github.com/dawsonjon/Chips-2.0.git
+        $ cd Chips-2.0
         $ sudo python setup install
 
-Documentation
--------------
+Install from PyPi
+-----------------
 
 ::
 
-        $ cd docs
-        $ make html
+        $ pip-install chips
 
-To Prepare a Source Distribution
---------------------------------
-
-::
-
-        $ python setup sdist
-
-Distribution is contained in ./dist
-
-To Create a Windows Distribution
---------------------------------
-
-::
-
-        $ python setup bdist_wininst

@@ -95,7 +95,7 @@ module adder(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN 
+        //if a is NaN or b is NaN return NaN
         if ((a_e == 128 && a_m != 0) || (b_e == 128 && b_m != 0)) begin
           z[31] <= 1;
           z[30:23] <= 255;
@@ -380,14 +380,14 @@ module divider(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN 
+        //if a is NaN or b is NaN return NaN
         if ((a_e == 128 && a_m != 0) || (b_e == 128 && b_m != 0)) begin
           z[31] <= 1;
           z[30:23] <= 255;
           z[22] <= 1;
           z[21:0] <= 0;
           state <= put_z;
-          //if a is inf and b is inf return NaN 
+          //if a is inf and b is inf return NaN
         end else if ((a_e == 128) && (b_e == 128)) begin
           z[31] <= 1;
           z[30:23] <= 255;
@@ -692,7 +692,7 @@ module multiplier(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN 
+        //if a is NaN or b is NaN return NaN
         if ((a_e == 128 && a_m != 0) || (b_e == 128 && b_m != 0)) begin
           z[31] <= 1;
           z[30:23] <= 255;
@@ -966,14 +966,14 @@ module double_divider(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN 
+        //if a is NaN or b is NaN return NaN
         if ((a_e == 1024 && a_m != 0) || (b_e == 1024 && b_m != 0)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
           z[51] <= 1;
           z[50:0] <= 0;
           state <= put_z;
-          //if a is inf and b is inf return NaN 
+          //if a is inf and b is inf return NaN
         end else if ((a_e == 1024) && (b_e == 1024)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
@@ -1278,7 +1278,7 @@ module double_multiplier(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN 
+        //if a is NaN or b is NaN return NaN
         if ((a_e == 1024 && a_m != 0) || (b_e == 1024 && b_m != 0)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
@@ -1549,7 +1549,7 @@ module double_adder(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN 
+        //if a is NaN or b is NaN return NaN
         if ((a_e == 1024 && a_m != 0) || (b_e == 1024 && b_m != 0)) begin
           z[63] <= 1;
           z[62:52] <= 2047;

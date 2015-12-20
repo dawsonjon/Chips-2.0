@@ -1,8 +1,837 @@
+
 C Libraries
 ===========
 
-Not all of the libC is supported. The library is under development, and the intention is to make the library as complete as possible.
-There will be occasions, where the libc functions can't be implemented, or have to differ from the standard.
+
+ctype.h
+-------
+
+
+The isalnum function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isalnum(int c);
+
+Description:
+
+   The isalnum function tests for any character for which isalpha or
+   isdigit is true.
+
+
+The isalpha function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isalpha(int c);
+
+Description:
+
+   The isalpha function tests for any character for which isupper or
+   islower is true, or any of an implementation-defined set of characters
+   for which none of iscntrl, isdigit, ispunct, or isspace is true.
+   In the C locale, isalpha returns true only for the characters for
+   which isupper or islower is true.
+
+
+The iscntrl function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int iscntrl(int c);
+
+Description:
+
+   The iscntrl function tests for any control character.
+
+
+The isdigit function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isdigit(int c);
+
+Description:
+
+   The isdigit function tests for any decimal-digit character.
+
+
+The isgraph function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isgraph(int c);
+
+Description:
+
+   The isgraph function tests for any printing character except space (' ').
+
+
+The islower function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int islower(int c);
+
+Description:
+
+   The islower function tests for any lower-case letter or any of an
+   implementation-defined set of characters for which none of iscntrl,
+   isdigit, ispunct, or isspace is true.  In the C locale, islower
+   returns true only for the characters defined as lower-case letters.
+
+
+The isprint function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isprint(int c);
+
+Description:
+
+   The isprint function tests for any printing character including
+   space (' ').
+
+
+The ispunct function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int ispunct(int c);
+
+Description:
+
+   The ispunct function tests for any printing character except space
+   (' ') or a character for which isalnum is true.
+
+
+The isspace function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isspace(int c);
+
+Description:
+
+   The isspace function tests for the standard white-space characters
+   or for any of an implementation-defined set of characters for which
+   isalnum is false.  The standard white-space characters are the
+   following: space (' '), form feed ('\f'), new-line ('\n'), carriage
+   return ('\r'), horizontal tab ('\t'), and vertical tab ('\v').  In the
+   C locale, isspace returns true only for the standard white-space
+   characters.
+
+
+The isupper function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isupper(int c);
+
+Description:
+
+   The isupper function tests for any upper-case letter or any of an
+   implementation-defined set of characters for which none of iscntrl,
+   isdigit, ispunct, or isspace is true.  In the C locale, isupper
+   returns true only for the characters defined as upper-case letters.
+
+
+The isxdigit function
+*********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int isxdigit(int c);
+
+Description:
+
+   The isxdigit function tests for any hexadecimal-digit character.
+
+
+The tolower function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int tolower(int c);
+
+Description:
+
+   The tolower function converts an upper-case letter to the
+   corresponding lower-case letter.
+
+Returns:
+
+   If the argument is an upper-case letter, the tolower function
+   returns the corresponding lower-case letter if there is one; otherwise
+   the argument is returned unchanged.  In the C locale, tolower maps
+   only the characters for which isupper is true to the corresponding
+   characters for which islower is true.
+
+
+The toupper function
+********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <ctype.h>
+         int toupper(int c);
+
+Description:
+
+   The toupper function converts a lower-case letter to the corresponding upper-case letter.
+
+Returns:
+
+   If the argument is a lower-case letter, the toupper function
+   returns the corresponding upper-case letter if there is one; otherwise
+   the argument is returned unchanged.  In the C locale, toupper maps
+   only the characters for which islower is true to the corresponding
+   characters for which isupper is true.
+
+math.h
+------
+
+
+The isfinite macro
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+        #include <math.h>
+        int isfinite(real-floating x);
+
+Description:
+
+    The isfinite macro determines whether its argument has a finite value (zero,
+    subnormal, or normal, and not infinite or NaN). First, an argument represented in a
+    format wider than its semantic type is converted to its semantic type. Then determination
+    is based on the type of the argument.
+    Since an expression can be evaluated with more range and precision than its type has, it is important to
+    know the type that classification is based on. For example, a normal long double value might
+    become subnormal when converted to double, and zero when converted to float.
+
+Returns:
+
+The isfinite macro returns a nonzero value if and only if its argument has a finite
+value.
+
+The isinf macro
+***************
+
+Synopsis:
+
+.. code-block:: c
+
+    #include <math.h>
+    int isinf(real-floating x);
+
+Description:
+
+    The isinf macro determines whether its argument value is an infinity (positive or
+    negative). First, an argument represented in a format wider than its semantic type is
+    converted to its semantic type. Then determination is based on the type of the argument.
+
+Returns:
+
+    The isinf macro returns a nonzero value if and only if its argument has an infinite
+    value.
+
+
+The isnan macro
+***************
+
+Synopsis:
+
+.. code-block:: c
+
+        #include <math.h>
+        int isnan(real-floating x);
+
+Description:
+
+    The isnan macro determines whether its argument value is a NaN. First, an argument
+    represented in a format wider than its semantic type is converted to its semantic type.
+    Then determination is based on the type of the argument.
+
+Returns:
+
+    The isnan macro returns a nonzero value if and only if its argument has a NaN value.
+
+
+The isnormal macro
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+        #include <math.h>
+        int isnormal(real-floating x);
+
+..
+
+    For the isnan macro, the type for determination does not matter unless the implementation supports
+    NaNs in the evaluation type but not in the semantic type.
+
+Description:
+
+    The isnormal macro determines whether its argument value is normal (neither
+    zero, subnormal, infinite, nor NaN). First, an argument
+    represented in a format wider than its semantic type is converted to its
+    semantic type. Then determination is based on the type of the argument.
+
+Returns:
+
+    The isnormal macro returns a nonzero value if and only if its argument has a
+    normal value.
+
+
+The signbit macro (not in C89)
+******************************
+
+Synopsis:
+
+.. code-block:: c
+
+    #include <math.h>
+    int signbit(real-floating x);
+
+Description:
+
+    The signbit macro determines whether the sign of its argument value is negative.
+
+Returns:
+
+    The signbit macro returns a nonzero value if and only if the sign of its argument value
+    is negative.
+
+The fabs function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double fabs(double x);
+
+Description:
+
+   The fabs function computes the absolute value of a floating-point
+   number x.
+
+Returns:
+
+   The fabs function returns the absolute value of x.
+
+
+The modf function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double modf(double value, double *iptr);
+
+Description:
+
+   The modf function breaks the argument value into integral and
+   fractional parts, each of which has the same sign as the argument.  It
+   stores the integral part as a double in the object pointed to by iptr.
+
+Returns:
+
+   The modf function returns the signed fractional part of value.
+
+
+The fmod function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double fmod(double x, double y);
+
+Description:
+
+   The fmod function computes the floating-point remainder of x/y.
+
+Returns:
+
+   The fmod function returns the value x i y , for some integer i such
+   that, if y is nonzero, the result has the same sign as x and magnitude
+   less than the magnitude of y.  If y is zero, whether a domain error
+   occurs or the fmod function returns zero is implementation-defined.
+
+
+The exp function
+****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double exp(double x);
+
+Description:
+
+   The exp function computes the exponential function of x.  A range
+   error occurs if the magnitude of x is too large.
+
+Returns:
+
+   The exp function returns the exponential value.
+
+
+The sqrt function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double sqrt(double x);
+
+Description:
+
+   The sqrt function computes the nonnegative square root of x.  A
+   domain error occurs if the argument is negative.
+
+Returns:
+
+   The sqrt function returns the value of the square root.
+
+
+The pow function
+****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double pow(double x, double y);
+
+Description:
+
+   The pow function computes x raised to the power y.  A domain error
+   occurs if x is negative and y is not an integer.  A domain error
+   occurs if the result cannot be represented when x is zero and y is
+   less than or equal to zero.  A range error may occur.
+
+Returns:
+
+   The pow function returns the value of x raised to the power y.
+
+
+The ldexp function
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double ldexp(double x, int exp);
+
+Description:
+
+   The ldexp function multiplies a floating-point number by an
+   integral power of 2.  A range error may occur.
+
+Returns:
+
+   The ldexp function returns the value of x times 2 raised to the
+   power exp.
+
+
+The frexp function
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double frexp(double value, int *exp);
+
+Description:
+
+   The frexp function breaks a floating-point number into a normalized
+   fraction and an integral power of 2.  It stores the integer in the int
+   object pointed to by exp.
+
+Returns:
+
+   The frexp function returns the value x , such that x is a double
+   with magnitude in the interval [1/2, 1) or zero, and value equals x
+   times 2 raised to the power *exp.  If value is zero, both parts of
+   the result are zero.
+
+
+The floor function
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double floor(double x);
+
+Description:
+
+   The floor function computes the largest integral value not greater
+than x.
+
+Returns:
+
+   The floor function returns the largest integral value not greater
+   than x , expressed as a double.
+
+
+The ceil function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double ceil(double x);
+
+Description:
+
+   The ceil function computes the smallest integral value not less than x.
+
+Returns:
+
+   The ceil function returns the smallest integral value not less than
+   x , expressed as a double.
+
+
+The cos function
+****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double cos(double x);
+
+Description:
+
+   The cos function computes the cosine of x (measured in radians).  A
+   large magnitude argument may yield a result with little or no
+   significance.
+
+Returns:
+
+   The cos function returns the cosine value.
+
+
+The sin function
+****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double sin(double x);
+
+Description:
+
+   The sin function computes the sine of x (measured in radians).  A
+   large magnitude argument may yield a result with little or no
+   significance.
+
+Returns:
+
+   The sin function returns the sine value.
+
+
+The tan function
+****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double tan(double x);
+
+Description:
+
+   The tan function returns the tangent of x (measured in radians).  A large magnitude argument may yield a result with little or no significance.
+
+Returns:
+
+   The tan function returns the tangent value.
+
+
+The atan function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double atan(double x);
+
+Description:
+
+   The atan function computes the principal value of the arc tangent of x.
+
+Returns:
+
+   The atan function returns the arc tangent in the range [-PI/2, +PI/2]
+   radians.
+
+
+The atan2 function
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double atan2(double y, double x);
+
+Description:
+
+   The atan2 function computes the principal value of the arc tangent
+   of y/x , using the signs of both arguments to determine the quadrant
+   of the return value.  A domain error may occur if both arguments are
+   zero.
+
+Returns:
+
+   The atan2 function returns the arc tangent of y/x , in the range
+   [-PI, +PI] radians.
+
+
+The asin function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double asin(double x);
+
+Description:
+
+   The asin function computes the principal value of the arc sine of x.
+   A domain error occurs for arguments not in the range [-1, +1].
+
+Returns:
+
+   The asin function returns the arc sine in the range [-PI/2, +PI/2]
+   radians.
+
+
+The acos function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+  #include <math.h>
+  double acos(double x);
+
+Description:
+
+  The acos function computes the principal value of the arc cosine of x.
+  A domain error occurs for arguments not in the range [-1, +1].
+
+Returns:
+
+  The acos function returns the arc cosine in the range [0, PI] radians.
+
+
+The sinh function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double sinh(double x);
+
+Description:
+
+   The sinh function computes the hyperbolic sine of x.  A range error occurs if the magnitude of x is too large.
+
+Returns:
+
+   The sinh function returns the hyperbolic sine value.
+
+
+The cosh function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double cosh(double x);
+
+Description:
+
+   The cosh function computes the hyperbolic cosine of x.  A range
+   error occurs if the magnitude of x is too large.
+
+Returns:
+
+   The cosh function returns the hyperbolic cosine value.
+
+
+The tanh function
+*****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double tanh(double x);
+
+Description:
+
+   The tanh function computes the hyperbolic tangent of x.
+
+Returns:
+
+   The tanh function returns the hyperbolic tangent value.
+
+
+The log function
+****************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double log(double x);
+
+Description:
+
+   The log function computes the natural logarithm of x.  A domain
+   error occurs if the argument is negative.  A range error occurs if the
+   argument is zero and the logarithm of zero cannot be represented.
+
+Returns:
+
+   The log function returns the natural logarithm.
+
+
+The log10 function
+******************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double log10(double x);
+
+Description:
+
+   The log10 function computes the base-ten logarithm of x.  A domain
+   error occurs if the argument is negative.  A range error occurs if the
+   argument is zero and the logarithm of zero cannot be represented.
+
+Returns:
+
+   The log10 function returns the base-ten logarithm.
+
+
+The log2 function (Not in C89 standard)
+***************************************
+
+Synopsis:
+
+.. code-block:: c
+
+         #include <math.h>
+         double log2(double x);
+
+Description:
+
+   The log2 function computes the base-two logarithm of x.  A domain
+   error occurs if the argument is negative.  A range error occurs if the
+   argument is zero and the logarithm of zero cannot be represented.
+
+Returns:
+
+   The log2 function returns the base-two logarithm.
+
 
 stdio.h
 -------
@@ -52,355 +881,582 @@ The `putc` writes a single character to stdout.
 
         void putc(unsigned c);
 
-print.h
--------
+<stdlib.h>
+----------
 
-The `fprint_decimal` function prints a number in decimal to the output `handle`.
+macros
+******
 
-.. code-block:: c
+The header <stdlib.h> defines the following macros:
 
-    void fprint_decimal(int value, unsigned handle);
++ NULL
++ RAND_MAX
++ MB_CUR_MAX
++ MB_LEN_MAX
 
-The `fprint_hex` function prints a number in hexadecimal format to the output `handle`.
+.. note::
 
-.. code-block:: c
+    The EXIT_FAILURE and EXIT_SUCCESS macros are not defined.
 
-    void fprint_hex(int value, unsigned handle);
+`RAND_MAX` expands to an integral constant expression, the value of which
+is the maximum value returned by the rand function.
+`MB_CUR_MAX` expands to a positive integer expression whose value is the
+maximum number of bytes in a multibyte character for the extended
+character set specified by the current locale (category LC_CTYPE ),
+and whose value is never greater than `MB_LEN_MAX`.
 
-The `fprint_float` function prints a floatin point number to the output `handle`.
+.. note::
 
-.. code-block:: c
+    The EXIT_FAILURE and EXIT_SUCCESS macros are not defined.
 
-    void fprint_float(float value, unsigned handle);
+`RAND_MAX` expands to an integral constant expression, the value of which
+is the maximum value returned by the rand function.
 
-The `print_decimal` function prints a number in decimal to standard output.
 
-.. code-block:: c
+`MB_CUR_MAX` expands to a positive integer expression whose value is the
+maximum number of bytes in a multibyte character for the extended
+character set specified by the current locale (category LC_CTYPE ),
+and whose value is never greater than `MB_LEN_MAX`.
 
-    void print_decimal(int value);
+types
+*****
 
-The `print_hex` function prints a number in hexadecimal format to standard output.
+The header <stdlib.h> defines the following types:
 
-.. code-block:: c
++ div_t
 
-    void print_hex(int value);
 
-The `print_float` function prints a floatin point number to standard output.
+The atof function
+*****************
 
-.. code-block:: c
+Synopsis:
 
-    void print_float(float value);
+    .. code-block:: C
 
-To provide flexibility, the definition of standard output is left to the
-user, it could be a serial port, an LCD display, or perhaps a telnet session.
-To define standard output assign it to an output.
+         #include <stdlib.h>
+         double atof(const char *nptr);
 
-.. code-block:: c
+Description:
 
-    #include <print.h>
+   The atof function converts the initial portion of the string
+   pointed to by nptr to double representation.  Except for the behavior
+   on error, it is equivalent to
 
-    stdout = output("uart_tx");
+         strtod(nptr, (char **)NULL)
 
-    print_string("Hello World!\n"); //Hello World!
-    print_decimal(12345); //12345
-    print_hex(127); //7f
-    print_float(1.0); //1.0
+Returns:
 
-scan.h
-------
+   The atof function returns the converted value.
 
-The `fscan_hex` function reads a hex value from the input `handle`.
+.. note::
 
-.. code-block:: c
+	This function is not implemented!!!
 
-    int fscan_hex(unsigned stdin);
 
-The `fscan_decimal` function reads an integer from the input `handle`.
+The atoi function
+*****************
 
-.. code-block:: c
+Synopsis:
 
-    int fscan_decimal(unsigned stdin);
+    .. code-block::
 
-The `fscan_decimal` function reads an float from the input `handle`.
+         #include <stdlib.h>
+         int atoi(const char *nptr);
 
-.. code-block:: c
+Description:
 
-    float fscan_float(unsigned stdin);
+   The atoi function converts the initial portion of the string
+pointed to by nptr to int representation.  Except for the behavior on
+error, it is equivalent to
 
-The `scan_hex` function reads a hex value from standard input.
+         (int)strtol(nptr, (char **)NULL, 10)
 
-.. code-block:: c
+Returns:
 
-    int scan_hex();
+   The atoi function returns the converted value.
 
-The `scan_decimal` function reads an integer from standard input.
+.. note::
 
-.. code-block:: c
+	This function is not implemented!!!
 
-    int scan_decimal();
 
-The `scan_decimal` function reads an float from standard input.
+The atol function
+*****************
 
-.. code-block:: c
+Synopsis:
 
-    float scan_float();
+    .. code-block:: c
 
-To provide flexibility, the definition of standard input is left to the user.
-To define standard input, assign an input to the global stdin.
+         #include <stdlib.h>
+         long int atol(const char *nptr);
 
-ctypes.h
---------
+Description:
 
-The `isalnum` function returns 1 if c is an aphanumeric character otherwise 0.
+   The atol function converts the initial portion of the string
+pointed to by nptr to long int representation.  Except for the
+behavior on error, it is equivalent to
 
-.. code-block:: c
+         strtol(nptr, (char **)NULL, 10)
 
-    unsigned isalnum(char c);
+Returns:
 
-The `isalpha` function returns 1 if c is a letter otherwise 0.
+   The atol function returns the converted value.
 
-.. code-block:: c
+.. note::
 
-    unsigned isalpha(char c);
+	This function is not implemented!!!
 
-The `islower` function returns 1 if c is a lower case letter otherwise 0.
+The strtod function
+*******************
 
-.. code-block:: c
+Synopsis:
 
-    unsigned islower(char c);
+    .. code-block::
 
-The `isupper` function returns 1 if c is an upper case letter otherwise 0.
+         #include <stdlib.h>
+         double strtod(const char *nptr, char **endptr);
 
-.. code-block:: c
+.. note::
 
-    unsigned isupper(char c);
+	This function is not implemented!!!
 
-The `isdigit` function returns 1 if c is a digit otherwise 0.
+The strtol function
+*******************
 
-.. code-block:: c
+Synopsis:
 
-    unsigned isdigit(char c);
+    .. code-block:: c
 
-The `isxdigit` function returns 1 if c is a hexadecimal digit otherwise 0.
+         #include <stdlib.h>
+         long int strtol(const char *nptr, char **endptr, int base);
 
-.. code-block:: c
+.. note::
 
-    unsigned isxdigit(char c);
+	This function is not implemented!!!
 
-The `isgraph` function returns 1 if c is a printing character not including space otherwise 0.
 
-.. code-block:: c
+The strtoul function
+********************
 
-    unsigned isgraph(char c);
+Synopsis:
 
-The `isspace` function returns 1 if c is white space character otherwise 0.
+    .. code-block:: c
 
-.. code-block:: c
+         #include <stdlib.h>
+         unsigned long int strtoul(const char *nptr, char **endptr,
+                  int base);
 
-    unsigned isspace(char c);
+.. note::
 
-The `isprint` function returns 1 if c is a printing character otherwise 0.
+	This function is not implemented!!!
 
-.. code-block:: c
 
-    unsigned isprint(char c);
+The rand function
+*****************
 
-The `ispunct` function returns 1 if c is punctuation otherwise 0.
+Synopsis:
 
-.. code-block:: c
+    .. code-block:: c
 
-    unsigned ispunct(char c);
+         #include <stdlib.h>
+         int rand(void);
 
-The `toupper` function returns the upper case equivilent of c if any otherwise c.
+Description:
 
-.. code-block:: c
+   The rand function computes a sequence of pseudo-random integers in
+   the range 0 to RAND_MAX.
 
-    unsigned toupper(char c);
+   The implementation shall behave as if no library function calls the
+   rand function.
 
-The `tolower` function returns the lower case equivilent of c if any otherwise c.
+Returns:
 
-.. code-block:: c
+   The rand function returns a pseudo-random integer.
 
-    unsigned tolower(char c);
 
-math.h
-------
+The srand function
+******************
 
-All angles are expressed in radians.
+Synopsis:
 
-The `M_LOG2E` constant respresents an approximation of :math:`log_{2} e`.
+    .. code-block:: c
 
-.. code-block:: c
+         #include <stdlib.h>
+         void srand(unsigned int seed);
 
-    const float M_LOG2E
+Description:
 
-The `M_LOG10E` constant respresents an approximation of :math:`log_{10} e`.
+   The srand function uses the argument as a seed for a new sequence
+   of pseudo-random numbers to be returned by subsequent calls to rand.
+   If srand is then called with the same seed value, the sequence of
+   pseudo-random numbers shall be repeated.  If rand is called before any
+   calls to srand have been made, the same sequence shall be generated as
+   when srand is first called with a seed value of 1.
 
-.. code-block:: c
+Returns:
 
-    const float M_LOG10E
+   The srand function returns no value.
 
-The `M_LN2` constant respresents an approximation of :math:`log_{e} 2`.
 
-.. code-block:: c
+The malloc function
+*******************
 
-    const float M_LN2
+Synopsis:
 
-The `M_LN10` constant respresents an approximation of :math:`log_{e} 10`.
+    .. code-block:: c
 
-.. code-block:: c
+         #include <stdlib.h>
+         void *malloc(size_t size);
 
-    const float M_LN10
+Description:
 
-The `M_PI` constant respresents an approximation of :math:`\pi`.
+   The malloc function allocates space for an object whose size is
+   specified by size and whose value is indeterminate.
 
-.. code-block:: c
+Returns:
 
-    const float M_PI
+   The malloc function returns either a null pointer or a pointer to
+   the allocated space.
 
-The `M_PI_2` constant respresents an approximation of :math:`\pi/2`.
+The calloc function
+*******************
 
-.. code-block:: c
+Synopsis:
 
-    const float M_PI_2
+    .. code-block:: c
 
-The `M_PI_4` constant respresents an approximation of :math:`\pi/4`.
+         #include <stdlib.h>
+         void *calloc(size_t nmemb, size_t size);
 
-.. code-block:: c
+Description:
 
-    const float M_PI_4
+   The calloc function allocates space for an array of nmemb objects,
+   each of whose size is size.  The space is initialized to all bits
+   zero.
 
-The `M_1_PI` constant respresents an approximation of :math:`1/\pi`.
+Returns:
 
-.. code-block:: c
+   The calloc function returns either a null pointer or a pointer to
+   the allocated space.
 
-    const float M_1_PI
 
-The `M_2_PI` constant respresents an approximation of :math:`2/\pi`.
+The realloc function
+********************
 
-.. code-block:: c
+Synopsis:
 
-    const float M_2_PI
+    .. code-block:: c
 
-The `M_2_SQRTPI` constant respresents an approximation of :math:`2/\sqrt{\pi}`.
+         #include <stdlib.h>
+         void *realloc(void *ptr, size_t size);
 
-.. code-block:: c
 
-    const float M_2_SQRTPI
+   The realloc function changes the size of the object pointed to by
+   ptr to the size specified by size.  The contents of the object shall
+   be unchanged up to the lesser of the new and old sizes.  If the new
+   size is larger, the value of the newly allocated portion of the object
+   is indeterminate.  If ptr is a null pointer, the realloc function
+   behaves like the malloc function for the specified size.  Otherwise,
+   if ptr does not match a pointer earlier returned by the calloc,
+   malloc, or realloc function, or if the space has been deallocated by
+   a call to the free or realloc function, the behavior is undefined.  If
+   the space cannot be allocated, the object pointed to by ptr is
+   unchanged.  If size is zero and ptr is not a null pointer, the object
+   it points to is freed.
 
-The `M_SQRT2` constant respresents an approximation of :math:`\sqrt{2}`.
+Returns:
 
-.. code-block:: c
+   The realloc function returns either a null pointer or a pointer to
+   the possibly moved allocated space.
 
-    const float M_SQRT2
+The free function
+*****************
 
-Return the :math:`cos x`.
 
-.. code-block:: c
+Synopsis:
 
-    float cos(float x);
+    .. code-block:: c
 
-Return the :math:`sin x`.
+         #include <stdlib.h>
+         void free(void *ptr);
 
-.. code-block:: c
+Description:
 
-    float sin(float x);
+   The free function causes the space pointed to by ptr to be
+   deallocated, that is, made available for further allocation.  If ptr
+   is a null pointer, no action occurs.  Otherwise, if the argument does
+   not match a pointer earlier returned by the calloc, malloc, or
+   realloc function, or if the space has been deallocated by a call to
+   free or realloc, the behavior is undefined.
 
-Return the :math:`tan x`.
+Returns:
 
-.. code-block:: c
+   The free function returns no value.
 
-    float tan(float x);
 
-Return the :math:`sinh x`.
+The abort function
+******************
 
-.. code-block:: c
+Synopsis:
 
-    float sinh(float x);
+    .. code-block:: c
 
-Return the :math:`cosh x`.
+         #include <stdlib.h>
+         void abort(void);
 
-.. code-block:: c
+.. note::
 
-    float cosh(float x);
+	this function is not implemented!!!
 
-Return the :math:`tanh x`.
 
-.. code-block:: c
+The atexit function
+*******************
 
-    float tanh(float x);
+Synopsis:
 
-Return the :math:`asinh x`.
+    .. code-block:: c
 
-.. code-block:: c
+         #include <stdlib.h>
+         int atexit(void (*func)(void));
 
-    float asinh(float x);
+.. note::
 
-Return the :math:`acosh x`.
+	this function is not implemented!!!
 
-.. code-block:: c
+The exit function
+*****************
 
-    float acosh(float x);
+Synopsis:
 
-Return the :math:`atanh x`.
+    .. code-block:: c
 
-.. code-block:: c
+         #include <stdlib.h>
+         void exit(int status);
 
-    float atanh(float x);
+.. note::
 
-Return the absolute value of float n.
+	This function is not implemented!!!
 
-.. code-block:: c
 
-    float fabs(float n);
+The getenv function
+*******************
 
-Return the absolute value of int n.
+Synopsis:
 
-.. code-block:: c
+    .. code-block:: c
 
-    int abs(int n);
+         #include <stdlib.h>
+         char *getenv(const char *name);
 
-Return the :math:`e^x`. 
+.. note::
 
-.. code-block:: c
+	this function is not implemented!!!
 
-    float exp(float x);
 
-Return the :math:`log_{e} n`. 
+The system function
+*******************
 
-.. code-block:: c
+Synopsis:
 
-    float log(float n);
+    .. code-block:: c
 
-Return the :math:`log_{10} n`. 
+         #include <stdlib.h>
+         int system(const char *string);
 
-.. code-block:: c
+.. note::
 
-    float log10(float n);
+	This function is not implemented!!!
 
-Return the :math:`log_{2} n`. 
 
-.. code-block:: c
+The bsearch function
+********************
 
-    float log2(float n);
+Synopsis:
 
-stdlib.h
---------
+    .. code-block:: c
 
-Return the maximum value returned by the rand function. 
+         #include <stdlib.h>
+         void *bsearch(const void *key, const void *base,
+                  size_t nmemb, size_t size,
+                  int (*compar)(const void *, const void *));
 
-.. code-block:: c
+.. note::
 
-    const unsigned long RAND_MAX
+	This function is not implemented!!!
 
-Set the random seed to s. 
 
-.. code-block:: c
+The qsort function
+******************
 
-    void srand(unsigned long int s);
+Synopsis:
 
-Return a random integer in the range :math:`0 \le x \le RAND\_MAX`. 
+    .. code-block:: c
 
-.. code-block:: c
+         #include <stdlib.h>
+         void qsort(void *base, size_t nmemb, size_t size,
+                  int (*compar)(const void *, const void *));
 
-    unsigned long rand();
+.. note::
+
+	This function is not implemented!!!
+
+
+The abs function
+****************
+
+Synopsis:
+
+    .. code-block:: C
+
+         #include <stdlib.h>
+         int abs(int j);
+
+Description:
+
+   The abs function computes the absolute value of an integer j.  If
+   the result cannot be represented, the behavior is undefined.
+
+Returns:
+
+   The abs function returns the absolute value.
+
+
+The div function
+****************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         div_t div(int numer, int denom);
+
+Description:
+
+   The div function computes the quotient and remainder of the
+   division of the numerator numer by the denominator denom .  If the
+   division is inexact, the sign of the resulting quotient is that of the
+   algebraic quotient, and the magnitude of the resulting quotient is the
+   largest integer less than the magnitude of the algebraic quotient.  If
+   the result cannot be represented, the behavior is undefined;
+   otherwise, quot * denom + rem shall equal numer .
+
+Returns:
+
+   The div function returns a structure of type div_t, comprising
+   both the quotient and the remainder.  The structure shall contain the
+   following members, in either order.
+
+   .. code-block:: c
+
+         int quot;   /*  quotient */
+         int rem;    /*  remainder */
+
+
+The labs function
+*****************
+
+Synopsis:
+
+    ..code-block::
+
+         #include <stdlib.h>
+         long int labs(long int j);
+
+Description:
+
+   The labs function is similar to the abs function, except that the
+   argument and the returned value each have type long int.
+
+
+The ldiv function
+*****************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         ldiv_t ldiv(long int numer, long int denom);
+
+Description:
+
+   The ldiv function is similar to the div function, except that the
+   arguments and the members of the returned structure (which has type
+   ldiv_t ) all have type long int.
+
+
+The mblen function
+******************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         int mblen(const char *s, size_t n);
+
+.. note::
+
+	This function is not implemented!!!
+
+
+The mbtowc function
+*******************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         int mbtowc(wchar_t *pwc, const char *s, size_t n);
+
+.. note::
+
+	This function is not implemented!!!
+
+
+The wctomb function
+*******************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         int wctomb(char *s, wchar_t wchar);
+
+.. note::
+
+	This function is not implemented!!!
+
+
+The mbstowcs function
+*********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         size_t mbstowcs(wchar_t *pwcs, const char *s, size_t n);
+
+.. note::
+
+	This function is not implemented!!!
+
+
+The wcstombs function
+*********************
+
+Synopsis:
+
+    .. code-block:: c
+
+         #include <stdlib.h>
+         size_t wcstombs(char *s, const wchar_t *pwcs, size_t n);
+
+.. note::
+
+	This function is not implemented!!!
+

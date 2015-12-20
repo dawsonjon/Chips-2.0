@@ -1,5 +1,5 @@
 examples = {
-"Fast Fourier Transform" : """
+    "Fast Fourier Transform" : """
 /* fft.c */
 /* Jonathan P Dawson */
 /* 2013-12-23 */
@@ -127,7 +127,7 @@ void main(){
 }
 """,
 
-"Taylor Series" : """
+    "Taylor Series" : """
 /* taylor.c */
 /* Jonathan P Dawson */
 /* 2013-12-23 */
@@ -182,7 +182,7 @@ double sin(double angle){
 /* return the cosine of angle in radians */
 
 double cos(double angle){
-    
+
     return sin(angle+(pi/2));
 
 }
@@ -205,7 +205,7 @@ void main(){
 }
 """,
 
-"Square Root" : """
+    "Square Root" : """
 /* sqrt.c */
 /* Jonathan P Dawson */
 /* 2013-12-23 */
@@ -235,7 +235,7 @@ void main(){
     }
 }""",
 
-"Edge Detection" : """
+    "Edge Detection" : """
 /*Edge Detection*/
 /*Jonathan P Dawson 2014-07-06*/
 
@@ -299,7 +299,7 @@ void main()
 }
 """,
 
-"FIR Filter":"""
+    "FIR Filter": """
 /* Chips-2.0 FIR Filter Example */
 /* Jonathan P Dawson 2014-07-05 */
 
@@ -343,7 +343,7 @@ void main(){
 }
 """,
 
-"Knight Rider":"""
+    "Knight Rider": """
 /* Knight Rider Style LEDs */
 
 int leds = output("leds");
@@ -365,16 +365,16 @@ void main()
 }
 """,
 
-"Seven Segment":"""
+    "Seven Segment": """
 /* Seven Segment Display Driver */
 
 int nibble = input("nibble");
 int leds = output("leds");
 
 int digits[] = {
-    0x7E, 0x30, 0x6D, 0x79, 
-    0x33, 0x5B, 0x5F, 0x70, 
-    0x7F, 0x7B, 0x77, 0x1F, 
+    0x7E, 0x30, 0x6D, 0x79,
+    0x33, 0x5B, 0x5F, 0x70,
+    0x7F, 0x7B, 0x77, 0x1F,
     0x4E, 0x3D, 0x4F, 0x47};
 
 void main()
@@ -383,7 +383,7 @@ void main()
 }
 """,
 
-"LZSS Compress" : """
+    "LZSS Compress" : """
 /*LZSS Compression Component*/
 /*Jonathan P Dawson 2014-07.10*/
 
@@ -409,7 +409,7 @@ void send_bits(unsigned data, unsigned bits){
     }
 }
 
-/*A function that reads a stream of uncompressed data, 
+/*A function that reads a stream of uncompressed data,
 and creates a stream of compressed data*/
 
 void main(){
@@ -469,7 +469,7 @@ void main(){
 }
 """,
 
-"LZSS Decompress" : """
+    "LZSS Decompress" : """
 /*LZSS Decompression Component*/
 /* Jonathan P Dawson 2014-07-10*/
 
@@ -499,7 +499,7 @@ unsigned get_bits(unsigned bits){
 }
 
 
-/* Decompress a stream of lzss compressed data, 
+/* Decompress a stream of lzss compressed data,
 and generate a stream of raw data*/
 
 void main(){
@@ -528,7 +528,6 @@ void main(){
     }
 }"""
 
-            
+
 
 }
-

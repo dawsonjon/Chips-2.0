@@ -2,23 +2,22 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2012, Jonathan P Dawson"
 __version__ = "0.1"
 
-def cleanup_functions(instructions):
 
+def cleanup_functions(instructions):
     """Remove functions that are not called"""
 
+    # This is an iterative processor. Once a function is removed,
+    # there may be more unused functions
+    while True:
 
-    #This is an iterative processor. Once a function is removed,
-    #there may be more unused functions
-    while 1:
-
-        #find function calls
+        # find function calls
         live_functions = {}
         for instruction in instructions:
             if instruction["op"] == "call":
                 if instruction["label"].startswith("function"):
                     live_functions[instruction["label"]] = None
 
-        #remove instructions without function calls
+        # remove instructions without function calls
         kept_instructions = []
         generate_on = True
         for instruction in instructions:

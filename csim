@@ -201,6 +201,7 @@ class command_interpreter(cmd.Cmd):
       trace = instruction["trace"]
       function = trace.function
       registers = model.get_registers()
+      frameval = registers.get(frame, 0)
       memory = model.get_memory()
 
       variables = function.local_variables
@@ -209,17 +210,18 @@ class command_interpreter(cmd.Cmd):
       print "======"
       for name, instance in variables.iteritems():
           offset = instance.offset
+          print offset
           size = size_of(instance)
           if size == 4:
-              print name, ":", memory.get(tos+offset, 0)
+              print name, ":", memory.get(frameval+offset, 0)
           elif size == 8:
-              print name, ":", memory.get(tos+offset+1, 0) << 32 | memory.get(tos+offset, 0)
+              print name, ":", memory.get(frameval+offset+1, 0) << 32 | memory.get(frameval+offset, 0)
           else:
               print name, ":"
-              for i in range((size//4)//8):
+              for i in range((size//4+8)//8):
                   print "%4x:"%(i*8),
                   for j in range(8):
-                      print "%08x"%memory.get(tos+offset+8*i+j, 0), 
+                      print "%08x"%memory.get(frameval+offset+8*i+j, 0), 
                   print 
 
    def do_globals(self, line): 

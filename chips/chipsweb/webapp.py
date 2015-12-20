@@ -10,7 +10,7 @@ from examples import examples
 
 module_path = os.path.dirname(__file__)
 render = web.template.render(os.path.join(module_path, 'templates/'))
-        
+
 urls = (
     '/', 'source_entry',
     '/main.v', 'file_download'
@@ -18,11 +18,16 @@ urls = (
 app = web.application(urls, globals())
 
 myform = form.Form(
-        form.Textarea("C"),
-        form.Dropdown("Examples", examples.keys(), onclick = "return update_form()"),
+    form.Textarea("C"),
+    form.Dropdown(
+        "Examples",
+        examples.keys(),
+        onclick="return update_form()"),
 )
 
-class file_download:        
+
+class file_download:
+
     def POST(self):
         f = myform()
         f.validates()
@@ -34,20 +39,23 @@ class file_download:
         except C2CHIPError as err:
             return "Error in file: " + err.filename + " at line: " + str(err.lineno) + "\n" + err.message
 
-class source_entry:        
+
+class source_entry:
+
     def GET(self):
         f = myform()
-        f["C"].value=examples.values()[0]
-        f["Examples"].value=examples.keys()[0]
+        f["C"].value = examples.values()[0]
+        f["Examples"].value = examples.keys()[0]
         return render.page(f)
 
     def POST(self):
         f = myform()
         f.validates()
-        example_selected=f["Examples"].value
-        f["C"].value=examples[example_selected]
-        f["Examples"].value=example_selected
+        example_selected = f["Examples"].value
+        f["C"].value = examples[example_selected]
+        f["Examples"].value = example_selected
         return render.page(f)
+
 
 def compile(c_buffer):
 
@@ -64,12 +72,12 @@ def compile(c_buffer):
     output_file = StringIO.StringIO()
 
     inputs, outputs = generate_CHIP_area(
-            input_file,
-            name,
-            instructions,
-            output_file,
-            parser.allocator,
-            False)
+        input_file,
+        name,
+        instructions,
+        output_file,
+        parser.allocator,
+        False)
 
     return output_file.getvalue()
 

@@ -264,6 +264,28 @@ def test_long_arithmetic():
             test_random(operator, type_)
 
 
+test("type conversion 1",
+"""
+void main(){
+    double x;
+    long y = -4;
+    x = y;
+    assert(x==-4);
+}
+"""
+)
+
+test("type conversion 2",
+"""
+void main(){
+    float x;
+    int y = -4;
+    x = y;
+    assert(x==-4);
+}
+"""
+)
+
 test("function proto 1",
 """
 int foo(int y);
