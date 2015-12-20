@@ -1,0 +1,680 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Python API &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference Manual" href="index.html" />
+    <link rel="next" title="C Compiler" href="c_compiler.html" />
+    <link rel="prev" title="Installation" href="install.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_compiler.html" title="C Compiler"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-chips.api.api"></span><div class="section" id="python-api">
+<h1>Python API<a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h1>
+<p>The Python API provides the ability to build systems from C components. Designs
+can be simulated using Python as a rich verification environment. Designs can
+be converted into Verilog and targeted to FPGAs using the FPGA vendors
+synthesis tools.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<dl class="class">
+<dt id="chips.api.api.Chip">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Chip</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip" title="Permalink to this definition">¶</a></dt>
+<dd><p>A chip is a canvas to which you can add inputs outputs, components and wires. When you
+create a chips all you need to give it is a name.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;mychip&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The interface to a <cite>Chip</cite> may defined by calling <cite>Input</cite> and <cite>Output</cite>
+objects. Each input and output object is given a name. The name will be
+used in the generated Verilog. While any string can be used for the name,
+if you intend to generate Verilog output, the name should be a valid
+Verilog identifier.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;input_1&quot;</span><span class="p">)</span>
+<span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;input_2&quot;</span><span class="p">)</span>
+<span class="n">Output</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;output_1&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The implementation of a chip is defined by creating and instancing
+components. For example a simple adder can be created as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#define a component</span>
+<span class="n">adder</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">C_file</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">        input_1 = input(&quot;input_1&quot;);</span>
+<span class="s">        input_2 = input(&quot;input_2&quot;);</span>
+<span class="s">        output_1 = output(&quot;output_1&quot;);</span>
+<span class="s">        void main(){</span>
+<span class="s">            while(1){</span>
+<span class="s">                fputc(fgetc(input_1)+fgetc(input_2), output_1);</span>
+<span class="s">            }</span>
+<span class="s">        }</span>
+<span class="s">&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The adder can then be instanced, and connected up by calling the adder.
+When an added in instanced, the <cite>inputs</cite> and <cite>outputs</cite> arguments should be
+supplied. These dictionaries specify how the inputs and outputs of the
+component should be connected. The dictionary key should be the
+input/output name, and the value should be an <cite>Input</cite>, <cite>Output</cite> or
+<cite>Wire</cite> instance:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#instance a component</span>
+<span class="n">my_adder</span> <span class="o">=</span> <span class="n">adder</span><span class="p">(</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;input_1&quot;</span> <span class="p">:</span> <span class="n">input_1</span><span class="p">,</span>
+        <span class="s">&quot;input_2&quot;</span> <span class="p">:</span> <span class="n">input_2</span><span class="p">,</span>
+    <span class="p">},</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;output_1&quot;</span> <span class="p">:</span> <span class="n">output_1</span><span class="p">,</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>HDLs provide the ability define new components by connecting components
+together. Chips doesn&#8217;t provide a means to do this. There&#8217;s no need. A
+Python function does the job nicely. A function can be used to build a four
+input adder out of 2 input adders for example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">four_input_adder</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="n">input_a</span><span class="p">,</span> <span class="n">input_b</span><span class="p">,</span> <span class="n">input_c</span><span class="p">,</span> <span class="n">input_d</span><span class="p">,</span> <span class="n">output_z</span><span class="p">):</span>
+
+    <span class="n">adder</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">C_file</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">            a = input(&quot;a&quot;);</span>
+<span class="s">            b = input(&quot;b&quot;);</span>
+<span class="s">            z = output(&quot;z&quot;);</span>
+<span class="s">            void main(){</span>
+<span class="s">                while(1){</span>
+<span class="s">                    fputc(fgetc(a)+fgetc(b), z);</span>
+<span class="s">                }</span>
+<span class="s">            }</span>
+<span class="s">    &quot;&quot;&quot;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">wire_a</span> <span class="o">=</span> <span class="n">Wire</span><span class="p">(</span><span class="n">chip</span><span class="p">)</span>
+    <span class="n">wire_b</span> <span class="o">=</span> <span class="n">Wire</span><span class="p">(</span><span class="n">chip</span><span class="p">)</span>
+
+    <span class="n">adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span> <span class="p">:</span> <span class="n">input_a</span><span class="p">,</span> <span class="s">&quot;b&quot;</span> <span class="p">:</span> <span class="n">input_b</span><span class="p">},</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;z&quot;</span> <span class="p">:</span> <span class="n">wire_a</span><span class="p">})</span>
+
+    <span class="n">adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span> <span class="p">:</span> <span class="n">input_c</span><span class="p">,</span> <span class="s">&quot;b&quot;</span> <span class="p">:</span> <span class="n">input_d</span><span class="p">},</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;z&quot;</span> <span class="p">:</span> <span class="n">wire_b</span><span class="p">})</span>
+
+    <span class="n">adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;a&quot;</span> <span class="p">:</span> <span class="n">wire_a</span><span class="p">,</span> <span class="s">&quot;b&quot;</span> <span class="p">:</span> <span class="n">wire_b</span><span class="p">},</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;z&quot;</span> <span class="p">:</span> <span class="n">output_z</span><span class="p">})</span>
+
+<span class="n">mychip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;mychip&quot;</span><span class="p">)</span>
+<span class="n">input_a</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;a&quot;</span><span class="p">)</span>
+<span class="n">input_b</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;b&quot;</span><span class="p">)</span>
+<span class="n">input_c</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;c&quot;</span><span class="p">)</span>
+<span class="n">input_d</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;d&quot;</span><span class="p">)</span>
+<span class="n">output_z</span> <span class="o">=</span> <span class="n">Output</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;z&quot;</span><span class="p">)</span>
+<span class="n">four_input_adder</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="n">input_a</span><span class="p">,</span> <span class="n">input_b</span><span class="p">,</span> <span class="n">input_c</span><span class="p">,</span> <span class="n">input_d</span><span class="p">,</span> <span class="n">output_z</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A diagrammatic representation of the <cite>Chip</cite> is shown below.</p>
+<div class="highlight-python"><div class="highlight"><pre>       +-------+       +-------+
+       | adder |       | adder |
+A =====&gt;       &gt;=======&gt;       &gt;=====&gt; Z
+B =====&gt;       |       |       |
+       +-------+       |       |
+                       |       |
+       +-------+       |       |
+       | adder |       |       |
+C =====&gt;       &gt;=======&gt;       |
+D =====&gt;       |       |       |
+       +-------+       +-------+
+</pre></div>
+</div>
+<p>Functions provide a means to build more complex components out of simple
+ones, but it doesn&#8217;t stop there. By providing the basic building blocks,
+you can use all the features of the Python language to build chips.</p>
+<p>Ideas:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Create multiple instances using loops.</li>
+<li>Use tuples, arrays or dictionaries to group wires into more complex structures.</li>
+<li>Use a GUI interface to customise a components or chips.</li>
+<li>Build libraries of components using modules or packages.</li>
+<li>Document designs with docutils or sphinx.</li>
+</ul>
+</div></blockquote>
+<p>There are two ways to transfer data between the python environment, and the
+<cite>Chip</cite> simulation.</p>
+<p>The first and most flexible method is to subclass the <cite>Input</cite> and <cite>Output</cite>
+classes, overriding the data_source and data_sink methods. By defining your
+own data_source and data_sink methods, you can interface to other Python
+code. Using this method allows the simulation to interact with its
+environment on the fly.</p>
+<p>The second simpler method is to employ the <cite>Stimulus</cite> or <cite>Response</cite>
+classes. These classes are themselves inherited from <cite>Input</cite> and <cite>Output</cite>.
+The <cite>Stimulus</cite> class is provided with a Python sequence object for example
+a list, and iterator or a generator at the time it is created created. The
+<cite>Response</cite> class store data as the simulation progresses, and is itself a
+sequence object.</p>
+<p>It is simple to run the simulation, which should be initiated with a reset:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">simulation_reset</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The simulation can be run for a single cycle:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">simulation_step</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The <cite>simulation_run</cite> method executes the simulation until all processes
+complete (which may not happen):</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">simulation_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>There are a couple of methods to terminate the simulation, by waiting for
+simulation time to elapse, or for a certain amount of output data to be
+accumulated.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#run simulation for 1000 cycles</span>
+<span class="k">while</span> <span class="n">mychip</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+    <span class="n">mychip</span><span class="o">.</span><span class="n">simulation_step</span><span class="p">()</span>
+
+
+<span class="c">#run simulation until 1000 data items are collected</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">chip</span><span class="p">,</span> <span class="s">&quot;output&quot;</span><span class="p">,</span> <span class="s">&quot;int&quot;</span><span class="p">)</span>
+<span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1000</span><span class="p">:</span>
+    <span class="n">mychip</span><span class="o">.</span><span class="n">simulation_step</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Chips designs can be programmed into FPGAs. Chips uses Verilog as its
+output because it is supported by FPGA vendors build tools. Chips output
+almost will be compatible with any FPGA family. Synthesisable Verilog code
+s generated by calling the <cite>generate_verilog</cite> method.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">generate_verilog</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can also generate a matching testbench using the <cite>generate_testbench</cite>
+method. You can also specify the simulation run time in clock cycles.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">generate_testbench</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="c">#1000 clocks</span>
+</pre></div>
+</div>
+<p>To compile the design in Icarus Verilog, use the <cite>compile_iverilog</cite> method.
+You can also run the code directly if you pass <cite>True</cite> to the
+<cite>compile_iverilog</cite> function. This is most useful to verify that chips
+components match their native python simulations. In most cases Verilog
+simulations will only be needed to by <cite>Chips</cite> developers.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">mychip</span><span class="o">.</span><span class="n">compile_iverilog</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The generated Verilog code is dependent on the chips_lib.v file which is
+output alongside the synthesisable Verilog.</p>
+<dl class="method">
+<dt id="chips.api.api.Chip.compile_iverilog">
+<code class="descname">compile_iverilog</code><span class="sig-paren">(</span><em>run=False</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip.compile_iverilog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">chip</span><span class="o">.</span><span class="n">compile_iverilog</span><span class="p">(</span><span class="n">run</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>Compile using the external iverilog simulator.</div></blockquote>
+<p>Arguments:</p>
+<blockquote>
+<div>run: (optional) run the simulation.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>None</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Chip.generate_testbench">
+<code class="descname">generate_testbench</code><span class="sig-paren">(</span><em>stop_clocks=None</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip.generate_testbench" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">chip</span><span class="o">.</span><span class="n">generate_testbench</span><span class="p">(</span><span class="n">stop_clocks</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>Generate a Verilog testbench.</div></blockquote>
+<p>Arguments:</p>
+<blockquote>
+<div>stop_clocks: The number of clock cycles for the simulation to run.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>None</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Chip.generate_verilog">
+<code class="descname">generate_verilog</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip.generate_verilog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">chip</span><span class="o">.</span><span class="n">generate_verilog</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>Generate synthesisable Verilog output.</div></blockquote>
+<p>Arguments:</p>
+<blockquote>
+<div>None</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>None</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Chip.simulation_reset">
+<code class="descname">simulation_reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip.simulation_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">chip</span><span class="o">.</span><span class="n">simulation_reset</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>Reset the simulation.</div></blockquote>
+<p>Arguments:</p>
+<blockquote>
+<div>None</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>None</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Chip.simulation_run">
+<code class="descname">simulation_run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip.simulation_run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">chip</span><span class="o">.</span><span class="n">simulation_run</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>Run the simulation until all processes terminate.</div></blockquote>
+<p>Arguments:</p>
+<blockquote>
+<div>None</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>None</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Chip.simulation_step">
+<code class="descname">simulation_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Chip.simulation_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-python"><div class="highlight"><pre><span class="n">chip</span><span class="o">.</span><span class="n">simulation_step</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>Run the simulation for one cycle.</div></blockquote>
+<p>Arguments:</p>
+<blockquote>
+<div>None</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>None</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.Component">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>C_file</em>, <em>options={}</em>, <em>inline=False</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Component" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Component class defines a new type of component.</p>
+<p>Components are written in C. You can supply the C code as a file name, or
+directly as a string:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#Call an external C file</span>
+<span class="n">my_component</span> <span class="o">=</span> <span class="n">Component</span><span class="p">(</span><span class="n">C_file</span><span class="o">=</span><span class="s">&quot;adder.c&quot;</span><span class="p">)</span>
+
+<span class="c">#Supply C code directly</span>
+<span class="n">my_component</span> <span class="o">=</span> <span class="n">Adder</span><span class="p">(</span><span class="n">C_file</span><span class="o">=</span><span class="s">&quot;&quot;&quot;</span>
+<span class="s">    unsigned in1 = input(&quot;in1&quot;);</span>
+<span class="s">    unsigned in2 = input(&quot;in2&quot;);</span>
+<span class="s">    unsigned out = input(&quot;out&quot;);</span>
+<span class="s">    void main(){</span>
+<span class="s">        while(1){</span>
+<span class="s">            fputc(fgetc(in1) + fgetc(in2), out);</span>
+<span class="s">        }</span>
+<span class="s">    }</span>
+<span class="s">&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">inline</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once you have defined a component you can use the __call__ method to create
+an instance of the component:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="o">...</span>
+
+<span class="n">adder_1</span> <span class="o">=</span> <span class="n">Adder</span><span class="p">(</span>
+    <span class="n">chip</span><span class="p">,</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;in1&quot;</span><span class="p">:</span><span class="n">a</span><span class="p">,</span> <span class="s">&quot;in2&quot;</span><span class="p">:</span><span class="n">b</span><span class="p">},</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;out&quot;</span><span class="p">:</span><span class="n">z</span><span class="p">},</span>
+    <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>You can make many instances of a component by &#8220;calling&#8221; the component. Each
+time you make an instance, you must specify the <cite>Chip</cite> it belongs to, and
+connect up the inputs and outputs of the <cite>Component</cite>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.Input">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Input</code><span class="sig-paren">(</span><em>chip</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Input" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <cite>Input</cite> takes data from outside the <cite>Chip</cite>, and feeds it into the input
+of a <cite>Component</cite>. When you create an <cite>Input</cite>, you need to specify the
+<cite>Chip</cite> it belongs to, and the name it will be given.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">input_a</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;A&quot;</span><span class="p">)</span>
+<span class="n">input_b</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;B&quot;</span><span class="p">)</span>
+<span class="n">input_c</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;C&quot;</span><span class="p">)</span>
+<span class="n">input_d</span> <span class="o">=</span> <span class="n">Input</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;D&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In simulation, the Input calls the <cite>data_source</cite> member function, to model
+an input in simulation, subclass the Input and override the <cite>data_source</cite>
+method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="n">Input</span>
+
+<span class="n">stimulus</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+
+<span class="k">class</span> <span class="nc">MyInput</span><span class="p">(</span><span class="n">Input</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">data_source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">stimulus</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="chips.api.api.Input.data_source">
+<code class="descname">data_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Input.data_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this function in your application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Input.simulation_reset">
+<code class="descname">simulation_reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Input.simulation_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_reset() instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Input.simulation_step">
+<code class="descname">simulation_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Input.simulation_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_step() instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Input.simulation_update">
+<code class="descname">simulation_update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Input.simulation_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_update() instead</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.Output">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Output</code><span class="sig-paren">(</span><em>chip</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Output" title="Permalink to this definition">¶</a></dt>
+<dd><p>An <cite>Output</cite> takes data from a <cite>Component</cite> output, and sends it outside the
+<cite>Chip</cite>. When you create an <cite>Output</cite> you must tell it which <cite>Chip</cite> it belongs
+to, and the name it will be given.</p>
+<p>In simulation, the <cite>Output</cite> calls the <cite>data_source</cite> member function, to model
+an output in simulation, subclass the Output and override the <cite>data_sink</cite>
+method:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="n">Output</span>
+
+<span class="k">class</span> <span class="nc">MyOutput</span><span class="p">(</span><span class="n">Output</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">data_sink</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">print</span> <span class="n">data</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="chips.api.api.Output.data_sink">
+<code class="descname">data_sink</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Output.data_sink" title="Permalink to this definition">¶</a></dt>
+<dd><p>override this function in your application</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Output.simulation_reset">
+<code class="descname">simulation_reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Output.simulation_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_reset() instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Output.simulation_step">
+<code class="descname">simulation_step</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Output.simulation_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_step() instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Output.simulation_update">
+<code class="descname">simulation_update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Output.simulation_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_update() instead</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.Wire">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Wire</code><span class="sig-paren">(</span><em>chip</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Wire" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <cite>Wire</cite> is a point to point connection, a stream, that connects an output
+from one component to the input of another. A <cite>Wire</cite> can only have one
+source of data, and one data sink. When you create a <cite>Wire</cite>, you must tell
+it which <cite>Chip</cite> it belongs to:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">wire_a</span> <span class="o">=</span> <span class="n">Wire</span><span class="p">(</span><span class="n">mychip</span><span class="p">)</span>
+<span class="n">wire_b</span> <span class="o">=</span> <span class="n">Wire</span><span class="p">(</span><span class="n">mychip</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="chips.api.api.Wire.simulation_reset">
+<code class="descname">simulation_reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Wire.simulation_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_reset() instead</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Wire.simulation_update">
+<code class="descname">simulation_update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Wire.simulation_update" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_update() instead</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.Stimulus">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Stimulus</code><span class="sig-paren">(</span><em>chip</em>, <em>name</em>, <em>type_</em>, <em>sequence</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Stimulus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stimulus is a subclass of Input. A Stimulus input provides a convenient
+means to supply data to the Chips simulation using any python sequence
+object for example a, list, an iterator or a generator.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="n">Sequence</span>
+
+<span class="n">mychip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;a chip&quot;</span><span class="p">)</span>
+<span class="o">...</span>
+
+<span class="n">Sequence</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;counter&quot;</span><span class="p">,</span> <span class="s">&quot;int&quot;</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
+
+<span class="n">mychip</span><span class="o">.</span><span class="n">simulation_reset</span><span class="p">()</span>
+<span class="n">mychip</span><span class="o">.</span><span class="n">simulation_run</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="chips.api.api.Stimulus.data_source">
+<code class="descname">data_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Stimulus.data_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Stimulus.simulation_reset">
+<code class="descname">simulation_reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Stimulus.simulation_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_reset() instead</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.Response">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">Response</code><span class="sig-paren">(</span><em>chip</em>, <em>name</em>, <em>type_</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Response is a subclass of Output. A Response output provides a convenient
+means to extract data to the Chips simulation. A response behaves as a
+Python iterator.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">chips.api.api</span> <span class="kn">import</span> <span class="n">Response</span>
+
+<span class="n">mychip</span> <span class="o">=</span> <span class="n">Chip</span><span class="p">(</span><span class="s">&quot;a chip&quot;</span><span class="p">)</span>
+<span class="o">...</span>
+
+<span class="n">sinx</span> <span class="o">=</span> <span class="n">Response</span><span class="p">(</span><span class="n">mychip</span><span class="p">,</span> <span class="s">&quot;sinx&quot;</span><span class="p">,</span> <span class="s">&quot;int&quot;</span><span class="p">)</span>
+
+<span class="n">mychip</span><span class="o">.</span><span class="n">simulation_reset</span><span class="p">()</span>
+<span class="n">mychip</span><span class="o">.</span><span class="n">simulation_run</span><span class="p">()</span>
+
+<span class="n">plot</span><span class="p">(</span><span class="n">sinx</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="chips.api.api.Response.data_sink">
+<code class="descname">data_sink</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Response.data_sink" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="chips.api.api.Response.simulation_reset">
+<code class="descname">simulation_reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.Response.simulation_reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a private function, you shouldn&#8217;t need to call this directly.
+Use Chip.simulation_reset() instead</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="chips.api.api.VerilogComponent">
+<em class="property">class </em><code class="descclassname">chips.api.api.</code><code class="descname">VerilogComponent</code><span class="sig-paren">(</span><em>C_file</em>, <em>V_file</em>, <em>options={}</em>, <em>inline=False</em><span class="sig-paren">)</span><a class="headerlink" href="#chips.api.api.VerilogComponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>The VerilogComponent is derived from Component. The VerilogComponent does
+not use the C Compiler to generate the Verilog implementation, but allows
+the user to supply Verilog directly. This is useful on occasions when
+hand-crafted Verilog is needed in a performance critical section, or if
+some pre-existing Verilog code needs to be employed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">my_component</span> <span class="o">=</span> <span class="n">Adder</span><span class="p">(</span><span class="n">C_file</span><span class="o">=</span><span class="s">&quot;adder.c&quot;</span><span class="p">,</span> <span class="n">V_file</span><span class="o">=</span><span class="s">&quot;adder.v&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="install.html"
+                        title="previous chapter">Installation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="c_compiler.html"
+                        title="next chapter">C Compiler</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/python_api.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_compiler.html" title="C Compiler"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="install.html" title="Installation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>

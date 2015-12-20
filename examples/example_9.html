@@ -1,0 +1,260 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>LZSS Compression &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="lzss-compression">
+<h1>LZSS Compression<a class="headerlink" href="#lzss-compression" title="Permalink to this headline">¶</a></h1>
+<p>LZSS is a simple form of of run length compression that exploits repeated
+sequences in a block of data. The encoder scans a block of data, and sends
+literal characters. However if the encoder encounters a sequence of characters
+that have already been sent, it will substitute the sequence with a
+reference to the earlier data. The encoder will always select the longest
+matching sequence that it has already sent. To achieve this the encoder
+needs to store a number of previously sent characters in a buffer. This buffer
+is referred to as the window.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/*LZSS Compression Component*/</span>
+<span class="cm">/*Jonathan P Dawson 2014-07.10*/</span>
+
+<span class="kt">unsigned</span> <span class="n">raw_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;raw_in&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">compressed_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;compressed_out&quot;</span><span class="p">);</span>
+
+<span class="cm">/*Send data of an arbitrary bit length*/</span>
+<span class="kt">unsigned</span> <span class="n">packed</span><span class="p">,</span> <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">send_bits</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">data</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">bits</span><span class="p">){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">bits</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="n">packed</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">packed</span> <span class="o">|=</span> <span class="p">(</span><span class="n">data</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span><span class="p">;</span>
+        <span class="n">data</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">stored</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">stored</span> <span class="o">==</span> <span class="mi">32</span><span class="p">){</span>
+            <span class="n">fputc</span><span class="p">(</span><span class="n">packed</span><span class="p">,</span> <span class="n">compressed_out</span><span class="p">);</span>
+            <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="cm">/*A function that reads a stream of uncompressed data,</span>
+<span class="cm">and creates a stream of compressed data*/</span>
+
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+
+    <span class="kt">unsigned</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">match</span><span class="p">,</span> <span class="n">match_length</span><span class="p">,</span> <span class="n">longest_match</span><span class="p">,</span> <span class="n">longest_match_length</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">buffer</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+
+    <span class="kt">unsigned</span> <span class="n">new_size</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="k">for</span><span class="p">(</span><span class="n">pointer</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">pointer</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span> <span class="n">pointer</span><span class="o">++</span><span class="p">){</span>
+            <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">raw_in</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="n">pointer</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+        <span class="n">new_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">pointer</span><span class="o">&lt;</span><span class="n">N</span><span class="p">){</span>
+
+            <span class="cm">/*Find the longest matching string already sent*/</span>
+            <span class="n">longest_match</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">longest_match_length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">match</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">match</span><span class="o">&lt;</span><span class="n">pointer</span><span class="p">;</span> <span class="n">match</span><span class="o">++</span><span class="p">){</span>
+
+                <span class="cm">/*match length of 0 indicates no match*/</span>
+                <span class="n">match_length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+                <span class="cm">/*search through buffer to find a match*/</span>
+                <span class="k">while</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">match</span><span class="o">+</span><span class="n">match_length</span><span class="p">]</span> <span class="o">==</span> <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="o">+</span><span class="n">match_length</span><span class="p">]){</span>
+                    <span class="n">match_length</span><span class="o">++</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="cm">/*If this is the longest match, remember it*/</span>
+                <span class="k">if</span><span class="p">(</span><span class="n">match_length</span> <span class="o">&gt;</span> <span class="n">longest_match_length</span><span class="p">){</span>
+                    <span class="n">longest_match</span> <span class="o">=</span> <span class="n">match</span><span class="p">;</span>
+                    <span class="n">longest_match_length</span> <span class="o">=</span> <span class="n">match_length</span><span class="p">;</span>
+                <span class="p">}</span>
+
+            <span class="p">}</span>
+
+            <span class="cm">/*send data*/</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">longest_match_length</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">){</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="n">longest_match_length</span><span class="p">,</span> <span class="n">LOG2N</span><span class="p">);</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="n">pointer</span> <span class="o">-</span> <span class="n">longest_match</span><span class="p">,</span> <span class="n">LOG2N</span><span class="p">);</span>
+                <span class="n">pointer</span> <span class="o">+=</span> <span class="n">longest_match_length</span><span class="p">;</span>
+                <span class="n">new_size</span> <span class="o">+=</span> <span class="n">LOG2N</span> <span class="o">+</span> <span class="n">LOG2N</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">else</span><span class="p">{</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+                <span class="n">send_bits</span><span class="p">(</span><span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">],</span> <span class="mi">8</span><span class="p">);</span>
+                <span class="n">pointer</span><span class="o">++</span><span class="p">;</span>
+                <span class="n">new_size</span> <span class="o">+=</span> <span class="mi">9</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="n">report</span><span class="p">(</span><span class="n">pointer</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="cm">/*report the compression ratio of this block in simulation*/</span>
+        <span class="n">report</span><span class="p">(</span><span class="n">new_size</span> <span class="o">/</span> <span class="p">(</span><span class="mf">8.0</span><span class="o">*</span><span class="n">N</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The encoding is simple. A bit is sent to indicate whether a raw character or a
+reference continues. A reference consists of a distance length pair. The
+distance tells the decoder how many characters ago the matching sequence was
+sent, and the distance indicates the length of the matching sequence. The
+size of the distance and length pointers will depend on the size of the
+window, for example a window size of 1024 requires the pointers to be 10 bits each.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cm">/*LZSS Decmpression Component*/</span>
+<span class="cm">/*Jonathan P Dawson 2014-07-10*/</span>
+
+<span class="kt">unsigned</span> <span class="n">raw_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;raw_out&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">compressed_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;compressed_in&quot;</span><span class="p">);</span>
+
+<span class="cm">/*A function to get data of an arbitrary bit length*/</span>
+
+<span class="kt">unsigned</span> <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="n">packed</span><span class="p">;</span>
+<span class="kt">unsigned</span> <span class="nf">get_bits</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">bits</span><span class="p">){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">bits</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">stored</span><span class="p">){</span>
+            <span class="n">stored</span> <span class="o">=</span> <span class="mi">32</span><span class="p">;</span>
+            <span class="n">packed</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">compressed_in</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="n">value</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">value</span> <span class="o">|=</span> <span class="p">(</span><span class="n">packed</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">31</span><span class="p">;</span>
+        <span class="n">packed</span> <span class="o">&gt;&gt;=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">stored</span><span class="o">--</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">value</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">32</span> <span class="o">-</span> <span class="n">bits</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+<span class="cm">/*Decompress a stream of lzss compressed data,</span>
+<span class="cm">and generate a stream of raw data*/</span>
+
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+    <span class="kt">unsigned</span> <span class="n">i</span><span class="p">,</span> <span class="n">pointer</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">data</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">buffer</span><span class="p">[</span><span class="n">N</span><span class="p">];</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+
+        <span class="cm">/*get distance length*/</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">get_bits</span><span class="p">(</span><span class="mi">1</span><span class="p">)){</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">get_bits</span><span class="p">(</span><span class="mi">8</span><span class="p">);</span>
+            <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
+            <span class="n">pointer</span><span class="o">++</span><span class="p">;</span>
+            <span class="n">fputc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">raw_out</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span><span class="p">{</span>
+            <span class="n">length</span> <span class="o">=</span> <span class="n">get_bits</span><span class="p">(</span><span class="n">LOG2N</span><span class="p">);</span>
+            <span class="n">distance</span> <span class="o">=</span> <span class="n">get_bits</span><span class="p">(</span><span class="n">LOG2N</span><span class="p">);</span>
+            <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">length</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">){</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="o">-</span><span class="n">distance</span><span class="p">];</span>
+                <span class="n">buffer</span><span class="p">[</span><span class="n">pointer</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">;</span>
+                <span class="n">pointer</span><span class="o">++</span><span class="p">;</span>
+                <span class="n">fputc</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">raw_out</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the simulation, a short passage of text is compressed by the encoder
+component, sent to the decoder component, decompressed and recovered. A fuller
+explanation may be found on <a class="reference external" href="http://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Storer%E2%80%93Szymanski">wikipedia</a>.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/example_9.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>

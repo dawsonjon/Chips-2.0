@@ -1,19 +1,20 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Approximating Sine and Cosine functions using Taylor Series &mdash; Chips v0.1 documentation</title>
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <title>Approximating Sine and Cosine functions using Taylor Series &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,56 +24,61 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/chips.ico"/>
-    <link rel="top" title="Chips v0.1 documentation" href="../index.html" /> 
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
-        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="approximating-sine-and-cosine-functions-using-taylor-series">
 <h1>Approximating Sine and Cosine functions using Taylor Series<a class="headerlink" href="#approximating-sine-and-cosine-functions-using-taylor-series" title="Permalink to this headline">¶</a></h1>
 <p>In this example, we calculate an approximation of the cosine functions using
 the <a class="reference external" href="http://en.wikipedia.org/wiki/Taylor_series">Taylor series</a>:</p>
 <div class="math">
-<p><img src="../_images/math/43052740cab688d6b1b1f3c541855312195b886e.png" alt="\cos (x) = \sum_{n=0}^{\infty} \frac{(-1)^n}{(2n)!} x^{2n}" /></p>
+<p><span class="math">\cos (x) = \sum_{n=0}^{\infty} \frac{(-1)^n}{(2n)!} x^{2n}</span></p>
 </div><p>The following example uses the Taylor Series approximation to generate the Sine
 and Cosine functions. Successive terms of the taylor series are calculated
 until successive approximations agree to within a small degree. A Sine
-function is also synthesised using the identity <img class="math" src="../_images/math/7f1c36e45e99f4b75af050d318964a79ef68b184.png" alt="sin(x) \equiv cos(x-\pi/2)"/></p>
+function is also synthesised using the identity <span class="math">sin(x) \equiv cos(x-\pi/2)</span></p>
 <div class="highlight-c"><div class="highlight"><pre><span class="cm">/* taylor.c */</span>
 <span class="cm">/* Jonathan P Dawson */</span>
 <span class="cm">/* 2013-12-23 */</span>
 
+<span class="cp">#include &lt;stdio.h&gt;</span>
+
 <span class="cm">/* globals */</span>
-<span class="kt">float</span> <span class="n">pi</span><span class="o">=</span><span class="mf">3.14159265359</span><span class="p">;</span>
+<span class="kt">double</span> <span class="n">pi</span><span class="o">=</span><span class="mf">3.14159265359</span><span class="p">;</span>
 
 <span class="cm">/* approximate the cosine function using Taylor series */</span>
 
-<span class="kt">float</span> <span class="n">taylor</span><span class="p">(</span><span class="kt">float</span> <span class="n">angle</span><span class="p">){</span>
+<span class="kt">double</span> <span class="nf">taylor</span><span class="p">(</span><span class="kt">double</span> <span class="n">angle</span><span class="p">){</span>
 
-    <span class="kt">float</span> <span class="n">old</span><span class="p">,</span> <span class="n">approximation</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">power</span><span class="p">,</span> <span class="n">fact</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="n">old</span><span class="p">,</span> <span class="n">approximation</span><span class="p">,</span> <span class="n">sign</span><span class="p">,</span> <span class="n">power</span><span class="p">,</span> <span class="n">fact</span><span class="p">;</span>
     <span class="kt">unsigned</span> <span class="n">count</span><span class="p">,</span> <span class="n">i</span><span class="p">;</span>
 
-    <span class="n">approximation</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+    <span class="n">approximation</span> <span class="o">=</span> <span class="n">angle</span><span class="p">;</span>
     <span class="n">old</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span>
     <span class="n">sign</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">;</span>
     <span class="n">count</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
     <span class="n">power</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
     <span class="n">fact</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
 
-    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span> <span class="n">approximation</span><span class="o">!=</span><span class="n">old</span><span class="p">;</span> <span class="n">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
+    <span class="k">for</span><span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">3</span><span class="p">;</span> <span class="n">approximation</span><span class="o">!=</span><span class="n">old</span><span class="p">;</span> <span class="n">i</span><span class="o">+=</span><span class="mi">2</span><span class="p">){</span>
         <span class="n">old</span> <span class="o">=</span> <span class="n">approximation</span><span class="p">;</span>
 
         <span class="k">while</span><span class="p">(</span><span class="n">count</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">){</span>
@@ -88,34 +94,42 @@ function is also synthesised using the identity <img class="math" src="../_image
     <span class="k">return</span> <span class="n">approximation</span><span class="p">;</span>
 <span class="p">}</span>
 
-<span class="cm">/* return the cosine of angle in radians */</span>
-
-<span class="kt">float</span> <span class="n">cos</span><span class="p">(</span><span class="kt">float</span> <span class="n">angle</span><span class="p">){</span>
-    <span class="k">return</span> <span class="n">taylor</span><span class="p">(</span><span class="n">angle</span><span class="p">);</span>
-<span class="p">}</span>
 
 <span class="cm">/* return the sine of angle in radians */</span>
 
-<span class="kt">float</span> <span class="n">sin</span><span class="p">(</span><span class="kt">float</span> <span class="n">angle</span><span class="p">){</span>
-    <span class="k">return</span> <span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="o">-</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">));</span>
+<span class="kt">double</span> <span class="nf">sin</span><span class="p">(</span><span class="kt">double</span> <span class="n">angle</span><span class="p">){</span>
+
+    <span class="k">return</span> <span class="n">taylor</span><span class="p">(</span><span class="n">angle</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="cm">/* return the cosine of angle in radians */</span>
+
+<span class="kt">double</span> <span class="nf">cos</span><span class="p">(</span><span class="kt">double</span> <span class="n">angle</span><span class="p">){</span>
+
+    <span class="k">return</span> <span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="o">+</span><span class="p">(</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">));</span>
+
 <span class="p">}</span>
 
 
 <span class="cm">/* test routine */</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">x_in</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">sin_x_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;sin_x&quot;</span><span class="p">);</span>
+<span class="k">const</span> <span class="kt">int</span> <span class="n">cos_x_out</span> <span class="o">=</span> <span class="n">output</span><span class="p">(</span><span class="s">&quot;cos_x&quot;</span><span class="p">);</span>
 
-<span class="kt">void</span> <span class="n">main</span><span class="p">(){</span>
-    <span class="kt">float</span> <span class="n">x</span><span class="p">;</span>
-    <span class="kt">float</span> <span class="n">step</span><span class="o">=</span><span class="n">pi</span><span class="o">/</span><span class="mi">25</span><span class="p">;</span>
+<span class="kt">void</span> <span class="nf">main</span><span class="p">(){</span>
+    <span class="kt">double</span> <span class="n">x</span><span class="p">;</span>
 
-    <span class="k">for</span><span class="p">(</span><span class="n">x</span><span class="o">=-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">;</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">;</span> <span class="n">x</span> <span class="o">+=</span> <span class="n">step</span><span class="p">){</span>
-       <span class="n">file_write</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s">&quot;x&quot;</span><span class="p">);</span>
-       <span class="n">file_write</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&quot;cos_x&quot;</span><span class="p">);</span>
-       <span class="n">file_write</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="s">&quot;sin_x&quot;</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">fget_double</span><span class="p">(</span><span class="n">x_in</span><span class="p">);</span>
+        <span class="n">fput_double</span><span class="p">(</span><span class="n">sin</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">sin_x_out</span><span class="p">);</span>
+        <span class="n">fput_double</span><span class="p">(</span><span class="n">cos</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">cos_x_out</span><span class="p">);</span>
     <span class="p">}</span>
+
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>A simple test calculates Sine and Cosine for the range <img class="math" src="../_images/math/e6cb12527a2ee17923e2d7e2d21bca89784845bb.png" alt="-2\pi &lt;= x &lt;= 2\pi"/>.</p>
+<p>A simple test calculates Sine and Cosine for the range <span class="math">-2\pi &lt;= x &lt;= 2\pi</span>.</p>
 <img alt="../_images/example_2.png" src="../_images/example_2.png" />
 </div>
 
@@ -123,20 +137,22 @@ function is also synthesised using the identity <img class="math" src="../_image
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
             <p class="logo"><a href="../index.html">
               <img class="logo" src="../_static/chips.png" alt="Logo"/>
             </a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="../_sources/examples/example_2.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/example_2.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -150,18 +166,21 @@ function is also synthesised using the identity <img class="math" src="../_image
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
-        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2011, Jonathan P Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
     </div>
   </body>
 </html>

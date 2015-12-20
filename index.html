@@ -1,19 +1,20 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Chips - Hardware Design in Python &mdash; Chips v0.1 documentation</title>
-    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <title>Contents &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '',
-        VERSION:     '0.1',
+        URL_ROOT:    './',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,108 +24,52 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="shortcut icon" href="_static/chips.ico"/>
-    <link rel="top" title="Chips v0.1 documentation" href="#" />
-    <link rel="next" title="Reference Manual" href="language_reference/index.html" /> 
+    <link rel="top" title="Chips 2.0.1 documentation" href="#" />
+    <link rel="next" title="Introduction" href="home/index.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="language_reference/index.html" title="Reference Manual"
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="home/index.html" title="Introduction"
              accesskey="N">next</a> |</li>
-        <li><a href="#">Chips v0.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
-  <div class="section" id="chips-hardware-design-in-python">
-<h1><em>Chips</em> - Hardware Design in Python<a class="headerlink" href="#chips-hardware-design-in-python" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="what-is-chips">
-<h2>What is <em>Chips</em>?<a class="headerlink" href="#what-is-chips" title="Permalink to this headline">¶</a></h2>
-<p><em>Chips</em> makes FPGA design quicker and easier. <em>Chips</em> isn&#8217;t a Hardware
-Description Language (HDL) like VHDL or Verilog, its a different way of doing
-things. In <em>Chips</em>, you design components using a simple subset of the C
-programming language. There&#8217;s a Python API to connect C components together
-using fast data streams to form complex, parallel systems all in a single chip.
-You don&#8217;t need to worry about clocks, resets, or timing. You don&#8217;t need to
-follow special templates to make your code synthesisable. All that&#8217;s done for
-you!</p>
-</div>
-<div class="section" id="features">
-<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
-<p>Some of the key features include:</p>
-<blockquote>
-<div><ul class="simple">
-<li>A fast and simple development environment</li>
-<li>A free open source solution (MIT license)</li>
-<li>Automatic generation of synthesisable Verilog</li>
-<li>Optimise for speed or area</li>
-<li>Use C and Python software tools to design hardware.</li>
-</ul>
-</div></blockquote>
-<p>You can get the <em>Chips</em> from the <a class="reference external" href="http://github.com/dawsonjon/Chips-2.0">Git Hub</a>
-homepage. If you want to give it a try in some real hardware, take a look at
-the <a class="reference external" href="http://github.com/dawsonjon/Chips-Demo">demo</a> for the Digilent Atlys
-Demo card.</p>
-</div>
-<div class="section" id="a-quick-taster">
-<h2>A Quick Taster<a class="headerlink" href="#a-quick-taster" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-c"><div class="highlight"><pre><span class="n">lfsr</span><span class="p">.</span><span class="n">c</span><span class="o">:</span>
-
-<span class="c1">//4 bit linear feedback shift register</span>
-
-<span class="kt">void</span> <span class="n">lfsr</span><span class="p">(){</span>
-    <span class="kt">int</span> <span class="n">new_bit</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-    <span class="kt">int</span> <span class="n">shift_register</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">){</span>
-
-         <span class="c1">//tap off bit 2 and 3</span>
-         <span class="n">new_bit</span><span class="o">=</span><span class="p">((</span><span class="n">shift_register</span> <span class="o">&gt;&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">shift_register</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">^</span> <span class="n">new_bit</span><span class="p">);</span>
-
-         <span class="c1">//implement shift register</span>
-         <span class="n">shift_register</span><span class="o">=</span><span class="p">((</span><span class="n">new_bit</span> <span class="o">&amp;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="mi">3</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">shift_register</span> <span class="o">&gt;&gt;</span> <span class="mi">1</span><span class="p">);</span>
-
-         <span class="c1">//4 bit mask</span>
-         <span class="n">shift_register</span> <span class="o">&amp;=</span> <span class="mh">0xf</span><span class="p">;</span>
-
-         <span class="c1">//write to stream</span>
-         <span class="n">report</span><span class="p">(</span><span class="n">shift_register</span><span class="p">);</span>
-     <span class="p">}</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<div class="highlight-python"><pre>console:
-
-$ c2verilog iverilog run lfsr.c
-
-8
-12
-14
-7
-3
-1</pre>
-</div>
-</div>
-<div class="section" id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="contents">
+<h1>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="language_reference/index.html">Reference Manual</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#download">Download</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#install">Install</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#icarus-verilog">Icarus Verilog</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#c-components">C Components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#built-in-libraries">Built in Libraries</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#python-api">Python API</a></li>
-<li class="toctree-l2"><a class="reference internal" href="language_reference/index.html#physical-interface">Physical Interface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="home/index.html">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#design-components-in-c-design-fpgas-in-python">Design components in C, design FPGAs in Python</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#a-quick-example">A quick example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#work-at-a-higher-level-of-abstraction">Work at a higher level of abstraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#with-chips-the-batteries-are-included">With Chips the batteries <em>are</em> included</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#python-is-a-rich-verification-environment">Python is a rich verification environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#under-the-hood">Under the hood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="home/index.html#try-it-out">Try it out</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_manual/install.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html#download-github">Download (github)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html#install-from-github">Install from github</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html#install-from-pypi">Install from PyPi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html#icarus-verilog">Icarus Verilog</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html#c-preprocessor">C Preprocessor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html#other-packages">Other packages</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
@@ -133,71 +78,168 @@ $ c2verilog iverilog run lfsr.c
 <li class="toctree-l2"><a class="reference internal" href="examples/index.html#implement-quicksort">Implement Quicksort</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/index.html#pseudo-random-number-generator">Pseudo Random Number Generator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/index.html#fast-fourier-transform">Fast Fourier Transform</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#fir-filter">FIR Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#fm-modulation">FM Modulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#edge-detection">Edge Detection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/index.html#lzss-compression">LZSS Compression</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="tutorial/index.html">Tutorial</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="tutorial/index.html#create-and-test-a-c-component">Create and Test a C component</a></li>
+<li class="toctree-l1"><a class="reference internal" href="user_manual/index.html">Reference Manual</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/install.html">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/install.html#download-github">Download (github)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/install.html#install-from-github">Install from github</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/install.html#install-from-pypi">Install from PyPi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/install.html#icarus-verilog">Icarus Verilog</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/install.html#c-preprocessor">C Preprocessor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/install.html#other-packages">Other packages</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/python_api.html">Python API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/c_compiler.html">C Compiler</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#missing-features">Missing Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#functions">Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#control-structures">Control Structures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#operators">Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#stream-i-o">Stream I/O</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#timed-waits">Timed Waits</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#debug-and-test">Debug and Test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_compiler.html#c-preprocessor">C Preprocessor</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/c_library.html">C Libraries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_library.html#ctype-h">ctype.h</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isalnum-function">The isalnum function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isalpha-function">The isalpha function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-iscntrl-function">The iscntrl function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isdigit-function">The isdigit function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isgraph-function">The isgraph function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-islower-function">The islower function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isprint-function">The isprint function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-ispunct-function">The ispunct function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isspace-function">The isspace function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isupper-function">The isupper function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isxdigit-function">The isxdigit function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-tolower-function">The tolower function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-toupper-function">The toupper function</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_library.html#math-h">math.h</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isfinite-macro">The isfinite macro</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isinf-macro">The isinf macro</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isnan-macro">The isnan macro</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-isnormal-macro">The isnormal macro</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-signbit-macro-not-in-c89">The signbit macro (not in C89)</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-fabs-function">The fabs function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-modf-function">The modf function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-fmod-function">The fmod function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-exp-function">The exp function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-sqrt-function">The sqrt function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-pow-function">The pow function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-ldexp-function">The ldexp function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-frexp-function">The frexp function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-floor-function">The floor function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-ceil-function">The ceil function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-cos-function">The cos function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-sin-function">The sin function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-tan-function">The tan function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-atan-function">The atan function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-atan2-function">The atan2 function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-asin-function">The asin function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-acos-function">The acos function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-sinh-function">The sinh function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-cosh-function">The cosh function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-tanh-function">The tanh function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-log-function">The log function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-log10-function">The log10 function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-log2-function-not-in-c89-standard">The log2 function (Not in C89 standard)</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_library.html#stdio-h">stdio.h</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/c_library.html#stdlib-h">&lt;stdlib.h&gt;</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#macros">macros</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#types">types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-atof-function">The atof function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-atoi-function">The atoi function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-atol-function">The atol function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-strtod-function">The strtod function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-strtol-function">The strtol function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-strtoul-function">The strtoul function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-rand-function">The rand function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-srand-function">The srand function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-malloc-function">The malloc function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-calloc-function">The calloc function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-realloc-function">The realloc function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-free-function">The free function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-abort-function">The abort function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-atexit-function">The atexit function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-exit-function">The exit function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-getenv-function">The getenv function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-system-function">The system function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-bsearch-function">The bsearch function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-qsort-function">The qsort function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-abs-function">The abs function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-div-function">The div function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-labs-function">The labs function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-ldiv-function">The ldiv function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-mblen-function">The mblen function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-mbtowc-function">The mbtowc function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-wctomb-function">The wctomb function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-mbstowcs-function">The mbstowcs function</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_manual/c_library.html#the-wcstombs-function">The wcstombs function</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_manual/interface.html">Physical Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/interface.html#global-signals">Global Signals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/interface.html#interconnect-signals">Interconnect Signals</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_manual/interface.html#interconnect-bus-transaction">Interconnect Bus Transaction</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
 </div>
-</div>
-<div class="section" id="links">
-<h2>Links<a class="headerlink" href="#links" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li><a class="reference external" href="http://scipy.org">SciPy</a> Scientific Tools for Python.</li>
-<li><a class="reference external" href="http://matplotlib.org">matplotlib</a> 2D plotting library for Python.</li>
-<li><a class="reference external" href="http://www.pythonware.com/products/pil/">Python Imaging Library (PIL)</a> Python Imaging Library adds image processing
-capabilities to Python.</li>
-<li><a class="reference external" href="http://www.myhdl.org">MyHDL</a> A Hardware description language based on Python.</li>
-</ul>
 </div>
 <div class="section" id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
-<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
-<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+<li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
-</div>
 </div>
 
 
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
             <p class="logo"><a href="#">
               <img class="logo" src="_static/chips.png" alt="Logo"/>
             </a></p>
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#"><em>Chips</em> - Hardware Design in Python</a><ul>
-<li><a class="reference internal" href="#what-is-chips">What is <em>Chips</em>?</a></li>
-<li><a class="reference internal" href="#features">Features</a></li>
-<li><a class="reference internal" href="#a-quick-taster">A Quick Taster</a></li>
-<li><a class="reference internal" href="#documentation">Documentation</a><ul>
-</ul>
-</li>
-<li><a class="reference internal" href="#links">Links</a></li>
+<li><a class="reference internal" href="#">Contents</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
-</li>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="language_reference/index.html"
-                        title="next chapter">Reference Manual</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="_sources/index.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <p class="topless"><a href="home/index.html"
+                        title="next chapter">Introduction</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -211,21 +253,24 @@ capabilities to Python.</li>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="language_reference/index.html" title="Reference Manual"
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="home/index.html" title="Introduction"
              >next</a> |</li>
-        <li><a href="#">Chips v0.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2011, Jonathan P Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
     </div>
   </body>
 </html>

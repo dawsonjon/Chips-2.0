@@ -1,0 +1,1429 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>C Libraries &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference Manual" href="index.html" />
+    <link rel="next" title="Physical Interface" href="interface.html" />
+    <link rel="prev" title="C Compiler" href="c_compiler.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="interface.html" title="Physical Interface"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="c_compiler.html" title="C Compiler"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="c-libraries">
+<h1>C Libraries<a class="headerlink" href="#c-libraries" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="ctype-h">
+<h2>ctype.h<a class="headerlink" href="#ctype-h" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-isalnum-function">
+<h3>The isalnum function<a class="headerlink" href="#the-isalnum-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isalnum</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isalnum function tests for any character for which isalpha or
+isdigit is true.</div></blockquote>
+</div>
+<div class="section" id="the-isalpha-function">
+<h3>The isalpha function<a class="headerlink" href="#the-isalpha-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isalpha</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isalpha function tests for any character for which isupper or
+islower is true, or any of an implementation-defined set of characters
+for which none of iscntrl, isdigit, ispunct, or isspace is true.
+In the C locale, isalpha returns true only for the characters for
+which isupper or islower is true.</div></blockquote>
+</div>
+<div class="section" id="the-iscntrl-function">
+<h3>The iscntrl function<a class="headerlink" href="#the-iscntrl-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">iscntrl</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The iscntrl function tests for any control character.</div></blockquote>
+</div>
+<div class="section" id="the-isdigit-function">
+<h3>The isdigit function<a class="headerlink" href="#the-isdigit-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isdigit</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isdigit function tests for any decimal-digit character.</div></blockquote>
+</div>
+<div class="section" id="the-isgraph-function">
+<h3>The isgraph function<a class="headerlink" href="#the-isgraph-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isgraph</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isgraph function tests for any printing character except space (&#8216; &#8216;).</div></blockquote>
+</div>
+<div class="section" id="the-islower-function">
+<h3>The islower function<a class="headerlink" href="#the-islower-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">islower</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The islower function tests for any lower-case letter or any of an
+implementation-defined set of characters for which none of iscntrl,
+isdigit, ispunct, or isspace is true.  In the C locale, islower
+returns true only for the characters defined as lower-case letters.</div></blockquote>
+</div>
+<div class="section" id="the-isprint-function">
+<h3>The isprint function<a class="headerlink" href="#the-isprint-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isprint</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isprint function tests for any printing character including
+space (&#8216; &#8216;).</div></blockquote>
+</div>
+<div class="section" id="the-ispunct-function">
+<h3>The ispunct function<a class="headerlink" href="#the-ispunct-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">ispunct</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The ispunct function tests for any printing character except space
+(&#8216; &#8216;) or a character for which isalnum is true.</div></blockquote>
+</div>
+<div class="section" id="the-isspace-function">
+<h3>The isspace function<a class="headerlink" href="#the-isspace-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isspace</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isspace function tests for the standard white-space characters
+or for any of an implementation-defined set of characters for which
+isalnum is false.  The standard white-space characters are the
+following: space (&#8216; &#8216;), form feed (&#8216;f&#8217;), new-line (&#8216;n&#8217;), carriage
+return (&#8216;r&#8217;), horizontal tab (&#8216;t&#8217;), and vertical tab (&#8216;v&#8217;).  In the
+C locale, isspace returns true only for the standard white-space
+characters.</div></blockquote>
+</div>
+<div class="section" id="the-isupper-function">
+<h3>The isupper function<a class="headerlink" href="#the-isupper-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isupper</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isupper function tests for any upper-case letter or any of an
+implementation-defined set of characters for which none of iscntrl,
+isdigit, ispunct, or isspace is true.  In the C locale, isupper
+returns true only for the characters defined as upper-case letters.</div></blockquote>
+</div>
+<div class="section" id="the-isxdigit-function">
+<h3>The isxdigit function<a class="headerlink" href="#the-isxdigit-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isxdigit</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isxdigit function tests for any hexadecimal-digit character.</div></blockquote>
+</div>
+<div class="section" id="the-tolower-function">
+<h3>The tolower function<a class="headerlink" href="#the-tolower-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">tolower</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The tolower function converts an upper-case letter to the
+corresponding lower-case letter.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>If the argument is an upper-case letter, the tolower function
+returns the corresponding lower-case letter if there is one; otherwise
+the argument is returned unchanged.  In the C locale, tolower maps
+only the characters for which isupper is true to the corresponding
+characters for which islower is true.</div></blockquote>
+</div>
+<div class="section" id="the-toupper-function">
+<h3>The toupper function<a class="headerlink" href="#the-toupper-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;ctype.h&gt;</span>
+<span class="kt">int</span> <span class="nf">toupper</span><span class="p">(</span><span class="kt">int</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The toupper function converts a lower-case letter to the corresponding upper-case letter.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>If the argument is a lower-case letter, the toupper function
+returns the corresponding upper-case letter if there is one; otherwise
+the argument is returned unchanged.  In the C locale, toupper maps
+only the characters for which islower is true to the corresponding
+characters for which isupper is true.</div></blockquote>
+</div>
+</div>
+<div class="section" id="math-h">
+<h2>math.h<a class="headerlink" href="#math-h" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="the-isfinite-macro">
+<h3>The isfinite macro<a class="headerlink" href="#the-isfinite-macro" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isfinite</span><span class="p">(</span><span class="n">real</span><span class="o">-</span><span class="n">floating</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The isfinite macro determines whether its argument has a finite value (zero,
+subnormal, or normal, and not infinite or NaN). First, an argument represented in a
+format wider than its semantic type is converted to its semantic type. Then determination
+is based on the type of the argument.
+Since an expression can be evaluated with more range and precision than its type has, it is important to
+know the type that classification is based on. For example, a normal long double value might
+become subnormal when converted to double, and zero when converted to float.</div></blockquote>
+<p>Returns:</p>
+<p>The isfinite macro returns a nonzero value if and only if its argument has a finite
+value.</p>
+</div>
+<div class="section" id="the-isinf-macro">
+<h3>The isinf macro<a class="headerlink" href="#the-isinf-macro" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isinf</span><span class="p">(</span><span class="n">real</span><span class="o">-</span><span class="n">floating</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The isinf macro determines whether its argument value is an infinity (positive or
+negative). First, an argument represented in a format wider than its semantic type is
+converted to its semantic type. Then determination is based on the type of the argument.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The isinf macro returns a nonzero value if and only if its argument has an infinite
+value.</div></blockquote>
+</div>
+<div class="section" id="the-isnan-macro">
+<h3>The isnan macro<a class="headerlink" href="#the-isnan-macro" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isnan</span><span class="p">(</span><span class="n">real</span><span class="o">-</span><span class="n">floating</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The isnan macro determines whether its argument value is a NaN. First, an argument
+represented in a format wider than its semantic type is converted to its semantic type.
+Then determination is based on the type of the argument.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The isnan macro returns a nonzero value if and only if its argument has a NaN value.</div></blockquote>
+</div>
+<div class="section" id="the-isnormal-macro">
+<h3>The isnormal macro<a class="headerlink" href="#the-isnormal-macro" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">int</span> <span class="nf">isnormal</span><span class="p">(</span><span class="n">real</span><span class="o">-</span><span class="n">floating</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<blockquote>
+<div>For the isnan macro, the type for determination does not matter unless the implementation supports
+NaNs in the evaluation type but not in the semantic type.</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The isnormal macro determines whether its argument value is normal (neither
+zero, subnormal, infinite, nor NaN). First, an argument
+represented in a format wider than its semantic type is converted to its
+semantic type. Then determination is based on the type of the argument.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The isnormal macro returns a nonzero value if and only if its argument has a
+normal value.</div></blockquote>
+</div>
+<div class="section" id="the-signbit-macro-not-in-c89">
+<h3>The signbit macro (not in C89)<a class="headerlink" href="#the-signbit-macro-not-in-c89" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">int</span> <span class="nf">signbit</span><span class="p">(</span><span class="n">real</span><span class="o">-</span><span class="n">floating</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The signbit macro determines whether the sign of its argument value is negative.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The signbit macro returns a nonzero value if and only if the sign of its argument value
+is negative.</div></blockquote>
+</div>
+<div class="section" id="the-fabs-function">
+<h3>The fabs function<a class="headerlink" href="#the-fabs-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">fabs</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The fabs function computes the absolute value of a floating-point
+number x.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The fabs function returns the absolute value of x.</div></blockquote>
+</div>
+<div class="section" id="the-modf-function">
+<h3>The modf function<a class="headerlink" href="#the-modf-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">modf</span><span class="p">(</span><span class="kt">double</span> <span class="n">value</span><span class="p">,</span> <span class="kt">double</span> <span class="o">*</span><span class="n">iptr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The modf function breaks the argument value into integral and
+fractional parts, each of which has the same sign as the argument.  It
+stores the integral part as a double in the object pointed to by iptr.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The modf function returns the signed fractional part of value.</div></blockquote>
+</div>
+<div class="section" id="the-fmod-function">
+<h3>The fmod function<a class="headerlink" href="#the-fmod-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">fmod</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span> <span class="n">y</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The fmod function computes the floating-point remainder of x/y.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The fmod function returns the value x i y , for some integer i such
+that, if y is nonzero, the result has the same sign as x and magnitude
+less than the magnitude of y.  If y is zero, whether a domain error
+occurs or the fmod function returns zero is implementation-defined.</div></blockquote>
+</div>
+<div class="section" id="the-exp-function">
+<h3>The exp function<a class="headerlink" href="#the-exp-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">exp</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The exp function computes the exponential function of x.  A range
+error occurs if the magnitude of x is too large.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The exp function returns the exponential value.</div></blockquote>
+</div>
+<div class="section" id="the-sqrt-function">
+<h3>The sqrt function<a class="headerlink" href="#the-sqrt-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">sqrt</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The sqrt function computes the nonnegative square root of x.  A
+domain error occurs if the argument is negative.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The sqrt function returns the value of the square root.</div></blockquote>
+</div>
+<div class="section" id="the-pow-function">
+<h3>The pow function<a class="headerlink" href="#the-pow-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">pow</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="kt">double</span> <span class="n">y</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The pow function computes x raised to the power y.  A domain error
+occurs if x is negative and y is not an integer.  A domain error
+occurs if the result cannot be represented when x is zero and y is
+less than or equal to zero.  A range error may occur.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The pow function returns the value of x raised to the power y.</div></blockquote>
+</div>
+<div class="section" id="the-ldexp-function">
+<h3>The ldexp function<a class="headerlink" href="#the-ldexp-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">ldexp</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">,</span> <span class="kt">int</span> <span class="n">exp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The ldexp function multiplies a floating-point number by an
+integral power of 2.  A range error may occur.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The ldexp function returns the value of x times 2 raised to the
+power exp.</div></blockquote>
+</div>
+<div class="section" id="the-frexp-function">
+<h3>The frexp function<a class="headerlink" href="#the-frexp-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">frexp</span><span class="p">(</span><span class="kt">double</span> <span class="n">value</span><span class="p">,</span> <span class="kt">int</span> <span class="o">*</span><span class="n">exp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The frexp function breaks a floating-point number into a normalized
+fraction and an integral power of 2.  It stores the integer in the int
+object pointed to by exp.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The frexp function returns the value x , such that x is a double
+with magnitude in the interval [1/2, 1) or zero, and value equals x
+times 2 raised to the power <a href="#id1"><span class="problematic" id="id2">*</span></a>exp.  If value is zero, both parts of
+the result are zero.</div></blockquote>
+</div>
+<div class="section" id="the-floor-function">
+<h3>The floor function<a class="headerlink" href="#the-floor-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">floor</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The floor function computes the largest integral value not greater</div></blockquote>
+<p>than x.</p>
+<p>Returns:</p>
+<blockquote>
+<div>The floor function returns the largest integral value not greater
+than x , expressed as a double.</div></blockquote>
+</div>
+<div class="section" id="the-ceil-function">
+<h3>The ceil function<a class="headerlink" href="#the-ceil-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">ceil</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The ceil function computes the smallest integral value not less than x.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The ceil function returns the smallest integral value not less than
+x , expressed as a double.</div></blockquote>
+</div>
+<div class="section" id="the-cos-function">
+<h3>The cos function<a class="headerlink" href="#the-cos-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">cos</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The cos function computes the cosine of x (measured in radians).  A
+large magnitude argument may yield a result with little or no
+significance.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The cos function returns the cosine value.</div></blockquote>
+</div>
+<div class="section" id="the-sin-function">
+<h3>The sin function<a class="headerlink" href="#the-sin-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">sin</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The sin function computes the sine of x (measured in radians).  A
+large magnitude argument may yield a result with little or no
+significance.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The sin function returns the sine value.</div></blockquote>
+</div>
+<div class="section" id="the-tan-function">
+<h3>The tan function<a class="headerlink" href="#the-tan-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">tan</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The tan function returns the tangent of x (measured in radians).  A large magnitude argument may yield a result with little or no significance.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The tan function returns the tangent value.</div></blockquote>
+</div>
+<div class="section" id="the-atan-function">
+<h3>The atan function<a class="headerlink" href="#the-atan-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">atan</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The atan function computes the principal value of the arc tangent of x.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The atan function returns the arc tangent in the range [-PI/2, +PI/2]
+radians.</div></blockquote>
+</div>
+<div class="section" id="the-atan2-function">
+<h3>The atan2 function<a class="headerlink" href="#the-atan2-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">atan2</span><span class="p">(</span><span class="kt">double</span> <span class="n">y</span><span class="p">,</span> <span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The atan2 function computes the principal value of the arc tangent
+of y/x , using the signs of both arguments to determine the quadrant
+of the return value.  A domain error may occur if both arguments are
+zero.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The atan2 function returns the arc tangent of y/x , in the range
+[-PI, +PI] radians.</div></blockquote>
+</div>
+<div class="section" id="the-asin-function">
+<h3>The asin function<a class="headerlink" href="#the-asin-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">asin</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The asin function computes the principal value of the arc sine of x.
+A domain error occurs for arguments not in the range [-1, +1].</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The asin function returns the arc sine in the range [-PI/2, +PI/2]
+radians.</div></blockquote>
+</div>
+<div class="section" id="the-acos-function">
+<h3>The acos function<a class="headerlink" href="#the-acos-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">acos</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The acos function computes the principal value of the arc cosine of x.
+A domain error occurs for arguments not in the range [-1, +1].</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The acos function returns the arc cosine in the range [0, PI] radians.</div></blockquote>
+</div>
+<div class="section" id="the-sinh-function">
+<h3>The sinh function<a class="headerlink" href="#the-sinh-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">sinh</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The sinh function computes the hyperbolic sine of x.  A range error occurs if the magnitude of x is too large.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The sinh function returns the hyperbolic sine value.</div></blockquote>
+</div>
+<div class="section" id="the-cosh-function">
+<h3>The cosh function<a class="headerlink" href="#the-cosh-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">cosh</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The cosh function computes the hyperbolic cosine of x.  A range
+error occurs if the magnitude of x is too large.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The cosh function returns the hyperbolic cosine value.</div></blockquote>
+</div>
+<div class="section" id="the-tanh-function">
+<h3>The tanh function<a class="headerlink" href="#the-tanh-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">tanh</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The tanh function computes the hyperbolic tangent of x.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The tanh function returns the hyperbolic tangent value.</div></blockquote>
+</div>
+<div class="section" id="the-log-function">
+<h3>The log function<a class="headerlink" href="#the-log-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">log</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The log function computes the natural logarithm of x.  A domain
+error occurs if the argument is negative.  A range error occurs if the
+argument is zero and the logarithm of zero cannot be represented.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The log function returns the natural logarithm.</div></blockquote>
+</div>
+<div class="section" id="the-log10-function">
+<h3>The log10 function<a class="headerlink" href="#the-log10-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">log10</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The log10 function computes the base-ten logarithm of x.  A domain
+error occurs if the argument is negative.  A range error occurs if the
+argument is zero and the logarithm of zero cannot be represented.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The log10 function returns the base-ten logarithm.</div></blockquote>
+</div>
+<div class="section" id="the-log2-function-not-in-c89-standard">
+<h3>The log2 function (Not in C89 standard)<a class="headerlink" href="#the-log2-function-not-in-c89-standard" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;math.h&gt;</span>
+<span class="kt">double</span> <span class="nf">log2</span><span class="p">(</span><span class="kt">double</span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Description:</p>
+<blockquote>
+<div>The log2 function computes the base-two logarithm of x.  A domain
+error occurs if the argument is negative.  A range error occurs if the
+argument is zero and the logarithm of zero cannot be represented.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The log2 function returns the base-two logarithm.</div></blockquote>
+</div>
+</div>
+<div class="section" id="stdio-h">
+<h2>stdio.h<a class="headerlink" href="#stdio-h" title="Permalink to this headline">¶</a></h2>
+<p>In contrast to the C standard, <cite>fputc</cite> and <cite>fgetc</cite> are built-in functions, you
+do not need to include <cite>stdio.h</cite> to use them.</p>
+<p>The globals <cite>stdin</cite> and <cite>stdout</cite> should be set to an input or output by the user.</p>
+<p>The <cite>fputs</cite> function prints <cite>string</cite> to the output <cite>handle</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fputs</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>fgets</cite> function reads a line, up to <cite>maxlength</cite> characters, or a line end
+from the input <cite>handle</cite>. The string will be null terminated. <cite>maxlength</cite>
+includes the null character.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">fgets</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">maxlength</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="n">handle</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>puts</cite> function prints <cite>string</cite> to stdout.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">puts</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[]);</span>
+</pre></div>
+</div>
+<p>The <cite>gets</cite> function reads a line, up to <cite>maxlength</cite> characters, or a line end
+from stdin. The string will be null terminated. <cite>maxlength</cite>
+includes the null character.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">gets</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">string</span><span class="p">[],</span> <span class="kt">unsigned</span> <span class="n">maxlength</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <cite>getc</cite> returns a single character from stdin.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">getc</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>The <cite>putc</cite> writes a single character to stdout.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">void</span> <span class="nf">putc</span><span class="p">(</span><span class="kt">unsigned</span> <span class="n">c</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stdlib-h">
+<h2>&lt;stdlib.h&gt;<a class="headerlink" href="#stdlib-h" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="macros">
+<h3>macros<a class="headerlink" href="#macros" title="Permalink to this headline">¶</a></h3>
+<p>The header &lt;stdlib.h&gt; defines the following macros:</p>
+<ul class="simple">
+<li>NULL</li>
+<li>RAND_MAX</li>
+<li>MB_CUR_MAX</li>
+<li>MB_LEN_MAX</li>
+</ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The EXIT_FAILURE and EXIT_SUCCESS macros are not defined.</p>
+</div>
+<p><cite>RAND_MAX</cite> expands to an integral constant expression, the value of which
+is the maximum value returned by the rand function.
+<cite>MB_CUR_MAX</cite> expands to a positive integer expression whose value is the
+maximum number of bytes in a multibyte character for the extended
+character set specified by the current locale (category LC_CTYPE ),
+and whose value is never greater than <cite>MB_LEN_MAX</cite>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The EXIT_FAILURE and EXIT_SUCCESS macros are not defined.</p>
+</div>
+<p><cite>RAND_MAX</cite> expands to an integral constant expression, the value of which
+is the maximum value returned by the rand function.</p>
+<p><cite>MB_CUR_MAX</cite> expands to a positive integer expression whose value is the
+maximum number of bytes in a multibyte character for the extended
+character set specified by the current locale (category LC_CTYPE ),
+and whose value is never greater than <cite>MB_LEN_MAX</cite>.</p>
+</div>
+<div class="section" id="types">
+<h3>types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h3>
+<p>The header &lt;stdlib.h&gt; defines the following types:</p>
+<ul class="simple">
+<li>div_t</li>
+</ul>
+</div>
+<div class="section" id="the-atof-function">
+<h3>The atof function<a class="headerlink" href="#the-atof-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-C"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">double</span> <span class="nf">atof</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">nptr</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div><p>The atof function converts the initial portion of the string
+pointed to by nptr to double representation.  Except for the behavior
+on error, it is equivalent to</p>
+<blockquote>
+<div>strtod(nptr, (char <a href="#id3"><span class="problematic" id="id4">**</span></a>)NULL)</div></blockquote>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The atof function returns the converted value.</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-atoi-function">
+<h3>The atoi function<a class="headerlink" href="#the-atoi-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div></div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The atoi function converts the initial portion of the string</div></blockquote>
+<p>pointed to by nptr to int representation.  Except for the behavior on
+error, it is equivalent to</p>
+<blockquote>
+<div>(int)strtol(nptr, (char <a href="#id5"><span class="problematic" id="id6">**</span></a>)NULL, 10)</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The atoi function returns the converted value.</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-atol-function">
+<h3>The atol function<a class="headerlink" href="#the-atol-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">long</span> <span class="kt">int</span> <span class="nf">atol</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">nptr</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The atol function converts the initial portion of the string</div></blockquote>
+<p>pointed to by nptr to long int representation.  Except for the
+behavior on error, it is equivalent to</p>
+<blockquote>
+<div>strtol(nptr, (char <a href="#id7"><span class="problematic" id="id8">**</span></a>)NULL, 10)</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The atol function returns the converted value.</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-strtod-function">
+<h3>The strtod function<a class="headerlink" href="#the-strtod-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div></div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-strtol-function">
+<h3>The strtol function<a class="headerlink" href="#the-strtol-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">long</span> <span class="kt">int</span> <span class="nf">strtol</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">nptr</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">endptr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">base</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-strtoul-function">
+<h3>The strtoul function<a class="headerlink" href="#the-strtoul-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">unsigned</span> <span class="kt">long</span> <span class="kt">int</span> <span class="nf">strtoul</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">nptr</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">endptr</span><span class="p">,</span>
+         <span class="kt">int</span> <span class="n">base</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-rand-function">
+<h3>The rand function<a class="headerlink" href="#the-rand-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">rand</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div><p>The rand function computes a sequence of pseudo-random integers in
+the range 0 to RAND_MAX.</p>
+<p>The implementation shall behave as if no library function calls the
+rand function.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The rand function returns a pseudo-random integer.</div></blockquote>
+</div>
+<div class="section" id="the-srand-function">
+<h3>The srand function<a class="headerlink" href="#the-srand-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="nf">srand</span><span class="p">(</span><span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">seed</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The srand function uses the argument as a seed for a new sequence
+of pseudo-random numbers to be returned by subsequent calls to rand.
+If srand is then called with the same seed value, the sequence of
+pseudo-random numbers shall be repeated.  If rand is called before any
+calls to srand have been made, the same sequence shall be generated as
+when srand is first called with a seed value of 1.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The srand function returns no value.</div></blockquote>
+</div>
+<div class="section" id="the-malloc-function">
+<h3>The malloc function<a class="headerlink" href="#the-malloc-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="o">*</span><span class="nf">malloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The malloc function allocates space for an object whose size is
+specified by size and whose value is indeterminate.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The malloc function returns either a null pointer or a pointer to
+the allocated space.</div></blockquote>
+</div>
+<div class="section" id="the-calloc-function">
+<h3>The calloc function<a class="headerlink" href="#the-calloc-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="o">*</span><span class="nf">calloc</span><span class="p">(</span><span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The calloc function allocates space for an array of nmemb objects,
+each of whose size is size.  The space is initialized to all bits
+zero.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The calloc function returns either a null pointer or a pointer to
+the allocated space.</div></blockquote>
+</div>
+<div class="section" id="the-realloc-function">
+<h3>The realloc function<a class="headerlink" href="#the-realloc-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="o">*</span><span class="nf">realloc</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The realloc function changes the size of the object pointed to by
+ptr to the size specified by size.  The contents of the object shall
+be unchanged up to the lesser of the new and old sizes.  If the new
+size is larger, the value of the newly allocated portion of the object
+is indeterminate.  If ptr is a null pointer, the realloc function
+behaves like the malloc function for the specified size.  Otherwise,
+if ptr does not match a pointer earlier returned by the calloc,
+malloc, or realloc function, or if the space has been deallocated by
+a call to the free or realloc function, the behavior is undefined.  If
+the space cannot be allocated, the object pointed to by ptr is
+unchanged.  If size is zero and ptr is not a null pointer, the object
+it points to is freed.</p>
+</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The realloc function returns either a null pointer or a pointer to
+the possibly moved allocated space.</div></blockquote>
+</div>
+<div class="section" id="the-free-function">
+<h3>The free function<a class="headerlink" href="#the-free-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="nf">free</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The free function causes the space pointed to by ptr to be
+deallocated, that is, made available for further allocation.  If ptr
+is a null pointer, no action occurs.  Otherwise, if the argument does
+not match a pointer earlier returned by the calloc, malloc, or
+realloc function, or if the space has been deallocated by a call to
+free or realloc, the behavior is undefined.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The free function returns no value.</div></blockquote>
+</div>
+<div class="section" id="the-abort-function">
+<h3>The abort function<a class="headerlink" href="#the-abort-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="nf">abort</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">this function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-atexit-function">
+<h3>The atexit function<a class="headerlink" href="#the-atexit-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">atexit</span><span class="p">(</span><span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">func</span><span class="p">)(</span><span class="kt">void</span><span class="p">));</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">this function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-exit-function">
+<h3>The exit function<a class="headerlink" href="#the-exit-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="nf">exit</span><span class="p">(</span><span class="kt">int</span> <span class="n">status</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-getenv-function">
+<h3>The getenv function<a class="headerlink" href="#the-getenv-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">char</span> <span class="o">*</span><span class="nf">getenv</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">this function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-system-function">
+<h3>The system function<a class="headerlink" href="#the-system-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">system</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">string</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-bsearch-function">
+<h3>The bsearch function<a class="headerlink" href="#the-bsearch-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="o">*</span><span class="nf">bsearch</span><span class="p">(</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">base</span><span class="p">,</span>
+         <span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span>
+         <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">compar</span><span class="p">)(</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="p">));</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-qsort-function">
+<h3>The qsort function<a class="headerlink" href="#the-qsort-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">void</span> <span class="nf">qsort</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">base</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">nmemb</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span>
+         <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">compar</span><span class="p">)(</span><span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="p">));</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-abs-function">
+<h3>The abs function<a class="headerlink" href="#the-abs-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-C"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">abs</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The abs function computes the absolute value of an integer j.  If
+the result cannot be represented, the behavior is undefined.</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div>The abs function returns the absolute value.</div></blockquote>
+</div>
+<div class="section" id="the-div-function">
+<h3>The div function<a class="headerlink" href="#the-div-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">div_t</span> <span class="nf">div</span><span class="p">(</span><span class="kt">int</span> <span class="n">numer</span><span class="p">,</span> <span class="kt">int</span> <span class="n">denom</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The div function computes the quotient and remainder of the
+division of the numerator numer by the denominator denom .  If the
+division is inexact, the sign of the resulting quotient is that of the
+algebraic quotient, and the magnitude of the resulting quotient is the
+largest integer less than the magnitude of the algebraic quotient.  If
+the result cannot be represented, the behavior is undefined;
+otherwise, quot * denom + rem shall equal numer .</div></blockquote>
+<p>Returns:</p>
+<blockquote>
+<div><p>The div function returns a structure of type div_t, comprising
+both the quotient and the remainder.  The structure shall contain the
+following members, in either order.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">quot</span><span class="p">;</span>   <span class="cm">/*  quotient */</span>
+<span class="kt">int</span> <span class="n">rem</span><span class="p">;</span>    <span class="cm">/*  remainder */</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div>
+<div class="section" id="the-labs-function">
+<h3>The labs function<a class="headerlink" href="#the-labs-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><p>..code-block:</p>
+<div class="highlight-python"><div class="highlight"><pre>#include &lt;stdlib.h&gt;
+long int labs(long int j);
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The labs function is similar to the abs function, except that the
+argument and the returned value each have type long int.</div></blockquote>
+</div>
+<div class="section" id="the-ldiv-function">
+<h3>The ldiv function<a class="headerlink" href="#the-ldiv-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">ldiv_t</span> <span class="nf">ldiv</span><span class="p">(</span><span class="kt">long</span> <span class="kt">int</span> <span class="n">numer</span><span class="p">,</span> <span class="kt">long</span> <span class="kt">int</span> <span class="n">denom</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Description:</p>
+<blockquote>
+<div>The ldiv function is similar to the div function, except that the
+arguments and the members of the returned structure (which has type
+ldiv_t ) all have type long int.</div></blockquote>
+</div>
+<div class="section" id="the-mblen-function">
+<h3>The mblen function<a class="headerlink" href="#the-mblen-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">mblen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-mbtowc-function">
+<h3>The mbtowc function<a class="headerlink" href="#the-mbtowc-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">mbtowc</span><span class="p">(</span><span class="kt">wchar_t</span> <span class="o">*</span><span class="n">pwc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-wctomb-function">
+<h3>The wctomb function<a class="headerlink" href="#the-wctomb-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">int</span> <span class="nf">wctomb</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">wchar_t</span> <span class="n">wchar</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-mbstowcs-function">
+<h3>The mbstowcs function<a class="headerlink" href="#the-mbstowcs-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">size_t</span> <span class="nf">mbstowcs</span><span class="p">(</span><span class="kt">wchar_t</span> <span class="o">*</span><span class="n">pwcs</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+<div class="section" id="the-wcstombs-function">
+<h3>The wcstombs function<a class="headerlink" href="#the-wcstombs-function" title="Permalink to this headline">¶</a></h3>
+<p>Synopsis:</p>
+<blockquote>
+<div><div class="highlight-c"><div class="highlight"><pre><span class="cp">#include &lt;stdlib.h&gt;</span>
+<span class="kt">size_t</span> <span class="nf">wcstombs</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">,</span> <span class="k">const</span> <span class="kt">wchar_t</span> <span class="o">*</span><span class="n">pwcs</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">n</span><span class="p">);</span>
+</pre></div>
+</div>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This function is not implemented!!!</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">C Libraries</a><ul>
+<li><a class="reference internal" href="#ctype-h">ctype.h</a><ul>
+<li><a class="reference internal" href="#the-isalnum-function">The isalnum function</a></li>
+<li><a class="reference internal" href="#the-isalpha-function">The isalpha function</a></li>
+<li><a class="reference internal" href="#the-iscntrl-function">The iscntrl function</a></li>
+<li><a class="reference internal" href="#the-isdigit-function">The isdigit function</a></li>
+<li><a class="reference internal" href="#the-isgraph-function">The isgraph function</a></li>
+<li><a class="reference internal" href="#the-islower-function">The islower function</a></li>
+<li><a class="reference internal" href="#the-isprint-function">The isprint function</a></li>
+<li><a class="reference internal" href="#the-ispunct-function">The ispunct function</a></li>
+<li><a class="reference internal" href="#the-isspace-function">The isspace function</a></li>
+<li><a class="reference internal" href="#the-isupper-function">The isupper function</a></li>
+<li><a class="reference internal" href="#the-isxdigit-function">The isxdigit function</a></li>
+<li><a class="reference internal" href="#the-tolower-function">The tolower function</a></li>
+<li><a class="reference internal" href="#the-toupper-function">The toupper function</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#math-h">math.h</a><ul>
+<li><a class="reference internal" href="#the-isfinite-macro">The isfinite macro</a></li>
+<li><a class="reference internal" href="#the-isinf-macro">The isinf macro</a></li>
+<li><a class="reference internal" href="#the-isnan-macro">The isnan macro</a></li>
+<li><a class="reference internal" href="#the-isnormal-macro">The isnormal macro</a></li>
+<li><a class="reference internal" href="#the-signbit-macro-not-in-c89">The signbit macro (not in C89)</a></li>
+<li><a class="reference internal" href="#the-fabs-function">The fabs function</a></li>
+<li><a class="reference internal" href="#the-modf-function">The modf function</a></li>
+<li><a class="reference internal" href="#the-fmod-function">The fmod function</a></li>
+<li><a class="reference internal" href="#the-exp-function">The exp function</a></li>
+<li><a class="reference internal" href="#the-sqrt-function">The sqrt function</a></li>
+<li><a class="reference internal" href="#the-pow-function">The pow function</a></li>
+<li><a class="reference internal" href="#the-ldexp-function">The ldexp function</a></li>
+<li><a class="reference internal" href="#the-frexp-function">The frexp function</a></li>
+<li><a class="reference internal" href="#the-floor-function">The floor function</a></li>
+<li><a class="reference internal" href="#the-ceil-function">The ceil function</a></li>
+<li><a class="reference internal" href="#the-cos-function">The cos function</a></li>
+<li><a class="reference internal" href="#the-sin-function">The sin function</a></li>
+<li><a class="reference internal" href="#the-tan-function">The tan function</a></li>
+<li><a class="reference internal" href="#the-atan-function">The atan function</a></li>
+<li><a class="reference internal" href="#the-atan2-function">The atan2 function</a></li>
+<li><a class="reference internal" href="#the-asin-function">The asin function</a></li>
+<li><a class="reference internal" href="#the-acos-function">The acos function</a></li>
+<li><a class="reference internal" href="#the-sinh-function">The sinh function</a></li>
+<li><a class="reference internal" href="#the-cosh-function">The cosh function</a></li>
+<li><a class="reference internal" href="#the-tanh-function">The tanh function</a></li>
+<li><a class="reference internal" href="#the-log-function">The log function</a></li>
+<li><a class="reference internal" href="#the-log10-function">The log10 function</a></li>
+<li><a class="reference internal" href="#the-log2-function-not-in-c89-standard">The log2 function (Not in C89 standard)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#stdio-h">stdio.h</a></li>
+<li><a class="reference internal" href="#stdlib-h">&lt;stdlib.h&gt;</a><ul>
+<li><a class="reference internal" href="#macros">macros</a></li>
+<li><a class="reference internal" href="#types">types</a></li>
+<li><a class="reference internal" href="#the-atof-function">The atof function</a></li>
+<li><a class="reference internal" href="#the-atoi-function">The atoi function</a></li>
+<li><a class="reference internal" href="#the-atol-function">The atol function</a></li>
+<li><a class="reference internal" href="#the-strtod-function">The strtod function</a></li>
+<li><a class="reference internal" href="#the-strtol-function">The strtol function</a></li>
+<li><a class="reference internal" href="#the-strtoul-function">The strtoul function</a></li>
+<li><a class="reference internal" href="#the-rand-function">The rand function</a></li>
+<li><a class="reference internal" href="#the-srand-function">The srand function</a></li>
+<li><a class="reference internal" href="#the-malloc-function">The malloc function</a></li>
+<li><a class="reference internal" href="#the-calloc-function">The calloc function</a></li>
+<li><a class="reference internal" href="#the-realloc-function">The realloc function</a></li>
+<li><a class="reference internal" href="#the-free-function">The free function</a></li>
+<li><a class="reference internal" href="#the-abort-function">The abort function</a></li>
+<li><a class="reference internal" href="#the-atexit-function">The atexit function</a></li>
+<li><a class="reference internal" href="#the-exit-function">The exit function</a></li>
+<li><a class="reference internal" href="#the-getenv-function">The getenv function</a></li>
+<li><a class="reference internal" href="#the-system-function">The system function</a></li>
+<li><a class="reference internal" href="#the-bsearch-function">The bsearch function</a></li>
+<li><a class="reference internal" href="#the-qsort-function">The qsort function</a></li>
+<li><a class="reference internal" href="#the-abs-function">The abs function</a></li>
+<li><a class="reference internal" href="#the-div-function">The div function</a></li>
+<li><a class="reference internal" href="#the-labs-function">The labs function</a></li>
+<li><a class="reference internal" href="#the-ldiv-function">The ldiv function</a></li>
+<li><a class="reference internal" href="#the-mblen-function">The mblen function</a></li>
+<li><a class="reference internal" href="#the-mbtowc-function">The mbtowc function</a></li>
+<li><a class="reference internal" href="#the-wctomb-function">The wctomb function</a></li>
+<li><a class="reference internal" href="#the-mbstowcs-function">The mbstowcs function</a></li>
+<li><a class="reference internal" href="#the-wcstombs-function">The wcstombs function</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="c_compiler.html"
+                        title="previous chapter">C Compiler</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="interface.html"
+                        title="next chapter">Physical Interface</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/c_library.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="interface.html" title="Physical Interface"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="c_compiler.html" title="C Compiler"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Physical Interface &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference Manual" href="index.html" />
+    <link rel="prev" title="C Libraries" href="c_library.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_library.html" title="C Libraries"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="physical-interface">
+<h1>Physical Interface<a class="headerlink" href="#physical-interface" title="Permalink to this headline">¶</a></h1>
+<p><cite>Input</cite>, <cite>Output</cite> and <cite>Wire</cite> objects within a chip are implemented using a
+synchronous interconnect bus. The details of the interconnect bus are described
+here. This section will be of most use to developers who want to integrate a
+<em>Chips</em> design into a larger design, or to generate an HDL wrapper to support a
+<em>Chips</em> design in new hardware.</p>
+<a class="reference internal image-reference" href="../_images/aafig-964c97c0ff44e0138deebb77010f7acfce473aa2.svg"><img height="266.0" src="../_images/aafig-964c97c0ff44e0138deebb77010f7acfce473aa2.svg" width="854.0" /></a>
+<div class="section" id="global-signals">
+<h2>Global Signals<a class="headerlink" href="#global-signals" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="31%" />
+<col width="17%" />
+<col width="36%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Name</td>
+<td>Direction</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr class="row-even"><td>clk</td>
+<td>input</td>
+<td>bit</td>
+<td>Clock</td>
+</tr>
+<tr class="row-odd"><td>rst</td>
+<td>input</td>
+<td>bit</td>
+<td>Reset</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="interconnect-signals">
+<h2>Interconnect Signals<a class="headerlink" href="#interconnect-signals" title="Permalink to this headline">¶</a></h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="12%" />
+<col width="7%" />
+<col width="64%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>Name</td>
+<td>Direction</td>
+<td>Type</td>
+<td>Description</td>
+</tr>
+<tr class="row-even"><td>&lt;bus_name&gt;</td>
+<td>TX to RX</td>
+<td>bus</td>
+<td>Payload Data</td>
+</tr>
+<tr class="row-odd"><td>&lt;bus_name&gt;_stb</td>
+<td>TX to RX</td>
+<td>bit</td>
+<td>&#8216;1&#8217; indicates that payload data is valid and TX is ready.</td>
+</tr>
+<tr class="row-even"><td>&lt;bus_name&gt;_ack</td>
+<td>TX to RX</td>
+<td>bit</td>
+<td>&#8216;1&#8217; indicates that RX is ready.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="interconnect-bus-transaction">
+<h2>Interconnect Bus Transaction<a class="headerlink" href="#interconnect-bus-transaction" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Both transmitter and receiver <strong>shall</strong> be synchronised to the 0 to 1 transition of <cite>clk</cite>.</li>
+<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the transmitter <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;bus_name&gt;_stb</cite> to 0.</li>
+<li>If <cite>rst</cite> is set to 1, upon the 0 to 1 transition of <cite>clk</cite> the receiver <strong>shall</strong> terminate any active bus transaction and set <cite>&lt;bus_name&gt;_ack</cite> to 0.</li>
+<li>If <cite>rst</cite> is set to 0, normal operation <strong>shall</strong> commence.</li>
+<li>The transmitter <strong>may</strong> insert wait states on the bus by setting <cite>&lt;bus_name&gt;_stb</cite> to 0.</li>
+<li>The transmitter <strong>shall</strong> set <cite>&lt;bus_name&gt;_stb</cite> to 1 to signify that data is valid.</li>
+<li>Once <cite>&lt;bus_name&gt;_stb</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
+<li>The transmitter <strong>shall</strong> ensure that <cite>&lt;bus_name&gt;</cite> contains valid data for the entire period that <cite>&lt;bus_name&gt;_stb</cite> is 1.</li>
+<li>The transmitter <strong>may</strong> set <cite>&lt;bus_name&gt;</cite> to any value when <cite>&lt;bus_name&gt;_stb</cite> is 0.</li>
+<li>The receiver <strong>may</strong> insert wait states on the bus by setting <cite>&lt;bus_name&gt;_ack</cite> to 0.</li>
+<li>The receiver <strong>shall</strong> set <cite>&lt;bus_name&gt;_ack</cite> to 1 to signify that it is ready to receive data.</li>
+<li>Once <cite>&lt;bus_name&gt;_ack</cite> has been set to 1, it <strong>shall</strong> remain at 1 until the transaction completes.</li>
+<li>Whenever <cite>&lt;bus_name&gt;_stb</cite> is 1 and <cite>&lt;bus_name&gt;_ack</cite> are 1, a bus transaction <strong>shall</strong> complete on the following 0 to 1 transition of <cite>clk</cite>.</li>
+<li>Both the transmitter and receiver <strong>may</strong> commence a new transaction without inserting any wait states.</li>
+<li>The receiver <strong>may</strong> delay a transaction by inserting wait states until the transmitter indicates that data is available.</li>
+<li>The transmitter <strong>shall</strong> not delay a transaction by inserting wait states until the receiver is ready to accept data. Deadlock would occur if both the transmitter and receiver delayed a transaction until the other was ready.</li>
+</ol>
+<a class="reference internal image-reference" href="../_images/aafig-ff4d391a93a37b5866520a04baaa4935303a4509.svg"><img height="770.0" src="../_images/aafig-ff4d391a93a37b5866520a04baaa4935303a4509.svg" width="1330.0" /></a>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Physical Interface</a><ul>
+<li><a class="reference internal" href="#global-signals">Global Signals</a></li>
+<li><a class="reference internal" href="#interconnect-signals">Interconnect Signals</a></li>
+<li><a class="reference internal" href="#interconnect-bus-transaction">Interconnect Bus Transaction</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="c_library.html"
+                        title="previous chapter">C Libraries</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/interface.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_library.html" title="C Libraries"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>

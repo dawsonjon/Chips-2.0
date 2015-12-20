@@ -1,0 +1,186 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference Manual" href="index.html" />
+    <link rel="next" title="Python API" href="python_api.html" />
+    <link rel="prev" title="Reference Manual" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_api.html" title="Python API"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Reference Manual"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="download-github">
+<h2>Download (github)<a class="headerlink" href="#download-github" title="Permalink to this headline">¶</a></h2>
+<p>You can download the
+<a class="reference external" href="https://github.com/dawsonjon/Chips-2.0/archive/master.zip">source</a>
+from the
+<a class="reference external" href="https://github.com/dawsonjon/Chips-2.0">Git Hub</a>
+homepage. Alternatively clone the project using git:</p>
+<div class="highlight-python"><div class="highlight"><pre>~$ git clone --recursive https://github.com/dawsonjon/Chips-2.0.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-from-github">
+<h2>Install from github<a class="headerlink" href="#install-from-github" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>$ cd Chips-2.0
+$ sudo python setup install
+</pre></div>
+</div>
+</div>
+<div class="section" id="install-from-pypi">
+<h2>Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>$ pip-install chips
+</pre></div>
+</div>
+</div>
+<div class="section" id="icarus-verilog">
+<h2>Icarus Verilog<a class="headerlink" href="#icarus-verilog" title="Permalink to this headline">¶</a></h2>
+<p>Chips can automatically simulate the verilog it generates, to simulate verilog
+you will need the <a class="reference external" href="http://iverilog.icarus.com/">Icarus Verilog</a></p>
+<blockquote>
+<div>simulator. This will need to be installed in your command path.</div></blockquote>
+</div>
+<div class="section" id="c-preprocessor">
+<h2>C Preprocessor<a class="headerlink" href="#c-preprocessor" title="Permalink to this headline">¶</a></h2>
+<p>Chips uses an external C processor. Make sure you have a c preprocessor <cite>cpp</cite>
+installed in your path</p>
+</div>
+<div class="section" id="other-packages">
+<h2>Other packages<a class="headerlink" href="#other-packages" title="Permalink to this headline">¶</a></h2>
+<p>While not strictly speaking dependencies, you may want to install the following
+packages to use all the libraries and examples:</p>
+<ul class="simple">
+<li>numpy</li>
+<li>scipy</li>
+<li>matplotlib</li>
+<li>pil</li>
+<li>wxpython</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation</a><ul>
+<li><a class="reference internal" href="#download-github">Download (github)</a></li>
+<li><a class="reference internal" href="#install-from-github">Install from github</a></li>
+<li><a class="reference internal" href="#install-from-pypi">Install from PyPi</a></li>
+<li><a class="reference internal" href="#icarus-verilog">Icarus Verilog</a></li>
+<li><a class="reference internal" href="#c-preprocessor">C Preprocessor</a></li>
+<li><a class="reference internal" href="#other-packages">Other packages</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Reference Manual</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="python_api.html"
+                        title="next chapter">Python API</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/install.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="python_api.html" title="Python API"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Reference Manual"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>

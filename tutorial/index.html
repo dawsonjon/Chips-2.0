@@ -1,19 +1,20 @@
-
-
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; Chips v0.1 documentation</title>
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <title>Tutorial &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1',
+        VERSION:     '2.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,27 +24,26 @@
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
     <link rel="shortcut icon" href="../_static/chips.ico"/>
-    <link rel="top" title="Chips v0.1 documentation" href="../index.html" />
-    <link rel="prev" title="Examples" href="../examples/index.html" /> 
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" /> 
   </head>
-  <body>
-    <div class="related">
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="../examples/index.html" title="Examples"
-             accesskey="P">previous</a> |</li>
-        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          <div class="body">
+          <div class="body" role="main">
             
   <div class="section" id="tutorial">
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
@@ -51,16 +51,17 @@
 <h2>Create and Test a C component<a class="headerlink" href="#create-and-test-a-c-component" title="Permalink to this headline">¶</a></h2>
 <p>Why not start with a simple example. With your favourite text editor, create a
 file count.c and add the following:</p>
-<div class="highlight-python"><pre>void count(){
+<div class="highlight-python"><div class="highlight"><pre>void count(){
         for(i=1; i&lt;=10; i++){
                 report(i);
         }
-}</pre>
+}
+</pre></div>
 </div>
 <p>You can convert C components into Verilog components using the C2Verilog
 compiler. The <em>iverilog</em> option causes the generated Verilog component to be
 compiled using Icarus Verilog. The <em>run</em> option causes simulation to be run:</p>
-<div class="highlight-python"><pre>~$ c2verilog iverilog run test.c
+<div class="highlight-python"><div class="highlight"><pre>~$ c2verilog iverilog run test.c
 1
 2
 3
@@ -70,7 +71,8 @@ compiled using Icarus Verilog. The <em>run</em> option causes simulation to be r
 7
 8
 9
-10</pre>
+10
+</pre></div>
 </div>
 <p>When a design is reset, execution starts with the last function defined in
 the C file. This need not be called <em>main</em>. The name of the last function
@@ -86,10 +88,11 @@ synthesise the design it will be ignored.</p>
 useful in a real design. You can add inputs and outputs to a components using
 function calls with special names. Functions that start with the name <em>input_</em>
 or <em>output_</em> are interpreted as inputs, or outputs respectively.</p>
-<div class="highlight-python"><pre>int temp;
+<div class="highlight-python"><div class="highlight"><pre>int temp;
 temp = input_spam(); //reads from an input called spam
 temp = input_eggs(); //reads from an input called eggs
-output_fish(temp);   //writes to an output called fish</pre>
+output_fish(temp);   //writes to an output called fish
+</pre></div>
 </div>
 <p>Reading or writing from inputs and outputs causes program execution to block
 until data is available. This synchronises data transfers with other components
@@ -98,49 +101,54 @@ processes is much simpler than the mutex/lock/semaphore mechanisms used in
 multithreaded applications.</p>
 <p>If you don&#8217;t want to commit yourself to reading and input and blocking
 execution, you can check if data is ready:</p>
-<div class="highlight-python"><pre>int temp;
+<div class="highlight-python"><div class="highlight"><pre>int temp;
 if(ready_spam()){
         temp = input_spam();
-}</pre>
+}
+</pre></div>
 </div>
 <p>There is no equivalent function to check if an output is ready to receive data,
 this could cause deadlocks if both the sending and receiving end were waiting
 for one another.</p>
 <p>We can now construct some basic hardware components quite simply. Here&#8217;s a counter for instance:</p>
-<div class="highlight-python"><pre>void counter(){
+<div class="highlight-python"><div class="highlight"><pre>void counter(){
         while(1){
                 for(i=1; i&lt;=10; i++){
                         output_out(i);
                 }
         }
-}</pre>
+}
+</pre></div>
 </div>
 <p>We can generate an adder like this:</p>
-<div class="highlight-python"><pre>void added(){
+<div class="highlight-python"><div class="highlight"><pre>void added(){
         while(1){
                 output_z(input_a()+input_b());
         }
-}</pre>
+}
+</pre></div>
 </div>
 <p>Or a divider like this (yes, you can synthesise division):</p>
-<div class="highlight-python"><pre>void divider(){
+<div class="highlight-python"><div class="highlight"><pre>void divider(){
         while(1){
                 output_z(input_a()/input_b());
         }
-}</pre>
+}
+</pre></div>
 </div>
 <p>We can split a stream of data into two identical data streams using a tee function:</p>
-<div class="highlight-python"><pre>void tee(){
+<div class="highlight-python"><div class="highlight"><pre>void tee(){
         int temp;
         while(1){
                 temp = input_a();
                 output_y(temp);
                 output_z(temp);
         }
-}</pre>
+}
+</pre></div>
 </div>
 <p>If we want to merge two streams of data, we could interlace them:</p>
-<div class="highlight-python"><pre>void interlace(){
+<div class="highlight-python"><div class="highlight"><pre>void interlace(){
         int temp;
         while(1){
                 temp = input_a();
@@ -148,10 +156,11 @@ for one another.</p>
                 temp = input_b();
                 output_z(temp);
         }
-}</pre>
+}
+</pre></div>
 </div>
 <p>or we could prioritise one stream over the other:</p>
-<div class="highlight-python"><pre>void arbiter(){
+<div class="highlight-python"><div class="highlight"><pre>void arbiter(){
         int temp;
         while(1){
                 if( ready_a() ){
@@ -162,7 +171,8 @@ for one another.</p>
                         output_z(temp);
                 }
         }
-}</pre>
+}
+</pre></div>
 </div>
 </div>
 </div>
@@ -171,7 +181,7 @@ for one another.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar">
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
             <p class="logo"><a href="../index.html">
               <img class="logo" src="../_static/chips.png" alt="Logo"/>
@@ -184,18 +194,17 @@ for one another.</p>
 </li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="../examples/index.html"
-                        title="previous chapter">Examples</a></p>
-  <h3>This Page</h3>
-  <ul class="this-page-menu">
-    <li><a href="../_sources/tutorial/index.txt"
-           rel="nofollow">Show Source</a></li>
-  </ul>
-<div id="searchbox" style="display: none">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/tutorial/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -209,21 +218,21 @@ for one another.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related">
+    <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="../examples/index.html" title="Examples"
-             >previous</a> |</li>
-        <li><a href="../index.html">Chips v0.1 documentation</a> &raquo;</li> 
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li> 
       </ul>
     </div>
-    <div class="footer">
-        &copy; Copyright 2011, Jonathan P Dawson.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
     </div>
   </body>
 </html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>C Compiler &mdash; Chips 2.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '2.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="shortcut icon" href="../_static/chips.ico"/>
+    <link rel="top" title="Chips 2.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Reference Manual" href="index.html" />
+    <link rel="next" title="C Libraries" href="c_library.html" />
+    <link rel="prev" title="Python API" href="python_api.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_library.html" title="C Libraries"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="python_api.html" title="Python API"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="c-compiler">
+<h1>C Compiler<a class="headerlink" href="#c-compiler" title="Permalink to this headline">¶</a></h1>
+<p>The heart of Chips is the C compiler and simulator. The C compiler allows
+you to define new hardware components using the C language. Components written
+in C can be simulated, or converted automatically into Verilog components.
+These Verilog components may then be implemented in an FPGA using tools
+provided by FPGA vendors.</p>
+<p>The C dialect used in Chips has been made as standard as possible. This
+section of the manual describes the subset of the C language that is available
+in <em>Chips</em>.</p>
+<div class="section" id="types">
+<h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
+<p>The following types are available in chips:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>char</cite></li>
+<li><cite>int</cite></li>
+<li><cite>long</cite></li>
+<li><cite>unsigned char</cite></li>
+<li><cite>unsigned int</cite></li>
+<li><cite>unsigned long</cite></li>
+<li><cite>float</cite></li>
+<li><cite>double</cite></li>
+</ul>
+</div></blockquote>
+<p>A <cite>char</cite> is at least 8 bits wide.  An <cite>int</cite> is at least 32 bits wide.  A <cite>long</cite>
+is at least 64 bits wide.</p>
+<p>The <cite>float</cite> type is implemented as an IEEE 754 single precision floating point
+number. The <cite>double</cite> and <cite>long double</cite> types are implemented as IEEE 754 double
+precision floating point numbers. Round-to-zero (ties to even) is the only
+supported rounding mode.</p>
+<p>Any type may be used to form an array, including <cite>struct</cite> s and arrays. Arrays
+may be nested arbitrarily to form arrays of arrays.  <cite>struct</cite> s may be
+assigned, passed to and returned from functions.</p>
+<p>Arrays may be passed to functions, in this case the array is not copied, but a
+reference is passed. Any modification made to the array within the called
+function will also be reflected within the calling function.</p>
+</div>
+<div class="section" id="missing-features">
+<h2>Missing Features<a class="headerlink" href="#missing-features" title="Permalink to this headline">¶</a></h2>
+<p>Chips is getting close to supporting the whole C language. The following
+features have not been done yet.</p>
+<ul class="simple">
+<li><cite>union</cite> s</li>
+<li><cite>enum</cite> s</li>
+<li>Variadic Functions</li>
+</ul>
+</div>
+<div class="section" id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
+<p>Recursion is permitted, but it should be remembered that memory is at a premium
+in FPGAs. It may be better to avoid recursive functions so that the memory
+usage can be predicted at compile time.  Only a fixed number of arguments is
+supported, optional arguments are not permitted.</p>
+</div>
+<div class="section" id="control-structures">
+<h2>Control Structures<a class="headerlink" href="#control-structures" title="Permalink to this headline">¶</a></h2>
+<p>The usual control structures are supported.</p>
+</div>
+<div class="section" id="operators">
+<h2>Operators<a class="headerlink" href="#operators" title="Permalink to this headline">¶</a></h2>
+<p>The usual operators are supported.</p>
+</div>
+<div class="section" id="stream-i-o">
+<h2>Stream I/O<a class="headerlink" href="#stream-i-o" title="Permalink to this headline">¶</a></h2>
+<p>The language has been extended to allow components to communicate by sending
+data through streams.</p>
+<p>To open an input or an output stream use the built in <cite>input</cite> and <cite>output</cite>
+functions. These functions accept a string argument identifying the name of the
+input or output.  They return a file handle that can be passed to
+the <cite>fgetc</cite>, and <cite>fputc</cite> functions to send or receive data. You can also use
+the file I/O functions defined in <cite>print.h</cite>, <cite>scan.h</cite> and <cite>stdio.h</cite>.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">unsigned</span> <span class="n">spam</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;spam&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">eggs</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;eggs&quot;</span><span class="p">);</span>
+<span class="kt">unsigned</span> <span class="n">fish</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;fish&quot;</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">spam</span><span class="p">);</span> <span class="c1">//reads from an input called spam</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">eggs</span><span class="p">);</span> <span class="c1">//reads from an input called eggs</span>
+<span class="n">fputc</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">fish</span><span class="p">);</span>   <span class="c1">//writes to an output called fish</span>
+</pre></div>
+</div>
+<p>Reading or writing from inputs and outputs causes program execution to block
+until data is available. If you don&#8217;t want to commit yourself to reading and
+input and blocking execution, you can check if data is ready.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">unsigned</span> <span class="n">spam</span> <span class="o">=</span> <span class="n">input</span><span class="p">(</span><span class="s">&quot;spam&quot;</span><span class="p">);</span>
+<span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">ready</span><span class="p">(</span><span class="n">spam</span><span class="p">)){</span>
+   <span class="n">temp</span> <span class="o">=</span> <span class="n">fgetc</span><span class="p">(</span><span class="n">spam</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>There is an equivilent <cite>output_ready</cite> function to check whether an output,
+is waiting for data. Care should be taken to avoid deadlocks which might arise
+if both the sender and receiver are waiting for the other to be waiting.</p>
+</div>
+<div class="section" id="timed-waits">
+<h2>Timed Waits<a class="headerlink" href="#timed-waits" title="Permalink to this headline">¶</a></h2>
+<p>Timed waits can be achieved using the built-in <cite>wait-clocks</cite> function. The
+wait_clocks function accepts a single argument, the numbers of clock cycles to
+wait.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">wait_clocks</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span> <span class="c1">//wait for 1 us with 100MHz clock</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="debug-and-test">
+<h2>Debug and Test<a class="headerlink" href="#debug-and-test" title="Permalink to this headline">¶</a></h2>
+<p>The built in <cite>report</cite> function displays the value of an expression in the
+simulation console. <em>This will have no effect in a synthesised design.</em></p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="n">report</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//prints 4 to console</span>
+<span class="n">report</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span> <span class="c1">//prints 10 to the console</span>
+</pre></div>
+</div>
+<p>The built in function assert causes a simulation error if it is passed a zero
+value. <em>The assert function has no effect in a synthesised design.</em></p>
+<div class="highlight-c"><div class="highlight"><pre><span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//does not cause an error</span>
+<span class="kt">int</span> <span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="c1">//will cause a simulation error</span>
+<span class="n">assert</span><span class="p">(</span><span class="mi">2</span><span class="o">+</span><span class="mi">2</span><span class="o">==</span><span class="mi">5</span><span class="p">);</span> <span class="c1">//will cause a simulation error</span>
+</pre></div>
+</div>
+<p>In simulation, you can write values to a file using the built-in <cite>file_write</cite>
+function. The first argument is the value to write, and the second argument is
+the file to write to. The file will be overwritten when the simulation starts,
+and subsequent calls will append a new vale to the end of the file. Each value
+will appear in decimal format on a separate line. A file write has no effect in
+a synthesised design.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">file_write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<span class="n">file_write</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<span class="n">file_write</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+<span class="n">file_write</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s">&quot;simulation_log.txt&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>You can also read values from a file during simulation. A simulation error will
+occur if there are no more value in the file.</p>
+<div class="highlight-c"><div class="highlight"><pre><span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">);</span>
+<span class="n">assert</span><span class="p">(</span><span class="n">file_read</span><span class="p">(</span><span class="s">&quot;simulation_log.txt&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="c-preprocessor">
+<h2>C Preprocessor<a class="headerlink" href="#c-preprocessor" title="Permalink to this headline">¶</a></h2>
+<p>Chips uses an external C pre-processor, you will need to make sure that Chips
+can see the <cite>cpp</cite> command in its command path.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/chips.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">C Compiler</a><ul>
+<li><a class="reference internal" href="#types">Types</a></li>
+<li><a class="reference internal" href="#missing-features">Missing Features</a></li>
+<li><a class="reference internal" href="#functions">Functions</a></li>
+<li><a class="reference internal" href="#control-structures">Control Structures</a></li>
+<li><a class="reference internal" href="#operators">Operators</a></li>
+<li><a class="reference internal" href="#stream-i-o">Stream I/O</a></li>
+<li><a class="reference internal" href="#timed-waits">Timed Waits</a></li>
+<li><a class="reference internal" href="#debug-and-test">Debug and Test</a></li>
+<li><a class="reference internal" href="#c-preprocessor">C Preprocessor</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="python_api.html"
+                        title="previous chapter">Python API</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="c_library.html"
+                        title="next chapter">C Libraries</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/c_compiler.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="c_library.html" title="C Libraries"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="python_api.html" title="Python API"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Chips 2.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Reference Manual</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2014, Jonathan P Dawson.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.3.
+    </div>
+  </body>
+</html>
