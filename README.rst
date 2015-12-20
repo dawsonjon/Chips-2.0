@@ -44,13 +44,20 @@ A quick example
         scanner = Component(C_file = """
 
             /* Knight Rider */
-            unsigned leds = output("leds");
-            void main (){
-                unsigned i;
-                while(1)
-                {
-                    for(i=1; i<=0x80; i<<=1) fputc(i, leds);
-                    for(i=0x80; i>=1; i>>=1) fputc(i, leds);
+            int leds = output("leds");
+            void main(){
+                unsigned shifter = 1;
+                while(1){
+                    while(shifter != 0x80){
+                        fputc(shifter, leds);
+                        shifter <<= 1;
+                        wait_clocks(5000000);
+                    }
+                    while(shifter != 0x01){
+                        fputc(shifter, leds);
+                        shifter >>= 1;
+                        wait_clocks(5000000);
+                    }
                 }
             }
 
