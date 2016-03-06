@@ -479,7 +479,7 @@ class GuiInstance(wx.Frame):
             for line, count in sorted(lines.items(), key=operator.itemgetter(1), reverse=True):
                 report.report("%s %s %s" %(
                 filename.ljust(100),
-                str(line).center(10),
+                str(line).center(10)))
                 print 100.0 * float(count) / float(total)
 
     def annotate_coverage(self, filename):

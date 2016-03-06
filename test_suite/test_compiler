@@ -22,22 +22,22 @@ def test(test, code, no_init=False, check_output=""):
 
   if "coverage" in sys.argv[1:]:
       #Test using csim compiler
-      python_process = subprocess.Popen(["coverage2", "run", "-p", "../csim", "test.c"], stdout=subprocess.PIPE)
+      python_process = subprocess.Popen(["coverage2", "run", "-p", "csim", "test.c"], stdout=subprocess.PIPE)
 
       #Test using c2verilog compiler
       if no_init:
-          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
       else:
-          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+          verilog_process = subprocess.Popen(["coverage2", "run", "-p", "c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
   else:
       #Test using csim compiler
-      python_process = subprocess.Popen(["../csim", "test.c"], stdout=subprocess.PIPE)
+      python_process = subprocess.Popen(["csim", "test.c"], stdout=subprocess.PIPE)
 
       #Test using c2verilog compiler
       if no_init:
-          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
+          verilog_process = subprocess.Popen(["c2verilog", "iverilog", "run", "no_initialize_memory", "test.c"], stdout=subprocess.PIPE)
       else:
-          verilog_process = subprocess.Popen(["../c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
+          verilog_process = subprocess.Popen(["c2verilog", "iverilog", "run", "test.c"], stdout=subprocess.PIPE)
 
 
   result = python_process.wait()
@@ -92,14 +92,14 @@ def test_fails(test, code, no_init=False):
   f.close()
   if "coverage" in sys.argv[1:]:
       if no_init:
-          result = os.system("coverage2 run -p ../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+          result = os.system("coverage2 run -p c2verilog iverilog run no_initialize_memory test.c > /dev/null")
       else:
-          result = os.system("coverage2 run -p ../c2verilog iverilog run test.c > /dev/null")
+          result = os.system("coverage2 run -p c2verilog iverilog run test.c > /dev/null")
   else:
       if no_init:
-          result = os.system("../c2verilog iverilog run no_initialize_memory test.c > /dev/null")
+          result = os.system("c2verilog iverilog run no_initialize_memory test.c > /dev/null")
       else:
-          result = os.system("../c2verilog iverilog run test.c > /dev/null")
+          result = os.system("c2verilog iverilog run test.c > /dev/null")
 
   if result == 0:
     print test, "...fail"
@@ -109,9 +109,9 @@ def test_fails(test, code, no_init=False):
 
   #Test using csim compiler
   if "coverage" in sys.argv[1:]:
-      result = os.system("coverage2 run -p ../csim test.c > /dev/null")
+      result = os.system("coverage2 run -p csim test.c > /dev/null")
   else:
-      result = os.system("../csim test.c > /dev/null")
+      result = os.system("csim test.c > /dev/null")
 
   if result == 0:
     print test, "...fail"

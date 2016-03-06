@@ -1,5 +1,5 @@
 from chips.api.api import Chip, Component, Wire, VerilogComponent
-from chips.compiler.utils import float_to_bits, double_to_bits, split_word
+from chips_c import float_to_bits, double_to_bits, low_word, high_word
 
 
 def async(chip, a, out=None):
@@ -55,10 +55,12 @@ def constant(chip, value, type_="int", out=None):
         """ % verilog_value
 
     elif type_ in ["long", "double"]:
-        high, low = split_word(value)
+        high = high_word(value)
+        low = low_word(value)
 
         if type_ == "double":
-            high, low = split_word(double_to_bits(value))
+            high = high_word(double_to_bits(value))
+            low = low_word(double_to_bits(value))
 
         verilog_file = """
         module {name} (output_out_ack,clk,rst,output_out,output_out_stb,exception);

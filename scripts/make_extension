@@ -1,0 +1,5 @@
+#!/bin/bash
+cd chips_c
+swig -python chips_c.i
+cp chips_c.py ..
+cd ..

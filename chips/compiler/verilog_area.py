@@ -109,7 +109,7 @@ def generate_declarations(
     no_tb_mode,
     register_bits,
     opcode_bits,
-        allocator):
+    allocator):
     """Generate verilog declarations"""
 
     # list all inputs and outputs used in the program
@@ -248,12 +248,14 @@ def generate_CHIP(input_file,
                   allocator,
                   initialize_memory,
                   memory_size=1024,
-                  no_tb_mode=False):
+                  no_tb_mode=False,
+                  options={}):
     """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
 
     instructions = calculate_jumps(instructions)
     instruction_set, instruction_memory = generate_instruction_set(
         instructions)
+    opcodes = [i["op"] for i in instruction_set]
     register_bits = 16
     opcode_bits = log2(len(instruction_set))
     instruction_bits = 16 + 4 + 4 + opcode_bits
@@ -264,7 +266,7 @@ def generate_CHIP(input_file,
         opcode_bits,
         allocator)
     inputs, outputs, input_files, output_files, testbench, inports, outports, signals = declarations
-    floating_point_arithmetic, floating_point_conversions, floating_point_debug = floating_point_enables(
+    floating_point_arithmetic, floating_point_conversions, floating_point_debug  = floating_point_enables(
         instruction_set)
 
     # output the code in verilog
@@ -352,6 +354,27 @@ def generate_CHIP(input_file,
     if outports:
         states.append("write")
 
+    needs_divider = False
+    for i in ["divide", "unsigned_divide", "modulo", "unsigned_modulo"]:
+        if i in opcodes:
+            states.append(i)
+            needs_divider = True
+
+    needs_long_divider = False
+    for i in ["long_divide", "unsigned_long_divide", "long_modulo", "unsigned_long_modulo"]:
+        if i in opcodes:
+            states.append(i)
+            needs_long_divider = True
+
+    if "multiply" in opcodes:
+        states.append("multiply")
+
+    divide_latency = options.get("divide_latency", 32)
+    divide_iterations = 32/divide_latency
+
+    long_divide_latency = options.get("long_divide_latency", 64)
+    long_divide_iterations = 64/long_divide_latency
+
     for i in floating_point_arithmetic:
         states.append("%s_write_a" % i)
         states.append("%s_write_b" % i)
@@ -424,6 +447,32 @@ def generate_CHIP(input_file,
     output_file.write("  wire [15:0] store_address;\n")
     output_file.write("  wire [31:0] store_data;\n")
     output_file.write("  wire  store_enable;\n")
+
+    if needs_divider:
+      output_file.write("  reg [31:0] shifter;\n")
+      output_file.write("  reg [32:0] difference;\n")
+      output_file.write("  reg [31:0] divisor;\n")
+      output_file.write("  reg [31:0] dividend;\n")
+      output_file.write("  reg [31:0] quotient;\n")
+      output_file.write("  reg [31:0] remainder;\n")
+      output_file.write("  reg quotient_sign;\n")
+      output_file.write("  reg dividend_sign;\n")
+
+    if needs_long_divider:
+      output_file.write("  reg [63:0] long_shifter;\n")
+      output_file.write("  reg [64:0] long_difference;\n")
+      output_file.write("  reg [63:0] long_divisor;\n")
+      output_file.write("  reg [63:0] long_dividend;\n")
+      output_file.write("  reg [63:0] long_quotient;\n")
+      output_file.write("  reg [63:0] long_remainder;\n")
+      output_file.write("  reg long_quotient_sign;\n")
+      output_file.write("  reg long_dividend_sign;\n")
+
+    if "multiply" in opcodes:
+      output_file.write("  reg [31:0] product_a;\n")
+      output_file.write("  reg [31:0] product_b;\n")
+      output_file.write("  reg [31:0] product_c;\n")
+      output_file.write("  reg [31:0] product_d;\n")
 
     # generate clock and reset in testbench mode
     if testbench:
@@ -538,7 +587,6 @@ def generate_CHIP(input_file,
     output_file.write("  \n  initial\n")
     output_file.write("  begin\n")
     for location, instruction in enumerate(instruction_memory):
-        # print instruction
         output_file.write("    instructions[%s] = {%s, %s, %s, %s};//%s : %s %s\n" % (
             location,
             print_verilog_literal(opcode_bits, instruction["op"]),
@@ -667,7 +715,6 @@ def generate_CHIP(input_file,
     output_file.write("    end\n")
     output_file.write("    //execute\n")
     output_file.write("    execute: begin\n")
-    # output_file.write("      $display(program_counter_2);\n")
     output_file.write("      program_counter <= program_counter + 1;\n")
     output_file.write("      address_z_3 <= address_z_2;\n")
     output_file.write("      case(opcode_2)\n\n")
@@ -797,11 +844,104 @@ def generate_CHIP(input_file,
             output_file.write("          write_enable <= 1;\n")
 
         elif instruction["op"] == "multiply":
-            output_file.write(
-                "          long_result = operand_a * operand_b;\n")
-            output_file.write("          result <= long_result[31:0];\n")
-            output_file.write("          carry <= long_result[63:32];\n")
-            output_file.write("          write_enable <= 1;\n")
+
+            output_file.write("          product_a <= operand_a[15:0]  * operand_b[15:0];\n")
+            output_file.write("          product_b <= operand_a[15:0]  * operand_b[31:16];\n")
+            output_file.write("          product_c <= operand_a[31:16] * operand_b[15:0];\n")
+            output_file.write("          product_d <= operand_a[31:16] * operand_b[31:16];\n")
+            output_file.write("          state <= multiply;\n")
+
+        elif instruction["op"] == "unsigned_divide":
+            output_file.write("          dividend  <= operand_a;\n")
+            output_file.write("          divisor <= operand_b;\n")
+            output_file.write("          timer <= %i;\n"%divide_latency)
+            output_file.write("          remainder <= 0;\n")
+            output_file.write("          quotient  <= 0;\n")
+            output_file.write("          state <= unsigned_divide;\n")
+
+        elif instruction["op"] == "divide":
+            output_file.write("          quotient_sign <= operand_a[31] ^ operand_b[31];\n")
+            output_file.write("          dividend  <= operand_a;\n")
+            output_file.write("          divisor <= operand_b;\n")
+            output_file.write("          if (operand_a[31]) begin\n")
+            output_file.write("            dividend <= -operand_a;\n")
+            output_file.write("          end\n")
+            output_file.write("          if (operand_b[31]) begin\n")
+            output_file.write("            divisor <= -operand_b;\n")
+            output_file.write("          end\n")
+            output_file.write("          timer <= %i;\n"%divide_latency)
+            output_file.write("          remainder <= 0;\n")
+            output_file.write("          quotient <= 0;\n")
+            output_file.write("          state <= divide;\n")
+
+        elif instruction["op"] == "unsigned_modulo":
+            output_file.write("          dividend  <= operand_a;\n")
+            output_file.write("          divisor <= operand_b;\n")
+            output_file.write("          timer <= %i;\n"%divide_latency)
+            output_file.write("          remainder <= 0;\n")
+            output_file.write("          quotient  <= 0;\n")
+            output_file.write("          state <= unsigned_modulo;\n")
+
+        elif instruction["op"] == "modulo":
+            output_file.write("          dividend_sign  <= operand_a[31];\n")
+            output_file.write("          dividend <= operand_a;\n")
+            output_file.write("          divisor <= operand_b;\n")
+            output_file.write("          if (operand_a[31]) begin\n")
+            output_file.write("            dividend <= -operand_a;\n")
+            output_file.write("          end\n")
+            output_file.write("          if (operand_b[31]) begin\n")
+            output_file.write("            divisor <= -operand_b;\n")
+            output_file.write("          end\n")
+            output_file.write("          timer <= %i;\n"%divide_latency)
+            output_file.write("          remainder <= 0;\n")
+            output_file.write("          quotient <= 0;\n")
+            output_file.write("          state <= modulo;\n")
+
+        elif instruction["op"] == "unsigned_long_divide":
+            output_file.write("          long_dividend <= {a_hi, a_lo};\n")
+            output_file.write("          long_divisor <= {b_hi, b_lo};\n")
+            output_file.write("          timer <= %i;\n"%long_divide_latency)
+            output_file.write("          long_remainder <= 0;\n")
+            output_file.write("          long_quotient  <= 0;\n")
+            output_file.write("          state <= unsigned_long_divide;\n")
+
+        elif instruction["op"] == "long_divide":
+            output_file.write("          long_quotient_sign <= a_hi[31] ^ b_hi[31];\n")
+            output_file.write("          long_dividend <= {a_hi, a_lo};\n")
+            output_file.write("          long_divisor <= {b_hi, b_lo};\n")
+            output_file.write("          if (a_hi[31]) begin\n")
+            output_file.write("            long_dividend <= -{a_hi, a_lo};\n")
+            output_file.write("          end\n")
+            output_file.write("          if (b_hi[31]) begin\n")
+            output_file.write("            long_divisor <= -{b_hi, b_lo};\n")
+            output_file.write("          end\n")
+            output_file.write("          timer <= %i;\n"%long_divide_latency)
+            output_file.write("          long_remainder <= 0;\n")
+            output_file.write("          long_quotient <= 0;\n")
+            output_file.write("          state <= long_divide;\n")
+
+        elif instruction["op"] == "unsigned_long_modulo":
+            output_file.write("          long_dividend <= {a_hi, a_lo};\n")
+            output_file.write("          long_divisor <= {b_hi, b_lo};\n")
+            output_file.write("          timer <= %i;\n"%long_divide_latency)
+            output_file.write("          long_remainder <= 0;\n")
+            output_file.write("          long_quotient  <= 0;\n")
+            output_file.write("          state <= unsigned_long_modulo;\n")
+
+        elif instruction["op"] == "long_modulo":
+            output_file.write("          long_dividend_sign <= a_hi[31];\n")
+            output_file.write("          long_dividend <= {a_hi, a_lo};\n")
+            output_file.write("          long_divisor <= {b_hi, b_lo};\n")
+            output_file.write("          if (a_hi[31]) begin\n")
+            output_file.write("            long_dividend <= -{a_hi, a_lo};\n")
+            output_file.write("          end\n")
+            output_file.write("          if (b_hi[31]) begin\n")
+            output_file.write("            long_divisor <= -{b_hi, b_lo};\n")
+            output_file.write("          end\n")
+            output_file.write("          timer <= %i;\n"%long_divide_latency)
+            output_file.write("          long_remainder <= 0;\n")
+            output_file.write("          long_quotient <= 0;\n")
+            output_file.write("          state <= long_modulo;\n")
 
         elif instruction["op"] == "carry":
             output_file.write("          result <= carry;\n")
@@ -919,6 +1059,7 @@ def generate_CHIP(input_file,
             output_file.write("          multiplier_a <= operand_a;\n")
             output_file.write("          multiplier_b <= operand_b;\n")
             output_file.write("          state <= multiplier_write_a;\n")
+
 
         elif instruction["op"] == "float_divide":
             output_file.write("          divider_a_stb <= 1;\n")
@@ -1130,6 +1271,140 @@ def generate_CHIP(input_file,
     output_file.write("      endcase\n\n")
     output_file.write("    end\n\n")
 
+
+    if "multiply" in opcodes:
+        output_file.write("    multiply:\n")
+        output_file.write("    begin\n")
+        output_file.write("      long_result = product_a +\n")
+        output_file.write("                    (product_b << 16) +\n")
+        output_file.write("                    (product_c << 16) +\n")
+        output_file.write("                    (product_d << 32);\n")
+        output_file.write("      result <= long_result[31:0];\n")
+        output_file.write("      carry <= long_result[63:32];\n")
+        output_file.write("      write_enable <= 1;\n")
+        output_file.write("      state <= execute;\n")
+        output_file.write("    end\n\n")
+
+    if "unsigned_divide" in opcodes:
+        output_file.write("    unsigned_divide:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        result <= quotient;\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "divide" in opcodes:
+        output_file.write("    divide:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        if (quotient_sign) begin\n")
+        output_file.write("          result <= -quotient;\n")
+        output_file.write("        end else begin\n")
+        output_file.write("          result <= quotient;\n")
+        output_file.write("        end\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "unsigned_modulo" in opcodes:
+        output_file.write("    unsigned_modulo:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        result <= remainder;\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "modulo" in opcodes:
+        output_file.write("    modulo:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        if (dividend_sign) begin\n")
+        output_file.write("          result <= -remainder;\n")
+        output_file.write("        end else begin\n")
+        output_file.write("          result <= remainder;\n")
+        output_file.write("        end\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "unsigned_long_divide" in opcodes:
+        output_file.write("    unsigned_long_divide:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        a_hi <= long_quotient[63:32];\n")
+        output_file.write("        a_lo <= long_quotient[31:0];\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "long_divide" in opcodes:
+        output_file.write("    long_divide:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        if (long_quotient_sign) begin\n")
+        output_file.write("          long_result = -long_quotient;\n")
+        output_file.write("          a_hi <= long_result[63:32];\n")
+        output_file.write("          a_lo <= long_result[31:0];\n")
+        output_file.write("        end else begin\n")
+        output_file.write("          a_hi <= long_quotient[63:32];\n")
+        output_file.write("          a_lo <= long_quotient[31:0];\n")
+        output_file.write("        end\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "unsigned_long_modulo" in opcodes:
+        output_file.write("    unsigned_long_modulo:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        a_hi <= long_remainder[63:32];\n")
+        output_file.write("        a_lo <= long_remainder[31:0];\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if "long_modulo" in opcodes:
+        output_file.write("    long_modulo:\n")
+        output_file.write("    begin\n")
+        output_file.write("      if (timer) begin\n")
+        output_file.write("        timer <= timer - 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        if (long_dividend_sign) begin\n")
+        output_file.write("          long_result = -long_remainder;\n")
+        output_file.write("          a_hi <= long_result[63:32];\n")
+        output_file.write("          a_lo <= long_result[31:0];\n")
+        output_file.write("        end else begin\n")
+        output_file.write("          a_hi <= long_remainder[63:32];\n")
+        output_file.write("          a_lo <= long_remainder[31:0];\n")
+        output_file.write("        end\n")
+        output_file.write("        state <= execute;\n")
+        output_file.write("        write_enable <= 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
     if allocator.input_names:
         output_file.write("    read:\n")
         output_file.write("    begin\n")
@@ -1251,8 +1526,37 @@ def generate_CHIP(input_file,
         output_file.write("         state <= execute;\n")
         output_file.write("       end\n")
         output_file.write("     end\n\n")
-
     output_file.write("    endcase\n\n")
+
+    if needs_divider:
+        output_file.write("    //divider kernel logic\n")
+        output_file.write("    repeat (%u) begin\n"%(divide_iterations))
+        output_file.write("      shifter = {remainder[30:0], dividend[31]};\n")
+        output_file.write("      difference = shifter - divisor;\n")
+        output_file.write("      dividend = dividend << 1;\n")
+        output_file.write("      if (difference[32]) begin\n")
+        output_file.write("        remainder = shifter;\n")
+        output_file.write("        quotient = quotient << 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        remainder = difference[31:0];\n")
+        output_file.write("        quotient = quotient << 1 | 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
+
+    if needs_long_divider:
+        output_file.write("    //long divider kernel logic\n")
+        output_file.write("    repeat (%u) begin\n"%(divide_iterations))
+        output_file.write("      long_shifter = {long_remainder[62:0], long_dividend[63]};\n")
+        output_file.write("      long_difference = long_shifter - long_divisor;\n")
+        output_file.write("      long_dividend = long_dividend << 1;\n")
+        output_file.write("      if (long_difference[64]) begin\n")
+        output_file.write("        long_remainder = long_shifter;\n")
+        output_file.write("        long_quotient = long_quotient << 1;\n")
+        output_file.write("      end else begin\n")
+        output_file.write("        long_remainder = long_difference[63:0];\n")
+        output_file.write("        long_quotient = long_quotient << 1 | 1;\n")
+        output_file.write("      end\n")
+        output_file.write("    end\n\n")
 
     # Reset program counter and control signals
     output_file.write("    if (rst == 1'b1) begin\n")
