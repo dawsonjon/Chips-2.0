@@ -7,7 +7,7 @@ here. This section will be of most use to developers who want to integrate a
 *Chips* design into a larger design, or to generate an HDL wrapper to support a
 *Chips* design in new hardware.
 
-.. aafig::
+::
  
   rst >-o------------------------------+
         |                              |
