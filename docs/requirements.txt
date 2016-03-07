@@ -1,1 +1,0 @@
-sphinxcontrib-aafig == 0.3
