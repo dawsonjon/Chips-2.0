@@ -191,7 +191,76 @@ def report_all(chip, stream, type_="int"):
 
 
 def tee(chip, a, out1=None, out2=None):
-    tee_component = Component("""
+
+    verilog_file = """
+        module {name} (clk,rst,exception, 
+            input_in, 
+            input_in_stb,
+            input_in_ack,
+            output_out1,
+            output_out1_stb,
+            output_out1_ack,
+            output_out2,
+            output_out2_stb,
+            output_out2_ack);
+
+          input clk;
+          input rst;
+          output exception;
+
+          input [31:0] input_in;
+          input input_in_stb;
+          output input_in_ack;
+
+          output reg [31:0] output_out1;
+          output output_out1_stb;
+          input output_out1_ack;
+
+          output reg [31:0] output_out2;
+          output output_out2_stb;
+          input output_out2_ack;
+
+          reg s_output_out1_stb;
+          reg s_output_out2_stb;
+          wire s_input_in_ack;
+
+          always @(posedge clk)
+          begin
+
+            if (s_input_in_ack & input_in_stb) begin
+              s_output_out1_stb <= 1;
+              s_output_out2_stb <= 1;
+              output_out1 <= input_in;
+              output_out2 <= input_in;
+            end else begin
+              if (output_out1_ack) begin
+                s_output_out1_stb <= 0;
+              end
+              if (output_out2_ack) begin
+                s_output_out2_stb <= 0;
+              end
+            end
+
+            if (rst == 1'b1) begin
+              s_output_out1_stb <= 0;
+              s_output_out2_stb <= 0;
+            end
+
+          end
+
+          assign s_input_in_ack =
+              (output_out1_ack | (~s_output_out1_stb)) &
+              (output_out2_ack | (~s_output_out2_stb));
+
+          assign input_in_ack = s_input_in_ack;
+          assign output_out1_stb = s_output_out1_stb;
+          assign output_out2_stb = s_output_out2_stb;
+          assign exception = 0;
+
+        endmodule
+    """
+
+    tee_component = VerilogComponent("""
         int out1 = output("out1");
         int out2 = output("out2");
         int in = input("in");
@@ -202,7 +271,10 @@ def tee(chip, a, out1=None, out2=None):
                 fputc(data, out1);
                 fputc(data, out2);
             }
-        }""", inline=True)
+        }""", 
+        V_file=verilog_file,
+        inline=True)
+
     if out1 is None:
         out1 = Wire(chip)
     if out2 is None:
