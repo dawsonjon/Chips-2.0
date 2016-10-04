@@ -80,10 +80,6 @@ A quick example
         #check the results
         print list(scanner_output)
 
-.. testoutput::
-
-        [1, 2, 4, 8, 16, 32, 64, 128, 128, 64, 32, 16, 8, 4, 2, 1]
-
 ..        
 
 
