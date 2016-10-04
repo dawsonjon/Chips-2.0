@@ -4,18 +4,26 @@ __author__ = "Jon Dawson"
 __copyright__ = "Copyright (C) 2013, Jonathan P Dawson"
 __version__ = "0.1"
 
-from numpy import uint32
-from numpy import int32
-from numpy import uint64
-from numpy import int64
+import chips_c
 import sys
 import math
 import register_map
 from chips.compiler.exceptions import StopSim, BreakSim, ChipsAssertionFail
 from chips.compiler.exceptions import NoProfile
-from utils import calculate_jumps, bits_to_double, double_to_bits
-from utils import bits_to_float, float_to_bits, split_word, join_words
+from utils import calculate_jumps
+from chips_c import bits_to_float, float_to_bits, bits_to_double, double_to_bits, add, subtract
+from chips_c import greater, greater_equal, unsigned_greater, unsigned_greater_equal
+from chips_c import shift_left, shift_right, unsigned_shift_right
 
+def to_32_signed(a):
+    if a & 0x80000000:
+        return a | (~0xffffffff)
+    return a
+
+def to_64_signed(a):
+    if a & 0x8000000000000000:
+        return a | (~0xffffffffffffffff)
+    return a
 
 def generate_python_model(
         debug,
@@ -220,13 +228,24 @@ class PythonModel:
 
         elif instruction["op"] == "literal":
             if literal & 0x8000:
-                result = 0xffff0000 | literal
+                result = -65536 | literal
             else:
                 result = literal
+            result &= 0xffffffff
         elif instruction["op"] == "addl":
-            result = literal + operand_a
+            if literal & 0x8000:
+                sext = -65536 | literal
+            else:
+                sext = literal
+            result = sext + operand_a
+            result &= 0xffffffff
         elif instruction["op"] == "literal_hi":
-            result = operand_a & 0x0000ffff | ((literal & 0xffff) << 16)
+            if literal & 0x8000:
+                sext = -65536 | literal
+            else:
+                sext = literal
+            result = (sext << 16) | (operand_a & 0x0000ffff)
+            result &= 0xffffffff
         elif instruction["op"] == "store":
             self.memory[operand_a] = operand_b
         elif instruction["op"] == "load":
@@ -249,152 +268,142 @@ class PythonModel:
             result = self.b_hi
             self.b_hi = operand_a
         elif instruction["op"] == "not":
-            result = uint32(~operand_a)
+            result = (~operand_a) & 0xffffffff
         elif instruction["op"] == "int_to_long":
             if operand_a & 0x80000000:
-                result = uint32(0xffffffff)
+                result = 0xffffffff
             else:
-                result = uint32(0x00000000)
+                result = 0
         elif instruction["op"] == "int_to_float":
-            f = float(int32(self.a_lo))
+            f = float(to_32_signed(self.a_lo))
             self.a_lo = float_to_bits(f)
         elif instruction["op"] == "float_to_int":
             i = bits_to_float(self.a_lo)
             if math.isnan(i):
-                self.a_lo = int32(0)
+                self.a_lo = 0
             else:
-                self.a_lo = int32(i)
+                self.a_lo = int(i) & 0xffffffff
         elif instruction["op"] == "long_to_double":
-            double = float(int64(join_words(self.a_hi, self.a_lo)))
+            double = float(to_64_signed(chips_c.join_words(self.a_hi, self.a_lo)))
             if math.isnan(double):
-                self.a_hi, self.a_lo = split_word(0, 0)
+                self.a_hi = 0
+                self.a_lo = 0
             else:
-                self.a_hi, self.a_lo = split_word(double_to_bits(double))
+                self.a_hi = chips_c.high_word(double_to_bits(double))
+                self.a_lo = chips_c.low_word(double_to_bits(double))
         elif instruction["op"] == "double_to_long":
-            bits = int(bits_to_double(join_words(self.a_hi, self.a_lo)))
-            self.a_hi, self.a_lo = split_word(bits)
+            bits = int(bits_to_double(chips_c.join_words(self.a_hi, self.a_lo)))
+            bits &= 0xffffffffffffffff
+            self.a_hi = chips_c.high_word(bits)
+            self.a_lo = chips_c.low_word(bits)
         elif instruction["op"] == "float_to_double":
             f = bits_to_float(self.a_lo)
             bits = double_to_bits(f)
-            self.a_hi, self.a_lo = split_word(bits)
+            self.a_hi = chips_c.high_word(bits)
+            self.a_lo = chips_c.low_word(bits)
         elif instruction["op"] == "double_to_float":
-            f = bits_to_double(join_words(self.a_hi, self.a_lo))
+            f = bits_to_double(chips_c.join_words(self.a_hi, self.a_lo))
             self.a_lo = float_to_bits(f)
         elif instruction["op"] == "add":
-            a = operand_a
-            b = operand_b
-            lw = int(uint32(a)) + int(uint32(b))
-            self.carry, result = split_word(lw)
-            self.carry &= 1
+            total = add(operand_a, operand_b, 0);
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "add_with_carry":
-            a = operand_a
-            b = operand_b
-            lw = int(uint32(a)) + int(uint32(b)) + self.carry
-            self.carry, result = split_word(lw)
-            self.carry &= 1
+            total = add(operand_a, operand_b, self.carry);
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "subtract":
-            a = operand_a
-            b = operand_b
-            lw = int(uint32(a)) + ~int(uint32(b)) + 1
-            self.carry, result = split_word(lw)
-            self.carry &= 1
-            self.carry ^= 1
+            total = subtract(operand_a, operand_b, 1);
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "subtract_with_carry":
-            a = operand_a
-            b = operand_b
-            lw = int(uint32(a)) + ~int(uint32(b)) + self.carry
-            self.carry, result = split_word(lw)
-            self.carry &= 1
-            self.carry ^= 1
+            total = subtract(operand_a, operand_b, self.carry);
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "multiply":
+            lw = operand_a * operand_b
+            self.carry = chips_c.high_word(lw)
+            result = chips_c.low_word(lw)
+        elif instruction["op"] == "divide":
             a = operand_a
             b = operand_b
-            lw = int(uint32(a)) * int(uint32(b))
-            self.carry, result = split_word(lw)
+            result = chips_c.divide(a, b)
+        elif instruction["op"] == "unsigned_divide":
+            a = operand_a
+            b = operand_b
+            result = chips_c.unsigned_divide(a, b)
+        elif instruction["op"] == "modulo":
+            a = operand_a
+            b = operand_b
+            result = chips_c.modulo(a, b)
+        elif instruction["op"] == "unsigned_modulo":
+            a = operand_a
+            b = operand_b
+            result = chips_c.unsigned_modulo(a, b)
+        elif instruction["op"] == "long_divide":
+            a = chips_c.join_words(self.a_hi, self.a_lo)
+            b = chips_c.join_words(self.b_hi, self.b_lo)
+            quotient = chips_c.long_divide(a, b)
+            self.a_hi = chips_c.high_word(quotient)
+            self.a_lo = chips_c.low_word(quotient)
+        elif instruction["op"] == "long_modulo":
+            a = chips_c.join_words(self.a_hi, self.a_lo)
+            b = chips_c.join_words(self.b_hi, self.b_lo)
+            remainder = chips_c.long_modulo(a, b)
+            self.a_hi = chips_c.high_word(remainder)
+            self.a_lo = chips_c.low_word(remainder)
+        elif instruction["op"] == "unsigned_long_divide":
+            a = chips_c.join_words(self.a_hi, self.a_lo)
+            b = chips_c.join_words(self.b_hi, self.b_lo)
+            quotient = chips_c.unsigned_long_divide(a, b)
+            self.a_hi = chips_c.high_word(quotient)
+            self.a_lo = chips_c.low_word(quotient)
+        elif instruction["op"] == "unsigned_long_modulo":
+            a = chips_c.join_words(self.a_hi, self.a_lo)
+            b = chips_c.join_words(self.b_hi, self.b_lo)
+            remainder = chips_c.unsigned_long_modulo(a, b)
+            self.a_hi = chips_c.high_word(remainder)
+            self.a_lo = chips_c.low_word(remainder)
         elif instruction["op"] == "carry":
-            a = operand_a
-            b = operand_b
-            result = uint32(self.carry)
+            result = self.carry
         elif instruction["op"] == "or":
-            a = operand_a
-            b = operand_b
-            result = uint32(a | b)
+            result = operand_a | operand_b
         elif instruction["op"] == "and":
-            a = operand_a
-            b = operand_b
-            result = uint32(a & b)
+            result = operand_a & operand_b
         elif instruction["op"] == "xor":
-            a = operand_a
-            b = operand_b
-            result = uint32(a ^ b)
+            result = operand_a ^ operand_b
         elif instruction["op"] == "shift_left":
-            a = operand_a
-            b = int(operand_b)
-            b = b if b <= 32 else 32
-            self.carry = uint32(a) >> (32 - uint32(b))
-            if b == 32:
-                result = uint32(0)
-            else:
-                result = uint32(a) << uint32(b)
+            total = shift_left(operand_a, operand_b, 0)
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "shift_left_with_carry":
-            a = operand_a
-            b = int(operand_b)
-            b = b if b <= 32 else 32
-            carry_in = self.carry
-            self.carry = uint32(a) >> (32 - uint32(b))
-            if b == 32:
-                result = uint32(0) | carry_in
-            else:
-                result = uint32(a) << uint32(b) | carry_in
+            total = shift_left(operand_a, operand_b, self.carry)
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "shift_right":
-            a = operand_a
-            b = int(operand_b)
-            b = b if b <= 32 else 32
-            self.carry = uint32(a) << (32 - uint32(b))
-            result = uint32(int32(a) >> uint32(b))
+            total = shift_right(operand_a, operand_b)
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "unsigned_shift_right":
-            a = operand_a
-            b = int(operand_b)
-            b = b if b <= 32 else 32
-            self.carry = uint32(a) << (32 - uint32(b))
-            if b == 32:
-                result = uint32(0)
-            else:
-                result = uint32(a) >> uint32(b)
+            total = unsigned_shift_right(operand_a, operand_b, 0)
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "shift_right_with_carry":
-            a = operand_a
-            b = int(operand_b)
-            b = b if b <= 32 else 32
-            carry_in = self.carry
-            self.carry = uint32(a) << (32 - uint32(b))
-            if b == 32:
-                result = uint32(0) | carry_in
-            else:
-                result = uint32(a) >> uint32(b) | carry_in
+            total = unsigned_shift_right(operand_a, operand_b, self.carry)
+            result = total.lo
+            self.carry = total.hi
         elif instruction["op"] == "greater":
-            a = operand_a
-            b = operand_b
-            result = int32(int32(a) > int32(b))
+            result = greater(operand_a, operand_b)
         elif instruction["op"] == "greater_equal":
-            a = operand_a
-            b = operand_b
-            result = int32(int32(a) >= int32(b))
+            result = greater_equal(operand_a, operand_b)
         elif instruction["op"] == "unsigned_greater":
-            a = operand_a
-            b = operand_b
-            result = int32(uint32(a) > uint32(b))
+            result = unsigned_greater(operand_a, operand_b)
         elif instruction["op"] == "unsigned_greater_equal":
-            a = operand_a
-            b = operand_b
-            result = int32(uint32(a) >= uint32(b))
+            result = unsigned_greater_equal(operand_a, operand_b)
         elif instruction["op"] == "equal":
-            a = operand_a
-            b = operand_b
-            result = int32(int32(a) == int32(b))
+            result = operand_a == operand_b
         elif instruction["op"] == "not_equal":
-            a = operand_a
-            b = operand_b
-            result = int32(int32(a) != int32(b))
+            result = operand_a != operand_b
         elif instruction["op"] == "jmp_if_false":
             if operand_a == 0:
                 self.program_counter = literal
@@ -404,12 +413,12 @@ class PythonModel:
         elif instruction["op"] == "goto":
             self.program_counter = literal
         elif instruction["op"] == "timer_low":
-            result = uint32(self.clock&0xffffffff)
+            result = self.clock&0xffffffff
         elif instruction["op"] == "timer_high":
-            result = uint32(self.clock>>32)
+            result = self.clock>>32
         elif instruction["op"] == "file_read":
             value = self.input_files[instruction["filename"]].getline()
-            result = uint32(value)
+            result = value
         elif instruction["op"] == "float_file_write":
             self.output_files[instruction["file_name"]].write(
                 "%.7f\n" %
@@ -417,11 +426,11 @@ class PythonModel:
         elif instruction["op"] == "unsigned_file_write":
             self.output_files[instruction["file_name"]].write(
                 "%i\n" %
-                uint32(operand_a))
+                operand_a)
         elif instruction["op"] == "file_write":
             self.output_files[instruction["file_name"]].write(
                 "%i\n" %
-                int32(operand_a))
+                to_32_signed(operand_a))
         elif instruction["op"] == "read":
             if operand_a not in self.inputs:
                 result = 0
@@ -439,18 +448,18 @@ class PythonModel:
             else:
                 input_ = self.inputs[operand_a]
                 if input_.src_rdy:
-                    result = uint32(1)
+                    result = 1
                 else:
-                    result = uint32(0)
+                    result = 0
         elif instruction["op"] == "output_ready":
             if operand_a not in self.outputs:
                 operand_a = 0
             else:
                 output_ = self.outputs[operand_a]
                 if output_.dst_rdy:
-                    result = uint32(1)
+                    result = 1
                 else:
-                    result = uint32(0)
+                    result = 0
         elif instruction["op"] == "write":
             if operand_a not in self.outputs:
                 pass
@@ -490,39 +499,36 @@ class PythonModel:
             except ZeroDivisionError:
                 result = float_to_bits(float("nan"))
         elif instruction["op"] == "long_float_add":
-            double = bits_to_double(join_words(self.a_hi, self.a_lo))
-            doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-            self.a_hi, self.a_lo = split_word(
-                double_to_bits(double + doubleb)
-            )
+            double = bits_to_double(chips_c.join_words(self.a_hi, self.a_lo))
+            doubleb = bits_to_double(chips_c.join_words(self.b_hi, self.b_lo))
+            self.a_hi = chips_c.high_word(double_to_bits(double + doubleb))
+            self.a_lo = chips_c.low_word(double_to_bits(double + doubleb))
         elif instruction["op"] == "long_float_subtract":
-            double = bits_to_double(join_words(self.a_hi, self.a_lo))
-            doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-            self.a_hi, self.a_lo = split_word(
-                double_to_bits(double - doubleb)
-            )
+            double = bits_to_double(chips_c.join_words(self.a_hi, self.a_lo))
+            doubleb = bits_to_double(chips_c.join_words(self.b_hi, self.b_lo))
+            self.a_hi = chips_c.high_word(double_to_bits(double - doubleb))
+            self.a_lo = chips_c.low_word(double_to_bits(double - doubleb))
         elif instruction["op"] == "long_float_multiply":
-            double = bits_to_double(join_words(self.a_hi, self.a_lo))
-            doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
-            self.a_hi, self.a_lo = split_word(
-                double_to_bits(double * doubleb)
-            )
+            double = bits_to_double(chips_c.join_words(self.a_hi, self.a_lo))
+            doubleb = bits_to_double(chips_c.join_words(self.b_hi, self.b_lo))
+            self.a_hi = chips_c.high_word(double_to_bits(double * doubleb))
+            self.a_lo = chips_c.low_word(double_to_bits(double * doubleb))
         elif instruction["op"] == "long_float_divide":
-            double = bits_to_double(join_words(self.a_hi, self.a_lo))
-            doubleb = bits_to_double(join_words(self.b_hi, self.b_lo))
+            double = bits_to_double(chips_c.join_words(self.a_hi, self.a_lo))
+            doubleb = bits_to_double(chips_c.join_words(self.b_hi, self.b_lo))
             try:
-                self.a_hi, self.a_lo = split_word(
-                    double_to_bits(double / doubleb))
+                self.a_hi = chips_c.high_word(double_to_bits(double / doubleb))
+                self.a_lo = chips_c.low_word(double_to_bits(double / doubleb))
             except ZeroDivisionError:
-                self.a_hi, self.a_lo = split_word(
-                    double_to_bits(float("nan")))
+                self.a_hi = chips_c.high_word(double_to_bits(float("nan")))
+                self.a_lo = chips_c.low_word(double_to_bits(float("nan")))
         elif instruction["op"] == "long_float_file_write":
-            long_word = join_words(self.a_hi, self.a_lo)
+            long_word = chips_c.join_words(self.a_hi, self.a_lo)
             self.output_files[instruction["file_name"]].write(
                 "%.16f\n" %
                 bits_to_double(long_word))
         elif instruction["op"] == "long_file_write":
-            long_word = join_words(self.a_hi, self.a_lo)
+            long_word = chips_c.join_words(self.a_hi, self.a_lo)
             self.output_files[instruction["file_name"]].write(
                 "%f\n" %
                 long_word)
@@ -533,13 +539,13 @@ class PythonModel:
                     instruction["line"])
         elif instruction["op"] == "report":
             print "%d (report (int) at line: %s in file: %s)" % (
-                int32(self.a_lo),
+                to_32_signed(self.a_lo),
                 instruction["line"],
                 instruction["file"],
             )
         elif instruction["op"] == "long_report":
             print "%d (report (long) at line: %s in file: %s)" % (
-                int64(join_words(self.a_hi, self.a_lo)),
+                to_64_signed(chips_c.join_words(self.a_hi, self.a_lo)),
                 instruction["line"],
                 instruction["file"],
             )
@@ -551,19 +557,20 @@ class PythonModel:
             )
         elif instruction["op"] == "long_float_report":
             print "%s (report (double) at line: %s in file: %s)" % (
-                bits_to_double(join_words(self.a_hi, self.a_lo)),
+
+                bits_to_double(chips_c.join_words(self.a_hi, self.a_lo)),
                 instruction["line"],
                 instruction["file"],
             )
         elif instruction["op"] == "unsigned_report":
             print "%d (report (unsigned) at line: %s in file: %s)" % (
-                uint32(self.a_lo),
+                self.a_lo,
                 instruction["line"],
                 instruction["file"],
             )
         elif instruction["op"] == "long_unsigned_report":
             print "%d (report (unsigned long) at line: %s in file: %s)" % (
-                uint64(join_words(self.a_hi, self.a_lo)),
+                chips_c.join_words(self.a_hi, self.a_lo),
                 instruction["line"],
                 instruction["file"],
             )

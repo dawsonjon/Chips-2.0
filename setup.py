@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from distutils.core import setup
+from distutils.core import setup, Extension
 version = open("version").read()
 long_description = open("README.rst").read()
 
@@ -12,9 +12,15 @@ setup(name="Chips",
       author="Jon Dawson",
       author_email="chips@jondawson.org.uk",
       url="http://pyandchips.org",
-      download_url="http://github.com/dawsonjon/Chips-2.0",
+      download_url="http://github.com/idawsonjon/Chips-2.0",
       keywords=["Verilog", "FPGA", "C", "HDL", "Synthesis", "VHDL"],
       install_requires=["numpy"],
+      ext_modules = [
+            Extension("_chips_c", ["chips_c/chips_c.c", "chips_c/chips_c_wrap.c"])
+      ],
+      py_modules = [
+          "chips_c"
+      ],
       classifiers = [
           "Programming Language :: Python",
           "License :: OSI Approved :: MIT License",

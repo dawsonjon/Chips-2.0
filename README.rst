@@ -1,5 +1,7 @@
 .. image:: https://travis-ci.org/dawsonjon/Chips-2.0.svg?branch=master
     :target: https://travis-ci.org/dawsonjon/Chips-2.0`
+.. image:: https://readthedocs.org/projects/chips-20/badge/?version=latest
+    :target: https://readthedocs.org/projects/chips-20/badge/?version=latest
 
 Chips - 2.0
 ===========

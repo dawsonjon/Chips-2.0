@@ -22,9 +22,7 @@ import inspect
 import textwrap
 from chips.compiler.exceptions import C2CHIPError
 from chips.compiler.python_model import StopSim
-from chips.compiler.utils import float_to_bits, bits_to_float
-from chips.compiler.utils import double_to_bits, bits_to_double
-from chips.compiler.utils import split_word, join_words
+from chips_c import bits_to_float, float_to_bits, bits_to_double, double_to_bits, join_words, high_word, low_word
 import chips.compiler.compiler
 
 
@@ -1205,7 +1203,8 @@ class Stimulus(Input):
             else:
                 self.high_word = not self.high_word
                 long_word = next(self.iterator)
-                self.high, low = split_word(long_word)
+                self.high = high_word(long_word)
+                low = low_word(long_word)
                 return low
 
         elif self.type_ == "float":
@@ -1221,7 +1220,8 @@ class Stimulus(Input):
             else:
                 self.high_word = not self.high_word
                 long_word = double_to_bits(next(self.iterator))
-                self.high, low = split_word(long_word)
+                self.high = high_word(long_word)
+                low = low_word(long_word)
                 return low
 
     def __iter__(self):

@@ -1,0 +1,54 @@
+%module chips_c
+%{
+#define SWIG_FILE_WITH_INIT
+typedef struct {unsigned hi, lo;} pair;
+extern pair add(unsigned a, unsigned b, unsigned c);
+extern pair subtract(unsigned a, unsigned b, unsigned c);
+extern pair shift_left(unsigned a, unsigned b, unsigned c);
+extern pair shift_right(unsigned a, unsigned b);
+extern pair unsigned_shift_right(unsigned a, unsigned b, unsigned c);
+extern unsigned greater(unsigned a, unsigned b);
+extern unsigned greater_equal(unsigned a, unsigned b);
+extern unsigned unsigned_greater(unsigned a, unsigned b);
+extern unsigned unsigned_greater_equal(unsigned a, unsigned b);
+extern unsigned unsigned_divide(unsigned a, unsigned b);
+extern unsigned divide(unsigned a, unsigned b);
+extern unsigned unsigned_modulo(unsigned a, unsigned b);
+extern unsigned modulo(unsigned a, unsigned b);
+extern long long unsigned unsigned_long_divide(long long unsigned a, long long unsigned b);
+extern long long unsigned long_divide(long long unsigned a, long long unsigned b);
+extern long long unsigned unsigned_long_modulo(long long unsigned a, long long unsigned b);
+extern long long unsigned long_modulo(long long unsigned a, long long unsigned b);
+extern long long unsigned join_words(unsigned a, unsigned b);
+extern unsigned high_word(long long unsigned a);
+extern unsigned low_word(long long unsigned a);
+extern unsigned float_to_bits(float a);
+extern float bits_to_float(unsigned a);
+extern long long unsigned double_to_bits(double a);
+extern double bits_to_double(long long unsigned a);
+%}
+typedef struct {unsigned hi, lo;} pair;
+extern pair add(unsigned a, unsigned b, unsigned c);
+extern pair subtract(unsigned a, unsigned b, unsigned c);
+extern pair shift_left(unsigned a, unsigned b, unsigned c);
+extern pair shift_right(unsigned a, unsigned b);
+extern pair unsigned_shift_right(unsigned a, unsigned b, unsigned c);
+extern unsigned greater(unsigned a, unsigned b);
+extern unsigned greater_equal(unsigned a, unsigned b);
+extern unsigned unsigned_greater(unsigned a, unsigned b);
+extern unsigned unsigned_greater_equal(unsigned a, unsigned b);
+extern unsigned unsigned_divide(unsigned a, unsigned b);
+extern unsigned divide(unsigned a, unsigned b);
+extern unsigned unsigned_modulo(unsigned a, unsigned b);
+extern unsigned modulo(unsigned a, unsigned b);
+extern long long unsigned unsigned_long_divide(long long unsigned a, long long unsigned b);
+extern long long unsigned long_divide(long long unsigned a, long long unsigned b);
+extern long long unsigned unsigned_long_modulo(long long unsigned a, long long unsigned b);
+extern long long unsigned long_modulo(long long unsigned a, long long unsigned b);
+extern long long unsigned join_words(unsigned a, unsigned b);
+extern unsigned high_word(long long unsigned a);
+extern unsigned low_word(long long unsigned a);
+extern unsigned float_to_bits(float a);
+extern float bits_to_float(unsigned a);
+extern long long unsigned double_to_bits(double a);
+extern double bits_to_double(long long unsigned a);

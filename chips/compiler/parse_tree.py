@@ -7,7 +7,7 @@ from register_map import *
 from instruction_utils import *
 from instruction_utils import _return
 from exceptions import C2CHIPError, NotConstant
-from utils import bits_to_double, bits_to_float
+from chips_c import bits_to_double, bits_to_float
 from types import *
 
 
@@ -2420,7 +2420,7 @@ def select_binary_instruction(type_, left_signed, right_signed, operation):
         "-": ("subtract", False, False),
         "/": ("divide", False, True),
         "*": ("multiply", False, False),
-        "%": ("modulo", False, False),
+        "%": ("modulo", False, True),
         ">": ("greater", False, True),
         ">=": ("greater_equal", False, True),
         "<": ("greater", True, True),

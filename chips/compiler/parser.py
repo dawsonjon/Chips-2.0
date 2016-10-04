@@ -1007,12 +1007,6 @@ class Parser:
         """
 
         functions = {
-            # signed,left,right,size,operator
-            "False,int,/": "unsigned_divide_xxxx",
-            "True,int,/": "divide_xxxx",
-            "False,int,%": "unsigned_modulo_xxxx",
-            "True,int,%": "modulo_xxxx",
-
             "True,float,==": "float_equal_xxxx",
             "True,float,!=": "float_ne_xxxx",
             "True,float,<": "float_lt_xxxx",
@@ -1027,10 +1021,6 @@ class Parser:
             "True,double,<=": "long_float_le_xxxx",
             "True,double,>=": "long_float_ge_xxxx",
 
-            "False,long,/": "long_unsigned_divide_xxxx",
-            "True,long,/": "long_divide_xxxx",
-            "False,long,%": "long_unsigned_modulo_xxxx",
-            "True,long,%": "long_modulo_xxxx",
         }
 
         # select a function that matches the template.

@@ -108,6 +108,14 @@ def expand_macros(instructions, allocator):
             new_instructions.extend(long_equal(trace, instruction))
         elif instruction["op"] == "long_not_equal":
             new_instructions.extend(long_not_equal(trace, instruction))
+        elif instruction["op"] == "long_divide":
+            new_instructions.extend(long_divide(trace, instruction))
+        elif instruction["op"] == "long_modulo":
+            new_instructions.extend(long_modulo(trace, instruction))
+        elif instruction["op"] == "unsigned_long_divide":
+            new_instructions.extend(unsigned_long_divide(trace, instruction))
+        elif instruction["op"] == "unsigned_long_modulo":
+            new_instructions.extend(unsigned_long_modulo(trace, instruction))
         elif instruction["op"] == "long_greater":
             new_instructions.extend(long_greater(trace, instruction))
         elif instruction["op"] == "long_greater_equal":
@@ -716,6 +724,146 @@ def long_float_add(trace, instruction):
          "z": result,
          "a": result})
     instructions.append({"trace": trace, "op": "long_float_add"})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    return instructions
+
+def long_divide(trace, instruction):
+    instructions = []
+    instructions.append(
+        {"trace": trace,
+         "op": "b_hi",
+         "z": result_b_hi,
+         "a": result_b_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "b_lo",
+         "z": result_b,
+         "a": result_b})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append({"trace": trace, "op": "long_divide"})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    return instructions
+
+def long_modulo(trace, instruction):
+    instructions = []
+    instructions.append(
+        {"trace": trace,
+         "op": "b_hi",
+         "z": result_b_hi,
+         "a": result_b_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "b_lo",
+         "z": result_b,
+         "a": result_b})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append({"trace": trace, "op": "long_modulo"})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    return instructions
+
+def unsigned_long_divide(trace, instruction):
+    instructions = []
+    instructions.append(
+        {"trace": trace,
+         "op": "b_hi",
+         "z": result_b_hi,
+         "a": result_b_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "b_lo",
+         "z": result_b,
+         "a": result_b})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append({"trace": trace, "op": "unsigned_long_divide"})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    return instructions
+
+def unsigned_long_modulo(trace, instruction):
+    instructions = []
+    instructions.append(
+        {"trace": trace,
+         "op": "b_hi",
+         "z": result_b_hi,
+         "a": result_b_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "b_lo",
+         "z": result_b,
+         "a": result_b})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_hi",
+         "z": result_hi,
+         "a": result_hi})
+    instructions.append(
+        {"trace": trace,
+         "op": "a_lo",
+         "z": result,
+         "a": result})
+    instructions.append({"trace": trace, "op": "unsigned_long_modulo"})
     instructions.append(
         {"trace": trace,
          "op": "a_lo",
