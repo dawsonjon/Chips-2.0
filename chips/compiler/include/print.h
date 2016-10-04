@@ -17,6 +17,51 @@ void fprint_udecimal(unsigned udecimal, unsigned handle){
         unsigned digit;
         unsigned significant = 0;
         digit = 0;
+        while(udecimal >= 1000000000){
+                udecimal -= 10000;
+                digit += 1;
+        }
+        if(digit | significant){
+              fputc(digit | 0x30, handle);
+              significant = 1;
+        }
+        digit = 0;
+        while(udecimal >= 100000000){
+                udecimal -= 10000;
+                digit += 1;
+        }
+        if(digit | significant){
+              fputc(digit | 0x30, handle);
+              significant = 1;
+        }
+        digit = 0;
+        while(udecimal >= 10000000){
+                udecimal -= 10000;
+                digit += 1;
+        }
+        if(digit | significant){
+              fputc(digit | 0x30, handle);
+              significant = 1;
+        }
+        digit = 0;
+        while(udecimal >= 1000000){
+                udecimal -= 10000;
+                digit += 1;
+        }
+        if(digit | significant){
+              fputc(digit | 0x30, handle);
+              significant = 1;
+        }
+        digit = 0;
+        while(udecimal >= 100000){
+                udecimal -= 10000;
+                digit += 1;
+        }
+        if(digit | significant){
+              fputc(digit | 0x30, handle);
+              significant = 1;
+        }
+        digit = 0;
         while(udecimal >= 10000){
                 udecimal -= 10000;
                 digit += 1;
