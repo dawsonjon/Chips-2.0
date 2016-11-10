@@ -20,6 +20,7 @@ import tempfile
 import shutil
 import inspect
 import textwrap
+import subprocess
 from chips.compiler.exceptions import C2CHIPError
 from chips.compiler.python_model import StopSim
 from chips_c import bits_to_float, float_to_bits, bits_to_double, double_to_bits, join_words, high_word, low_word
@@ -383,6 +384,7 @@ class Chip:
         output_file.write("endmodule\n")
         output_file.close()
 
+
     def generate_testbench(self, stop_clocks=None):
         """
 
@@ -606,6 +608,171 @@ class Chip:
                 self.simulation_step()
         except StopSim:
             return
+
+    def cosim(self):
+        """
+
+        Synopsis:
+
+            .. code-block:: python
+
+               chip.generate_testbench(stop_clocks=None)
+
+        Description:
+
+            Generate a Verilog testbench.
+
+        Arguments:
+
+            stop_clocks: The number of clock cycles for the simulation to run.
+
+        Returns:
+
+            None
+
+        """
+
+        output_file = open(self.name + "_wrap.v", "w")
+        output_file.write("module %s_wrap;\n" % self.name)
+        output_file.write("  integer file_count;\n")
+        output_file.write("  integer control_out;\n")
+        output_file.write("  integer control_in;\n")
+        output_file.write("  reg  clk;\n")
+        output_file.write("  reg  rst;\n")
+        for i in self.inputs.values():
+            output_file.write("  reg  [31:0] %s;\n" % i.name)
+            output_file.write("  reg  %s_stb;\n" % i.name)
+            output_file.write("  wire %s_ack;\n" % i.name)
+        for i in self.outputs.values():
+            output_file.write("  wire [31:0] %s;\n" % i.name)
+            output_file.write("  wire %s_stb;\n" % i.name)
+            output_file.write("  reg  %s_ack;\n" % i.name)
+
+        output_file.write("  \n  initial\n")
+        output_file.write("  begin\n")
+        output_file.write("    control_out = $fopenw(\"control_out\");\n")
+        output_file.write("    control_in = $fopenr(\"control_in\");\n")
+        output_file.write("    rst <= 1'b1;\n")
+        output_file.write("    #50 rst <= 1'b0;\n")
+        output_file.write("  end\n\n")
+
+        output_file.write("  \n  initial\n")
+        output_file.write("  begin\n")
+        output_file.write("    clk <= 1'b0;\n")
+        output_file.write("    while (1) begin\n")
+        output_file.write("      #5 clk <= ~clk;\n")
+        output_file.write("    end\n")
+        output_file.write("  end\n\n")
+
+        output_file.write("  \n  always @ (posedge clk)\n")
+        output_file.write("  begin\n")
+        output_file.write("    if (!rst) begin\n")
+
+        for i in self.inputs.values():
+            output_file.write("      file_count = $fscanf(control_in, \"%%x\", %s);\n"%i.name)
+            output_file.write("      file_count = $fscanf(control_in, \"%%x\", %s_stb);\n"%i.name)
+
+        for i in self.outputs.values():
+            output_file.write("      file_count = $fscanf(control_in, \"%%x\", %s_ack);\n"%i.name)
+
+        for i in self.inputs.values():
+            output_file.write("      $fwrite(control_out, \"%%x\\n\", %s_ack);\n"%i.name)
+
+        for i in self.outputs.values():
+            output_file.write("      $fwrite(control_out, \"%%x\\n\", %s_stb);\n"%i.name)
+            output_file.write("      $fwrite(control_out, \"%%x\\n\", %s);\n"%i.name)
+
+        output_file.write("    end\n")
+
+        output_file.write("  end\n\n")
+
+
+        output_file.write("  %s uut(\n    " % (self.name))
+        ports = []
+        ports.append(".clk(clk)")
+        ports.append(".rst(rst)")
+        for i in self.inputs.values():
+            ports.append(".%s(%s)" % (i.name, i.name))
+            ports.append(".%s_stb(%s_stb)" % (i.name, i.name))
+            ports.append(".%s_ack(%s_ack)" % (i.name, i.name))
+        for i in self.outputs.values():
+            ports.append(".%s(%s)" % (i.name, i.name))
+            ports.append(".%s_stb(%s_stb)" % (i.name, i.name))
+            ports.append(".%s_ack(%s_ack)" % (i.name, i.name))
+        output_file.write(",\n    ".join(ports))
+        output_file.write(");\n")
+        output_file.write("endmodule\n")
+        output_file.close()
+
+        #Compile files using iverilog        
+        files = ["%s.v" % i.component_name for i in self.instances]
+        files.append(self.name + ".v")
+        files.append(self.name + "_wrap.v")
+        files.append("chips_lib.v")
+        files = " ".join(files)
+        os.system("iverilog -o %s %s" % (self.name + "_wrap", files))
+
+        self.cosim = subprocess.Popen(["vvp", "./%s_wrap"%self.name])
+        self.control_in = open("control_in", 'w')
+        self.control_out = open("control_out")
+        
+
+    def cosim_step(self):
+        """
+
+        Synopsis:
+
+            .. code-block:: python
+
+               chip.cosim_step()
+
+        Description:
+
+            Run cosim for one cycle.
+
+        Arguments:
+
+            None
+
+        Returns:
+
+            None
+
+        """
+
+        for i in self.inputs.values():
+            self.control_in.write(hex(i.q)[2:] + "\n")
+            self.control_in.flush()
+            print "a"
+            self.control_in.write(str(int(i.src_rdy)) + "\n")
+            self.control_in.flush()
+            print "b"
+
+        for i in self.outputs.values():
+            self.control_in.write(str(int(i.dst_rdy)) + "\n")
+            self.control_in.flush()
+            print "c"
+
+        for i in self.inputs.values():
+            i.dst_rdy = self.control_out.readline()
+            print "d"
+
+        for i in self.outputs.values():
+            i.src_rdy = bool(self.control_out.readline())
+            print "e"
+            try:
+                i.q = int(self.control_out.readline(), 16)
+                print i.q
+            except ValueError:
+                i.q = 0
+                print "uninitialised"
+
+        for i in self.inputs.values() + self.outputs.values():
+            i.simulation_step()
+        for i in self.inputs.values() + self.outputs.values():
+            i.simulation_update()
+
+        self.time += 1
 
 
 class Component:
