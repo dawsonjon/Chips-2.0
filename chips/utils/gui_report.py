@@ -15,7 +15,7 @@ from chips.compiler.types import size_of
 from chips.compiler.register_map import rregmap, frame, tos
 import chips.compiler.profiler as profiler
 from chips.compiler.exceptions import StopSim, BreakSim
-from chips.compiler.utils import bits_to_float, bits_to_double
+from chips_c import bits_to_float, bits_to_double
 
 class GuiReport(wx.Frame):
 

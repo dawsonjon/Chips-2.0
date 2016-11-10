@@ -14,90 +14,20 @@ void fprint_uhex(unsigned uhex, unsigned handle){
 //Print an unsigned int to stdout in decimal format
 //leading 0s will be suppressed
 void fprint_udecimal(unsigned udecimal, unsigned handle){
-        unsigned digit;
-        unsigned significant = 0;
-        digit = 0;
-        while(udecimal >= 1000000000){
-                udecimal -= 10000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 100000000){
-                udecimal -= 10000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 10000000){
-                udecimal -= 10000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 1000000){
-                udecimal -= 10000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 100000){
-                udecimal -= 10000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 10000){
-                udecimal -= 10000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 1000){
-                udecimal -= 1000;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 100){
-                udecimal -= 100;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        digit = 0;
-        while(udecimal >= 10){
-                udecimal -= 10;
-                digit += 1;
-        }
-        if(digit | significant){
-              fputc(digit | 0x30, handle);
-              significant = 1;
-        }
-        fputc(udecimal | 0x30, handle);
+        char digits[10];
+	unsigned digitval;
+	unsigned i;
+
+	digitval = 1000000000;
+	i=0;
+	while(digitval){
+		digits[i] = ((udecimal/digitval)&0xf) | '0';
+		report(digits[i]);
+		udecimal %= digitval;
+		digitval /= 10;
+		i++;
+	}
+	for(i=0; i<10; i++) fputc(digits[i], handle);
 }
 
 //Print a signed int to stdout in hex format

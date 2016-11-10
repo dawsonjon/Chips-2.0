@@ -13,7 +13,7 @@ from chips.compiler.types import size_of
 from chips.compiler.register_map import rregmap, frame
 import chips.compiler.profiler as profiler
 from chips.compiler.exceptions import StopSim, BreakSim
-from chips.compiler.utils import bits_to_float, bits_to_double
+from chips_c import bits_to_float, bits_to_double
 from chips.utils.gui_report import GuiReport
 
 keywords = ["auto", "break", "case", "char", "const", "continue", "default",
@@ -219,7 +219,7 @@ class GuiInstance(wx.Frame):
                 return self.on_set_breakpoint(ff, event)
             cw = wx.py.editwindow.EditWindow(self.code, -1)
             cw.Bind(wx.EVT_LEFT_DCLICK, call_handler)
-            cw.Bind(wx.EVT_RIGHT_DOWN, context_menu)
+            #cw.Bind(wx.EVT_RIGHT_DOWN, context_menu)
             self.file_windows[f] = cw
             self.code.AddPage(cw, f)
             ff = open(f, "r")
