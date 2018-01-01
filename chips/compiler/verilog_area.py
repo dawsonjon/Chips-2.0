@@ -447,6 +447,8 @@ def generate_CHIP(input_file,
     output_file.write("  wire [15:0] store_address;\n")
     output_file.write("  wire [31:0] store_data;\n")
     output_file.write("  wire  store_enable;\n")
+    output_file.write("  wire  forward_a;\n")
+    output_file.write("  wire  forward_b;\n")
 
     if needs_divider:
       output_file.write("  reg [31:0] shifter;\n")
@@ -652,6 +654,8 @@ def generate_CHIP(input_file,
     output_file.write("  assign address_a = instruction[19:16];\n")
     output_file.write("  assign address_b = instruction[3:0];\n")
     output_file.write("  assign literal   = instruction[15:0];\n")
+    output_file.write("  assign forward_a = (address_a_2 == address_z_3 && write_enable);\n")
+    output_file.write("  assign forward_b = (address_b_2 == address_z_3 && write_enable);\n")
 
     output_file.write(
         "\n  //////////////////////////////////////////////////////////////////////////////\n")
@@ -675,10 +679,8 @@ def generate_CHIP(input_file,
     output_file.write("  end\n")
     output_file.write("  assign register_a = registers[address_a_2];\n")
     output_file.write("  assign register_b = registers[address_b_2];\n")
-    output_file.write(
-        "  assign operand_a = (address_a_2 == address_z_3 && write_enable)?result:register_a;\n")
-    output_file.write(
-        "  assign operand_b = (address_b_2 == address_z_3 && write_enable)?result:register_b;\n")
+    output_file.write("  assign operand_a = forward_a?result:register_a;\n")
+    output_file.write("  assign operand_b = forward_b?result:register_b;\n")
     output_file.write("  assign store_address = operand_a;\n")
     output_file.write("  assign load_address = operand_a;\n")
     output_file.write("  assign store_data = operand_b;\n")

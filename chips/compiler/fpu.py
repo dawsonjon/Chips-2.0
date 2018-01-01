@@ -98,14 +98,14 @@ module divider(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN
+        //if a is NaN or b is NaN return NaN 
         if ((a_e == 128 && a_m != 0) || (b_e == 128 && b_m != 0)) begin
           z[31] <= 1;
           z[30:23] <= 255;
           z[22] <= 1;
           z[21:0] <= 0;
           state <= put_z;
-          //if a is inf and b is inf return NaN
+          //if a is inf and b is inf return NaN 
         end else if ((a_e == 128) && (b_e == 128)) begin
           z[31] <= 1;
           z[30:23] <= 255;
@@ -411,7 +411,7 @@ module multiplier(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN
+        //if a is NaN or b is NaN return NaN 
         if ((a_e == 128 && a_m != 0) || (b_e == 128 && b_m != 0)) begin
           z[31] <= 1;
           z[30:23] <= 255;
@@ -423,20 +423,26 @@ module multiplier(
           z[31] <= a_s ^ b_s;
           z[30:23] <= 255;
           z[22:0] <= 0;
-          state <= put_z;
-           //if b is zero return NaN
-          if ($signed(b_e == -127) && (b_m == 0)) begin
+          //if b is zero return NaN
+          if (($signed(b_e) == -127) && (b_m == 0)) begin
             z[31] <= 1;
             z[30:23] <= 255;
             z[22] <= 1;
             z[21:0] <= 0;
-            state <= put_z;
           end
+          state <= put_z;
         //if b is inf return inf
         end else if (b_e == 128) begin
           z[31] <= a_s ^ b_s;
           z[30:23] <= 255;
           z[22:0] <= 0;
+          //if a is zero return NaN
+          if (($signed(a_e) == -127) && (a_m == 0)) begin
+            z[31] <= 1;
+            z[30:23] <= 255;
+            z[22] <= 1;
+            z[21:0] <= 0;
+          end
           state <= put_z;
         //if a is zero return zero
         end else if (($signed(a_e) == -127) && (a_m == 0)) begin
@@ -683,7 +689,7 @@ module adder(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN
+        //if a is NaN or b is NaN return NaN 
         if ((a_e == 128 && a_m != 0) || (b_e == 128 && b_m != 0)) begin
           z[31] <= 1;
           z[30:23] <= 255;
@@ -695,6 +701,13 @@ module adder(
           z[31] <= a_s;
           z[30:23] <= 255;
           z[22:0] <= 0;
+          //if a is inf and signs don't match return nan
+          if ((b_e == 128) && (a_s != b_s)) begin
+              z[31] <= b_s;
+              z[30:23] <= 255;
+              z[22] <= 1;
+              z[21:0] <= 0;
+          end
           state <= put_z;
         //if b is inf return inf
         end else if (b_e == 128) begin
@@ -1228,14 +1241,14 @@ module double_divider(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN
+        //if a is NaN or b is NaN return NaN 
         if ((a_e == 1024 && a_m != 0) || (b_e == 1024 && b_m != 0)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
           z[51] <= 1;
           z[50:0] <= 0;
           state <= put_z;
-          //if a is inf and b is inf return NaN
+          //if a is inf and b is inf return NaN 
         end else if ((a_e == 1024) && (b_e == 1024)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
@@ -1541,7 +1554,7 @@ module double_multiplier(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN
+        //if a is NaN or b is NaN return NaN 
         if ((a_e == 1024 && a_m != 0) || (b_e == 1024 && b_m != 0)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
@@ -1554,8 +1567,8 @@ module double_multiplier(
           z[62:52] <= 2047;
           z[51:0] <= 0;
           state <= put_z;
-           //if b is zero return NaN
-          if ($signed(b_e == -1023) && (b_m == 0)) begin
+          //if b is zero return NaN
+          if (($signed(b_e) == -1023) && (b_m == 0)) begin
             z[63] <= 1;
             z[62:52] <= 2047;
             z[51] <= 1;
@@ -1567,6 +1580,14 @@ module double_multiplier(
           z[63] <= a_s ^ b_s;
           z[62:52] <= 2047;
           z[51:0] <= 0;
+          //if b is zero return NaN
+          if (($signed(a_e) == -1023) && (a_m == 0)) begin
+            z[63] <= 1;
+            z[62:52] <= 2047;
+            z[51] <= 1;
+            z[50:0] <= 0;
+            state <= put_z;
+          end
           state <= put_z;
         //if a is zero return zero
         end else if (($signed(a_e) == -1023) && (a_m == 0)) begin
@@ -1813,7 +1834,7 @@ module double_adder(
 
       special_cases:
       begin
-        //if a is NaN or b is NaN return NaN
+        //if a is NaN or b is NaN return NaN 
         if ((a_e == 1024 && a_m != 0) || (b_e == 1024 && b_m != 0)) begin
           z[63] <= 1;
           z[62:52] <= 2047;
@@ -1825,6 +1846,13 @@ module double_adder(
           z[63] <= a_s;
           z[62:52] <= 2047;
           z[51:0] <= 0;
+          //if a is inf and signs don't match return nan
+          if ((b_e == 1024) && (a_s != b_s)) begin
+              z[63] <= 1;
+              z[62:52] <= 2047;
+              z[51] <= 1;
+              z[50:0] <= 0;
+          end
           state <= put_z;
         //if b is inf return inf
         end else if (b_e == 1024) begin
