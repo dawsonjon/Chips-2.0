@@ -432,7 +432,7 @@ def generate_CHIP(input_file,
     output_file.write(
         "  reg [%s:0] instructions [%i:0];\n" %
         (instruction_bits - 1, len(instructions) - 1))
-    output_file.write("  reg [31:0] memory [%i:0];\n" % memory_size)
+    output_file.write("  reg [31:0] memory [%i:0];\n" % (memory_size-1))
     output_file.write("  reg [31:0] registers [15:0];\n")
     output_file.write("  wire [31:0] operand_a;\n")
     output_file.write("  wire [31:0] operand_b;\n")
@@ -629,7 +629,15 @@ def generate_CHIP(input_file,
     output_file.write("  begin\n")
     output_file.write("    load_data <= memory[load_address];\n")
     output_file.write("    if(store_enable && state == execute) begin\n")
+    output_file.write("      if (store_address > %i) begin\n"%(memory_size-1))
+    output_file.write("        $display(\"!!!!stack overflow!!!!\");\n")
+    output_file.write("        $finish_and_return(1);\n")
+    output_file.write("        exception <= 1'b1;\n")
+    output_file.write("      end\n")
     output_file.write("      memory[store_address] <= store_data;\n")
+    output_file.write("    end\n")
+    output_file.write("    if (rst==1'b1) begin\n")
+    output_file.write("      exception <= 1'b0;\n")
     output_file.write("    end\n")
     output_file.write("  end\n\n")
 

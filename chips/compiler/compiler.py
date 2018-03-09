@@ -64,7 +64,7 @@ def comp(input_file, options={}, parameters={}, sn=0):
                 output_file,
                 parser.allocator,
                 initialize_memory,
-                options.get("memory_size", 4096))
+                int(options.get("memory_size", 4096)))
             output_file.close()
 
     except C2CHIPError as err:

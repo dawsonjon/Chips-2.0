@@ -26,14 +26,25 @@ if len(sys.argv) < 2 or "help" in sys.argv or "h" in sys.argv:
     print "  no_initialize_memory : don't initialize memory"
     print
     print "tool options:"
-    print "  iverilog      : compiles using the icarus verilog compiler"
-    print "  run           : runs compiled code, used with ghdl or modelsimoptions"
-    print "  profile       : run the profiler during simulation"
-    print "  debug         : run the debugger during simulation"
+    print "  iverilog         : compiles using the icarus verilog compiler"
+    print "  memory_size=4096 : set the data memory size (default 4096)"
+    print "  run              : runs compiled code, used with iverilog option"
+    print "  profile          : run the profiler during simulation"
+    print "  debug            : run the debugger during simulation"
     sys.exit(-1)
 
 input_file = sys.argv[-1]
-options = dict(zip(sys.argv[1:-1], [True for i in sys.argv[1:-1]]))
+
+#parse options
+options = {}
+for option in sys.argv[1:-1]:
+    if "=" in option:
+        key, value = option.split("=")
+        options[key]=value
+    else:
+        options[option] = True
+
+
 name, inputs, outputs, documentation = comp(input_file, options)
 
 
