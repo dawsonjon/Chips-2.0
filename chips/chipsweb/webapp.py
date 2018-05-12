@@ -82,4 +82,5 @@ def compile(c_buffer):
     return output_file.getvalue()
 
 if __name__ == "__main__":
+    web.config.debug = False
     app.run()
