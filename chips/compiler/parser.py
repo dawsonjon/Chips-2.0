@@ -1614,20 +1614,13 @@ class Parser:
         """parse a string literal"""
 
         try:
-            initializer = [
-                Constant(
-                    Trace(self),
-                    ord(i)
-                )
-                for i in token.strip('"').decode("string_escape")
-            ]
-            initializer += [Constant(Trace(self), 0)]
-            # initialize_memory = self.initialize_memory
-            instance = GlobalVariable(
+            initializer = token.strip('"').decode("string_escape")
+            initializer += "\x00"
+            instance = ConstChar(
                 Trace(self),
                 TypeSpecifier(
                     ArrayOf("int",
-                            [len(initializer)]),
+                    [len(initializer)]),
                     False,
                     False),
                 initializer,
@@ -1635,8 +1628,7 @@ class Parser:
             )
             # since we don't return instance, it doesn't get generated.
             # treat as a global
-            self.function.global_variables[
-                "const_char_%s" % id(instance)] = instance
+            self.function.global_variables["const_char_%s" % id(instance)] = instance
             self.function.referenced_globals.append(instance)
             return instance.reference(Trace(self))
         except SyntaxError:

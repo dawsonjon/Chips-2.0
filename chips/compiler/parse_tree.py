@@ -792,6 +792,45 @@ class LocalVariable:
     def const(self):
         return self._const
 
+class ConstChar:
+
+    """ a constant string """
+
+    def __init__(self, trace, declaration, initializer, function):
+        self.trace = trace
+        self._type = declaration.type_
+        self._signed = declaration.signed
+        self._const = declaration.const
+        self.initializer = initializer
+        self.local = False
+        self.argument = False
+
+    def initialise(self, offset):
+        # initialise is used for global variables before program starts
+        assert not self.local
+        self.offset = offset
+        instructions = []
+        for index, value in enumerate(self.initializer):
+            instructions.append(
+                {"trace": self.trace,
+                 "op": "constant",
+                 "offset": offset+index, 
+                 "value":int(ord(value))})
+        return instructions
+
+
+    def reference(self, trace):
+        return Variable(trace, self)
+
+    def type_(self):
+        return self._type
+
+    def signed(self):
+        return self._signed
+
+    def const(self):
+        return self._const
+
 
 class GlobalVariable:
 
@@ -805,9 +844,6 @@ class GlobalVariable:
         self.initializer = initializer
         self.local = False
         self.argument = False
-
-        self.offset = function.offset
-        function.offset += size_of(self) // 4
 
     def initialise(self, offset):
         # initialise is used for global variables before program starts
@@ -829,11 +865,11 @@ class GlobalVariable:
             else:
                 instructions.extend(self.initializer.generate())
                 store_object(
-                    self.trace,
-                    instructions,
-                    n=size_of(self) // 4,
-                    offset=self.offset,
-                    local=False)
+                            self.trace,
+                            instructions,
+                            n=size_of(self) // 4,
+                            offset=self.offset,
+                            local=False)
         return instructions
 
     def reference(self, trace):

@@ -252,7 +252,7 @@ def generate_CHIP(input_file,
                   options={}):
     """A big ugly function to crunch through all the instructions and generate the CHIP equivilent"""
 
-    instructions = calculate_jumps(instructions)
+    instructions, initial_memory_contents = calculate_jumps(instructions, True)
     instruction_set, instruction_memory = generate_instruction_set(
         instructions)
     opcodes = [i["op"] for i in instruction_set]
@@ -553,23 +553,23 @@ def generate_CHIP(input_file,
             output_file.write("    .output_z_ack(%s_out_ack)\n" % i)
             output_file.write("  );\n")
 
-    # Generate a state machine to execute the instructions
-    # if initialize_memory and allocator.memory_content:
+     # Generate a state machine to execute the instructions
+    #if initialize_memory and allocator.memory_content:
 #
-        # output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
-        # output_file.write("  // MEMORY INITIALIZATION                                                      \n")
-        # output_file.write("  //                                                                            \n")
-        # output_file.write("  // In order to reduce program size, array contents have been stored into      \n")
-        # output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n")
-        # output_file.write("  // initialized when the FPGA configures.                                      \n")
-        # output_file.write("  // Memory will not be re-initialized at reset.                                \n")
-        # output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n")
+    output_file.write("\n  //////////////////////////////////////////////////////////////////////////////\n")
+    output_file.write("  // MEMORY INITIALIZATION                                                      \n")
+    output_file.write("  //                                                                            \n")
+    output_file.write("  // In order to reduce program size, array contents have been stored into      \n")
+    output_file.write("  // memory at initialization. In an FPGA, this will result in the memory being \n")
+    output_file.write("  // initialized when the FPGA configures.                                      \n")
+    output_file.write("  // Memory will not be re-initialized at reset.                                \n")
+    output_file.write("  // Dissable this behaviour using the no_initialize_memory switch              \n")
 #
-        # output_file.write("  \n  initial\n")
-        # output_file.write("  begin\n")
-        # for location, content in allocator.memory_content.iteritems():
-            # output_file.write("    memory[%s] = %s;\n"%(location, content))
-        # output_file.write("  end\n\n")
+    output_file.write("  \n  initial\n")
+    output_file.write("  begin\n")
+    for location, content in initial_memory_contents.iteritems():
+        output_file.write("    memory[%s] = %s;\n"%(location, content))
+    output_file.write("  end\n\n")
     output_file.write(
         "\n  //////////////////////////////////////////////////////////////////////////////\n")
     output_file.write(

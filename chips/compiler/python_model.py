@@ -36,7 +36,7 @@ def generate_python_model(
         profile=False
 ):
 
-    instructions = calculate_jumps(instructions)
+    instructions, initial_memory_contents = calculate_jumps(instructions, True)
 
     input_files = set(
         [i["file_name"] for i in instructions if "file_read" == i["op"]]
@@ -60,7 +60,7 @@ def generate_python_model(
     return PythonModel(
         debug,
         instructions,
-        allocator.memory_content,
+        initial_memory_contents,
         input_files,
         output_files,
         numbered_inputs,
