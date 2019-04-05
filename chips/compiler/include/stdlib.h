@@ -222,6 +222,8 @@ void srand(unsigned long int s){
 }
 
 #ifdef ENABLE_DYNAMIC_MEMORY
+//forward declaration
+void free(int * block);
 ///
 ///The malloc function
 ///*******************
@@ -251,7 +253,9 @@ void srand(unsigned long int s){
 ///   The malloc function returns either a null pointer or a pointer to
 ///   the allocated space.
 
+//_memory is an array of allocated blocks
 int _memory[MALLOC_SIZE];
+
 int * malloc(int size){
     int block = 0;
     int block_size;
@@ -259,19 +263,35 @@ int * malloc(int size){
 
     if(size == 0) return NULL;
 
+    if(!_memory[0]) _memory[0]=MALLOC_SIZE-1;
+
     while(1){
-        if(block >= 1024) return NULL;
+
+	//If we have run out of blocks to allocate return null
+        if(block >= MALLOC_SIZE) return NULL;
+
+	//the first location in each block contains the size of the block
+	//and a flag to say whether the block is allocated.
         block_size = _memory[block] & 0xffff;
         allocated = _memory[block] & 0x80000;
+
+	//If the block is big enough and not allocated then allocate this block
         if(block_size >= size && !allocated) break;
+
+	//Otherwise go to the start of the next block
         block = block + block_size + 1;
     }
 
+    //write the size and allocated flag of the block
     _memory[block] = 0x80000 | size;
+
+    //if the block was larger than needed, the spare space in the block can
+    //be split the second half is an unallocated block
     if(block_size > size){
-        _memory[block + size + 1] = block_size - size;
+        _memory[block + size + 1] = block_size - size - 1;
     }
 
+    //return pointer to the second location in the block
     return &_memory[block] + 1;
 }
 
@@ -370,7 +390,7 @@ int * realloc(int *ptr, int size){
 ///   The free function returns no value.  
 ///
 
-/*Merge non-contiguous blocks*/
+/*Merge contiguous non-allocated blocks*/
 
 void _clean(){
     int block = 0, next_block;
@@ -378,18 +398,19 @@ void _clean(){
     int allocated, next_allocated;
 
     while(1){
-        if(block >= 1024) return;
+        if(block >= MALLOC_SIZE) return;
         block_size = _memory[block] & 0xffff;
         allocated = _memory[block] & 0x80000;
 	next_block = block + block_size + 1;
         if(!allocated){
 	    while(1){
-                if(block >= 1024) return;
+                if(next_block >= MALLOC_SIZE) return;
 	        next_block_size = _memory[next_block] & 0xffff;
 	        next_allocated = _memory[next_block] & 0x80000;
 	        if(!next_allocated){
-	            _memory[block] = block_size + next_block_size + 1;
-		    next_block = next_block + next_block_size + 1;
+		    block_size = block_size + next_block_size + 1;
+	            _memory[block] = block_size;
+		    next_block += next_block_size + 1;
                 } else {
 		    break;
 		}
@@ -400,7 +421,10 @@ void _clean(){
 }
 
 void free(int * block){
+    //clear the allocated flag
     *(block - 1) &= 0xffff;
+
+    //merge unallocated blocks
     _clean();
 }
 
@@ -588,8 +612,8 @@ int abs(int x){
 
 div_t div(int n, int d){
 	div_t retval;
-	retval.quot = unsigned_divide_xxxx(n, d);
-	retval.rem = unsigned_modulo_yyyy;
+	retval.quot = n/d;
+	retval.rem = n%d;
 	return retval;
 }
 
@@ -638,8 +662,8 @@ long labs(long x){
 
 ldiv_t ldiv(long int n, long int d){
 	ldiv_t retval;
-	retval.quot = long_unsigned_divide_xxxx(n, d);
-	retval.rem = long_unsigned_modulo_yyyy;
+	retval.quot = n/d;
+	retval.rem = n%d;
 	return retval;
 }
 
